@@ -11,11 +11,11 @@ Create a personal web experience for reflecting on life through daily voice jour
 - Voice journals are recorded in VoiceNotes.
 - Only VoiceNotes content associated with a chosen tag should enter this product.
 - VoiceNotes should notify the product through its webhook integration.
-- One or two photos for a day should be easy to submit through a Telegram bot.
+- One or more photos for a day should be easy to submit through a Telegram bot.
 
 ### Daily experience
 
-- A day can contain multiple source voice journals and one or two real photos.
+- A day can contain multiple source journals and multiple real photos.
 - The product creates an attractive daily presentation with a concise summary and the detailed voice-journal text.
 - If journal content exists but no real photo was supplied, the product creates a journal-inspired AI image for that day.
 - Selecting a day reveals its images, summary, and detailed source journals.
