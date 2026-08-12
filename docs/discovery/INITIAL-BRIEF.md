@@ -32,6 +32,6 @@ Create a personal web experience for reflecting on life through daily voice jour
 - Publish under a new subdomain of `arunp.in` through Cloudflare.
 - Draw feature and interaction inspiration from Rosebud, Five Minute Journal, Daypix (the app currently published under the supplied `simple.diary` package), and Day One.
 
-## Not decided yet
+## Discovery status
 
-This brief does not yet decide access policy, canonical day/date rules, external AI processing permission, source deletion behavior, daily finalization timing, generated-art style, exact MVP boundary, or product/subdomain name. Those decisions belong to the grilling rounds.
+This brief preserves the original intent. Settled decisions, current open questions, and canonical language now live in `docs/discovery/REQUIREMENTS.md` and `CONTEXT.md`; implementation remains gated on completion of the grilling rounds and Arun's explicit shared-understanding confirmation.

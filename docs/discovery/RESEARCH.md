@@ -252,6 +252,35 @@ Sources:
 - [Cloudflare Access common policies](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/common-policies/)
 - [Hetzner backup and snapshot FAQ](https://docs.hetzner.com/cloud/servers/backups-snapshots/faq/)
 
+## Private web authentication research
+
+**Documented**
+
+- Cloudflare Access does not maintain an arbitrary application-specific username/password database. Human authentication is delegated to a configured identity provider.
+- Cloudflare's first-party identity provider authenticates with an existing Cloudflare account and can restrict access to members of the current Cloudflare account. Access can then allow one exact account email.
+- Other supported low-complexity options are email one-time PIN, whose codes are single-use and expire after ten minutes, or Google as an external identity provider.
+- Cloudflare Access service tokens are machine credentials, not a human username/password facility.
+- HTTP Basic Authentication would be implemented at the origin application. Placing it behind Access creates a second login layer; using it instead of Access means Access is not the login layer.
+- The Zero Trust Free plan currently covers up to 50 users, so one-user Access adds no subscription cost.
+
+**Proposed**
+
+- Use Cloudflare's first-party identity provider, restrict it to the Cloudflare account that owns the zone, allow Arun's exact account identity, require MFA on that account, and use a seven-day Access session.
+- Do not build an application password database or request a human password from Arun. Any credential pasted into chat or an attachment is exposed and must not be reused.
+- Validate the signed Access assertion at the application boundary and keep the origin bound to loopback behind the existing outbound-only Tunnel.
+- Return `Cache-Control: private, no-store` for journal HTML, APIs, media, thumbnails, search, and exports. Only content-hashed application assets containing no personal data may be shared-cacheable.
+- Prefer a separate machine-only webhook hostname so no human content route needs an Access bypass. Telegram and VoiceNotes endpoints still require their own application-level authentication and minimization.
+
+Sources:
+
+- [Cloudflare identity provider](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/cloudflare/)
+- [Access session management](https://developers.cloudflare.com/cloudflare-one/access-controls/access-settings/session-management/)
+- [Email one-time PIN](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/)
+- [Validating Access assertions](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/)
+- [Access application paths](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/app-paths/)
+- [Cloudflare cache-control behavior](https://developers.cloudflare.com/cache/concepts/cache-control/)
+- [Cloudflare Zero Trust plans](https://www.cloudflare.com/plans/zero-trust-services/)
+
 ## Research-driven safeguards
 
 - Preserve raw VoiceNotes transcripts and original photos separately from AI-authored summaries, tags, and artwork.
