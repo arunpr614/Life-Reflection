@@ -57,7 +57,7 @@ A replaceable, traceable title, summary, tag, or artwork produced from Source It
 _Avoid_: Source entry, original
 
 **Generated Artwork**:
-A visibly identified Derived Artifact created from journal text for a Journal Day that has no Daily Photo at generation time.
+A visibly identified visual Derived Artifact created from a Journal Day's journal text. It may be requested manually even when Daily Photos exist, but it can become the Calendar Cover only while that Journal Day has no Daily Photo.
 _Avoid_: Daily Photo, real photo
 
 **Calendar Cover**:

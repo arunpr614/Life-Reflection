@@ -11,9 +11,9 @@
 Run the required blind synthetic bake-off with these four currently viable candidates:
 
 1. **OpenAI GPT Image 2** — `gpt-image-2-2026-04-21`, medium quality, exact `1024x1280` JPEG.
-2. **Google Gemini 3.1 Flash Lite Image** — `gemini-3.1-flash-lite-image`, 1K, native 4:5.
-3. **Google Gemini 3.1 Flash Image** — `gemini-3.1-flash-image`, 1K, native 4:5.
-4. **Google Gemini 3 Pro Image** — `gemini-3-pro-image`, 1K, native 4:5.
+2. **Google Gemini 3.1 Flash Lite Image** — `gemini-3.1-flash-lite-image`, 1K, provider 4:5 setting.
+3. **Google Gemini 3.1 Flash Image** — `gemini-3.1-flash-image`, 1K, provider 4:5 setting.
+4. **Google Gemini 3 Pro Image** — `gemini-3-pro-image`, 1K, provider 4:5 setting.
 
 Do **not** interpret that bake-off set as the production dropdown. The smallest useful MVP dropdown should contain **one OpenAI model and one Google model**, selected after Arun scores the images blind:
 
@@ -22,7 +22,7 @@ Do **not** interpret that bake-off set as the production dropdown. The smallest 
 | OpenAI option | GPT Image 2 | It is OpenAI's only current non-deprecated image model, has a dated snapshot, supports exact 4:5 output, and has a moderate modeled cost. |
 | Google option | Gemini 3.1 Flash Image, or Flash Lite Image if its visual result is close | Flash has the longer published lifecycle and is Google's balanced image model. Lite is cheaper and faster but is designated a short-term model. |
 
-Gemini 3 Pro Image should remain a bake-off quality ceiling, not an automatic dropdown entry. At the modeled upper workload it consumes about **$4.04 for 30 images**, leaving less than $1 of the app's $5 monthly AI ceiling for all text generation and retries. Include it only if it produces a material, repeatable visual gain and is explicitly labeled as a premium, manual-first choice.
+Gemini 3 Pro Image should remain a bake-off quality ceiling, not an automatic dropdown entry. Its token-rate-derived image output plus the assumed prompt is already about **$4.05 for 30 images before billed thinking or other text-output tokens**. Because Pro Image supports only `HIGH` thinking, its all-in cost cannot be represented honestly until measured. Include it only if it produces a material, repeatable visual gain and, if enabled, make it technically ineligible for the automatic sweep rather than relying on a “manual-first” label.
 
 No credible source reviewed establishes a cross-provider winner for Life in Days' desired style. Provider descriptions are positioning claims, not independent evidence. The report therefore makes a **provisional operational recommendation**, while the blind bake-off decides visual taste and fidelity.
 
@@ -84,24 +84,28 @@ OpenAI's current [model catalog](https://developers.openai.com/api/docs/models/a
 
 The [image generation guide](https://developers.openai.com/api/docs/guides/image-generation) permits arbitrary dimensions when both edges are multiples of 16, neither edge exceeds 3,840 pixels, aspect ratio is at most 3:1, and the total pixel count is within the documented range. `1024x1280` satisfies those conditions and is exact 4:5. JPEG is preferred for this app because OpenAI documents it as faster to encode than PNG and the desired output is painterly rather than transparency-dependent.
 
+OpenAI's [Services Agreement](https://openai.com/policies/services-agreement/) says that, as between the customer and OpenAI and to the extent permitted by law, the customer owns output. Together with immediate API download, that supports permanent storage in Life in Days under the governing commercial account terms. Recheck the exact account agreement before production because an order form or service-specific term can control.
+
 **Versioning recommendation — proposed.** Send the dated snapshot, not the moving alias. Persist both the configured alias family and the exact requested snapshot. If the API returns a distinct resolved identifier, persist that too.
 
 ### Google Gemini image models
 
-Google's current [image generation guide](https://ai.google.dev/gemini-api/docs/image-generation), model pages, [pricing table](https://cloud.google.com/gemini-enterprise-agent-platform/generative-ai/pricing), and [lifecycle table](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/model-versions) establish the following stable image family.
+Google Cloud's current [Agent Platform image-generation guide](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/capabilities/image-generation), dedicated model pages, [pricing table](https://cloud.google.com/gemini-enterprise-agent-platform/generative-ai/pricing), [thinking controls](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/thinking), and [lifecycle table](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/model-versions) establish the following stable image family. This is the exact paid Google Cloud surface proposed for production; Gemini Developer API examples are not the production contract.
 
-| Model | Exact model ID | Native 4:5 at selected tier | Published lifecycle position | Provider positioning | Disposition |
+| Model | Exact model ID | Provider portrait output at selected tier | Published lifecycle position | Provider positioning | Disposition |
 |---|---|---:|---|---|---|
 | Gemini 3.1 Flash Lite Image | `gemini-3.1-flash-lite-image` | 1K; model supports native 4:5 | Released 2026-06-30; designated short-term; no retirement date announced | Fastest and least expensive; provider target below two seconds; not optimized for complex multi-reference or multi-turn editing | **Bake-off candidate; economy option only if quality passes** |
 | Gemini 3.1 Flash Image | `gemini-3.1-flash-image` | `928x1152` at 1K | Released 2026-05-28; published retirement no earlier than 2027-05-28 | General-purpose workhorse balancing quality, speed, and price | **Bake-off and likely Google production candidate** |
 | Gemini 3 Pro Image | `gemini-3-pro-image` | `928x1152` at 1K; 2K and 4K also available | Released 2026-05-28; published retirement no earlier than 2027-05-28 | Premium, reasoning-driven model for complex, professional-grade work | **Bake-off quality ceiling; not a default dropdown item** |
 | Gemini 2.5 Flash Image | `gemini-2.5-flash-image` | Native portrait options documented | Legacy; published retirement 2026-10-02; Google recommends transition | Earlier Flash image generation | **Exclude from new adoption** |
 
-The dedicated [Flash Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite-image), [Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-image), and [Pro](https://ai.google.dev/gemini-api/docs/models/gemini-3-pro-image) pages provide the provider positioning above. The 4:5 size tables in the image guide specify `928x1152` for 1K Flash and Pro output. That ratio is close to, but not mathematically exact, 4:5; display it inside a 4:5 frame using a tiny letterbox/padded background rather than silently cropping content. Confirm the actual Flash Lite dimensions from the returned file during the bake-off.
+The Cloud model pages for [Flash Lite](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/3-1-flash-lite-image), [Flash](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/3-1-flash-image), and [Pro](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/3-pro-image) provide the provider positioning and production model IDs above. The 4:5 size tables specify `928x1152` for 1K Flash and Pro output. That ratio is close to, but not mathematically exact, 4:5; display it inside a 4:5 frame using a tiny letterbox/padded background rather than silently cropping content. Confirm the actual Flash Lite dimensions from the returned file during the bake-off.
 
 Google's lifecycle page says short-term models can be retired on a substantially shorter notice window after a replacement appears. That makes Flash Lite's low price attractive but creates more migration risk than Flash. This is why the model should earn its place through a meaningful speed or cost benefit without a meaningful visual penalty.
 
 **Versioning limitation — documented.** The reviewed Google pages publish stable model IDs and release/lifecycle dates but no dated snapshot suffix equivalent to OpenAI's GPT Image 2 snapshot. Persist the exact requested model ID, API version, returned model identifier when present, project/location, and generation timestamp. Re-run the bake-off after a material alias/model revision or migration notice.
+
+Google Cloud's current [Service Specific Terms](https://cloud.google.com/terms/service-terms) define Generated Output as Customer Data and state that Google does not assert ownership rights in new intellectual property created in that output. They also state that, absent the customer's instruction or permission, Google will not store prompts outside the customer's account longer than reasonably necessary to generate the output or store the output outside that account. Those terms support Life in Days downloading and retaining the generated file in its private archive; they do not remove abuse-monitoring exceptions or guarantee exclusivity, and the exact account agreement must be rechecked before production.
 
 ### Google Imagen models
 
@@ -119,25 +123,25 @@ Their former price and quality tiers are irrelevant to a new trustworthy archive
 
 | Candidate and setting | Published image-output basis | 300-token text input | Modeled total per success | Confidence note |
 |---|---:|---:|---:|---|
-| OpenAI GPT Image 2, medium, `1024x1280` | **$0.041 proxy** using OpenAI's published medium `1024x1536` portrait figure | $0.0015 at $5/MTok | **$0.0425** | Conservative estimate, not a quote for the custom size. Record actual billed output tokens/cost. |
-| Google Gemini 3.1 Flash Lite Image, 1K | $0.034 for 1,120 image-output tokens | $0.000075 at $0.25/MTok | **$0.034075** | Uses Google's rounded per-image figure. |
-| Google Gemini 3.1 Flash Image, 1K | $0.067 for 1,120 image-output tokens | $0.00015 at $0.50/MTok | **$0.06715** | Uses Google's rounded per-image figure. |
-| Google Gemini 3 Pro Image, 1K | $0.134 for 1,120 image-output tokens | $0.0006 at $2/MTok | **$0.1346** | 1K and 2K consume the same published 1,120 output tokens; this comparison deliberately uses 1K. |
+| OpenAI GPT Image 2, medium, `1024x1280` | **$0.0453** from the official calculator's 1,510 image-output-token estimate at $30/MTok | $0.0015 at $5/MTok | **$0.0468** | Planning estimate for the exact custom size; record provider-reported usage and invoice cost. |
+| Google Gemini 3.1 Flash Lite Image, 1K | $0.0336 from 1,120 image-output tokens at $30/MTok | $0.000075 at $0.25/MTok | **At least $0.033675** | Token-rate-derived floor before billed thinking or other text-output tokens; set `MINIMAL` and measure all-in usage. |
+| Google Gemini 3.1 Flash Image, 1K | $0.0672 from 1,120 image-output tokens at $60/MTok | $0.00015 at $0.50/MTok | **At least $0.06735** | Token-rate-derived floor before billed thinking or other text-output tokens; set `MINIMAL` and measure all-in usage. |
+| Google Gemini 3 Pro Image, 1K | $0.1344 from 1,120 image-output tokens at $120/MTok | $0.0006 at $2/MTok | **At least $0.135** | Token-rate-derived floor before mandatory `HIGH` thinking or other text-output tokens; 1K and 2K use the same published image tokens. |
 
-OpenAI's image guide publishes **$0.005 / $0.041 / $0.165** for low/medium/high `1024x1536` GPT Image 2 output. Because Life in Days will request custom exact-4:5 dimensions, the table uses the medium portrait price as a conservative planning proxy. The application must prefer provider-reported usage or invoice reconciliation over this estimate.
+OpenAI's image guide links an official calculator for custom output sizes. On the research date it estimated 1,510 output tokens for medium `1024x1280`; at the model page's $30/MTok image-output rate that is $0.0453, plus $0.0015 for the assumed prompt. This supersedes the earlier `1024x1536` proxy and is still an estimate rather than a billing guarantee. The application must prefer provider-reported usage or invoice reconciliation.
 
-Google's pricing table publishes image-output rates of **$30 / $60 / $120 per million tokens** for Lite/Flash/Pro and states that a 1K image is 1,120 output tokens, shown in the table as approximately **$0.034 / $0.067 / $0.134**. The input prompt cost is included above rather than hidden as negligible.
+Google's pricing table publishes image-output rates of **$30 / $60 / $120 per million tokens** for Lite/Flash/Pro and states that a 1K image is 1,120 image-output tokens. The report calculates from those token rates rather than adding the separately rounded provider display prices to an exact prompt charge. These are not complete request totals: other output modalities and thinking tokens are billable. Cloud's thinking table says Lite and Flash default to `MINIMAL`, which is close to but not zero thinking, while Pro Image supports only `HIGH`. The input prompt is included above; all-in thinking/text output remains unknown until measured.
 
 ### Monthly artwork cost
 
-| Candidate | 10 successful images | 20 successful images | 30 successful images | Share of $5 cap at 30 |
+| Candidate | 10 successful images | 20 successful images | 30 successful images | Minimum share of $5 cap at 30 |
 |---|---:|---:|---:|---:|
-| OpenAI GPT Image 2 medium, estimated | **$0.43** | **$0.85** | **$1.28** | 25.5% |
-| Google Gemini 3.1 Flash Lite Image 1K | **$0.34** | **$0.68** | **$1.02** | 20.4% |
-| Google Gemini 3.1 Flash Image 1K | **$0.67** | **$1.34** | **$2.01** | 40.3% |
-| Google Gemini 3 Pro Image 1K | **$1.35** | **$2.69** | **$4.04** | 80.8% |
+| OpenAI GPT Image 2 medium, estimated | **$0.47** | **$0.94** | **$1.40** | 28.1% |
+| Google Gemini 3.1 Flash Lite Image 1K | **At least $0.34** | **At least $0.67** | **At least $1.01** | At least 20.2% |
+| Google Gemini 3.1 Flash Image 1K | **At least $0.67** | **At least $1.35** | **At least $2.02** | At least 40.4% |
+| Google Gemini 3 Pro Image 1K | **At least $1.35** | **At least $2.70** | **At least $4.05** | At least 81.0% |
 
-**Inference.** GPT Image 2, Flash Lite, and Flash all leave reasonable headroom under the $5 ceiling for daily text generation and a small number of retries. Pro does not leave comfortable headroom at 30 images. Since the expected absolute differences among the first three are about one dollar per month or less, quality and trust should choose the default.
+**Inference.** GPT Image 2 leaves clear modeled headroom under the $5 ceiling. Flash Lite and Flash likely do too, but that must be confirmed from all-in billed thinking/text-output usage. Pro does not have demonstrated headroom at 30 images and must not drive the automatic sweep unless a measured upper bound fits the ceiling. Since the image-output differences among the first three are about one dollar per month or less, quality and trust should choose the default.
 
 **Required production behavior — proposed.** Meter actual provider usage and estimated USD for every attempt, including failures where usage is returned. Warn at the existing 80% ceiling. At 100%, pause the automatic 01:00 artwork sweep but preserve capture, backup, text processing, and explicit visibility of the skipped job. A manual request should show the budget condition rather than silently switching model or provider.
 
@@ -258,7 +262,7 @@ Do not invent a seed when a provider does not expose one. Stochastic output is e
 
 Sources are OpenAI's [data controls matrix](https://developers.openai.com/api/docs/guides/your-data) and Google's [zero-data-retention overview](https://docs.cloud.google.com/gemini-enterprise-agent-platform/resources/zero-data-retention), [abuse-monitoring policy](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/abuse-monitoring), and [service-specific terms](https://cloud.google.com/terms/service-terms).
 
-The approved Google surface for this report is the paid Google Cloud commercial API. Do not substitute a consumer Gemini account or a free-tier developer key, because those are different products with different account, support, and data-handling conditions.
+The approved Google surface for this report is the paid Google Cloud Gemini Enterprise Agent Platform API, called with the Google Gen AI SDK configured by `GOOGLE_GENAI_USE_ENTERPRISE=True`, an explicit Cloud project, and the exact supported location (currently `global` for these image models). Do not substitute the Gemini Developer API, a consumer Gemini account, or a free-tier developer key; those are different surfaces with different authentication and data-handling conditions. Stage 0 must verify the model ID, endpoint, project, location, and billing surface on the actual paid account.
 
 ### Data-minimization recommendation
 
@@ -293,7 +297,7 @@ Keep two independent settings as already required:
 - `text_provider_model`
 - `artwork_provider_model`
 
-Artwork selection stores an approved configuration record, not a free-form model string: provider, display label, exact model/snapshot ID, endpoint/API version, region, default size, quality, format, safety setting, estimated unit cost, lifecycle review date, and enabled/disabled state. Secrets are referenced from runtime configuration, never stored in that record.
+Artwork selection stores an approved configuration record, not a free-form model string: provider, display label, exact model/snapshot ID, endpoint/API version, region, default size, quality, format, safety setting, estimated unit cost, lifecycle review date, enabled/disabled state, and a separate `automatic_sweep_eligible` flag. Secrets are referenced from runtime configuration, never stored in that record.
 
 ## Other hosted provider families screened
 
@@ -301,12 +305,13 @@ This was a bounded first-party API screen, not an attempt to list every image we
 
 | Provider/family | Current first-party evidence | Screening result |
 |---|---|---|
-| Recraft V4.1, `recraftv4_1` | Current [API guide](https://www.recraft.ai/docs/api-reference/getting-started), [pricing](https://www.recraft.ai/docs/api-reference/pricing), [size appendix](https://www.recraft.ai/docs/api-reference/appendix), and [developer terms](https://www.recraft.ai/legal/developer-terms). It supports exact 4:5 `896x1152`, costs $0.035/image, uses bearer auth, and provides temporary results. | **Exclude on contract gate.** Terms effective 2026-08-11 allow local caching for no more than 30 days and prohibit building a persistent content database/repository from API assets. That is incompatible with a lifelong archive. Re-evaluate only if Recraft changes or contractually waives this restriction in writing. |
+| Recraft V4.1, `recraftv4_1` | Current [API guide](https://www.recraft.ai/docs/api-reference/getting-started), [pricing](https://www.recraft.ai/docs/api-reference/pricing), [size appendix](https://www.recraft.ai/docs/api-reference/appendix), and [developer terms](https://www.recraft.ai/legal/developer-terms). Its provider-designated 4:5 setting returns `896x1152` (mathematically 7:9), costs $0.035/image, uses bearer auth, and provides temporary results. | **Exclude on contract gate.** Terms effective 2026-08-11 allow local caching for no more than 30 days and prohibit building a persistent content database/repository from API assets. That is incompatible with a lifelong archive. Re-evaluate only if Recraft changes or contractually waives this restriction in writing. |
 | Black Forest Labs FLUX.2 | Current [first-party pricing](https://docs.bfl.ai/quick_start/pricing) ranges from roughly $0.014 for Klein 4B to $0.07 for Max at the documented output basis. The current [FLUX API terms](https://bfl.ai/legal/flux-api-service-terms) grant BFL broad, perpetual rights over inputs/outputs and expressly permit model training/improvement. | **Exclude on privacy gate** for intimate journal text. An enterprise agreement with materially different data terms would be a separate procurement decision, not a simple MVP option. |
 | Stability AI / Stable Image | A current self-serve platform exists, but the static first-party materials reviewed did not establish a sufficiently precise API-specific no-training, prompt-retention, generated-asset retention, and current per-model price contract for this private journal use. The general [privacy policy](https://stability.ai/privacy-policy) is not a substitute for those API-specific commitments. | **Exclude pending contract clarity.** This is not a claim that Stability necessarily trains ordinary API prompts; it is a finding that the required first-party assurances were not clear enough to approve the processor. |
 | Ideogram API | The current [API terms](https://ideogram.ai/legal/api-tos) generally restrict model training on ordinary inputs/outputs but permit safety-training use of flagged content, require Ideogram attribution on pages enabling access, and grant broad rights over user data received through the API. The reviewed agreement also lagged the currently marketed model generation. | **Exclude on contract and product-simplicity gates.** Reconsider only under updated terms or a negotiated order that narrows data use and branding requirements. |
 | Adobe Firefly Image 5 | Current [Firefly API documentation](https://developer.adobe.com/firefly-services/docs/firefly-api/) and Adobe's [generative-AI approach](https://www.adobe.com/ai/overview/firefly/gen-ai-approach.html) provide strong commercial-safety, no-training-on-customer-content, and Content Credentials positioning. | **Exclude from self-serve MVP.** [Authentication setup](https://developer.adobe.com/firefly-services/docs/guides/get-started) requires Adobe enterprise entitlement/admin setup and OAuth server-to-server credentials; no simple public pay-as-you-go per-image price was found. |
 | Amazon Nova Canvas | AWS states in its [Bedrock privacy material](https://aws.amazon.com/bedrock/security-privacy-responsible-ai/) that Bedrock inputs/outputs are not shared with model providers or used to train base models. | **Exclude on lifecycle gate.** The [Nova Canvas model card](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-amazon-nova-canvas.html) marks `amazon.nova-canvas-v1:0` legacy with end of life on 2026-09-30, and no current successor image model was established for this report. |
+| xAI Grok Imagine Image | The current [model page](https://docs.x.ai/developers/models/grok-imagine-image), [generation guide](https://docs.x.ai/developers/model-capabilities/images/generation), and [Enterprise Terms](https://x.ai/legal/terms-of-service-enterprise) establish a self-serve API, $0.02/image list output price, aliases, 30-day standard retention, no foundation-model training on User Content, and customer output ownership. | **Exclude on product and format gates.** The API terms restrict access to business purposes, while Life in Days is strictly personal, and the published generation aspect ratios omit 4:5. A clearly applicable personal API contract plus native/exact 4:5 support would be required before reconsideration. |
 
 ### Deliberately omitted surfaces
 
@@ -357,19 +362,19 @@ Each candidate receives the semantically identical prompt. Provider-specific wra
 | Provider | Setting |
 |---|---|
 | OpenAI | `gpt-image-2-2026-04-21`, `1024x1280`, `quality=medium`, JPEG, `moderation=auto`, one image |
-| Google Lite | `gemini-3.1-flash-lite-image`, 1K, 4:5, one image |
-| Google Flash | `gemini-3.1-flash-image`, 1K, 4:5, one image |
-| Google Pro | `gemini-3-pro-image`, 1K, 4:5, one image |
+| Google Lite | Cloud Agent Platform `gemini-3.1-flash-lite-image`, global, 1K, 4:5, `thinking_level=MINIMAL`, one image |
+| Google Flash | Cloud Agent Platform `gemini-3.1-flash-image`, global, 1K, 4:5, `thinking_level=MINIMAL`, one image |
+| Google Pro | Cloud Agent Platform `gemini-3-pro-image`, global, 1K, 4:5, mandatory `thinking_level=HIGH`, one image |
 
-This produces 40 stage-one images. The modeled generation cost is approximately:
+This produces 40 stage-one images. The modeled image-output-plus-prompt floor is approximately:
 
-- GPT Image 2: $0.43
-- Gemini Flash Lite Image: $0.34
-- Gemini Flash Image: $0.67
-- Gemini Pro Image: $1.35
-- **Total: about $2.78**, excluding tax, retries, and blocked calls
+- GPT Image 2: $0.47
+- Gemini Flash Lite Image: at least $0.34
+- Gemini Flash Image: at least $0.67
+- Gemini Pro Image: at least $1.35
+- **Total: at least about $2.83**, before Google thinking/text-output tokens, tax, retries, and blocked calls
 
-Set a pre-authorized evaluation cap of **$3.50** for stage one. This research spend should be tagged separately from routine automatic generation so it does not unexpectedly pause the 01:00 sweep.
+No evaluation spend is pre-authorized. The existing $5 ceiling remains the only approved monthly AI limit. Before stage one, Arun must either approve a separate one-time evaluation ceiling or accept that text and artwork evaluation will be spread across billing months inside the $5 cap. A proposed combined ceiling appears below; research spend must never be silently exempted from cost controls.
 
 ### Blind presentation
 
@@ -419,17 +424,17 @@ Recommended final decision weighting after hard gates:
 
 ### Stage 2: reduce stochastic luck
 
-Take the top two hard-gate-passing models and rerun all ten prompts once, again blind and uncurated. Compare both the new mean and within-model consistency. Do not rely on a seed unless the exact API returns or supports one; record `null` otherwise.
+Take the best hard-gate-passing OpenAI model and the best hard-gate-passing Google model intended for the production dropdown, then rerun all ten prompts once, again blind and uncurated. If a third option may ship, it must receive the same second-run consistency test as well. Compare both the new mean and within-model consistency. Do not rely on a seed unless the exact API returns or supports one; record `null` otherwise.
 
-The most expensive possible two-model stage under the normalized settings is Flash plus Pro at about **$2.02** for 20 images. Set a separate **$2.25** stage-two cap. A full two-stage evaluation should therefore remain below approximately **$5.75** before tax and unusual retries.
+The most expensive required two-model stage under the normalized settings is GPT Image 2 plus Pro at an image-output-plus-prompt floor of about **$1.82** for 20 images, before Pro thinking/text-output tokens. A full two-stage artwork evaluation therefore has a floor near **$4.65**, not a reliable fixed total. Combined with the text report's roughly $5.56 bake-off estimate, the known floor is about **$10.21**. The recommended approval question is a separate **one-time $15 evaluation ceiling** for both reports, with a hard stop and no personal journal text; otherwise spread the work across at least three $5-capped months. This $15 ceiling is proposed, not approved.
 
 Selection rules — proposed:
 
 1. The default is the highest-scoring model after both rounds unless it has materially worse reliability or violates the monthly ceiling.
 2. The other provider's best passing model remains available so the MVP genuinely supports OpenAI and Google without silent fallback.
-3. Keep an economy entry only if it scores within **10% of the default** and is at least **20% cheaper or materially faster** in the measured test.
-4. Keep a premium entry only if it improves the blind score by at least **10%**, remains reliable, and its budget impact is explicitly shown before use.
-5. If score intervals overlap and Arun has no clear preference, choose the model with the longer lifecycle/pinnable version and simpler operations.
+3. Keep an economy entry only if its combined two-stage mean is within **10 points on the 100-point rubric** of the default and it is at least **20% cheaper** on measured all-in cost or at least **20% faster** on measured median latency.
+4. Keep a premium entry only if its combined two-stage mean exceeds the best non-premium result by at least **10 points on the 100-point rubric**, remains reliable, and its all-in budget impact is explicitly shown before use. A manual-only premium option must have `automatic_sweep_eligible=false`; a descriptive label is not an enforcement control.
+5. Compute a nonparametric 95% bootstrap confidence interval over prompt-level mean score differences, with prompts as the resampling unit and 10,000 resamples. If the interval includes zero and Arun has no clear preference, choose the model with the longer lifecycle/pinnable version and simpler operations. Freeze this method before identities are revealed.
 
 ## Proposed post-bake-off dropdown
 
@@ -439,12 +444,12 @@ The settings UI should expose model identity rather than a vague provider-only c
 
 | UI label | Exact configuration | Notes shown in UI |
 |---|---|---|
-| OpenAI · GPT Image 2 | `gpt-image-2-2026-04-21`, medium, exact 4:5 | Estimated ~$0.04/image; pinned snapshot |
-| Google · winning Gemini image model | Either `gemini-3.1-flash-image` or `gemini-3.1-flash-lite-image`, 1K, native 4:5 | Show measured cost, lifecycle class, and no dated pin |
+| OpenAI · GPT Image 2 | `gpt-image-2-2026-04-21`, medium, exact 4:5 | Estimated ~$0.047/image; pinned snapshot |
+| Google · winning Gemini image model | Either `gemini-3.1-flash-image` or `gemini-3.1-flash-lite-image`, 1K, provider 4:5 setting | Show measured all-in cost, lifecycle class, and no dated pin |
 
 ### Conditional third entry
 
-`Google · Gemini 3 Pro Image` may appear as **Premium · manual use recommended** only if it meets the stage-two improvement rule. It should never become the automatic default merely because Google markets it as premium.
+`Google · Gemini 3 Pro Image` may appear as **Premium · manual only** only if it meets the stage-two improvement rule and its configuration enforces `automatic_sweep_eligible=false`. It should never become the automatic default merely because Google markets it as premium.
 
 Changing the dropdown applies only to future generation attempts. Existing artwork is not regenerated and never loses its provider, model, prompt-template, source-revision, usage, safety, or cost provenance. No dropdown option may be enabled without a current credential-health check and a reviewed lifecycle date.
 
@@ -475,13 +480,13 @@ Re-run the relevant evaluation when:
 
 ## Decision summary
 
-**Documented:** GPT Image 2 and the three current Gemini 3.x image models are the credible stable/GA first-party candidates that pass the initial product screen. They support suitable portrait output, standard server-side authentication, text-only input, and current commercial APIs. GPT Image 2 has the strongest version pin. Google Flash has the stronger published lifecycle among Google's balanced/economy choices. Lite is cheapest and fastest but short-term. Pro is costly relative to the $5 ceiling.
+**Documented:** GPT Image 2 and the three current Gemini 3.x image models are the credible stable/GA first-party candidates that pass the initial product screen. They support suitable portrait output, standard server-side authentication, text-only input, and current commercial APIs. GPT Image 2 has the strongest version pin. Google Flash has the stronger published lifecycle among Google's balanced/economy choices. Lite has the lowest published image-output cost and is positioned as fastest but is short-term. Pro has mandatory high thinking and a published image-output floor already close to the $5 ceiling at 30 images.
 
 **Inference:** GPT Image 2 is the best temporary implementation default; Gemini Flash is the safest likely Google production option; Lite can replace it if the blind quality difference is small; Pro belongs only as a measured premium exception.
 
 **Proposed decision:** Bake off all four, then ship two entries—one OpenAI and one Google—with a third premium/economy variant only if the explicit score rule earns it. Never route silently, never send real photos, and preserve raw artwork plus complete provider/model/source provenance.
 
-**Still unknown until tested:** Arun's preferred output, real endpoint latency, actual custom-size GPT Image 2 cost, exact returned Flash Lite dimensions, safety-block rate for journal-like synthetic themes, and whether either Google economy model is consistent enough to replace Flash.
+**Still unknown until tested:** Arun's preferred output, real endpoint latency, actual custom-size GPT Image 2 billed cost, all-in Gemini thinking/text-output cost, exact returned Flash Lite dimensions, safety-block rate for journal-like synthetic themes, and whether either Google economy model is consistent enough to replace Flash.
 
 ## Primary source register
 
@@ -492,6 +497,7 @@ All links below were reviewed as first-party sources on 2026-08-12.
 - [Current model catalog](https://developers.openai.com/api/docs/models/all)
 - [GPT Image 2 model page and snapshot](https://developers.openai.com/api/docs/models/gpt-image-2)
 - [Image generation sizes, formats, pricing, latency, and safety](https://developers.openai.com/api/docs/guides/image-generation)
+- [OpenAI Services Agreement, including customer ownership of output](https://openai.com/policies/services-agreement/)
 - [API training, retention, endpoint state, ZDR eligibility, and residency controls](https://developers.openai.com/api/docs/guides/your-data)
 - [C2PA and SynthID in OpenAI-generated images](https://help.openai.com/en/articles/8912793-c2pa-and-synthid-in-openai-generated-images)
 - [API key safety](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety)
@@ -499,10 +505,11 @@ All links below were reviewed as first-party sources on 2026-08-12.
 
 ### Google
 
-- [Gemini image generation model and size guide](https://ai.google.dev/gemini-api/docs/image-generation)
-- [Gemini 3.1 Flash Lite Image](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite-image)
-- [Gemini 3.1 Flash Image](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-image)
-- [Gemini 3 Pro Image](https://ai.google.dev/gemini-api/docs/models/gemini-3-pro-image)
+- [Cloud Agent Platform image generation guide and API configuration](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/capabilities/image-generation)
+- [Cloud Gemini 3.1 Flash Lite Image](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/3-1-flash-lite-image)
+- [Cloud Gemini 3.1 Flash Image](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/3-1-flash-image)
+- [Cloud Gemini 3 Pro Image](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/3-pro-image)
+- [Cloud thinking levels and defaults](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/thinking)
 - [Google Cloud generative AI pricing](https://cloud.google.com/gemini-enterprise-agent-platform/generative-ai/pricing)
 - [Model versions and lifecycle](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/model-versions)
 - [Zero-data-retention behavior](https://docs.cloud.google.com/gemini-enterprise-agent-platform/resources/zero-data-retention)
@@ -519,3 +526,4 @@ All links below were reviewed as first-party sources on 2026-08-12.
 - [Ideogram API terms](https://ideogram.ai/legal/api-tos)
 - [Adobe Firefly API](https://developer.adobe.com/firefly-services/docs/firefly-api/), [getting started](https://developer.adobe.com/firefly-services/docs/guides/get-started), and [generative-AI approach](https://www.adobe.com/ai/overview/firefly/gen-ai-approach.html)
 - [Amazon Bedrock security/privacy](https://aws.amazon.com/bedrock/security-privacy-responsible-ai/) and [Nova Canvas lifecycle](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-amazon-nova-canvas.html)
+- [xAI Grok Imagine Image](https://docs.x.ai/developers/models/grok-imagine-image), [generation aspect ratios](https://docs.x.ai/developers/model-capabilities/images/generation), and [Enterprise Terms](https://x.ai/legal/terms-of-service-enterprise)

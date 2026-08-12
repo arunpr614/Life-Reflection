@@ -7,11 +7,11 @@ Existing recovery decision: encrypted Restic repository in Backblaze B2
 
 ## Decision summary
 
-**Recommendation:** launch with encrypted media on the existing Hetzner root disk, capped at **10 GB**, for **$0 incremental monthly cost**. Build against a filesystem/object-storage abstraction from the first commit. Begin migration work at 7 GB and move the live media store to **Cloudflare R2 Standard** before 9 GB or before the server falls below 15 GB free.
+**Recommendation:** launch with encrypted media on the existing Hetzner root disk, with authoritative/root-resident media capped at **10 GB**, for **$0 incremental monthly cost**. Build against a filesystem/object-storage abstraction from the first commit. Begin migration planning at 7 GB root-resident media use or 18 GB host free, begin verified copy and dual-write no later than 8 GB root-resident media use or 15 GB host free, and complete cutover before 10 GB root-resident media use or 12 GB host free. The recommended target, still subject to product-owner approval, is **Cloudflare R2 Standard in the EU jurisdiction**.
 
-R2 Standard is not the absolute cheapest metered object store. Backblaze B2 is cheaper by roughly $0.12/month at 25 GB, $0.32 at 50 GB, $0.72 at 100 GB, and $1.93 at 250 GB. R2 is the better recommended scale target because the selected encrypted backup is already in B2. Keeping live media in R2 and recovery copies in B2 avoids one provider/account/region being both the primary and the backup. The premium is small at this product's expected scale.
+R2 Standard is not the absolute cheapest metered object store once the live collection grows beyond roughly 19 GB, even if the Restic repository has already consumed B2's account-wide free allowance. If that allowance is still available, B2 is cheaper by roughly $0.12/month at 25 GB, $0.32 at 50 GB, $0.72 at 100 GB, and $1.93 at 250 GB. If the allowance is already consumed, those differences are roughly $0.05, $0.25, $0.66, and $1.86. R2 is nevertheless the better recommended scale target because the selected encrypted backup is already in B2. Keeping live media in R2 and recovery copies in B2 avoids one provider/account/region being both the primary and the backup. The premium is small at this product's expected scale, and R2 is actually cheaper through roughly the first 19 GB when B2's free allowance is unavailable.
 
-If minimizing the invoice is valued above that correlated-risk boundary, a **separate private B2 live-media bucket with separate application keys** is the cheapest credible scale path. It must not be the Restic repository, must not share its credentials, and must not be treated as its own backup. A B2 provider, account, billing, or regional incident could still affect both buckets.
+If minimizing the invoice is valued above that correlated-risk boundary, a **separate private B2 live-media bucket with separate application keys** becomes the cheapest credible scale path above roughly 19 GB. It must not be the Restic repository, must not share its credentials, and must not be treated as its own backup. A B2 provider, account, billing, or regional incident could still affect both buckets.
 
 Do not use R2 Infrequent Access for live images. Its free tier does not apply, reads incur retrieval fees, and Cloudflare rounds billable request classes to million-request units. A continuously written and read one-user archive can therefore incur about $9.90 in request-class charges before storage and retrieval.
 
@@ -22,7 +22,7 @@ Do not use Hetzner Storage Box as the live filesystem. Its price is attractive a
 ### Product constraints
 
 - Strictly one user; no public links or sharing.
-- Telegram accepts an unlimited number of images, but each image is at most 20 MB.
+- Life in Days has no application-level image-count limit, but each image is at most 20 MB and ingestion remains subject to capacity, safety, and upstream API limits.
 - Preserve the exact bytes received as the Original; never silently downsample or delete an Original.
 - Generate web thumbnails locally. Strip metadata from thumbnails while preserving the untouched Original.
 - Real photos and their metadata must never be sent to an AI provider.
@@ -61,7 +61,7 @@ The estimates below are planning models, not quotes. Prices are provider-publish
 
 `—` means the option violates the recommended 10 GB root-disk quota. Dollar and euro values should not be added together; both are shown only where Hetzner publishes both.
 
-| Live media | Existing root disk | Hetzner Cloud Volume | Hetzner Storage Box BX11 | Hetzner Object Storage | Backblaze B2 | Cloudflare R2 Standard | Cloudflare R2 IA | Bunny Storage |
+| Live media | Existing root disk | Hetzner Cloud Volume | Hetzner Storage Box BX11 | Hetzner Object Storage | Backblaze B2 if free allowance remains | Cloudflare R2 Standard | Cloudflare R2 IA | Bunny Storage |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 10 GB | $0 | $0.50 / €0.44 | $4.00 / €3.20 | $5.99 / €4.99 | $0.00 | $0.00 | $10.01 | $1.00 |
 | 25 GB | — | $1.25 / €1.10 | $4.00 / €3.20 | $5.99 / €4.99 | $0.10 | $0.23 | $10.18 | $1.00 |
@@ -71,6 +71,8 @@ The estimates below are planning models, not quotes. Prices are provider-publish
 | 500 GB | — | $25.00 / €22.00 | $4.00 / €3.20 | $5.99 / €4.99 | $3.41 | $7.35 | $15.40 | $5.00 |
 
 The table does not include the existing server bill or the separate backup bytes. Restic repository size will not equal live-store size exactly because it is encrypted, deduplicated, versioned, and retained across snapshots.
+
+The displayed B2 column assumes its account-wide 10 GB allowance remains after Restic usage. If the backup repository has consumed that allowance, the incremental B2 live-media costs are approximately **$0.07 at 10 GB, $0.17 at 25 GB, $0.35 at 50 GB, $0.70 at 100 GB, $1.74 at 250 GB, and $3.48 at 500 GB**. The R2 column likewise assumes its own account-wide allowances are otherwise unused. Actual account-wide usage must be read before migration approval; free capacity may never be counted twice.
 
 At 100% monthly reads instead of 10%, B2 and R2 Standard remain $0 for modeled egress/retrieval, while R2 IA adds another $0.009 per stored GB relative to the table. At more than three times average B2 storage downloaded directly outside a Bandwidth Alliance path, B2 charges $0.01/GB for the excess.
 
@@ -175,13 +177,13 @@ At 100% monthly reads instead of 10%, B2 and R2 Standard remain $0 for modeled e
 
 **Inferences**
 
-- This is the cheapest credible metered object store in the modeled range.
+- Above the account-specific break-even, this is the cheapest credible metered object store in the modeled range. When Restic has consumed B2's shared free allowance, R2 is cheaper below roughly 19 GB.
 - Application-proxy delivery remains within free egress at the one-user read rate and keeps the storage credential away from the browser.
 - Using B2 for both live and Restic storage creates a correlated provider/account/region risk even with separate buckets.
 
 **Fit**
 
-- Cost-minimum alternative, not the primary recommendation.
+- Cost-minimum alternative above the account-specific break-even, not the primary recommendation.
 - If selected, create two clearly separate buckets and credentials:
   - `life-in-days-live-media`: application key restricted to this bucket and only the operations the application needs.
   - `life-in-days-restic-backup`: a different key used only by Restic; the application process must not possess it.
@@ -198,7 +200,7 @@ At 100% monthly reads instead of 10%, B2 and R2 Standard remain $0 for modeled e
 - R2 encrypts object data and metadata at rest automatically with Cloudflare-managed AES-256 keys; TLS protects transit.
 - Standard has no retrieval charge or minimum storage duration and publishes eleven-nines durability.
 - Buckets are not public by default. R2 supports presigned URLs, Workers, custom domains, and protecting a custom-domain bucket with Cloudflare Access.
-- An EU jurisdiction can guarantee storage and processing within the EU; a mere location hint is best-effort rather than a residency guarantee.
+- An EU jurisdiction can guarantee storage and processing within the EU; a mere location hint is best-effort rather than a residency guarantee. Jurisdiction is selected when the bucket is created and cannot be changed afterward.
 
 **Inferences**
 
@@ -208,7 +210,7 @@ At 100% monthly reads instead of 10%, B2 and R2 Standard remain $0 for modeled e
 
 **Fit**
 
-- Recommended object-store migration target.
+- Recommended object-store migration target, created explicitly in the EU jurisdiction rather than with only a best-effort location hint.
 - Use Standard, not Infrequent Access.
 - Keep the bucket private and let the Life in Days server fetch encrypted objects. This avoids putting the decryption key in a Worker or browser.
 - If a future direct R2 custom-domain path is used, protect it with Access and disable every alternative public path, especially `r2.dev`.
@@ -265,17 +267,19 @@ The database should store a stable Media Item identity, not a provider URL:
 
 Do not place dates, names, journal text, Telegram IDs, filenames, or plaintext checksums in bucket names, object keys, or provider metadata. Use random opaque object keys. This also prevents changing a Journal Date from requiring an object rename.
 
-Implement a small backend contract from the outset: `put`, `getStream`, `head`, `delete`, and `healthCheck`. MVP uses `FilesystemMediaStore`; R2 and B2 use an `S3MediaStore`. This makes the later move a verified data migration instead of an application rewrite.
+Implement a small backend contract from the outset: `put`, `getStream`, `head`, `listInventory`, `delete`, and `healthCheck`. `listInventory` must support complete paginated enumeration and fail closed on partial listing. MVP uses `FilesystemMediaStore`; R2 and B2 use an `S3MediaStore`. This makes the later move a verified data migration instead of an application rewrite and gives backup reconciliation an explicit complete-inventory contract.
 
 ### Capture and derivation flow
 
-1. Telegram bytes land in a root-only temporary file with a 20 MB hard limit.
+1. Telegram bytes land in a bounded, service-private memory-backed temporary area with a 20 MB hard input limit. Plaintext must not be written to the ordinary root filesystem.
 2. Validate the actual file type, decode safely, calculate a plaintext duplicate checksum, and record dimensions.
 3. Preserve the exact received bytes as the Original.
 4. Generate thumbnails locally in a resource-limited process; orient them for display and strip EXIF/IPTC/XMP metadata.
 5. Encrypt the Original and Thumbnail separately with authenticated application-level encryption. Open-source cryptography has no provider fee; a per-object nonce and versioned envelope are mandatory.
 6. Store ciphertext under opaque keys, verify stored length/checksum, commit metadata, then acknowledge Telegram.
-7. Remove temporary plaintext immediately after durable live storage and the backup job has accepted the item.
+7. Remove temporary plaintext immediately after the encrypted Original, encrypted Thumbnail, and their database metadata have committed durably. The backup job consumes ciphertext rather than extending plaintext lifetime. Clean abandoned memory-backed temporary files at service startup and after every failed capture.
+
+The memory-backed path is bounded rather than an invitation to consume the host. Production must refuse to start if unencrypted swap is active, recheck that invariant in System Health, enforce an aggregate staging/cgroup memory limit, allow only one media decode/derivation job at a time on the 4 GB host, and return explicit temporary backpressure when the bound is unavailable. A future encrypted swap configuration may be accepted only after its recovery-key and boot behavior are documented and tested.
 
 The application encryption key remains readable only by the Life in Days service account on the Hetzner server; keep an offline recovery copy in the password manager. This is not zero-knowledge encryption because the running app can decrypt files. It does mean an object-storage operator or exposed bucket sees ciphertext rather than usable personal photos.
 
@@ -310,7 +314,9 @@ The live store and the backup answer different questions:
 - Live store: low-latency current data used by the application.
 - Restic/B2: encrypted point-in-time recovery after deletion, corruption, server loss, or live-provider loss.
 
-For root disk or Cloud Volume, include the complete encrypted media tree in every scheduled Restic snapshot. For an object-store live backend, expose the complete immutable object keyspace to the Restic job with stable size/time metadata, not only the newly captured staging files. Otherwise, retention pruning can eventually remove the only backup of an old object after its staging copy disappears.
+For root disk or Cloud Volume, include the complete encrypted media tree in every scheduled Restic snapshot. Restic normally reads a filesystem-like source; merely naming an R2 or B2 destination does not make a remote object store a valid complete backup source. Before object-store cutover, implement and test a read-only, complete remote-source path—for example, a rigorously validated read-only mount or inventory-driven streaming adapter—that enumerates every opaque live object, follows pagination, exposes stable size/time metadata, and aborts the entire snapshot on any partial listing or read error. Backing up only newly captured staging files is forbidden because retention pruning can eventually remove the only recovery copy of an older object.
+
+The exact remote-source mechanism remains an implementation ADR and a pre-cutover gate, not a claim that an untested mount is reliable. A full inventory reconciliation and restore proof must pass at the expected collection size before any local authoritative copy is evicted.
 
 Before evicting local media during migration, prove through a restore test that:
 
@@ -324,23 +330,23 @@ If B2 is selected as the live store, use separate live and Restic buckets and di
 
 ## Capacity controls and migration thresholds
 
-### MVP disk watermarks
+### Root-resident MVP disk watermarks
 
-- **10 GB:** hard application media quota.
-- **7 GB media used or 18 GB host free, whichever comes first:** warning and start object-store migration work.
-- **8 GB media used or 15 GB host free:** provision the target and begin verified copy/dual-write.
-- **9 GB media used:** new writes should already use the object store; finish backfill and cutover.
-- **12 GB host free or 10 GB media used:** emergency hard stop for new media. Continue journal text, reads, backup, export, and deletion recovery. Return a clear Telegram failure; never drop the update silently.
+- **10 GB:** hard quota for authoritative/root-resident media while the filesystem backend is active or migration remains incomplete. It is not a post-cutover cap on the total object-store archive.
+- **7 GB root-resident media used or 18 GB host free, whichever comes first:** warning and start object-store migration work.
+- **8 GB root-resident media used or 15 GB host free:** provision the target and begin verified copy/dual-write.
+- **9 GB root-resident media used or 13 GB host free:** new writes must use the object store; finish backfill, full remote-to-Restic backup proof, and cutover.
+- **12 GB host free, or 10 GB root-resident media while migration is incomplete:** emergency hard stop for new media. Continue journal text, reads, backup, export, and deletion recovery. Return a clear Telegram failure; never drop the update silently.
 
-The free-space checks use actual filesystem bytes, not provider dashboard estimates. Alert on projected exhaustion as well as present usage; a burst of 20 MB images can cross a watermark quickly.
+After verified object-store cutover and eviction of old root copies, total archive media may exceed 10 GB; the 12 GB host-free emergency stop remains globally active because database, logging, updates, and memory-backed processing still need local space. The free-space checks use actual filesystem bytes, not provider dashboard estimates. Alert on projected exhaustion as well as present usage; a burst of 20 MB images can cross a watermark quickly.
 
 ### Safe migration sequence
 
 1. Create the private target bucket and least-privilege server credential.
-2. Enable provider encryption and retain application-level encryption.
+2. For R2, create the bucket in the EU jurisdiction. Enable provider encryption and retain application-level encryption.
 3. Start dual-write for new encrypted objects, with the root copy still authoritative.
 4. Copy old ciphertext by opaque key; verify byte length and checksum at destination.
-5. Run a full count/size/hash reconciliation and a restore test.
+5. Run a full count/size/hash reconciliation and prove the complete object-store-to-Restic snapshot and restore path, including fail-closed behavior on a deliberately interrupted listing.
 6. Atomically change database backend pointers; keep a reversible migration ledger.
 7. Observe reads from the target for at least seven days.
 8. Only then remove old root copies that have both a verified live object and a verified Restic recovery copy.
@@ -356,7 +362,8 @@ Is live media below 7 GB and host free space at least 18 GB?
    ├─ Is separate live/backup provider risk the priority?
    │  └─ Yes → R2 Standard live + B2 Restic backup.
    └─ Is the absolute lowest metered bill the priority?
-      └─ Yes → Separate B2 live bucket/key + separate B2 Restic bucket/key;
+      └─ Yes, and live media is above the current account-specific break-even
+             → Separate B2 live bucket/key + separate B2 Restic bucket/key;
                explicitly accept correlated B2 risk.
 
 At approximately 250 GB → refresh real bills, latency, restore time, and growth.
@@ -372,25 +379,25 @@ At approximately 1 TB → re-run the evaluation; do not switch to Storage Box
 | Launch to 7 GB | Existing root disk | $0 | Simplest, fastest, preserves cash; B2 recovery covers server loss. |
 | 7–10 GB | Migrate and dual-write | R2 still within/near free tier | Complete migration before capacity becomes an incident. |
 | 10–250 GB | R2 Standard | $0 to about $3.60/month | Private S3, free egress, automatic at-rest encryption, B2-independent recovery. |
-| Cost-minimum variant | B2 live bucket | $0 to about $1.67/month, plus backup account usage | Cheapest, but same provider as backup. |
+| Cost-minimum variant above account-specific break-even | B2 live bucket | About $0–$1.67 if its free allowance remains, or $0.07–$1.74 if Restic has consumed it, plus backup usage | Cheapest only above the measured break-even; same provider as backup. |
 | 250 GB | Re-evaluation checkpoint | provider quote | Validate actual image growth, B2 backup size, latency from Hetzner Helsinki, and restore duration. |
 | 400–500 GB | Compare R2/B2/Hetzner Object again | about $3.41–$7.35/month | Hetzner's 1 TB base bundle begins to beat R2 list storage cost. |
 
 ## Final recommendation and unresolved decision
 
-Adopt now:
+Report recommendation, subject to the provider decision below:
 
-1. Existing root disk, 10 GB quota, strict watermarks, and application-level authenticated encryption.
-2. Local thumbnail generation; Originals untouched; no real-photo AI transfer.
+1. Existing root disk, 10 GB root-resident quota, strict watermarks, and application-level authenticated encryption.
+2. Memory-backed plaintext staging, local thumbnail generation, immediate encrypted commit, and immediate plaintext cleanup; Originals otherwise untouched and never sent to AI.
 3. Same-origin authenticated application proxy with shared-cache bypass.
 4. Storage-neutral backend metadata and API from day one.
 5. Complete encrypted Restic snapshots in the separate B2 backup repository.
-6. R2 Standard as the planned scale target, with migration starting at 7 GB.
+6. Begin provider-neutral migration planning at 7 GB root-resident media. Require a tested complete remote-to-Restic backup path before either object-store target may cut over.
 
 One product-owner decision remains:
 
 - **Recommended safety/price balance:** R2 Standard live + B2 backup.
-- **Absolute lowest bill:** B2 live + B2 backup in separate buckets/keys, accepting correlated provider risk.
+- **Lowest bill above the account-specific break-even:** B2 live + B2 backup in separate buckets/keys, accepting correlated provider risk. R2 is cheaper at very small scale if B2's shared free allowance has already been consumed.
 
 No Hetzner Volume should be pre-purchased. It is a fallback if the filesystem implementation is materially simpler than the object-storage adapter when the threshold is reached, not the default plan.
 

@@ -307,7 +307,7 @@ Sources:
 
 - Encrypt journal content and source images at rest under an application-held key, with the recovery key stored outside the server in Arun's password manager. This protects copied disks and backups, not a compromised running root account.
 - Never describe Life in Days as end-to-end encrypted or zero-knowledge: the running server must decrypt data for thumbnails/search, journal text may go to the selected AI providers, and Telegram, VoiceNotes, Hetzner, and Cloudflare remain infrastructure processors.
-- Start with a 10 GB Life in Days media budget on the existing disk for zero incremental cost. Warn early, migrate media to a 50 GB Volume before free space falls below 12 GB, and keep Restic/B2 backup independent because server Backups exclude the Volume.
+- The round-three provisional plan was to start with a 10 GB root-resident Life in Days media budget for zero incremental cost and move to a 50 GB Volume before free space fell below 12 GB. The detailed storage report below supersedes the Volume target: it keeps the same zero-cost launch and safety reserve but recommends an object-store migration path, still awaiting the product-owner choice.
 - If free space reaches an emergency boundary, pause nonessential thumbnail/artwork work and reject new media with a clear Telegram failure; never silently delete or downsample originals.
 
 Sources:
@@ -359,3 +359,11 @@ Sources:
 - Do not claim end-to-end encryption while the server or an AI provider can read journal content.
 - Document VoiceNotes, Telegram, Cloudflare, Hetzner, and any AI provider as distinct data processors and trust boundaries.
 - Make export, deletion, backup, and restoration product requirements rather than operational afterthoughts.
+
+## Detailed evaluation reports
+
+These reports supersede the earlier preliminary model and live-storage estimates where their assumptions differ. Their recommendations remain provisional until the remaining product-owner decisions and synthetic evaluations are complete.
+
+- [AI text model evaluation](AI-TEXT-MODEL-EVALUATION.md): provisional OpenAI and Google candidates, complete cost/privacy/lifecycle comparison, and a journal-fidelity bake-off with critical-invention gates.
+- [AI artwork model evaluation](AI-ARTWORK-MODEL-EVALUATION.md): current first-party provider screen, all-in-cost caveats, permanent-retention/privacy gates, and a blind two-stage visual bake-off.
+- [Private media storage evaluation](MEDIA-STORAGE-EVALUATION.md): launch on the existing disk at zero incremental cost, then prefer private R2 Standard in the EU jurisdiction over coupling live media and Restic backup to B2; a Hetzner Volume remains a filesystem-simplicity fallback rather than the cost recommendation.

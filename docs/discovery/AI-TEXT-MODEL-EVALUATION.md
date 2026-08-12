@@ -9,7 +9,7 @@
 
 The best cost-to-capability starting point is **OpenAI GPT-5.6 Luna (`gpt-5.6-luna`)**, subject to the journal-specific bake-off below. At the expected workload it costs approximately **$0.04–$0.08 per month** for one generation per day. It supports strict structured output and can run without reasoning, and it costs essentially the same as the older GPT-5.4 Nano while being the current OpenAI economy model. GPT-4o Mini is slightly cheaper at **$0.02–$0.05 per month**, but the absolute saving is only a few cents and its published snapshot is from 2024; it belongs in the bake-off as a cost floor, not as an automatic default.
 
-The strongest low-cost alternative is **Google Cloud Gemini 3.5 Flash-Lite (`gemini-3.5-flash-lite`)**. Its modeled global-endpoint cost is approximately **$0.06–$0.13 per month**, or about 10% more on a supported regional endpoint. Its published GA lifecycle extends to at least 2027-07-21, it supports structured output, and its thinking level can be kept at `minimal`.
+The strongest low-cost alternative is **Google Cloud Gemini 3.5 Flash-Lite (`gemini-3.5-flash-lite`)**. Its modeled global-endpoint cost is approximately **$0.06–$0.13 per month**, or about 10% more on a supported non-global endpoint such as its EU multi-region endpoint. Its published GA lifecycle extends to at least 2027-07-21, it supports structured output, and its thinking level can be kept at `minimal`.
 
 Cost is not the deciding variable here: every sensible economy candidate is well below $1/month. The deciding variable is whether a model can summarize intimate source text faithfully without inventing events, turning the entry into advice, or flattening the author's voice. No provider publishes a benchmark that measures this. Therefore:
 
@@ -45,8 +45,8 @@ The source journal remains canonical. All four fields are derived artifacts, ind
 - **Lower scenario:** 3,000 input tokens + 500 output tokens per day.
 - **Upper scenario:** 10,000 input tokens + 500 output tokens per day.
 - 30-day month.
-- Standard synchronous, uncached list prices; no batch discounts, caching discounts, committed spend, taxes, or currency conversion.
-- At this tiny volume, prompt caching and batch processing save pennies at most and add scheduling or retention complexity. They are not MVP requirements.
+- Standard synchronous, uncached list prices; no batch discounts, cache-read discounts, cache-write premiums, committed spend, taxes, or currency conversion.
+- At this tiny volume, prompt caching and batch processing save pennies at most and add scheduling or retention complexity. Production must opt out of provider prompt caching wherever the selected API permits it. GPT-5.6 requests use `prompt_cache_options.mode: "explicit"` with no breakpoints, which disables implicit caching; the dedicated Google Cloud project has its default 24-hour in-memory cache disabled. Older benchmark models that cannot disable automatic caching must disclose that limitation and use provider-reported usage for actual cost.
 
 The monthly formula is `0.09 × input $/MTok + 0.015 × output $/MTok` for the lower scenario and `0.30 × input $/MTok + 0.015 × output $/MTok` for the upper scenario.
 
@@ -63,14 +63,15 @@ OpenAI's current catalog positions Luna for cost-sensitive/high-volume work, Ter
 | GPT-4o Mini | Pin `gpt-4o-mini-2024-07-18` | $0.15 / $0.60 | 128K / 16K | Yes | No reasoning step | **$0.0225–$0.054** | Cheapest non-deprecated OpenAI candidate; cost-floor test only |
 | GPT-5.6 Luna | `gpt-5.6-luna`; no separate dated snapshot is published on its current page | $0.20 / $1.20 | 1.05M / 128K | Yes | `none`, `low`, `medium`, `high`, `xhigh`, `max` | **$0.036–$0.078** | Best OpenAI economy candidate |
 | GPT-5.4 Nano | `gpt-5.4-nano-2026-03-17` | $0.20 / $1.25 | 400K / 128K | Yes | `none`, `low`, `medium`, `high`, `xhigh` | $0.0368–$0.0788 | Stable snapshot, but superseded economically by Luna |
-| GPT-5 Mini | `gpt-5-mini-2025-08-07` | $0.25 / $2.00 | 400K / 128K | Yes | Model-specific reasoning controls | $0.0525–$0.105 | Older viable model; no cost or lifecycle reason to prefer it |
 | GPT-4.1 Mini | Pin `gpt-4.1-mini-2025-04-14` | $0.40 / $1.60 | 1,047,576 / 32K | Yes | No reasoning step | $0.060–$0.144 | Stable, but Luna is newer and less expensive at both token rates |
 | GPT-5.4 Mini | `gpt-5.4-mini-2026-03-17` | $0.75 / $4.50 | 400K / 128K | Yes | `none`, `low`, `medium`, `high`, `xhigh` | $0.135–$0.2925 | Useful fallback, but not a distinct MVP need |
 | GPT-5.6 Terra | `gpt-5.6-terra`; no separate dated snapshot is published on its current page | $2.00 / $12.00 | 1.05M / 128K | Yes | `none` through `max` | **$0.36–$0.78** | Quality challenger; still inexpensive in absolute terms |
 | GPT-5.4 | `gpt-5.4-2026-03-05` | $2.50 / $15.00 | 1.05M / 128K | Yes | Model-specific reasoning controls | $0.45–$0.975 | Superseded for this selection by the 5.6 family |
 | GPT-5.6 Sol | `gpt-5.6-sol`; no separate dated snapshot is published on its current page | $5.00 / $30.00 | 1.05M / 128K | Yes | `none` through `max` | $0.90–$1.95 | Flagship overkill unless the bake-off proves a unique fidelity gain |
 
-**Version-stability implication.** The dated GPT-4o Mini, GPT-4.1 Mini, GPT-5.4, and GPT-5 Mini snapshots can be pinned. The reviewed GPT-5.6 pages expose canonical IDs but no dated snapshots. If a 5.6 model is selected, persist the API-returned model identifier, prompt version, schema version, and evaluation version with each derived artifact. Never change the configured model without an explicit re-evaluation and settings migration.
+**Version-stability implication.** The dated GPT-4o Mini, GPT-4.1 Mini, and GPT-5.4 snapshots can be pinned. The reviewed GPT-5.6 pages expose canonical IDs but no dated snapshots. If a 5.6 model is selected, persist the API-returned model identifier, prompt version, schema version, and evaluation version with each derived artifact. Never change the configured model without an explicit re-evaluation and settings migration.
+
+**Prompt-cache implication.** GPT-5.6 uses implicit prompt caching by default and bills new cache writes at 1.25 times the uncached input rate. Life in Days should send `prompt_cache_options.mode: "explicit"` with no explicit breakpoints, which OpenAI documents as disabling both implicit caching and cache writes. This preserves the uncached cost model and avoids placing intimate journal prefixes in a reusable provider cache. Earlier OpenAI benchmark models do not accept that control; record `cached_tokens`, `cache_write_tokens` where returned, the retention setting, and actual billed cost rather than pretending every test is uncached. Source: [OpenAI prompt caching](https://developers.openai.com/api/docs/guides/prompt-caching).
 
 **Rate-limit implication.** The Luna and GPT-5.4 model pages currently show entry-tier limits in the hundreds of requests per minute and hundreds of thousands of tokens per minute. One daily request is several orders of magnitude below them. Limits remain account/tier dependent, so the application must still handle `429` and `Retry-After`; it must not encode a catalog number as an availability guarantee. OpenAI documents its tier model in its [rate-limit guide](https://platform.openai.com/docs/guides/rate-limits).
 
@@ -83,7 +84,7 @@ The evaluated surface is the paid Google Cloud generative API, documented under 
 | Gemini 3.1 Flash-Lite | GA; retirement 2027-05-07 or later | $0.25 / $1.50 | 1,048,576 / 65,536 | Yes | `minimal`, `low`, `medium`, `high`; default `minimal` | $0.045–$0.0975 | Cheapest stable Google candidate; newer 3.5 is only pennies more |
 | Gemini 3.5 Flash-Lite | GA; retirement 2027-07-21 or later | $0.30 / $2.50 | 1,048,576 / 65,536 | Yes | `minimal`, `low`, `medium`, `high`; default `minimal` | **$0.0645–$0.1275** | Best Google economy candidate |
 | Gemini 3.5 Flash | GA; retirement 2027-05-19 or later | $1.50 / $9.00 | 1,048,576 / 65,536 | Yes | `minimal`, `low`, `medium`, `high`; default `medium` | **$0.27–$0.585** | Quality challenger; force `minimal` for the baseline test |
-| Gemini 3.6 Flash | GA, short-term availability | $1.50 / $7.50 | 1,048,576 / 65,536 | Yes | `minimal`, `low`, `medium`, `high`; default `high` | $0.2475–$0.5625 | Exclude from MVP because short-term models may retire quickly |
+| Gemini 3.6 Flash | GA, short-term availability | $1.50 / $7.50 | 1,048,576 / 65,536 | Yes | `minimal`, `low`, `medium`, `high`; default `medium` | $0.2475–$0.5625 | Exclude from MVP because short-term models may retire quickly |
 
 Pricing is from Google's current [generative AI pricing table](https://cloud.google.com/gemini-enterprise-agent-platform/generative-ai/pricing). It states that supported non-global endpoints are priced 10% higher. For example, the Gemini 3.5 Flash-Lite range becomes about **$0.071–$0.140/month** on such an endpoint. The exact endpoint availability must be checked at deployment because model-region matrices change.
 
@@ -117,6 +118,7 @@ The official sources do not provide comparable end-to-end latency SLAs for ordin
 | Model/surface | Reason |
 |---|---|
 | [OpenAI GPT-5 Nano](https://developers.openai.com/api/docs/models/gpt-5-nano) | Its current official page marks it deprecated. A slightly lower list price does not justify new dependence on a deprecated model. |
+| [OpenAI GPT-5 Mini](https://developers.openai.com/api/docs/models/gpt-5-mini) | Its `gpt-5-mini-2025-08-07` snapshot is marked deprecated on the current official page. It must not be adopted for a new archive. |
 | [OpenAI GPT-4.1 Nano](https://developers.openai.com/api/docs/models/gpt-4.1-nano) | Its dated snapshot is marked deprecated on the current official page. |
 | Other older OpenAI general/reasoning families | Stable GPT-4.1, GPT-4o, and dedicated reasoning variants were screened. GPT-4o Mini and GPT-4.1 Mini bound the relevant older cost/capability range; larger or reasoning-first predecessors add cost without a distinct journal requirement. They can be reintroduced only if the selected candidates fail fidelity gates. |
 | OpenAI or Google preview models | Preview behavior, price, IDs, and retirement can change before a trustworthy archive's MVP stabilizes. |
@@ -134,8 +136,8 @@ The official sources do not provide comparable end-to-end latency SLAs for ordin
 
 | Provider | Training default | Provider retention relevant to this design | Residency | Lowest-state endpoint pattern |
 |---|---|---|---|---|
-| OpenAI API | API/business data is not used to train by default | Eligible API content may be retained in abuse-monitoring logs for up to 30 days. `/v1/responses` can retain application state by default; other tools/files have their own retention. Approved Zero Data Retention or Modified Abuse Monitoring changes the eligible-endpoint behavior. | OpenAI lists India storage residency, but not India processing; India residency requires eligible endpoints and approved Modified Abuse Monitoring or Zero Data Retention. Do not claim India-local processing. | Server-side `/v1/chat/completions`, no files/tools, no conversation history, and no provider-side storage requested. If Responses is used, set `store:false` and verify current model/endpoint eligibility. |
-| Google Cloud generative API | Google states it does not train/fine-tune on customer data without permission or instruction | Request-response logging is disabled by default. Abuse monitoring may retain suspicious prompts for up to 90 days; exceptions require approval. | Supported model pages list US/EU regional availability and data-residency controls. A regional endpoint costs more than global. No India-residency claim is made here. | Stateless server-side `generateContent`; request logging left disabled; no grounding, session service, cache, or file service. |
+| OpenAI API | API/business data is not used to train by default | Eligible API content may be retained in abuse-monitoring logs for up to 30 days. `/v1/responses` can retain application state by default; other tools/files have their own retention. Approved Zero Data Retention or Modified Abuse Monitoring changes the eligible-endpoint behavior. | OpenAI lists India storage residency, but not India processing; India residency requires eligible endpoints and approved Modified Abuse Monitoring or Zero Data Retention. Do not claim India-local processing. | Server-side `/v1/chat/completions`, no files/tools, no conversation history, and no provider-side storage requested. For GPT-5.6, explicitly disable implicit prompt caching; if Responses is used, also set `store:false` and verify current model/endpoint eligibility. |
+| Google Cloud generative API | Google states it does not train/fine-tune on customer data without permission or instruction | Request-response logging is disabled by default. Published Gemini models otherwise use project-isolated in-memory caching with a 24-hour TTL by default; disable it at project level. Abuse monitoring may retain suspicious prompts for up to 90 days; exceptions require approval. | Supported model pages list US/EU multi-region availability and data-residency controls. A non-global endpoint costs more than global. No India-residency claim is made here. | Stateless server-side `generateContent`; request logging left disabled; project cache explicitly disabled; no grounding, session service, explicit cache, or file service. |
 | Anthropic commercial API | Commercial/API inputs and outputs are not used for training by default unless the customer opts in or supplies feedback under the documented exceptions | Standard API input/output deletion target is 30 days. Anthropic documents up to 2 years for content flagged for policy enforcement and up to 7 years for associated safety-classifier scores. ZDR requires an approved agreement and applies only to covered products/features. | The first-party Claude API is global by default and offers US-only inference at a 1.1× price. The reviewed official material does not establish India residency. | Stateless Messages API call in a dedicated workspace; no files, prompt cache, or multi-turn provider history. |
 
 Sources: OpenAI's [API data controls matrix](https://developers.openai.com/api/docs/guides/your-data), [training policy](https://openai.com/policies/how-your-data-is-used-to-improve-model-performance/), and [data residency guide](https://developers.openai.com/api/docs/guides/data-residency); Google Cloud's [zero-data-retention overview](https://docs.cloud.google.com/gemini-enterprise-agent-platform/resources/zero-data-retention), [abuse monitoring policy](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/abuse-monitoring), and [data residency page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/resources/data-residency); Anthropic's [commercial retention policy](https://privacy.anthropic.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data), [commercial training policy](https://privacy.anthropic.com/en/articles/7996885-how-do-you-use-personal-data-in-model-training), and [ZDR scope](https://privacy.anthropic.com/en/articles/8956058-i-have-a-zero-data-retention-agreement-with-anthropic-what-products-does-it-apply-to).
@@ -144,14 +146,14 @@ Sources: OpenAI's [API data controls matrix](https://developers.openai.com/api/d
 
 1. Send only the normalized journal text and the minimum date/language hints required for the task. Do not send name, email, Telegram identity, VoiceNotes account ID, app database IDs, or photo metadata.
 2. Put an explicit instruction before the journal that text inside the journal is untrusted quoted content, not model instructions. This limits prompt-injection behavior from pasted or transcribed text.
-3. Use one stateless request. Never upload journals to provider file stores, assistants, vector stores, grounding/search, provider prompt caches, or persistent sessions in MVP.
+3. Use one stateless request. Never upload journals to provider file stores, assistants, vector stores, grounding/search, or persistent sessions in MVP. Disable GPT-5.6 implicit prompt caching and Google Cloud project caching as described above; if an older benchmark model cannot disable automatic in-memory caching, expose that as a measured privacy difference rather than claiming it is absent.
 4. Do not silently fall back to another provider. Fallback would disclose the journal to a provider the user did not select and make derived output provenance ambiguous.
-5. Keep source text and generated fields in Life in Days' own storage. Provider logs must not receive raw journal text, full responses, or secrets.
+5. Keep source text and generated fields in Life in Days' own storage. Life in Days application logs, infrastructure telemetry, and error reports must never contain raw journal text, full responses, or secrets. Standard providers may still retain eligible request/response content in their own abuse-monitoring systems for the periods documented above; the product must say so accurately.
 6. Make the settings screen accurately say which provider/model is active and link to that provider's commercial API privacy terms. Do not describe standard service as zero retention.
 
 ### Regional recommendation
 
-For a sensitive journal, Google Cloud's supported EU regional endpoint is worth testing despite the 10% price uplift; the absolute difference is fractions of a cent per day. OpenAI's India option offers storage residency rather than India-local model processing and has eligibility constraints, so it is not a direct equivalent. Residency is a privacy/contract choice, not a model-quality feature, and should not be silently changed after launch.
+For a sensitive journal, Google Cloud's supported EU multi-region endpoint is worth testing despite the 10% price uplift; the absolute difference is fractions of a cent per day. OpenAI's India option offers storage residency rather than India-local model processing and has eligibility constraints, so it is not a direct equivalent. Residency is a privacy/contract choice, not a model-quality feature, and should not be silently changed after launch.
 
 ## Authentication and keys to create
 
@@ -256,7 +258,7 @@ Each fixture needs a human-authored fact inventory and explicit “must not clai
 - Record provider, requested model, returned model, input/output/reasoning token counts, latency, HTTP status, retry count, refusal/safety status, and calculated list-price cost.
 - Do not use another candidate model as the sole judge. Automated schema and lexical/fact checks can assist, but Arun's blinded adjudication decides disputed fidelity.
 
-At 32 fixtures × 3 repeats, the six release candidates are roughly **$3.40 total** at 5,000 input + 500 output tokens per run using current global list prices. Adding Haiku 4.5 and Sonnet 5 is roughly another **$2.16**. Actual billing will vary by tokenizer and output length; this is a planning estimate, not a quote.
+At 32 fixtures × 3 repeats, the six release candidates are roughly **$3.40 total** at 5,000 input + 500 output tokens per run using current global list prices. Adding Haiku 4.5 and Sonnet 5 is roughly another **$2.16**, for about **$5.56 total**. Actual billing will vary by tokenizer, caching behavior for older candidates, and output length; this is a planning estimate, not a quote. A separate one-time evaluation budget has not yet been approved. Until Arun explicitly approves one, run the bake-off across billing months inside the existing $5 monthly application ceiling rather than exempting research spend silently.
 
 ### Output schema
 
@@ -314,7 +316,7 @@ The provisional default wins only if it passes every hard gate and reaches a wei
 - Join the day's eligible journal source items in a deterministic order with clear source boundaries and timestamps.
 - Normalize encoding and reject malformed text; never silently drop an item.
 - Enforce an application input ceiling. The expected 10K tokens is far below every candidate context window, so truncation is unnecessary; if a future day exceeds the ceiling, segment visibly or require review rather than silently cutting the end.
-- Send one stateless request with the frozen system prompt and strict schema.
+- Send one stateless request with the frozen system prompt and strict schema. Disable selected-provider prompt caching using the verified control for that model/project; fail configuration health if the chosen production privacy setting cannot be confirmed.
 - Add no photo, Telegram, VoiceNotes-account, or internal database metadata.
 - Use a content hash plus generation purpose, model, and prompt version as the idempotency key inside Life in Days.
 
@@ -352,7 +354,7 @@ An async job with a 30-second request timeout is a reasonable starting implement
 1. Implement provider adapters for OpenAI and Google Cloud behind the same typed schema; keep provider/model selection as server-controlled settings.
 2. Provision only test credentials with low budgets and run the 32-fixture bake-off.
 3. If GPT-5.6 Luna passes, make it the default because it has the lowest combined integration/cost case, especially if the artwork report also selects OpenAI. This is provisional—not a quality conclusion made from a catalog page.
-4. Offer Gemini 3.5 Flash-Lite as the alternative if it passes. Prefer a supported EU regional endpoint for privacy if its measured latency is acceptable; accept the negligible 10% price uplift.
+4. Offer Gemini 3.5 Flash-Lite as the alternative if it passes. Prefer a supported EU multi-region endpoint for privacy if its measured latency is acceptable; accept the negligible 10% price uplift.
 5. Expose Terra and Gemini 3.5 Flash only when their measured fidelity improvement meets the selection rule. Keep Anthropic external unless it wins by enough to justify another provider.
 6. Re-run a smaller regression suite before any model ID, provider endpoint, prompt, reasoning level, or schema change. Review Google's published retirement dates quarterly and all provider pricing/retention pages before deployment.
 

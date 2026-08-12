@@ -1,6 +1,6 @@
 # Requirements under discovery
 
-Updated: 2026-08-12 after grilling round 3
+Updated: 2026-08-12 after grilling round 3 and independent research-report QA
 
 Status: partially decided. No implementation is authorized until the interview frontier is empty and Arun confirms shared understanding.
 
@@ -112,8 +112,8 @@ Status: partially decided. No implementation is authorized until the interview f
 - The existing-server cost, independent Backblaze storage, and any later live-media storage are tracked separately from the AI ceiling.
 - Journal data and media are encrypted at rest using application-controlled encryption with no additional service subscription. Runtime keys are server secrets and recovery material is held outside the server.
 - Encryption at rest protects copied storage and backups, not a compromised running server; Life in Days is not represented as end-to-end encrypted or zero-knowledge.
-- The 20 MB per-image limit and no application item-count limit are accepted. The current fallback plan is a 10 GB media budget on the existing disk, then a 50 GB Hetzner Volume before free space falls below 12 GB, with explicit rejection rather than silent data loss at the emergency threshold.
-- The final live-media storage architecture remains open pending the requested cost and private-rendering evaluation.
+- The 20 MB per-image limit and no application item-count limit are accepted. The currently approved launch boundary is a 10 GB root-resident media budget on the existing disk, migration before host free space falls below 12 GB, and explicit rejection rather than silent data loss at the emergency threshold. The 10 GB limit does not cap the total archive after verified object-store cutover. The initially proposed 50 GB Hetzner Volume is provisional because the completed storage report identifies lower-cost object-store paths.
+- The final live-media storage architecture remains open pending Arun's choice between the completed report's safety/price recommendation and its lower-cost-after-break-even alternative.
 
 ## Explicitly deferred
 
@@ -130,12 +130,20 @@ Status: partially decided. No implementation is authorized until the interview f
 
 ## Open frontier
 
-- Exact Text Provider and Artwork Provider dropdown models, pending detailed current-model reports and synthetic evaluation.
+- Exact Text Provider and Artwork Provider dropdown models. The detailed reports are complete, but final selection remains gated on the documented synthetic/blind evaluations.
+- Whether to approve the reports' proposed one-time $15 combined model-evaluation ceiling or spread evaluation across months under the existing $5 monthly ceiling.
 - When textual Derived Artifacts are first generated, how long a source quiet period lasts, and how 01:00 finalization affects them.
 - Whether the Artwork Sweep scans only the just-finished Journal Day or repairs all eligible post-activation days, and how a deliberate artwork removal opts out of recreation.
 - Minimum journal length and content-safety behavior for automatic or manual Generated Artwork.
 - Generated Artwork version visibility, selection, deletion, and regeneration limits.
-- Final live-media storage and private-delivery architecture after current cost research.
+- Whether to adopt the storage report's recommended existing-disk-to-R2 Standard EU path, or choose the lower-bill but correlated-risk B2-live alternative after the account-specific break-even.
+- Physical media deduplication and reference/deletion behavior when one checksum is intentionally used on multiple Journal Days.
 - Exact encrypted-at-rest data/key design and recovery ceremony, to be recorded as an architectural decision after shared understanding.
 - Accepted image formats when Telegram documents may contain arbitrary file types.
-- Machine webhook hostname/path isolation, browser support, search semantics, and remaining interaction edge cases.
+- Telegram caption-text meaning beyond the leading date, direct text-entry scope, machine webhook hostname/path isolation, browser support, search semantics, redating cascades, and remaining interaction edge cases.
+
+## Detailed decision reports
+
+- [AI text model evaluation](AI-TEXT-MODEL-EVALUATION.md)
+- [AI artwork model evaluation](AI-ARTWORK-MODEL-EVALUATION.md)
+- [Private media storage evaluation](MEDIA-STORAGE-EVALUATION.md)
