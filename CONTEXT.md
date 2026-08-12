@@ -20,6 +20,10 @@ _Avoid_: Local timezone, device timezone
 The holding state for a Source Item whose Journal Date cannot be determined from a reliable source timestamp or an explicit user choice.
 _Avoid_: Today's journal, undated day
 
+**Integration Activation**:
+The recorded instant from which newly created VoiceNotes content becomes eligible for automatic import. It is not moved backward by later tagging or editing.
+_Avoid_: Launch date, historical-import date
+
 **Source Item**:
 An authentic journal or photo supplied by Arun through an approved capture source. It retains its origin and original timestamp even when its Journal Date or displayed text is corrected.
 _Avoid_: AI entry, generated memory
@@ -60,9 +64,21 @@ _Avoid_: Daily Photo, real photo
 The single representative visual shown for a Journal Day in the calendar. Its default is the first Daily Photo when one exists, otherwise eligible Generated Artwork.
 _Avoid_: Hero image, thumbnail
 
-**Active AI Provider**:
-The external AI service currently selected to create new Derived Artifacts. Changing it does not change the provenance of existing Derived Artifacts.
-_Avoid_: AI model, permanent provider
+**Text Provider**:
+The external AI service selected to create new textual Derived Artifacts and the visual brief for artwork. Changing it affects only future generations.
+_Avoid_: Artwork Provider, permanent provider
+
+**Artwork Provider**:
+The external AI service selected to turn a text-only visual brief into Generated Artwork. Changing it affects only future generations.
+_Avoid_: Text Provider, image source
+
+**Artwork Request**:
+An explicit user instruction to create or regenerate Generated Artwork for a Journal Day. It is distinct from the scheduled fallback sweep.
+_Avoid_: Photo upload, automatic cover
+
+**Artwork Sweep**:
+The scheduled 01:00 Journal Timezone check that fills eligible journaled days lacking both a Daily Photo and Generated Artwork.
+_Avoid_: Reminder, empty-day generation
 
 **Finalization Time**:
 The Journal Timezone boundary after which a Journal Day is treated as complete for scheduled derivation. Finalization does not prevent later Source Items or Corrections.
@@ -71,3 +87,7 @@ _Avoid_: Midnight, lock time
 **Trash**:
 The recoverable 30-day state for journal content removed from its normal Journal Day presentation before permanent live deletion.
 _Avoid_: Permanent deletion, archive
+
+**Source Suppression**:
+The minimal retained instruction that prevents a deliberately deleted upstream Source Item from being re-imported during reconciliation.
+_Avoid_: Source deletion, Trash
