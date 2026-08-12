@@ -183,6 +183,53 @@ Sources:
 - [OpenAI project and service-account keys](https://help.openai.com/en/articles/9186755-managing-projects-in-the-api-platform)
 - [OpenAI key permissions](https://help.openai.com/en/articles/8867743)
 
+### Google Gemini option requested for MVP
+
+**Documented**
+
+- Google's current cost-efficient stable text model is `gemini-3.5-flash-lite`, with structured output, a 1,048,576-token input limit, and paid pricing of $0.30 per million input tokens and $2.50 per million output tokens including thinking.
+- At 3,000 input plus 500 billable output tokens per day, the modeled monthly text cost is $0.0645. At 10,000 input plus 500 output tokens per day, it is $0.1275.
+- Google's stable `gemini-3.1-flash-lite-image` generates one 1K portrait image for approximately $0.0336 in image-output tokens. Ten, twenty, and thirty images are approximately $0.34, $0.67, and $1.01 respectively, before small prompt/thinking costs.
+- Google's higher-quality stable `gemini-3.1-flash-image` is approximately $0.067 per 1K image, or $2.01 for thirty. The price difference is small enough that visual quality should be evaluated rather than inferred from price.
+- Paid Gemini API content is not used to improve Google's products. Google may retain content for an unspecified limited period for abuse/legal purposes, and does not promise India-only or other specific regional processing.
+- The Interactions API stores state by default; every request must set `store: false`. Developer logging, Files, saved datasets, explicit caching, and Search/Maps grounding create additional retention surfaces and are unnecessary here.
+- New Gemini authorization keys are bound to Google Cloud service accounts and limited to the Generative Language API. One such key can call both text and image models; Google does not offer per-model key restrictions. Paid activation can require a $10 prepayment.
+- Google's current Gemini API Additional Terms say it is for developers building for professional or business purposes and `not for consumer use`. Applicability to a developer's strictly personal single-user journal is therefore ambiguous and must not be represented as resolved.
+
+**Proposed**
+
+- Use Gemini through Vertex AI under the Google Cloud terms rather than the Gemini Developer API. The published Cloud terms do not contain the Developer API's `not for consumer use` restriction, although Google does not publish an explicit personal-journal use-case guarantee.
+- Use `gemini-3.5-flash-lite` with minimal thinking and structured JSON for daily text, and start the synthetic image evaluation with `gemini-3.1-flash-lite-image` versus `gemini-3.1-flash-image` at 1K 4:5.
+- Model two independent settings—Text Provider and Artwork Provider—rather than one coarse switch. Each applies only to new generations; manual regeneration creates a new version with its own provider/model provenance.
+- Never silently fall back to the non-selected provider. A failure must remain visible so Arun can explicitly retry or select another provider before any journal text crosses that boundary.
+- Use only paid Google service, choose single-turn `generateContent` or set `store: false`, disable tools, request logging, grounding, files, and explicit caches, and never send Daily Photos, their metadata, filenames, or image-derived descriptions.
+- Use a dedicated Google Cloud project and service account with only `roles/aiplatform.user`. On Hetzner, the simplest MVP credential is a root-readable service-account key; it is a long-lived secret and should be rotated. Workload Identity Federation is preferable only if a suitable external identity provider is introduced.
+
+**Vertex AI qualification**
+
+- Google Cloud's service terms state that Google does not train or fine-tune managed AI models on Customer Data without permission or instruction and treats generated output as Customer Data.
+- Vertex request/response logging is disabled by default and must stay disabled. In-memory project-isolated caching can last up to 24 hours and can be disabled.
+- Automated abuse monitoring may retain a flagged prompt for up to 90 days and allow authorized review; it is not used for training. An approved abuse-logging exception may be requested but must not be claimed before approval.
+- Vertex global pricing matches the Gemini Developer API rates used in the estimates above. `gemini-3.5-flash-lite` can use global, US, or EU endpoints; `gemini-3.1-flash-lite-image` is global-only, so Generated Artwork cannot claim regional processing.
+- Vertex has no separate published platform fee or Developer API-style minimum prepayment. One service-account identity can call the selected text and image models.
+
+Sources:
+
+- [Gemini 3.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite)
+- [Gemini 3.1 Flash Lite Image](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite-image)
+- [Gemini 3.1 Flash Image](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-image)
+- [Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing)
+- [Gemini API terms](https://ai.google.dev/gemini-api/terms)
+- [Gemini API keys](https://ai.google.dev/gemini-api/docs/api-key)
+- [Gemini API billing](https://ai.google.dev/gemini-api/docs/billing)
+- [Gemini data logging](https://ai.google.dev/gemini-api/docs/logs-policy)
+- [Gemini zero-data-retention controls](https://ai.google.dev/gemini-api/docs/zdr)
+- [Google Cloud terms](https://cloud.google.com/terms)
+- [Google Cloud AI service terms](https://cloud.google.com/terms/service-terms)
+- [Vertex AI zero-data-retention guidance](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/vertex-ai-zero-data-retention)
+- [Vertex AI abuse monitoring](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/abuse-monitoring)
+- [Vertex AI pricing](https://cloud.google.com/vertex-ai/generative-ai/pricing)
+
 ## Backup and restoration research
 
 ### Provider comparison
@@ -245,12 +292,34 @@ Sources:
 - Keep the VoiceNotes and Telegram receivers externally reachable but authenticate and rate-limit them at the application/edge layers.
 - Do not rely only on Hetzner's seven disk backups: journal media needs a separate encrypted off-server backup because Hetzner disk backups are server-bound and attached Volumes are excluded.
 
+### Live-storage and processor boundaries
+
+**Documented**
+
+- Hetzner assigns encryption of live data and backups at rest to the customer; it does not promise provider-managed encryption at rest for Cloud Servers or their Backups.
+- Hetzner Cloud Volumes are triple-replicated availability storage rather than backups. They grow from 10 GB to 10 TB in one-GB increments, cannot shrink, and are excluded from server Backups and Snapshots.
+- Current Volume pricing is EUR 0.044 per GB-month: 50 GB is EUR 2.20/month and 100 GB is EUR 4.40/month.
+- Telegram bot conversations are Telegram Cloud Chats, not Secret Chats with end-to-end encryption. Photos and documents necessarily pass through and may remain on Telegram until Arun deletes them.
+- Preserving exact bytes means preserving the bytes Telegram supplies. Sending an image as a Telegram document is the original-quality path; an ordinary photo message may be recompressed.
+- Cloudflare Tunnel routes the private application's HTTP traffic through Cloudflare. Private responses must disable caching, but `no-store` does not mean Cloudflare was absent from the transport path.
+
+**Proposed**
+
+- Encrypt journal content and source images at rest under an application-held key, with the recovery key stored outside the server in Arun's password manager. This protects copied disks and backups, not a compromised running root account.
+- Never describe Life in Days as end-to-end encrypted or zero-knowledge: the running server must decrypt data for thumbnails/search, journal text may go to the selected AI providers, and Telegram, VoiceNotes, Hetzner, and Cloudflare remain infrastructure processors.
+- Start with a 10 GB Life in Days media budget on the existing disk for zero incremental cost. Warn early, migrate media to a 50 GB Volume before free space falls below 12 GB, and keep Restic/B2 backup independent because server Backups exclude the Volume.
+- If free space reaches an emergency boundary, pause nonessential thumbnail/artwork work and reject new media with a clear Telegram failure; never silently delete or downsample originals.
+
 Sources:
 
 - [Cloudflare Tunnel routing](https://developers.cloudflare.com/tunnel/routing/)
 - [Cloudflare Access application paths](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/app-paths/)
 - [Cloudflare Access common policies](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/common-policies/)
 - [Hetzner backup and snapshot FAQ](https://docs.hetzner.com/cloud/servers/backups-snapshots/faq/)
+- [Hetzner technical and organizational measures](https://docs.hetzner.com/general/security-and-identify/technical-and-organizational-measures/)
+- [Hetzner Cloud Volumes](https://docs.hetzner.com/cloud/volumes/overview/)
+- [Telegram privacy policy](https://www.telegram.org/privacy)
+- [Cloudflare Customer DPA](https://www.cloudflare.com/cloudflare-customer-dpa/)
 
 ## Private web authentication research
 
