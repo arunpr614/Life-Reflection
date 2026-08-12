@@ -120,6 +120,112 @@ Current product sources:
 - Broad goals/coaching/therapy features.
 - Printing and book production.
 
+## AI provider and cost research
+
+The following estimates use current public API prices checked on 2026-08-12. They exclude tax and assume 30 Journal Days per month. Provider selection remains **Proposed** until Arun accepts it.
+
+### Text-derived title, summary, tags, and visual brief
+
+**Documented**
+
+- OpenAI positions `gpt-5.6-luna` as its current cost-sensitive model for new workloads. It costs $0.20 per million input tokens and $1.20 per million output tokens and supports a fixed 1.05-million-token context window.
+- At 3,000 input plus 500 output tokens per day, the modeled monthly cost is $0.036. At a deliberately generous 10,000 input plus 500 output tokens per day, it is $0.078.
+- OpenAI API inputs and outputs are not used to train models by default. Standard abuse-monitoring logs may retain content for up to 30 days. Chat Completions has no application-state retention apart from documented exceptions; Responses retains application state for 30 days by default.
+- Anthropic's current alternatives are materially more expensive at this volume: Claude Haiku 4.5 is approximately $0.375/month under the generous workload, and Claude Sonnet 5 is approximately $1.125/month after its introductory price ends. Anthropic does not offer native image generation, so using it would still require a second provider.
+
+**Proposed**
+
+- Use pinned `gpt-5.6-luna` through Chat Completions with reasoning disabled, strict structured output, and no prompt/response logging.
+- Do not add Batch, prompt caching, or a Claude fallback to MVP. Their savings or quality benefit cannot justify another retained job surface or secret at one request per day.
+- Prove summary quality with synthetic or deliberately redacted journal samples before sending personal content. The cost comparison is documented; relative journal-writing quality is an inference that documentation cannot establish.
+
+Sources:
+
+- [OpenAI GPT-5.6 Luna](https://developers.openai.com/api/docs/models/gpt-5.6-luna)
+- [OpenAI API data controls](https://developers.openai.com/api/docs/guides/your-data)
+- [Anthropic model overview](https://platform.claude.com/docs/en/about-claude/models/overview)
+- [Anthropic API pricing](https://platform.claude.com/docs/en/about-claude/pricing)
+
+### Generated Artwork
+
+**Documented**
+
+- OpenAI's current `gpt-image-2` supports a pinned `gpt-image-2-2026-04-21` snapshot and text-only generation.
+- A 1024 by 1536 medium-quality portrait costs $0.041 in output tokens. A conservative 300-token visual brief brings the modeled total to approximately $0.0425 per image: $0.43 for 10, $0.85 for 20, or $1.28 for 30 images per month.
+- Google's Gemini 3.1 Flash Lite Image is approximately $0.0337 per 1K image under the same prompt assumption. At 30 images it saves only about $0.27/month while requiring another provider integration and secret.
+- GPT Image API content is not used for training by default. The endpoint has no application-state retention, although standard abuse-monitoring retention can still apply. OpenAI-generated images include provenance signals.
+
+**Proposed**
+
+- Use pinned `gpt-image-2-2026-04-21`, 1024 by 1536, medium quality, with a short text-only visual brief.
+- Never transmit a Daily Photo, its metadata, Telegram identifiers, or an image embedding. Preserve the provider-returned generated asset and produce web thumbnails locally.
+- Prefer intentionally illustrative editorial artwork over photorealistic reconstruction so the image cannot masquerade as documentary evidence.
+- A ten-prompt synthetic visual bake-off can validate aesthetics, but the roughly $0.27/month theoretical Google saving does not justify two providers in MVP.
+
+Sources:
+
+- [OpenAI GPT Image 2](https://developers.openai.com/api/docs/models/gpt-image-2)
+- [OpenAI image generation and costs](https://developers.openai.com/api/docs/guides/image-generation#calculating-costs)
+- [OpenAI image provenance](https://help.openai.com/en/articles/8912793-c2pa-in-images)
+- [Google Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing)
+
+### Proposed account and key boundary
+
+- Use one OpenAI API project named `life-in-days-prod` and one project service account named `life-in-days-server`.
+- Create only one project-scoped secret for MVP, restricted to write access for `/v1/chat/completions` and `/v1/images/generations`; deny unrelated endpoints.
+- Store it only in the Hetzner server's secret environment as `OPENAI_API_KEY`. It must never reach the browser, Telegram, Git, application logs, exports, or backups.
+- OpenAI prepaid billing currently starts at $5. A $5 project alert plus an application-enforced monthly generation ceiling is sufficient: even the high text estimate plus 30 generated covers is approximately $1.36/month.
+- Do not create an Anthropic key unless a later synthetic evaluation demonstrates a material quality gain.
+
+Sources:
+
+- [OpenAI prepaid billing](https://help.openai.com/en/articles/8264778-what-is-prepaid-billing)
+- [OpenAI project and service-account keys](https://help.openai.com/en/articles/9186755-managing-projects-in-the-api-platform)
+- [OpenAI key permissions](https://help.openai.com/en/articles/8867743)
+
+## Backup and restoration research
+
+### Provider comparison
+
+These figures describe actual bytes retained in the encrypted backup repository after Restic deduplication and retention, not the size of the current live dataset. Prices exclude tax.
+
+| Retained repository | Backblaze B2 | Cloudflare R2 Standard | Hetzner Object Storage |
+| ---: | ---: | ---: | ---: |
+| 5 GB | $0/month | $0/month | About EUR 6.49/month minimum |
+| 10 GB | $0/month | $0/month | About EUR 6.49/month minimum |
+| 25 GB | $0.10425/month | $0.225/month | About EUR 6.49/month minimum |
+| 100 GB | $0.62550/month | $1.35/month | About EUR 6.49/month minimum |
+
+**Documented**
+
+- Backblaze B2 includes the first 10 GB, then costs $0.00695 per GB-month. Current ordinary transactions are free, and egress up to three times average monthly storage is free.
+- Cloudflare R2 Standard includes the first 10 GB-month, one million Class A operations, ten million Class B operations, and all egress; storage above the free tier costs $0.015 per GB-month.
+- Hetzner Object Storage's roughly EUR 6.49 minimum includes 1 TB, but that capacity is unnecessary at launch and shares a provider/control-plane failure domain with the live server.
+- Hetzner server Backups retain only seven daily slots, are bound to the server, disappear when it is deleted, and do not cover attached Volumes. They are useful for host recovery but are not the journal's independent data backup.
+
+**Proposed**
+
+- Use Restic with client-side encryption into one private Backblaze B2 EU Central bucket. It is the lowest-cost option at this scale and creates a failure boundary independent of Hetzner and Cloudflare.
+- Back up an application-consistent database export, all original photos and Uploaded Journals, Derived Artifacts, a manifest, and the minimal configuration needed to rebuild the service.
+- Target an hourly backup after a short ingestion debounce, keeping 48 hourly, 30 daily, and 12 monthly snapshots. Deduplication means unchanged photos are not copied once per retained snapshot.
+- Run `restic check` plus a sampled database/photo restore monthly and a complete recovery drill into a fresh disposable host quarterly. Treat four hours as an acceptance target for restoring up to 100 GB, to be validated rather than promised.
+- Keep the Restic repository password in Arun's password manager plus an offline recovery copy. Losing it makes the encrypted backup unrecoverable.
+- Alert on a missed backup or failed verification. A completed upload alone is not restore evidence.
+
+### Object Lock limitation
+
+Backblaze Object Lock is useful but is not a safe blanket setting for the live Restic repository. Restic's lock cleanup, `forget`, and `prune` operations need mutation and deletion; a default retention lock can make maintenance fail and strand storage. The proposed MVP therefore uses a bucket-scoped non-master Read/Write key, MFA, usage alerts, and tested restores, without Object Lock or a bucket lifecycle rule. This recovers from host/disk loss, but a fully compromised server plus its writer credential could delete the remote repository. If ransomware-resistant immutability becomes a requirement, add a separate lock-aware immutable export flow rather than silently applying Object Lock to Restic.
+
+Sources:
+
+- [Backblaze B2 transaction and storage pricing](https://www.backblaze.com/cloud-storage/transaction-pricing)
+- [Backblaze Restic integration](https://www.backblaze.com/docs/cloud-storage-integrate-restic-with-backblaze-b2)
+- [Backblaze application keys](https://www.backblaze.com/docs/en/cloud-storage-application-keys)
+- [Backblaze Object Lock](https://www.backblaze.com/docs/cloud-storage-object-lock)
+- [Cloudflare R2 pricing](https://developers.cloudflare.com/r2/pricing/)
+- [Hetzner Object Storage](https://www.hetzner.com/storage/object-storage/)
+- [Hetzner backup and snapshot FAQ](https://docs.hetzner.com/cloud/servers/backups-snapshots/faq/)
+
 ## Hosting facts
 
 **Observed, read-only on 2026-08-12**
