@@ -244,3 +244,80 @@ No owner decision blocks v8. Council C-02 already adopts Monthly Almanac as the 
 - **Working tree:** expected to contain only freeze-record documentation until committed.
 - **Deployed/runtime state:** no deployment; local prototype server only.
 - **Next milestone:** v8 Product/Design council and Cross-month Almanac candidate.
+
+---
+
+## 2026-08-14 — v8 Cross-month Almanac implementation candidate
+
+### Summary
+
+The Product Manager, UI/UX Designer, and Project Manager council approved `PVA-003 Cross-month Almanac`. The candidate now extends the approved Almanac across deterministic month boundaries without adding a Timeline tab. It is not frozen and has not yet received independent QA.
+
+### Decisions and implementation
+
+- Council resolved the initial range to August 2026 only. Each explicit `Load earlier days` adds exactly one calendar month: empty July, then June, then May.
+- `month` is the newest safe boundary and optional `through` is the oldest; optional `date` anchors a chapter. Private text, scroll, and focus selectors never enter the URL.
+- The wide Almanac rail is now a collapsible cross-month index with safe month/day links rather than a duplicate mini-calendar. At 960 px and below it becomes a focus-trapped sheet.
+- Chapters contain one Calendar Cover, generated title/summary/tags, counts, external provenance, and `Read full Journal Day`. Raw source journals appear only in the canonical full-day renderer.
+- Real-photo cover precedence is preserved. AI/source/status/caption text remains outside image pixels.
+- Hidden June 20 Trash-only and May 18 history-only synthetic records are represented outside the render data and never appear in ordinary Almanac counts, DOM, accessible names, index, or targets.
+- Loading preserves existing content and the logical control. A local synthetic error keeps content intact and exposes Retry without duplicating months.
+- Jump uses the inherited four-digit year row and exactly twelve text month buttons; committing resets the loaded range to that month, including truthful empty-month states.
+
+### Current verification
+
+- `npm run check:v8` passes.
+- `git diff --check` passes.
+- Direct browser walkthrough confirmed initial order; July zero-day load; June order 27/9; safe Back/Forward range restoration; canonical June full-day route and Back focus; twelve-button jump; empty July; failure/Retry; hidden sentinel absence; URL canonicalization; wide and 390 px layouts.
+- Frozen v7 core file hashes still match commit `05975fc` exactly.
+
+### Evidence boundary
+
+This is fictional-data frontend evidence only. It does not establish backend query ordering/filtering, lifecycle enforcement, server pagination, persistence, authentication, media delivery, deployment, formal accessibility conformance, or production readiness.
+
+### Next actions
+
+1. Assign a fresh independent v8 QA agent against the Council contract and exact candidate bytes.
+2. Repair every finding in the unfrozen v8 candidate and rerun affected/full checks.
+3. Capture final current-run evidence, record exact hashes, update tracker/QA/handoff, commit, and freeze only after Pass.
+
+---
+
+## 2026-08-14 — v8 Cross-month Almanac independent QA Pass
+
+### Outcome
+
+V8 independently passed with Critical 0, High 0, Medium 0, and Low 0. The allowed closure statement is limited to: `LID-REF-002` prototype-represented; implementation unverified.
+
+### Final artifact identity
+
+- `index-v8.html`: `0f876cf44f7f68478fa64653770ecd46bba9cd853bc6fcc3f3057e123a4ae384`
+- `app-v8.js`: `bc478af42d55df256fab8b2e9f0773d00b049a7879a12535a2a7effe11815760`
+- `styles-v8.css`: `453577e1b9c93ff63e215886b50215b8ad53a795dff5830afe47920711f19bda`
+- `styles-v8-almanac.css`: `87ef6345aa6ef054d76354c5c27e901980f99478fc2802b62a8d51c8ae618007`
+
+Any byte change to those four artifacts invalidates the QA result.
+
+### Findings repaired before Pass
+
+- Replaced private scroll/focus browser-history payloads with an opaque `entryId` and in-memory snapshots.
+- Preserved exact Almanac context across Load Back/Forward, view switches, responsive remapping, rail Hide/Show, manual/device theme changes, and full-day adjacent navigation.
+- Bounded ancient and distant route handling so no transition creates calendar-distance-proportional UI work.
+- Restored focus for drawers, dialogs, upload completion, photo view, and artwork generation states.
+- Corrected compact Read, Load, Retry, and archive-end controls to the 44 px minimum at 390 and 320 px.
+
+### Verification evidence
+
+- Full Council Sections 13 and 14 interaction matrix passed.
+- 1280/960/700/390/320 layouts, no horizontal overflow, drawer behavior, reduced motion, 200% text zoom, and compact high-zoom observation passed within the documented v35 boundary.
+- V6 private Search and frozen v7 Calendar regressions passed; v6/v7 files remained unchanged.
+- `npm run check:v8` and `git diff --check` passed; tested routes produced no console warnings or errors.
+- `design-qa-v8.md` contains the complete bounded QA record.
+
+### Deployment boundary
+
+Nothing was deployed or published. V8 remains a local fictional-data frontend prototype and does not verify any backend, integration, persistence, authentication, accessibility-conformance, or production behavior.
+
+### Next milestone
+
+Freeze v8 without changing the QA-bound bytes, release v9 `PVA-004 First-use and Readiness`, and keep every prior version immutable.

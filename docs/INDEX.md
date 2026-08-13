@@ -62,6 +62,10 @@ Current status: **G0 planning baseline complete. G1 is blocked on Arun's explici
 | [Calendar contract prototype v7](prototypes/CALENDAR-UI-PROTOTYPE-v7.md) | Second remediation slice: private-content-free month/year navigation, external Calendar state rings, progressive provenance, and cross-month keyboard behavior on `prototype/calendar-ui-v7-calendar-contract`. |
 | [Calendar UI v7 prototype guide](../prototypes/calendar-ui/README-v7.md) | Local routes, Calendar/chooser interaction contract, frozen v6 Search regression, responsive behavior, and evidence boundaries. |
 | [Calendar UI v7 design QA](../design-qa-v7.md) | Independent chooser, Calendar-state, history/focus, responsive, motion, URL, console, and v6 Search-regression pass on the final v7 hashes. |
+| [Cross-month Almanac prototype v8](prototypes/CALENDAR-UI-PROTOTYPE-v8.md) | Third remediation slice: deterministic cross-month reading, one-month pagination, safe range state, Almanac index, jump, and canonical Journal Day return. |
+| [Calendar UI v8 prototype guide](../prototypes/calendar-ui/README-v8.md) | Local routes, Cross-month Almanac interaction contract, inherited regressions, and prototype evidence boundaries. |
+| [Cross-month Almanac v8 council](prototypes/v8/COUNCIL-v8.md) | Product, Design, and Project reconciliation for PVA-003. |
+| [Cross-month Almanac v8 independent QA](../design-qa-v8.md) | Exact artifact fingerprints, full interaction/responsive regression matrix, resolved findings, Pass verdict, and evidence boundary. |
 
 ## Discovery and research record
 
