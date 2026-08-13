@@ -6,6 +6,7 @@ Status: requirements discovery only.
 
 ## Discovery documents
 
+- [Proposed shared understanding](docs/discovery/SHARED-UNDERSTANDING.md)
 - [Requirements under discovery](docs/discovery/REQUIREMENTS.md)
 - [Domain language](CONTEXT.md)
 - [Product and integration research](docs/discovery/RESEARCH.md)

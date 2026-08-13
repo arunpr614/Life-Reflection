@@ -1,8 +1,8 @@
 # Requirements under discovery
 
-Updated: 2026-08-13 after grilling round 4
+Updated: 2026-08-13 after grilling round 5
 
-Status: partially decided. No implementation is authorized until the interview frontier is empty and Arun confirms shared understanding.
+Status: the requirements decision frontier is complete and awaits Arun's explicit shared-understanding confirmation. No evaluation execution, implementation, deployment, account mutation, or secret collection is authorized before that confirmation.
 
 ## Decided
 
@@ -36,6 +36,7 @@ Status: partially decided. No implementation is authorized until the interview f
 - There is no product-level daily photo-count limit. The first Daily Photo is the default Calendar Cover, all Daily Photos appear chronologically, and Arun can reorder them and choose another real-photo cover.
 - Original received images remain private and unchanged. Web thumbnails are generated locally with EXIF removed.
 - A Telegram photo initially belongs to the Journal Date derived from its receipt time in `Asia/Kolkata`. A caption beginning with `YYYY-MM-DD` explicitly assigns that photo, or its media group, to the supplied Journal Date.
+- An invalid or future leading caption date never causes the photo to be discarded or silently assigned by receipt time. The photo enters Needs Date Review, remains outside the calendar until corrected, and receives a Telegram explanation. Explicit historical backdating remains allowed; future Journal Dates are excluded from MVP.
 - Caption text remaining after an optional leading `YYYY-MM-DD` is preserved as a searchable Photo Caption shown with the Daily Photo. Photo Captions are excluded from AI input in MVP.
 - The bot acknowledges durable capture with the assigned Journal Date and a link to change it.
 - The bot does not automatically delete successfully imported Telegram messages in MVP.
@@ -71,6 +72,8 @@ Status: partially decided. No implementation is authorized until the interview f
 - A Derived Artifact retains provider/model provenance after either provider setting changes.
 - Each Journal Day receives one concise generated title, one factual 80–140-word summary, and 3–7 editable/searchable tags.
 - Title, summary, and tags are independently editable.
+- Manually editing a title, summary, or tag field, or explicitly accepting/selecting one of its generated versions, makes that field a Protected Field. Source changes mark it stale and offer a replacement without overwriting it.
+- **Resume automatic updates** removes protection from an individual field; protection or removal on one field does not affect the others.
 - Automatic title, summary, tags, and Visual Brief generation begins after a 15-minute Source Quiet Period following the latest journal-source change.
 - At 01:00 `Asia/Kolkata`, untouched textual Derived Artifacts receive a final refresh when their source set changed. Manual protection is per field: editing one field does not freeze the other fields.
 - Generated text is warm but observational: no coaching, diagnosis, invented facts, or inferred emotions unless the journal states them.
@@ -78,6 +81,7 @@ Status: partially decided. No implementation is authorized until the interview f
 - Generated Artwork uses warm, painterly editorial illustration, symbolic scenes, and restrained texture. It must not attempt photorealistic reconstruction or recognizable likenesses and must be labeled `AI artwork`.
 - A ten-prompt synthetic visual evaluation must occur before personal journal text is sent for artwork generation.
 - The Text Provider creates a 150–300-token Visual Brief. Only that brief is sent to the Artwork Provider; the Artwork Provider never receives the raw journal, photos, photo-derived descriptions, names, or account identifiers.
+- The Visual Brief is read-only in MVP. Arun may use **Regenerate brief** and then explicitly retry artwork, but cannot add free-form text that could defeat the brief's minimization boundary.
 - Finalization Time is 01:00 `Asia/Kolkata` on the following day.
 - Generated Artwork has only two creation triggers in MVP: an explicit Artwork Request from the Journal Day UI, or the 01:00 Artwork Sweep.
 - As soon as a journal is available, the Journal Day shows an explicit **Generate artwork now** action. Arun can therefore issue an Artwork Request without waiting for the Source Quiet Period or the 01:00 Artwork Sweep, subject to the minimum-text, safety, provider, and budget gates.
@@ -100,6 +104,7 @@ Status: partially decided. No implementation is authorized until the interview f
 - The system uses encrypted Restic snapshots in a private Backblaze B2 EU Central bucket, without Object Lock on the Restic repository.
 - Backup retention is 48 hourly, 30 daily, and 12 monthly snapshots.
 - A sampled database/photo restore occurs monthly and a full disaster-recovery drill occurs quarterly, with a four-hour recovery acceptance target to be measured rather than assumed.
+- Production launch is blocked until the Recovery Ceremony succeeds: one recovery-key copy is stored in Arun's password manager, a second independent sealed copy is held offline, and a representative encrypted archive sample is restored and decrypted with the recovery material.
 - A separate immutable-export flow is deferred unless the threat model expands beyond crash/server loss.
 
 ### Reflection experience
@@ -109,6 +114,7 @@ Status: partially decided. No implementation is authorized until the interview f
 - Manual `.txt` and `.md` journal upload is available both globally and from a Journal Day.
 - Exact search indexes currently displayed journal text, titles, summaries, tags, and Photo Captions. Trash and superseded Source Revisions are excluded by default and available through an explicit **Include history** filter.
 - MVP search is lexical and deterministic; semantic and conversational journal search remain deferred.
+- A Journal Day with no live Source Items is hidden from the ordinary calendar and timeline even if historical Derived Artifacts remain. Its retained history stays available through management/history views for audit or restoration.
 - The visual direction is quiet and photographic: warm paper-like light theme, deep-ink dark theme, restrained typography, and restrained motion.
 - The calendar starts on Monday and uses `en-IN` date formatting.
 - The web experience is responsive across mobile and desktop, keyboard accessible, compatible with reduced-motion preferences, and targets WCAG 2.2 AA contrast.
@@ -131,6 +137,7 @@ Status: partially decided. No implementation is authorized until the interview f
 - Deleting a Voice Journal never changes VoiceNotes. A Source Suppression prevents reconciliation from resurrecting it; restoring from Trash removes that suppression.
 - After permanent local deletion, only the opaque upstream identity needed for Source Suppression remains. An explicit Allow Re-import action removes it.
 - A portable, restorable ZIP export contains JSON, Markdown, browsable HTML, original source files and photos, Generated Artwork, revisions, checksums, and a manifest. PDF books are deferred.
+- A complete restorable export also contains clearly separated Trash records and Source/Artwork Suppressions so restoration preserves deletion intent. Permanently deleted content is never reconstructed: only the opaque source identifier required by an enduring Source Suppression is exported.
 - Export defaults to AES-256 ZIP encryption under a one-time passphrase that is never stored. The server-side artifact is deleted after the first successful download or one hour, whichever comes first; an unencrypted export requires an explicit privacy warning.
 - Telegram sends operational alerts only after repeated photo-ingestion, VoiceNotes-reconciliation, or backup failure. It sends no journaling or habit reminders.
 - A Telegram photo acknowledgement is sent after durable local capture and includes its assigned Journal Date.
@@ -162,16 +169,12 @@ Status: partially decided. No implementation is authorized until the interview f
 - Immutable ransomware-resistant export flow.
 - Additional VoiceNotes eligibility tags and fuzzy tag matching.
 
-## Open frontier
+## Decision frontier status
 
-- Whether launch is blocked until the Encryption Recovery Ceremony has two independent off-server recovery-key copies and a successful test restore (Q60, unanswered).
-- Whether the Visual Brief is editable in MVP or read-only with regeneration and retry actions.
-- Whether a restorable export contains Trash and Source/Artwork Suppressions, or only currently visible archive content.
-- How invalid and future Telegram caption dates are handled.
-- Whether a Journal Day with only historical Derived Artifacts and no live Source Items remains visible in the calendar and timeline.
-- Whether explicitly accepting or selecting a generated title, summary, or tag version protects that field from future automatic refresh in the same way as a manual edit.
-- Exact Text Provider and Artwork Provider dropdown models are downstream decisions blocked on the approved synthetic/blind evaluations rather than unanswered preferences.
-- The exact no-additional-cost encrypted-at-rest data/key design is an architectural decision to document after shared understanding, not a provider purchase or an unanswered product preference.
+- No user/product preference decision is currently unresolved.
+- Exact Text Provider and Artwork Provider dropdown models are downstream outcomes of the approved synthetic/blind evaluations, not silently assumed selections. A hard-gate failure returns to Arun for a new decision.
+- The exact no-additional-cost encrypted-at-rest data/key design will be recorded in an architectural decision after shared-understanding confirmation.
+- The VoiceNotes integration remains conditional on its documented synthetic spike. If webhook-to-MCP identity, unattended authorization, or reconciliation behavior fails, the affected branch reopens rather than being improvised.
 
 ## Detailed decision reports
 

@@ -64,6 +64,10 @@ _Avoid_: Source edit, overwritten transcript
 A replaceable, traceable title, summary, tag, or artwork produced from Source Items. A Derived Artifact never replaces or masquerades as authentic source material.
 _Avoid_: Source entry, original
 
+**Protected Field**:
+A title, summary, or tag field that Arun has manually edited or explicitly accepted and that automatic generation cannot overwrite until protection is removed.
+_Avoid_: Untouched output, permanently locked field
+
 **Source Quiet Period**:
 The 15-minute interval after the most recent journal-source change during which automatic textual derivation waits for related content to settle.
 _Avoid_: Finalization Time, lock period
@@ -111,6 +115,10 @@ _Avoid_: Midnight, lock time
 **Trash**:
 The recoverable 30-day state for journal content removed from its normal Journal Day presentation before permanent live deletion.
 _Avoid_: Permanent deletion, archive
+
+**Recovery Ceremony**:
+The pre-launch proof that two independent off-server copies of the recovery key exist and that the key can restore and decrypt a representative archive sample.
+_Avoid_: Backup schedule, production recovery claim
 
 **Source Suppression**:
 The minimal retained instruction that prevents a deliberately deleted upstream Source Item from being re-imported during reconciliation.
