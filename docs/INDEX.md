@@ -44,6 +44,8 @@ Current status: **G0 planning baseline complete. G1 is blocked on Arun's explici
 | Document | Purpose |
 | --- | --- |
 | [Calendar UI prototype](prototypes/CALENDAR-UI-PROTOTYPE.md) | Throwaway, simulated comparison of three calendar and Journal Day layout directions on `prototype/calendar-ui-directions`; no production behavior is implied. |
+| [Calendar UI prototype v2](prototypes/CALENDAR-UI-PROTOTYPE-v2.md) | Versioned Margin Companion revision of Archive Desk, Living Mosaic, and Monthly Almanac on `prototype/calendar-ui-v2-margin-companion`. |
+| [Calendar UI v2 design QA](../design-qa-v2.md) | Selected-reference comparison, captured v2 image set, interaction checks, responsive checks, and the bounded prototype QA result. |
 
 ## Discovery and research record
 

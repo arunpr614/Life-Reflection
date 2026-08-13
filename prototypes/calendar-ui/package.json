@@ -5,6 +5,7 @@
   "description": "Throwaway Life in Days calendar UI directions using simulated data.",
   "scripts": {
     "prototype": "node serve.mjs",
-    "check": "node --check app.js && node --check serve.mjs"
+    "check": "node --check app.js && node --check serve.mjs",
+    "check:v2": "node --check app-v2.js && node --check serve.mjs"
   }
 }
