@@ -1,8 +1,22 @@
 # Arun Life Journal
 
-Local repository for a personal visual-journal application. Product discovery is being conducted in an isolated Git worktree before implementation begins.
+Local repository for the private, single-user **Life in Days** visual-journal application.
 
-Status: requirements discovery only.
+Status: G0 planning baseline complete. G1 is blocked on Arun's explicit shared-understanding confirmation. No implementation, credentials, infrastructure mutation, deployment, recovery exercise, or production verification is claimed or authorized.
+
+## Product council and delivery planning
+
+- [Product Council charter](docs/council/PRODUCT-COUNCIL.md)
+- [Planning-baseline council review](docs/council/COUNCIL-REVIEW.md)
+- [Senior Product Manager charter](docs/council/agents/SENIOR-PRODUCT-MANAGER.md)
+- [UI/UX Design Lead charter](docs/council/agents/UI-UX-DESIGN-LEAD.md)
+- [Project Manager charter](docs/council/agents/PROJECT-MANAGER.md)
+- [Technical Architect charter](docs/council/agents/TECHNICAL-ARCHITECT.md)
+- [Detailed Product Requirements Document](docs/product/PRODUCT-REQUIREMENTS.md)
+- [Detailed UX Specification](docs/design/UX-SPECIFICATION.md)
+- [Project Tracker](docs/project/PROJECT-TRACKER.md)
+- [Requirements Traceability](docs/project/REQUIREMENTS-TRACEABILITY.md)
+- [Detailed Implementation Plan](docs/architecture/IMPLEMENTATION-PLAN.md)
 
 ## Discovery documents
 
