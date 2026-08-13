@@ -6,6 +6,7 @@
   "scripts": {
     "prototype": "node serve.mjs",
     "check": "node --check app.js && node --check serve.mjs",
-    "check:v2": "node --check app-v2.js && node --check serve.mjs"
+    "check:v2": "node --check app-v2.js && node --check serve.mjs",
+    "check:v3": "node --check app-v3.js && node --check serve.mjs"
   }
 }
