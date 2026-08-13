@@ -4,6 +4,8 @@ Local repository for the private, single-user **Life in Days** visual-journal ap
 
 Status: G0 planning baseline complete. G1 is blocked on Arun's explicit shared-understanding confirmation. No implementation, credentials, infrastructure mutation, deployment, recovery exercise, or production verification is claimed or authorized.
 
+All project documents are collected in the [Life in Days document index](docs/INDEX.md).
+
 ## Product council and delivery planning
 
 - [Product Council charter](docs/council/PRODUCT-COUNCIL.md)
