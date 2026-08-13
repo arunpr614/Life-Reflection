@@ -85,3 +85,81 @@ No user decision is currently blocking autonomous progress. Product Council must
 - **Working tree:** Clean at program start; `RUNNING_LOG.md` newly created after the snapshot.
 - **Deployed/runtime state:** No deployment. Existing local v5 preview may be running at port 4173 but is not production evidence.
 - **Next milestone:** Council-approved v6 Search package and authoritative completeness tracker.
+
+## 2026-08-14 01:05 - v6 Private Search State independently QA-passed and frozen
+
+**Entry author:** AI agent (Codex) · **Triggered by:** completion of the first Product/Design/Project/Implementation/QA loop.
+
+### Planned since last entry
+
+The three-role council decomposed the program into 30 stable packages from v6 through v35, with each of the 57 prototype-representable audit gaps assigned exactly once. V6 was narrowed from full lexical Search to the dependency-safe privacy correction; full Search remains v21 after History, Trash, and Suppressions.
+
+### Done
+
+- Recorded Product Council decisions C-01 through C-04 and the complete v6-v35 execution register in `docs/project/PROTOTYPE-COMPLETENESS-TRACKER.md`.
+- Created the complete v6 version set without changing v5: `index-v6.html`, `app-v6.js`, `styles-v6.css`, `README-v6.md`, council contract, handoff, current-run screenshots, and QA report.
+- Removed all Search-query parsing and serialization through `q`; incoming legacy `q` is ignored and stripped into a known-safe history entry.
+- Kept Search input only in live JavaScript memory; reload clears it while internal navigation and Back/Forward preserve it within the open page.
+- Replaced recent memories and suggested personal terms with a restrained, explicit current-scope explanation.
+- Raised essential Search metadata, stacked the compact form, removed image-overlaid result provenance, and retained external accessible provenance where interpretation changes.
+- Independent QA found one High issue: Enter from the Search field did not submit. The candidate gained a shared keyboard/form submission path and the same QA agent reran the full affected matrix.
+- Final independent QA verdict: Pass with Critical 0, High 0, Medium 0, Low 0.
+- Committed the immutable v6 implementation and evidence at `2c0fbf2`.
+
+### Verification evidence
+
+- `npm run check:v6` passed.
+- `git diff --check` passed before freeze.
+- Fresh, result, no-result, Clear, legacy-query, Back/Forward, reload, URL/title/history/storage, focus, console, 1280/390/320, and inherited Calendar/Almanac/Settings checks passed.
+- `design-qa-v6.md` records the independent test matrix and evidence boundary.
+
+### Learned
+
+- An ordinary form-looking control cannot be assumed keyboard-complete; direct Enter verification belongs in every form acceptance walk.
+- A narrow privacy correction can safely ship before its broader capability when the interface states the current scope and the tracker preserves the remaining requirement.
+- Current-run visual evidence must use extensions matching actual encoded bytes; the browser captures were stored as JPEG files.
+
+### Deployed / Released
+
+Nothing deployed or published. V6 is frozen as a local, fictional-data frontend prototype only.
+
+### Documents created or updated this period
+
+**Created:**
+- `docs/project/PROTOTYPE-COMPLETENESS-TRACKER.md`
+- `docs/prototypes/v6/COUNCIL-v6.md`
+- `docs/prototypes/CALENDAR-UI-PROTOTYPE-v6.md`
+- `design-qa-v6.md`
+- v6 prototype files and five current-run image captures
+
+**Updated:**
+- `docs/INDEX.md`
+- `prototypes/calendar-ui/package.json`
+- `RUNNING_LOG.md`
+
+### Current remaining to-do
+
+1. Start v7 `PVA-002 Calendar Contract Completion` from frozen v6.
+2. Reconcile the already-complete PM and Design contracts into a written v7 council decision.
+3. Implement the compact month/year chooser, external Today/selected/focus states, progressive attention/provenance disclosure, and Calendar keyboard/back behavior.
+4. Assign a fresh v7 QA agent, repair the same candidate until Pass, then freeze v7.
+5. Continue packages v8 through v35 under the same mandatory gates.
+
+### Open questions / decisions needed
+
+No owner decision blocks v7. Council C-01 already gives Arun's later image-only Calendar direction precedence over older overlay wording. The implementation council must choose the PM's twelve textual month buttons or the Designer's native controls; the PM's explicit acceptance contract is the default unless a compact usability conflict is demonstrated.
+
+### Action items for the next agent
+
+1. Do not edit any v6 artifact.
+2. Branch from the v6 freeze record and copy the full version set to v7.
+3. Keep Search privacy in the regression suite.
+4. Append, never rewrite, the next log and tracker ledger entries.
+
+### State snapshot
+
+- **Current phase / version:** v6 complete; v7 Product and Design gates ready for reconciliation.
+- **Active branch:** `prototype/calendar-ui-v6-private-search` at implementation commit `2c0fbf2`, with this append-only freeze record following.
+- **Working tree:** expected to contain only the freeze-record documentation until committed.
+- **Deployed/runtime state:** no deployment; local prototype server only.
+- **Next milestone:** v7 council approval and versioned implementation candidate.

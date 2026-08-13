@@ -336,3 +336,10 @@ Entries below are chronological evidence. **Never edit, reorder, or delete an ex
 - QA verdict: **Pass**; [`../../design-qa-v6.md`](../../design-qa-v6.md).
 - Commit: recorded in the following freeze entry after Git creates the immutable identifier.
 - Next version released from queue: v7 `PVA-002 Calendar Contract Completion`.
+
+### 2026-08-14 — v6 — frozen
+
+- Immutable v6 implementation and evidence commit: `2c0fbf2` (`prototype: add private search state v6`).
+- All mandatory gates are **A**; the package status is **Complete**.
+- No v6 artifact may be edited by a later package. V7 must be created by copying the frozen v6 set and changing only newly versioned files plus shared tracker/index/log metadata.
+- The v6 pass closes the urgent Search privacy defect but does not close the full `LID-REF-003` row; complete lexical coverage remains assigned to v21.
