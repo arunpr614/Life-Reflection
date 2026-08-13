@@ -52,6 +52,9 @@ Current status: **G0 planning baseline complete. G1 is blocked on Arun's explici
 | [Museum Margin Calendar prototype v4](prototypes/CALENDAR-UI-PROTOTYPE-v4.md) | Approved revision with an image-only default Calendar and source provenance revealed in a selected-day right margin on `prototype/calendar-ui-v4-museum-margin`. |
 | [Calendar UI v4 prototype guide](../prototypes/calendar-ui/README-v4.md) | Local run instructions, two-state URL model, image-only tile contract, responsive behavior, and prototype boundaries. |
 | [Calendar UI v4 design QA](../design-qa-v4.md) | Approved-reference comparisons, primary interaction checks, responsive sheet evidence, and bounded QA result. |
+| [Private Settings and compact privacy prototype v5](prototypes/CALENDAR-UI-PROTOTYPE-v5.md) | Source-grounded Settings suite and a subtle Journal Day privacy entry point on `prototype/calendar-ui-v5-settings`. |
+| [Calendar UI v5 prototype guide](../prototypes/calendar-ui/README-v5.md) | Local routes, Settings screen inventory, responsive model, truthful simulated states, and prototype boundaries. |
+| [Calendar UI v5 design QA](../design-qa-v5.md) | Same-input privacy-density comparison, Settings screen review, interaction checks, responsive evidence, and bounded QA result. |
 
 ## Discovery and research record
 
