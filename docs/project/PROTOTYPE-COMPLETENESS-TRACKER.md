@@ -4,7 +4,7 @@
 - **Owner:** Project Manager agent
 - **Product owner:** Arun
 - **Baseline:** Prototype v5 at commit `00e5689`; feature audit at commit `f74455f`
-- **Current state:** v7 Calendar Contract Completion passed independent QA with zero findings against exact artifact hashes and is Complete; its Git implementation commit/freeze record is pending root creation, and v8 Cross-month Almanac is released from the queue
+- **Current state:** v7 Calendar Contract Completion passed independent QA with zero findings and is frozen at implementation/evidence commit `05975fc`; v8 Cross-month Almanac remains released from the queue
 - **Goal:** Close every prototype-representable gap in the [v5 feature audit](../audits/PROTOTYPE-V5-FEATURE-AUDIT.md) through immutable, consecutively numbered prototype versions, with Product, UX, council, implementation, and independent QA evidence for every version.
 
 This tracker governs the prototype-completeness loop only. It does not authorize or prove backend implementation, provider qualification, integration behavior, security controls, persistence, deployment, backup, restoration, or production readiness. The [PRD](../product/PRODUCT-REQUIREMENTS.md) and [UX specification](../design/UX-SPECIFICATION.md) remain authoritative for behavior. When this tracker differs from those sources or a direct decision from Arun, the higher-authority source wins and the discrepancy must be recorded in the iteration ledger.
@@ -395,3 +395,12 @@ Entries below are chronological evidence. **Never edit, reorder, or delete an ex
 - Gates and closure: Product **A**; Design **A**; Council **A**; Implementation **A**; QA **A**. Package status is **Complete**, and the Calendar-specific `LID-REF-001` prototype gap is closed. `LID-REF-005` and `LID-SCP-004` remain regression-only and open for their v35/v19 primary closures.
 - Git implementation commit: **pending root creation**. The exact artifact hashes above are the interim immutable identity; the later freeze entry must record the commit without implying a second QA pass unless bytes change.
 - Next version released from queue: v8 `PVA-003 Cross-month Almanac`.
+
+### 2026-08-14 — v7 — frozen
+
+- This entry resolves the implementation-commit placeholder in the preceding v7 QA disposition without rewriting that append-only evidence.
+- Immutable v7 implementation and evidence commit: `05975fc` (`prototype: complete calendar contract v7`).
+- The commit binds the independently passed artifact identities: `index-v7.html` SHA-256 prefix `03cdafe8…`; `app-v7.js` prefix `90f2d2b8…`; `styles-v7.css` prefix `0fe7faec…`.
+- All mandatory v7 gates remain **A**; package status remains **Complete**; the Calendar-specific `LID-REF-001` prototype gap remains closed. No second QA pass is claimed because the committed bytes are the exact independently verified bytes.
+- No v7 prototype, council, evidence, screenshot, guide, or design-QA artifact may be edited by a later package. V8 and later work must copy from the frozen v7 set into newly numbered files; any necessary correction to v7 must be a new append-only record and requires a fresh independent QA disposition.
+- V8 `PVA-003 Cross-month Almanac` remains released from the queue.

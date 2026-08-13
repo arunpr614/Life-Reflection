@@ -6,7 +6,7 @@ Branch: `prototype/calendar-ui-v7-calendar-contract`
 
 Starting point: frozen v6 record `a1596ec` (implementation `2c0fbf2`)
 
-Status: independently QA-passed; ready for immutable freeze
+Status: independently QA-passed and frozen at implementation/evidence commit `05975fc`
 
 ## Stable feature in v7
 
