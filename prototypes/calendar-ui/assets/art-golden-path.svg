@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Synthetic AI artwork fixture</title>
+  <desc id="desc">A clearly illustrative golden path winding through soft coral hills beneath a pale green sky.</desc>
+  <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#b9d5c4"/><stop offset="1" stop-color="#f2dcaf"/></linearGradient><linearGradient id="hill" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ca6f5b"/><stop offset="1" stop-color="#704a4b"/></linearGradient></defs>
+  <rect width="1200" height="800" fill="url(#sky)"/>
+  <circle cx="905" cy="172" r="78" fill="#fff0b7" opacity=".9"/>
+  <path d="M0 490Q218 285 450 500t438-65 312-23v388H0z" fill="#467568"/>
+  <path d="M0 610q203-191 420-58t367 0 413-93v341H0z" fill="url(#hill)"/>
+  <path d="M518 800q157-164 83-337 121 126 183 337z" fill="#efc25f"/>
+  <g fill="#234e45"><path d="M160 630l50-185 52 185z"/><path d="M260 646l60-244 63 244z"/><path d="M925 612l47-196 51 196z"/><path d="M1010 642l58-249 65 249z"/></g>
+  <g fill="#f0b17d"><circle cx="117" cy="555" r="20"/><circle cx="420" cy="465" r="17"/><circle cx="864" cy="501" r="18"/></g>
+</svg>

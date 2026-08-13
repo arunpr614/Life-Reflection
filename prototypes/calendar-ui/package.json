@@ -1,0 +1,10 @@
+{
+  "name": "life-in-days-calendar-ui-prototype",
+  "private": true,
+  "version": "0.0.0-prototype",
+  "description": "Throwaway Life in Days calendar UI directions using simulated data.",
+  "scripts": {
+    "prototype": "node serve.mjs",
+    "check": "node --check app.js && node --check serve.mjs"
+  }
+}

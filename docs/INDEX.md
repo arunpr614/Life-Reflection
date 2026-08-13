@@ -39,6 +39,12 @@ Current status: **G0 planning baseline complete. G1 is blocked on Arun's explici
 | Delivery | [Project Tracker](project/PROJECT-TRACKER.md) | Gates, milestones, epics, tasks, dependencies, statuses, evidence requirements, critical path, registers, and backlog. |
 | Coverage | [Requirements Traceability](project/REQUIREMENTS-TRACEABILITY.md) | Requirement-by-requirement navigation across Product, UX, Architecture, Delivery, and planned verification. |
 
+## Active design exploration
+
+| Document | Purpose |
+| --- | --- |
+| [Calendar UI prototype](prototypes/CALENDAR-UI-PROTOTYPE.md) | Throwaway, simulated comparison of three calendar and Journal Day layout directions on `prototype/calendar-ui-directions`; no production behavior is implied. |
+
 ## Discovery and research record
 
 These documents preserve how the current planning baseline was reached. Later confirmed decisions take precedence over earlier proposals.
