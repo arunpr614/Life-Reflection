@@ -4,7 +4,7 @@
 - **Owner:** Project Manager agent
 - **Product owner:** Arun
 - **Baseline:** Prototype v5 at commit `00e5689`; feature audit at commit `f74455f`
-- **Current state:** v6 Private Search State passed independent QA with no open findings and is the newest frozen prototype; v7 Calendar Contract Completion is next
+- **Current state:** v7 Calendar Contract Completion passed independent QA with zero findings against exact artifact hashes and is Complete; its Git implementation commit/freeze record is pending root creation, and v8 Cross-month Almanac is released from the queue
 - **Goal:** Close every prototype-representable gap in the [v5 feature audit](../audits/PROTOTYPE-V5-FEATURE-AUDIT.md) through immutable, consecutively numbered prototype versions, with Product, UX, council, implementation, and independent QA evidence for every version.
 
 This tracker governs the prototype-completeness loop only. It does not authorize or prove backend implementation, provider qualification, integration behavior, security controls, persistence, deployment, backup, restoration, or production readiness. The [PRD](../product/PRODUCT-REQUIREMENTS.md) and [UX specification](../design/UX-SPECIFICATION.md) remain authoritative for behavior. When this tracker differs from those sources or a direct decision from Arun, the higher-authority source wins and the discrepancy must be recorded in the iteration ledger.
@@ -68,7 +68,7 @@ Each package contains one stable feature that can be designed, implemented, and 
 | Version | Feature package and audit outcome | Primary audit gaps | Depends on | Status | P | D | C | I | Q | Required evidence when complete |
 | --- | --- | --- | --- | --- | --- | :---: | :---: | :---: | :---: | :---: | --- |
 | **v6** | **PVA-001 Private Search State** — remove query reads/writes from URLs, browser history, title, and persistent storage; keep query only in live memory; replace suggested/recent memories with an honest deterministic-scope initial state. Full lexical coverage is deliberately not claimed here. | Audit gap 2, privacy defect only | v5 baseline | **Complete** | A | A | A | A | A | `prototypes/calendar-ui/index-v6.html`; `app-v6.js`; `styles-v6.css`; `README-v6.md`; `docs/prototypes/CALENDAR-UI-PROTOTYPE-v6.md`; `design-qa-v6.md`; `docs/prototypes/v6/` |
-| **v7** | **PVA-002 Calendar Contract Completion** — month/year chooser and distinct Today/selected/focus treatments without image overlays; quiet empty days and progressive-disclosure provenance remain. | Audit gap 14 | v6; C-01 | Queued | — | — | — | — | — | Standard v7 artifact set; decision C-01 regression; `docs/prototypes/v7/` |
+| **v7** | **PVA-002 Calendar Contract Completion** — immediate-commit 12-button month/year chooser and distinct external Today/selected/focus rings without image overlays; quiet empty days and progressive-disclosure provenance remain. | Audit gap 14; primary closure `LID-REF-001`; `LID-REF-005`/`LID-SCP-004` regression only | frozen v6; C-01 | **Complete** | A | A | A | A | A | `prototypes/calendar-ui/index-v7.html`; `app-v7.js`; `styles-v7.css`; `README-v7.md`; [`../prototypes/CALENDAR-UI-PROTOTYPE-v7.md`](../prototypes/CALENDAR-UI-PROTOTYPE-v7.md); [`../prototypes/v7/COUNCIL-v7.md`](../prototypes/v7/COUNCIL-v7.md); current-run captures in [`../prototypes/v7/`](../prototypes/v7/) |
 | **v8** | **PVA-003 Cross-month Almanac** — reverse-chronological month groups, deterministic Load earlier, month/year jump, same Journal Day route, stable focus, and hidden/Trash-only exclusion under the approved Almanac direction. | Audit gap 11 | v7; C-02, C-03 | Queued | — | — | — | — | — | Standard v8 artifact set; cross-month walkthrough; `docs/prototypes/v8/` |
 | **v9** | **PVA-004 First-use Readiness** — empty Calendar and separate VoiceNotes, Telegram, AI, Backup, and Recovery Ceremony readiness without credential collection or false recovery claims. | Audit gap 3, first-use portion | v8; C-04 | Queued | — | — | — | — | — | Standard v9 artifact set; readiness-state matrix; `docs/prototypes/v9/` |
 | **v10** | **PVA-005 Resilient Application Shell** — loading, month/partial-media failure, connection interruption, unsaved Correction, session expiry, reauthentication, generic server failure, and idempotent safe retry. | Audit gap 3, interruption/failure portion | v9 | Queued | — | — | — | — | — | Standard v10 artifact set; shell-state matrix; `docs/prototypes/v10/` |
@@ -151,7 +151,7 @@ This is the exhaustive closure inventory derived from the audit's 38 `Partial`, 
 
 | Requirement | V5 status | Prototype gap that must be observable | Primary version | Status |
 | --- | --- | --- | --- | --- |
-| `LID-REF-001` | Partial | Month/year chooser plus council-resolved Today/attention/AI-cover status equivalence | v7 | Open |
+| `LID-REF-001` | Partial | Month/year chooser plus council-resolved Today/attention/AI-cover status equivalence | v7 | **Complete** |
 | `LID-REF-002` | Partial | Approved cross-month chronological browsing, jump/load controls, and same Journal Day routing | v8 | Open |
 | `LID-REF-003` | Partial | Private lexical/date/exact-tag/caption search, match reasons, Include history, and full state family | v21 | Open |
 | `LID-REF-004` | Partial | Journal Day exposes functioning history/provenance and exceptional management states | v18 | Open |
@@ -343,3 +343,55 @@ Entries below are chronological evidence. **Never edit, reorder, or delete an ex
 - All mandatory gates are **A**; the package status is **Complete**.
 - No v6 artifact may be edited by a later package. V7 must be created by copying the frozen v6 set and changing only newly versioned files plus shared tracker/index/log metadata.
 - The v6 pass closes the urgent Search privacy defect but does not close the full `LID-REF-003` row; complete lexical coverage remains assigned to v21.
+
+### 2026-08-14 — v7 — PVA-002 Calendar Contract Completion — started
+
+- Product Manager agent: `/root/prototype_product_manager`; **P gate: A**.
+- UI/UX Designer agent: `/root/prototype_ui_designer`; **D gate: A**.
+- Project Manager agent: `/root/prototype_project_manager`; **C gate: A**; full reconciliation in [`../prototypes/v7/COUNCIL-v7.md`](../prototypes/v7/COUNCIL-v7.md).
+- Implementing agent: root prototype agent; **I gate: IP**.
+- Independent QA agent: to be newly assigned after the candidate and implementation evidence are ready; **Q gate: —**.
+- Dependency evidence: v6 independently passed and is frozen at implementation commit `2c0fbf2`; freeze-record head `a1596ec`; Council decision C-01 remains controlling.
+- Primary closure: the Calendar-specific `LID-REF-001` audit gap. `LID-REF-005` and `LID-SCP-004` are regression-only in v7 and remain assigned to v35 and v19 respectively.
+- Council conflict resolution: use Product's exactly 12 textual `Jan`–`Dec` month buttons, immediate commit on month selection, `Previous year`/`Next year` draft-year controls, visible four-digit year, viewed-month selected state, visible `Current month` label, and initial focus on the viewed month. Use Design's external non-layout-shifting layered rings, progressive-disclosure treatment, breakpoints, target sizes, zoom behavior, focus/Back contract, and accessibility details. Do not implement Design's full-name month labels, draft-month confirmation button, synthetic availability summary, or initial heading focus.
+- Included acceptance: Calendar remains the default Monday-first `Asia/Kolkata` image-led grid; the month heading opens the chooser; a year change alone does not commit; choosing a month commits immediately, clears selected detail, updates only safe URL state, focuses Today or day 1, and announces the new month; cancel/Escape/backdrop preserve the current Calendar. Today uses a dotted external perimeter, selection a solid external perimeter, and keyboard focus an outermost dashed high-contrast ring; all coexist and remain distinct without entering image pixels.
+- C-01 invariant: cover tiles contain only the date and real/art image. Source, AI, and attention details appear only in safe accessible names and the selected Museum Margin; private title, caption, summary, tag, journal text, or private image description never enters the accessible name. Journal-only and quiet empty-date treatments remain.
+- Required fixtures: 13 August Today/selected/real/attention; 11 August artwork-only; 6 August conflict attention; 8 August journal-only; 4 August partial media failure; 3 August empty; July empty month; September future browsing.
+- Responsive/accessibility acceptance: seven columns without page overflow at 1280, 960, 700, 390, and 320 px; chooser becomes a full-width compact sheet with a 3 × 4 button grid; usable at 200% text and observed at 400% compact zoom; one roving tab stop; arrows/Home/End/Page keys/Enter/Space/Escape; focus trap and restoration; safe live announcement; no essential new text under 13 px; reduced-motion equivalence. Formal browser/WCAG/400% closure remains v35.
+- Explicit exclusions: no v9 readiness, v10 state shell/retry completion, v11 date review, v19 lifecycle closure, v35 conformance claim, year mosaic, replacement Timeline, media wall, On This Day, streak/reminder, blank composer, web photo upload, or backend/production claim.
+- Evidence boundary: this is synthetic frontend interaction design. It does not prove persistence, authentication, media delivery, cache/log privacy, integration, accessibility conformance, deployment, or production readiness.
+- Prototype files: v7 candidate is in implementation; no completion claim.
+- QA evidence: pending a fresh independent agent and current-run evidence.
+- Commit: pending.
+- Disposition: implementation in progress; repair any QA finding in the same unfrozen v7 candidate and do not release v8 until v7 receives an independent `Pass` and freeze record.
+
+### 2026-08-14 — v7 compact paper-tile clarification
+
+- Adversarial review identified a responsive contradiction: the Product contract retained visible title/count text on 8 August, while the Designer allowed secondary paper-tile text to disappear when seven columns become too narrow.
+- Product Council clarified the contract append-only in [`../prototypes/v7/COUNCIL-v7.md`](../prototypes/v7/COUNCIL-v7.md), Section 12.
+- At effective widths above 480 px, a journal-only paper tile retains date, restrained title, and journal count where legible. At effective widths up to 480 px, including 390/320 px and compact zoom layouts, it retains the date and quiet paper treatment while visually omitting title/count rather than clipping, shrinking below 13 px, or causing overflow.
+- The complete safe accessible name remains `Saturday, 8 August 2026, 0 photos, 1 journal, no cover image`; selection reveals full title/count/provenance in the Museum Margin.
+- C-01 is unchanged: real-photo and artwork-cover tiles remain image plus date only. Empty dates remain quiet date-only cells and cannot borrow the paper treatment.
+- This is an acceptance clarification, not a gate reset. V7 remains **Implementation in progress** with Product, Design, and Council gates **A**; independent QA must test the clarified rule before freeze.
+
+### 2026-08-14 — v7 prototype year-representation clarification
+
+- Adversarial review identified that `Historical years have no arbitrary limit` was broader than the synthetic prototype's safe four-digit `YYYY-MM` state contract.
+- Product Council clarified the contract append-only in [`../prototypes/v7/COUNCIL-v7.md`](../prototypes/v7/COUNCIL-v7.md), Section 13.
+- Life in Days retains no product archive-year cap. V7 alone is representationally bounded to `0001`–`9999`: `Previous year` is disabled at `0001`, `Next year` is disabled at `9999`, and invalid/out-of-range URL state is canonicalized without preserving it in history.
+- This is a truthful frontend representation boundary, not a production retention, ingestion, Journal Date, or storage rule and not evidence that the final date model is implemented or verified.
+- The v7 QA gate now includes both edge years, disabled-control semantics, exactly four-digit display, and invalid URL canonicalization. V7 remains **Implementation in progress** with Product, Design, and Council gates **A**.
+
+### 2026-08-14 — v7 — PVA-002 Calendar Contract Completion — QA disposition
+
+- Council approval: **A**; [`../prototypes/v7/COUNCIL-v7.md`](../prototypes/v7/COUNCIL-v7.md), including append-only compact paper-tile and prototype-year clarifications.
+- Implementation evidence: `prototypes/calendar-ui/index-v7.html`, `app-v7.js`, `styles-v7.css`, `README-v7.md`, [`../prototypes/CALENDAR-UI-PROTOTYPE-v7.md`](../prototypes/CALENDAR-UI-PROTOTYPE-v7.md), and current-run captures under [`../prototypes/v7/`](../prototypes/v7/).
+- Exact final artifact identity, SHA-256 prefixes: `index-v7.html` = `03cdafe8…`; `app-v7.js` = `90f2d2b8…`; `styles-v7.css` = `0fe7faec…`. The QA pass applies only to these exact bytes; any later artifact change invalidates the pass and requires fresh independent QA.
+- Independent QA agent: `/root/v7_independent_qa`.
+- Test scope: Calendar month chooser anatomy and immediate commit; year-only navigation and `0001`/`9999` disabled edges; URL canonicalization and private generic title; previous/next/Today/chooser history; Back and focus restoration; roving arrows/Home/End/Page/Enter/Space/Escape behavior; safe accessible names; independent Today/selected/focus rings; C-01 image-only cover tiles; selected Margin progressive disclosure; real-photo precedence; artwork-only, attention, journal-only paper, partial-media-failure, quiet-empty-date, empty-month, and future-month fixtures; 1280/960/700/390/320 responsive layouts; compact paper-day clarification; light/dark themes; reduced motion; zoom observations; console/syntax behavior; and inherited v6 private Search regression.
+- Evidence boundary checked: the result is synthetic frontend interaction evidence only. It does not establish backend persistence, authentication, storage, media delivery, cache/log privacy, integrations, deployment, formal accessibility conformance, or production readiness.
+- Findings: **Critical 0; High 0; Medium 0; Low 0**.
+- QA verdict: **Pass**.
+- Gates and closure: Product **A**; Design **A**; Council **A**; Implementation **A**; QA **A**. Package status is **Complete**, and the Calendar-specific `LID-REF-001` prototype gap is closed. `LID-REF-005` and `LID-SCP-004` remain regression-only and open for their v35/v19 primary closures.
+- Git implementation commit: **pending root creation**. The exact artifact hashes above are the interim immutable identity; the later freeze entry must record the commit without implying a second QA pass unless bytes change.
+- Next version released from queue: v8 `PVA-003 Cross-month Almanac`.

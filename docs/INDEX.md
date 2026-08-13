@@ -59,6 +59,9 @@ Current status: **G0 planning baseline complete. G1 is blocked on Arun's explici
 | [Prototype completeness tracker](project/PROTOTYPE-COMPLETENESS-TRACKER.md) | QA-gated v6–v35 remediation program mapping every prototype-representable v5 audit gap to one stable version while keeping backend proof outside prototype claims. |
 | [Private Search prototype v6](prototypes/CALENDAR-UI-PROTOTYPE-v6.md) | First remediation slice: page-memory-only Search terms, legacy `q` removal, and an honest no-suggestions initial state on `prototype/calendar-ui-v6-private-search`. |
 | [Calendar UI v6 prototype guide](../prototypes/calendar-ui/README-v6.md) | Local run instructions, privacy behavior, deliberate Search limits, responsive intent, and evidence boundaries. |
+| [Calendar contract prototype v7](prototypes/CALENDAR-UI-PROTOTYPE-v7.md) | Second remediation slice: private-content-free month/year navigation, external Calendar state rings, progressive provenance, and cross-month keyboard behavior on `prototype/calendar-ui-v7-calendar-contract`. |
+| [Calendar UI v7 prototype guide](../prototypes/calendar-ui/README-v7.md) | Local routes, Calendar/chooser interaction contract, frozen v6 Search regression, responsive behavior, and evidence boundaries. |
+| [Calendar UI v7 design QA](../design-qa-v7.md) | Independent chooser, Calendar-state, history/focus, responsive, motion, URL, console, and v6 Search-regression pass on the final v7 hashes. |
 
 ## Discovery and research record
 
