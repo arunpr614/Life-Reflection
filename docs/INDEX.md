@@ -56,6 +56,9 @@ Current status: **G0 planning baseline complete. G1 is blocked on Arun's explici
 | [Calendar UI v5 prototype guide](../prototypes/calendar-ui/README-v5.md) | Local routes, Settings screen inventory, responsive model, truthful simulated states, and prototype boundaries. |
 | [Calendar UI v5 design QA](../design-qa-v5.md) | Same-input privacy-density comparison, Settings screen review, interaction checks, responsive evidence, and bounded QA result. |
 | [Prototype v5 PRD feature audit](audits/PROTOTYPE-V5-FEATURE-AUDIT.md) | Product, design, and technical audit of all 78 PRD requirements, including missing/partial/placeholder coverage, current-run screenshots, and the recommended v6 completeness sequence. |
+| [Prototype completeness tracker](project/PROTOTYPE-COMPLETENESS-TRACKER.md) | QA-gated v6–v35 remediation program mapping every prototype-representable v5 audit gap to one stable version while keeping backend proof outside prototype claims. |
+| [Private Search prototype v6](prototypes/CALENDAR-UI-PROTOTYPE-v6.md) | First remediation slice: page-memory-only Search terms, legacy `q` removal, and an honest no-suggestions initial state on `prototype/calendar-ui-v6-private-search`. |
+| [Calendar UI v6 prototype guide](../prototypes/calendar-ui/README-v6.md) | Local run instructions, privacy behavior, deliberate Search limits, responsive intent, and evidence boundaries. |
 
 ## Discovery and research record
 
