@@ -1,6 +1,6 @@
 # Life in Days — document index
 
-Updated: 2026-08-13
+Updated: 2026-08-14
 
 This is the single navigation point for the Life in Days product, design, architecture, delivery, research, and governance documents.
 
@@ -55,6 +55,7 @@ Current status: **G0 planning baseline complete. G1 is blocked on Arun's explici
 | [Private Settings and compact privacy prototype v5](prototypes/CALENDAR-UI-PROTOTYPE-v5.md) | Source-grounded Settings suite and a subtle Journal Day privacy entry point on `prototype/calendar-ui-v5-settings`. |
 | [Calendar UI v5 prototype guide](../prototypes/calendar-ui/README-v5.md) | Local routes, Settings screen inventory, responsive model, truthful simulated states, and prototype boundaries. |
 | [Calendar UI v5 design QA](../design-qa-v5.md) | Same-input privacy-density comparison, Settings screen review, interaction checks, responsive evidence, and bounded QA result. |
+| [Prototype v5 PRD feature audit](audits/PROTOTYPE-V5-FEATURE-AUDIT.md) | Product, design, and technical audit of all 78 PRD requirements, including missing/partial/placeholder coverage, current-run screenshots, and the recommended v6 completeness sequence. |
 
 ## Discovery and research record
 
