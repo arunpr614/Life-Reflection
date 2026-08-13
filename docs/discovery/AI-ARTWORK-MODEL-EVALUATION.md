@@ -1,6 +1,6 @@
 # Life in Days — AI Artwork Model Evaluation
 
-**Status:** Decision report; the production default remains provisional until the blind bake-off in this document is run  
+**Status:** Evaluation protocol and combined one-time budget approved 2026-08-13; the production default remains provisional until the blind bake-off is run
 **Research cut-off:** 2026-08-12  
 **Scope:** Hosted, first-party text-to-image APIs for private, single-user journal artwork  
 **Production input:** Text only. Real photos, photo bytes, thumbnails, EXIF, Telegram file identifiers, and other photo metadata must never be sent to an AI provider.  
@@ -374,7 +374,7 @@ This produces 40 stage-one images. The modeled image-output-plus-prompt floor is
 - Gemini Pro Image: at least $1.35
 - **Total: at least about $2.83**, before Google thinking/text-output tokens, tax, retries, and blocked calls
 
-No evaluation spend is pre-authorized. The existing $5 ceiling remains the only approved monthly AI limit. Before stage one, Arun must either approve a separate one-time evaluation ceiling or accept that text and artwork evaluation will be spread across billing months inside the $5 cap. A proposed combined ceiling appears below; research spend must never be silently exempted from cost controls.
+Arun approved a combined one-time **$15 hard ceiling** for this artwork evaluation and the text evaluation on 2026-08-13. The evaluation uses synthetic prompts only, contains no personal journal text or photos, and must stop before reaching the ceiling. Execution still waits for the requirements session's explicit shared-understanding confirmation and securely supplied credentials; approval of the protocol is not evidence that any paid request has run.
 
 ### Blind presentation
 
@@ -426,7 +426,7 @@ Recommended final decision weighting after hard gates:
 
 Take the best hard-gate-passing OpenAI model and the best hard-gate-passing Google model intended for the production dropdown, then rerun all ten prompts once, again blind and uncurated. If a third option may ship, it must receive the same second-run consistency test as well. Compare both the new mean and within-model consistency. Do not rely on a seed unless the exact API returns or supports one; record `null` otherwise.
 
-The most expensive required two-model stage under the normalized settings is GPT Image 2 plus Pro at an image-output-plus-prompt floor of about **$1.82** for 20 images, before Pro thinking/text-output tokens. A full two-stage artwork evaluation therefore has a floor near **$4.65**, not a reliable fixed total. Combined with the text report's roughly $5.56 bake-off estimate, the known floor is about **$10.21**. The recommended approval question is a separate **one-time $15 evaluation ceiling** for both reports, with a hard stop and no personal journal text; otherwise spread the work across at least three $5-capped months. This $15 ceiling is proposed, not approved.
+The most expensive required two-model stage under the normalized settings is GPT Image 2 plus Pro at an image-output-plus-prompt floor of about **$1.82** for 20 images, before Pro thinking/text-output tokens. A full two-stage artwork evaluation therefore has a floor near **$4.65**, not a reliable fixed total. Combined with the text report's roughly $5.56 bake-off estimate, the known floor is about **$10.21**. The approved combined ceiling is **$15 one time**, with a hard stop and no personal journal text; it is separate from the $5 monthly production ceiling.
 
 Selection rules — proposed:
 

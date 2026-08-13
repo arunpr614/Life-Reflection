@@ -1,6 +1,6 @@
 # Life in Days — AI Text Model Evaluation
 
-- **Status:** Decision report; model choice remains provisional until the bake-off in this document is run
+- **Status:** Evaluation protocol and combined one-time budget approved 2026-08-13; model choice remains provisional until the bake-off is run
 - **Research cut-off:** 2026-08-12
 - **Scope:** Hosted text inference for one private, single-user journal application
 - **Data boundary:** Journal text may be sent to the selected text provider. Real photos, photo bytes, thumbnails, EXIF, Telegram file identifiers, and other photo metadata must never be sent to a text model.
@@ -258,7 +258,7 @@ Each fixture needs a human-authored fact inventory and explicit “must not clai
 - Record provider, requested model, returned model, input/output/reasoning token counts, latency, HTTP status, retry count, refusal/safety status, and calculated list-price cost.
 - Do not use another candidate model as the sole judge. Automated schema and lexical/fact checks can assist, but Arun's blinded adjudication decides disputed fidelity.
 
-At 32 fixtures × 3 repeats, the six release candidates are roughly **$3.40 total** at 5,000 input + 500 output tokens per run using current global list prices. Adding Haiku 4.5 and Sonnet 5 is roughly another **$2.16**, for about **$5.56 total**. Actual billing will vary by tokenizer, caching behavior for older candidates, and output length; this is a planning estimate, not a quote. A separate one-time evaluation budget has not yet been approved. Until Arun explicitly approves one, run the bake-off across billing months inside the existing $5 monthly application ceiling rather than exempting research spend silently.
+At 32 fixtures × 3 repeats, the six release candidates are roughly **$3.40 total** at 5,000 input + 500 output tokens per run using current global list prices. Adding Haiku 4.5 and Sonnet 5 is roughly another **$2.16**, for about **$5.56 total**. Actual billing will vary by tokenizer, caching behavior for older candidates, and output length; this is a planning estimate, not a quote. Arun approved a combined one-time **$15 hard ceiling** for this text evaluation and the artwork evaluation on 2026-08-13. Use synthetic fixtures initially, include no personal journal text, and stop before the combined spend reaches the ceiling. Execution still waits for the requirements session's explicit shared-understanding confirmation and securely supplied credentials.
 
 ### Output schema
 

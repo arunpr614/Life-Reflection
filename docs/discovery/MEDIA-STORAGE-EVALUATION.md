@@ -1,13 +1,13 @@
 # Life in Days: Private Media Storage Evaluation
 
-- Status: proposed architecture; no provider account, bucket, volume, DNS record, or server configuration has been changed
+- Status: requirements architecture approved 2026-08-13; no provider account, bucket, volume, DNS record, or server configuration has been changed
 - Research date: 2026-08-12
 - Scope: live storage and private rendering of Telegram photos, locally generated thumbnails, and AI-generated artwork
 Existing recovery decision: encrypted Restic repository in Backblaze B2
 
 ## Decision summary
 
-**Recommendation:** launch with encrypted media on the existing Hetzner root disk, with authoritative/root-resident media capped at **10 GB**, for **$0 incremental monthly cost**. Build against a filesystem/object-storage abstraction from the first commit. Begin migration planning at 7 GB root-resident media use or 18 GB host free, begin verified copy and dual-write no later than 8 GB root-resident media use or 15 GB host free, and complete cutover before 10 GB root-resident media use or 12 GB host free. The recommended target, still subject to product-owner approval, is **Cloudflare R2 Standard in the EU jurisdiction**.
+**Approved direction:** launch with encrypted media on the existing Hetzner root disk, with authoritative/root-resident media capped at **10 GB**, for **$0 incremental monthly cost**. Build against a filesystem/object-storage abstraction from the first commit. Begin migration planning at 7 GB root-resident media use or 18 GB host free, begin verified copy and dual-write no later than 8 GB root-resident media use or 15 GB host free, and complete cutover before 10 GB root-resident media use or 12 GB host free. The approved scale target is **Cloudflare R2 Standard in the EU jurisdiction**.
 
 R2 Standard is not the absolute cheapest metered object store once the live collection grows beyond roughly 19 GB, even if the Restic repository has already consumed B2's account-wide free allowance. If that allowance is still available, B2 is cheaper by roughly $0.12/month at 25 GB, $0.32 at 50 GB, $0.72 at 100 GB, and $1.93 at 250 GB. If the allowance is already consumed, those differences are roughly $0.05, $0.25, $0.66, and $1.86. R2 is nevertheless the better recommended scale target because the selected encrypted backup is already in B2. Keeping live media in R2 and recovery copies in B2 avoids one provider/account/region being both the primary and the backup. The premium is small at this product's expected scale, and R2 is actually cheaper through roughly the first 19 GB when B2's free allowance is unavailable.
 
@@ -383,21 +383,18 @@ At approximately 1 TB → re-run the evaluation; do not switch to Storage Box
 | 250 GB | Re-evaluation checkpoint | provider quote | Validate actual image growth, B2 backup size, latency from Hetzner Helsinki, and restore duration. |
 | 400–500 GB | Compare R2/B2/Hetzner Object again | about $3.41–$7.35/month | Hetzner's 1 TB base bundle begins to beat R2 list storage cost. |
 
-## Final recommendation and unresolved decision
+## Approved direction
 
-Report recommendation, subject to the provider decision below:
+Arun approved the safety/price recommendation on 2026-08-13:
 
 1. Existing root disk, 10 GB root-resident quota, strict watermarks, and application-level authenticated encryption.
 2. Memory-backed plaintext staging, local thumbnail generation, immediate encrypted commit, and immediate plaintext cleanup; Originals otherwise untouched and never sent to AI.
 3. Same-origin authenticated application proxy with shared-cache bypass.
 4. Storage-neutral backend metadata and API from day one.
 5. Complete encrypted Restic snapshots in the separate B2 backup repository.
-6. Begin provider-neutral migration planning at 7 GB root-resident media. Require a tested complete remote-to-Restic backup path before either object-store target may cut over.
+6. Begin migration planning at 7 GB root-resident media and use R2 Standard in the EU jurisdiction as the live scale target. Require a tested complete R2-to-Restic backup and restore path before cutover.
 
-One product-owner decision remains:
-
-- **Recommended safety/price balance:** R2 Standard live + B2 backup.
-- **Lowest bill above the account-specific break-even:** B2 live + B2 backup in separate buckets/keys, accepting correlated provider risk. R2 is cheaper at very small scale if B2's shared free allowance has already been consumed.
+The lower-bill B2-live alternative remains documented for future re-evaluation but is not the approved MVP path because it would correlate live storage and recovery storage in one provider/account/region.
 
 No Hetzner Volume should be pre-purchased. It is a fallback if the filesystem implementation is materially simpler than the object-storage adapter when the threshold is reached, not the default plan.
 

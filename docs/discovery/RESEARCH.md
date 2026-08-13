@@ -362,7 +362,7 @@ Sources:
 
 ## Detailed evaluation reports
 
-These reports supersede the earlier preliminary model and live-storage estimates where their assumptions differ. Their recommendations remain provisional until the remaining product-owner decisions and synthetic evaluations are complete.
+These reports supersede the earlier preliminary model and live-storage estimates where their assumptions differ. Arun approved their evaluation protocols, the combined one-time evaluation ceiling, and the R2/B2 storage direction on 2026-08-13. Exact AI model adoption remains provisional until the synthetic evaluations are run.
 
 - [AI text model evaluation](AI-TEXT-MODEL-EVALUATION.md): provisional OpenAI and Google candidates, complete cost/privacy/lifecycle comparison, and a journal-fidelity bake-off with critical-invention gates.
 - [AI artwork model evaluation](AI-ARTWORK-MODEL-EVALUATION.md): current first-party provider screen, all-in-cost caveats, permanent-retention/privacy gates, and a blind two-stage visual bake-off.

@@ -40,6 +40,14 @@ _Avoid_: Manual note, attachment
 An original image Source Item sent through the private Telegram bot and associated with a Journal Day.
 _Avoid_: AI image, generated photo
 
+**Photo Caption**:
+Text received with a Daily Photo after any leading Journal Date instruction has been removed.
+_Avoid_: Journal, AI prompt
+
+**Media Asset**:
+One preserved image byte sequence that may be referenced by multiple Daily Photos when an identical file is intentionally retained more than once, on the same or different Journal Days.
+_Avoid_: Daily Photo, gallery item
+
 **Original Timestamp**:
 The immutable time metadata retained from a Source Item's capture or delivery source. Changing a Journal Date never changes this evidence.
 _Avoid_: Journal Date
@@ -56,9 +64,21 @@ _Avoid_: Source edit, overwritten transcript
 A replaceable, traceable title, summary, tag, or artwork produced from Source Items. A Derived Artifact never replaces or masquerades as authentic source material.
 _Avoid_: Source entry, original
 
+**Source Quiet Period**:
+The 15-minute interval after the most recent journal-source change during which automatic textual derivation waits for related content to settle.
+_Avoid_: Finalization Time, lock period
+
+**Visual Brief**:
+A minimal, source-grounded text description created from journal text and used as the sole personal-content input to the Artwork Provider.
+_Avoid_: Full journal, photo description, artwork prompt
+
 **Generated Artwork**:
 A visibly identified visual Derived Artifact created from a Journal Day's journal text. It may be requested manually even when Daily Photos exist, but it can become the Calendar Cover only while that Journal Day has no Daily Photo.
 _Avoid_: Daily Photo, real photo
+
+**Active Artwork**:
+The selected Generated Artwork version shown in the normal Journal Day gallery. Earlier versions remain in history, and Active Artwork is cover-eligible only when no Daily Photo exists.
+_Avoid_: Latest attempt, Daily Photo
 
 **Calendar Cover**:
 The single representative visual shown for a Journal Day in the calendar. Its default is the first Daily Photo when one exists, otherwise eligible Generated Artwork.
@@ -79,6 +99,10 @@ _Avoid_: Photo upload, automatic cover
 **Artwork Sweep**:
 The scheduled 01:00 Journal Timezone check that fills eligible journaled days lacking both a Daily Photo and Generated Artwork.
 _Avoid_: Reminder, empty-day generation
+
+**Artwork Suppression**:
+The explicit instruction that prevents the Artwork Sweep from recreating artwork after all artwork is deliberately removed from a Journal Day.
+_Avoid_: Source Suppression, failed generation
 
 **Finalization Time**:
 The Journal Timezone boundary after which a Journal Day is treated as complete for scheduled derivation. Finalization does not prevent later Source Items or Corrections.
