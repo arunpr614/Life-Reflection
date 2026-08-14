@@ -412,3 +412,7 @@ Repairs covered empty-state truth; cross-view/compact-More history focus; picker
 ### Evidence boundary and next milestone
 
 The only permitted closure is: **Needs Date Review is prototype-represented with deterministic synthetic Telegram and VoiceNotes fixtures; capture, encryption, durable holding records, source timestamps, backend attachment, persistence, integration behavior, and idempotency enforcement remain unverified.** Nothing was deployed or published. V12 `PVA-007 Telegram Capture Companion` is released only after the documentation-only v11 freeze record.
+
+### Freeze record
+
+The immutable v11 implementation and evidence are bound to commit `0e4154f` (`prototype: add v11 needs date review`). The following documentation-only freeze commit changes no independently passed UI, QA, Council, guide, handoff, or evidence artifact and does not imply a second QA pass. Its exact Git identifier is recorded in the tracker by the final append-only v11 frozen entry. V12 is released from the queue but remains unstarted with all gates `—`.
