@@ -1,0 +1,356 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-08-14T08:32:59.624Z",
+  "repository": "https://github.com/arunpr614/Life-Reflection",
+  "project": "https://github.com/users/arunpr614/projects/1",
+  "issues": {
+    "AUD-001": {
+      "number": 2,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/2",
+      "expectedStatus": "Done",
+      "expectedFinalState": "closed"
+    },
+    "PC-001": {
+      "number": 3,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/3",
+      "expectedStatus": "Done",
+      "expectedFinalState": "closed"
+    },
+    "SPK-R0-001": {
+      "number": 4,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/4",
+      "expectedStatus": "In progress",
+      "expectedFinalState": "open"
+    },
+    "PRD-R0-001": {
+      "number": 5,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/5",
+      "expectedStatus": "Done",
+      "expectedFinalState": "closed"
+    },
+    "UX-R0-001": {
+      "number": 6,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/6",
+      "expectedStatus": "Next",
+      "expectedFinalState": "open"
+    },
+    "ARCH-R0-001": {
+      "number": 7,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/7",
+      "expectedStatus": "Next",
+      "expectedFinalState": "open"
+    },
+    "ENG-R0-001": {
+      "number": 8,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/8",
+      "expectedStatus": "Next",
+      "expectedFinalState": "open"
+    },
+    "REL-R0-001": {
+      "number": 9,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/9",
+      "expectedStatus": "Next",
+      "expectedFinalState": "open"
+    },
+    "PRD-R1-001": {
+      "number": 10,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/10",
+      "expectedStatus": "Done",
+      "expectedFinalState": "closed"
+    },
+    "UX-R1-001": {
+      "number": 11,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/11",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "ARCH-R1-001": {
+      "number": 12,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/12",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "ENG-R1-001": {
+      "number": 13,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/13",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "REL-R1-001": {
+      "number": 14,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/14",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "PRD-R2-001": {
+      "number": 15,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/15",
+      "expectedStatus": "Done",
+      "expectedFinalState": "closed"
+    },
+    "UX-R2-001": {
+      "number": 16,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/16",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "ARCH-R2-001": {
+      "number": 17,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/17",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "ENG-R2-001": {
+      "number": 18,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/18",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "ENG-R2-002": {
+      "number": 19,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/19",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "REL-R2-001": {
+      "number": 20,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/20",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "PRD-R3-001": {
+      "number": 21,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/21",
+      "expectedStatus": "Done",
+      "expectedFinalState": "closed"
+    },
+    "UX-R3-001": {
+      "number": 22,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/22",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "ARCH-R3-001": {
+      "number": 23,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/23",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "ENG-R3-001": {
+      "number": 24,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/24",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "REL-R3-001": {
+      "number": 25,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/25",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "PRD-R4-001": {
+      "number": 26,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/26",
+      "expectedStatus": "Done",
+      "expectedFinalState": "closed"
+    },
+    "UX-R4-001": {
+      "number": 27,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/27",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "ARCH-R4-001": {
+      "number": 28,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/28",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "ENG-R4-001": {
+      "number": 29,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/29",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "ENG-R4-002": {
+      "number": 30,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/30",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "REL-R4-001": {
+      "number": 31,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/31",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "SPK-R5-001": {
+      "number": 32,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/32",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "PRD-R5-001": {
+      "number": 33,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/33",
+      "expectedStatus": "Done",
+      "expectedFinalState": "closed"
+    },
+    "UX-R5-001": {
+      "number": 34,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/34",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "ARCH-R5-001": {
+      "number": 35,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/35",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "ENG-R5-001": {
+      "number": 36,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/36",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "REL-R5-001": {
+      "number": 37,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/37",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "EVAL-R6-001": {
+      "number": 38,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/38",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "PRD-R6-001": {
+      "number": 39,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/39",
+      "expectedStatus": "Done",
+      "expectedFinalState": "closed"
+    },
+    "UX-R6-001": {
+      "number": 40,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/40",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "ARCH-R6-001": {
+      "number": 41,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/41",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "ENG-R6-001": {
+      "number": 42,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/42",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "REL-R6-001": {
+      "number": 43,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/43",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "EVAL-R7-001": {
+      "number": 44,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/44",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "PRD-R7-001": {
+      "number": 45,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/45",
+      "expectedStatus": "Done",
+      "expectedFinalState": "closed"
+    },
+    "UX-R7-001": {
+      "number": 46,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/46",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "ARCH-R7-001": {
+      "number": 47,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/47",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "ENG-R7-001": {
+      "number": 48,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/48",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "REL-R7-001": {
+      "number": 49,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/49",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "PRD-R8-001": {
+      "number": 50,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/50",
+      "expectedStatus": "Done",
+      "expectedFinalState": "closed"
+    },
+    "ARCH-R8-001": {
+      "number": 51,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/51",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "QA-R8-001": {
+      "number": 52,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/52",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "REL-R8-001": {
+      "number": 53,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/53",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "PRD-R9-001": {
+      "number": 54,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/54",
+      "expectedStatus": "Done",
+      "expectedFinalState": "closed"
+    },
+    "QA-R9-001": {
+      "number": 55,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/55",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "REL-R9-001": {
+      "number": 56,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/56",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "PID-R10-001": {
+      "number": 57,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/57",
+      "expectedStatus": "Done",
+      "expectedFinalState": "closed"
+    },
+    "ARCH-R10-001": {
+      "number": 58,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/58",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    },
+    "REL-R10-001": {
+      "number": 59,
+      "url": "https://github.com/arunpr614/Life-Reflection/issues/59",
+      "expectedStatus": "Backlog",
+      "expectedFinalState": "open"
+    }
+  }
+}

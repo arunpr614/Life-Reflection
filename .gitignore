@@ -7,3 +7,6 @@ node_modules/
 dist/
 coverage/
 *.log
+
+# Local task-scoped workbook exports; publish only the stable outputs/phase1 copy.
+outputs/[0-9a-f][0-9a-f][0-9a-f][0-9a-f]*/
