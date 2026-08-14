@@ -442,3 +442,57 @@ Created root-level `AGENTS.md` as the repository-wide operating contract for eve
 ### Evidence boundary
 
 This change adds documentation and navigation only. It does not modify the roadmap manifest, GitHub issues, Project fields/views/workflows, Excel workbook, application code, infrastructure, or deployment state.
+
+---
+
+## 2026-08-14 19:16 — Autonomous P0-to-production Codex Goal prompt prepared
+
+### Outcome
+
+Created `docs/project/CODEX-GOAL-PROMPT-P0-TO-PRODUCTION.md` as a copy-ready Goal for a future Codex agent. The stored artifact is a template only: this documentation task did not activate the Goal or begin Phase 1 implementation.
+
+### Scope decision
+
+- Defined P0 as the 71 launch-blocking PRD requirements delivered through P0/R0–R9, not only the completed two-task P0 planning milestone and not only roadmap tasks whose Priority field is High.
+- Kept the canonical baseline at 58 tasks: 55 P0/R0–R9 work packages and three conditional R10 tasks. R10 remains date-free unless its measured trigger is approved.
+- Preserved the seven deferred P3/P4 requirement IDs outside R0–R9.
+- Required truthful production completion through R9 owner UAT, Recovery Ceremony, immutable seven-day observation, and final human proceed authority; the Goal cannot simulate those acts.
+
+### Goal operating contract
+
+- Requires the new agent to remain in the current Phase 1 worktree, preserve existing unpublished commits, read the complete authority/context sequence, and refresh live facts before acting.
+- Creates a five-seat execution council for Technical Architecture, Product Management, independent QA, UI/UX Design, and Project Management, with role charters, stable execution artifacts, vetoes, and wave-based scheduling when concurrency is limited.
+- Delegates routine R0–R8 decisions to the council while retaining non-delegable owner actions and a consolidated public-safe Owner Action Ledger.
+- Defines the R0–R9 implementation, evidence, deployment, recovery, rollback, and release loop, plus the early-hard-trigger versus normal post-R9 branches for R10.
+- Makes the GitHub issues/Project roadmap, Markdown plan, issue map, seven-sheet Excel workbook, Wiki, and running log synchronized living projections under `AGENTS.md`.
+- Requires Project workflow snapshots/rollback, repeatable remote-main-pinned Wiki publication, private deployment authority before any private infrastructure read/write, AI-blind authentic-media handling, and a private credential-incident ladder.
+- Gives standing authorization for direct append-only use of the `codex-project-running-log` skill at release events and at least every 45 minutes when material state changes.
+
+### Independent review and verification
+
+- A cold-reader agent, an adversarial authorization/safety agent, and an independent document validator returned final GO verdicts with no remaining P0/P1/P2 findings after revisions.
+- Validated 176 Markdown destinations across the prompt and navigation edits: 169 local and seven external, with zero missing local targets.
+- Reconciled the manifest to 12 releases, 58 tasks, 55 P0/R0–R9 work packages, 71 active requirements, seven deferred requirements, and null R10 dates.
+- Verified balanced Markdown fences, unique headings, final newline, no trailing whitespace, and syntax-clean roadmap, GitHub-sync, and Wiki generator scripts.
+- The frozen v10 prototype syntax check passed from `prototypes/calendar-ui`. An initial root-level npm invocation correctly exposed that the repository root has no `package.json`; validation was rerun from the actual prototype package.
+- The protected changed-content scan found no absolute local path, task/session identifier, private Project node identifier, credential-like value, or private-key marker.
+
+### Documents created or updated this period
+
+**Created:**
+
+- `docs/project/CODEX-GOAL-PROMPT-P0-TO-PRODUCTION.md`
+
+**Updated:**
+
+- `README.md`
+- `docs/INDEX.md`
+- `RUNNING_LOG.md`
+
+### Evidence and external-state boundary
+
+No roadmap status, manifest task, GitHub issue, Project item/field/view/workflow, Excel workbook, Wiki page, application code, infrastructure, credential, deployment, or production state changed. The three documentation files and this append are local and awaiting the scoped local commit at this entry.
+
+### Next action
+
+Validate the complete staged candidate and create the local documentation commit. The Product Owner may then copy the prompt's Goal section into a new Codex Goal when ready; no Goal was started by this task.

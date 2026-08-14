@@ -34,6 +34,7 @@ The prototypes use browser-memory-only behavior and simulated states. They do no
 | --- | --- |
 | AI-agent operating contract | [Living Phase 1 roadmap and Excel instructions](AGENTS.md) |
 | AI-agent orientation | [Phase 1 AI Agent Resource Index — 2026-08-14 15:10:39 IST](docs/project/AI-AGENT-RESOURCE-INDEX-2026-08-14-15-10-39-IST.md) |
+| Autonomous execution goal | [Codex Goal prompt — Phase 1 P0 requirements to private production](docs/project/CODEX-GOAL-PROMPT-P0-TO-PRODUCTION.md) |
 | Complete navigation | [Document index](docs/INDEX.md) |
 | Phase 1 council decision | [Product Council Decision Record](docs/council/PHASE1-COUNCIL-DECISION-RECORD.md) |
 | Detailed release plan | [Phase 1 Release Plan](docs/project/PHASE1-RELEASE-PLAN.md) |
