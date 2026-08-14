@@ -17,7 +17,7 @@ The PRD contains **78 stable requirements**. Against those requirements, v5 has:
 | Fully represented or correctly excluded | 9 | 11.5% | The UI intent is substantially represented, or a deferred feature is correctly absent. This is not implementation evidence. |
 | Partially represented | 38 | 48.7% | A relevant surface exists, but required behaviors, states, safeguards, or whole-requirement evidence are missing. |
 | Placeholder only | 7 | 9.0% | A label or control exists, but the action ends in a generic toast or does not change the required domain state. |
-| Completely missing | 10 | 12.8% | No representative route, screen, modal, or state exists. |
+| Completely missing | 12 | 15.4% | No representative route, screen, modal, or state exists. |
 | Outside a frontend prototype's evidence scope | 12 | 15.4% | These require integration, backend, infrastructure, security, or executed evaluation evidence. |
 | **Total** | **78** | **100%** | |
 
