@@ -74,6 +74,10 @@ Current status: **G0 planning baseline complete. G1 is blocked on Arun's explici
 | [Calendar UI v10 prototype guide](../prototypes/calendar-ui/README-v10.md) | Local run instructions, shell-state contract, deliberate limits, and review artifacts. |
 | [Resilient Application Shell v10 council](prototypes/v10/COUNCIL-v10.md) | Approved Product, Design, and Project contract for PVA-005. |
 | [Resilient Application Shell v10 independent QA](../design-qa-v10.md) | Exact six-file fingerprint, current-run shell-state and regression matrix, Pass verdict, and evidence boundary. |
+| [Needs Date Review prototype v11](prototypes/CALENDAR-UI-PROTOTYPE-v11.md) | Sixth remediation slice: conditional unresolved-source queue, blank non-future date assignment, destination preview, and guarded single-result transition. |
+| [Calendar UI v11 prototype guide](../prototypes/calendar-ui/README-v11.md) | Local run instructions, Needs Date Review behavior, deliberate limits, and review artifacts. |
+| [Needs Date Review v11 council](prototypes/v11/COUNCIL-v11.md) | Approved Product, Design, and Project contract for PVA-006. |
+| [Needs Date Review v11 independent QA](../design-qa-v11.md) | Exact seven-file fingerprint, complete date-review/state/privacy/responsive/frozen-regression matrix, sixteen current-run PNGs, 0/0/0/0 findings, and Pass verdict. |
 
 ## Discovery and research record
 

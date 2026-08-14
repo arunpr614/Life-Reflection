@@ -376,3 +376,39 @@ The only permitted closure is: **The resilient application shell is prototype-re
 ### Freeze record
 
 The immutable v10 implementation/evidence commit is `ffabe0d`; the documentation-only freeze record is `497c98d`. Neither freeze step changed the six independently passed UI hashes. V11 is released from the queue while all of its gates remain unstarted.
+
+---
+
+## 2026-08-15 — v11 Needs Date Review independent QA Pass
+
+### Outcome
+
+Product, Design, and Project Management approved `PVA-006 Needs Date Review`. After adversarial repair and a complete fresh independent gate by `/root/v10_freeze_prep`, supported by `/root/v11_ui_designer`, v11 passed with Critical 0, High 0, Medium 0, and Low 0. The implementation/evidence commit is recorded by the following freeze entry; these are the immutable QA-bound UI identities:
+
+- `index-v11.html`: `4c31a55c486ce0290c1b88a7114d059dc8961d4fc888c05c277a7cedfc1631f8`
+- `app-v11.js`: `e07edeae0a7fc16d9bcb7105231d9ba9a84cc0185c709c0e9ddc9718aedf53ac`
+- `styles-v11.css`: `3f38acbe74ffdac691b5963a779b27d61f3f19e3f03775aabec626b74bb12869`
+- `styles-v11-almanac.css`: `7ca0b5ad77cef1e08681479cd1d79d9dd1dafb70e520d1e0ee04d15860b38b8b`
+- `styles-v11-readiness.css`: `e2c07c35b05307ff682ed0ecb21ceb4e33fcb8b5a45f2cd227b23d86584cd42e`
+- `styles-v11-resilience.css`: `d69e52e73bfb2f72c378fbed3b60e1268790cdc91c642dbae347be01b642201c`
+- `styles-v11-date-review.css`: `525fcd5fe79e20ccb498b3d5dc6e323eb424cb5df3f8ad73ab4701ddc860bad5`
+
+Any byte change to those seven artifacts invalidates the QA result.
+
+### Implemented and verified
+
+- Added a conditional Needs Date Review management queue with four deterministic Telegram/VoiceNotes cases, explicit missing/invalid/future/untrusted reasons, and no receipt/retrieval-time guessing.
+- Every assignment starts blank, validates against the fixed 13 August 2026 Asia/Kolkata boundary, and provides an accessible Monday-first historical picker.
+- Exact destination previews show day visibility, source counts, and real-photo cover precedence without mutating the queue or source evidence.
+- Guarded in-memory assignment represents one attach/remove/count transition; failure, rapid repeat, date change, navigation, connection/session interruption, reset, reload, and stale callbacks cannot partially resolve or replay it.
+- Same-URL detail history, compact More origin, Cancel/Escape/Back, View day, next-row focus, and final 1-to-0 focus restore only opaque live-memory context without exposing source or chosen-date state.
+- Privacy checks found no review content in URL, title, history payload, storage, cookies, browser databases, service-worker/cache state, referrer, requests, console, telemetry, or logs.
+- Sixteen current-run PNGs cover queue, all four provenance/preview cases, validation, pending/failure/success/final-empty states, compact More, picker, landscape, and 200%/400%-equivalent reflow. Light/dark, forced colours, reduced motion, semantics, focus, targets, contrast, and frozen v6-v10 regressions passed.
+
+### Repairs before Pass
+
+Repairs covered empty-state truth; cross-view/compact-More history focus; picker header and keyboard geometry; validation associations and focus visibility; stale/private live announcements; neutral DOM identities; coherent populated destination baselines; provenance order; safe focus/scroll after operation states; neutral generated summaries for arbitrary destinations; compact targets; wide fixture-console layout; and the final 13px/18px essential metadata floor. The complete gate restarted after every UI fingerprint change.
+
+### Evidence boundary and next milestone
+
+The only permitted closure is: **Needs Date Review is prototype-represented with deterministic synthetic Telegram and VoiceNotes fixtures; capture, encryption, durable holding records, source timestamps, backend attachment, persistence, integration behavior, and idempotency enforcement remain unverified.** Nothing was deployed or published. V12 `PVA-007 Telegram Capture Companion` is released only after the documentation-only v11 freeze record.
