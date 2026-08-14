@@ -321,3 +321,54 @@ Nothing was deployed or published. V8 remains a local fictional-data frontend pr
 ### Next milestone
 
 Freeze v8 without changing the QA-bound bytes, release v9 `PVA-004 First-use and Readiness`, and keep every prior version immutable.
+
+---
+
+## 2026-08-14 — v9 First-use Readiness frozen
+
+### Outcome
+
+V9 independently passed with Critical 0, High 0, Medium 0, and Low 0. The implementation and evidence are immutable at `ae34415`; the freeze record is `5a12fb2`; the final tracker record is `12e5e88`.
+
+### Stable feature and boundary
+
+- The default Calendar can now represent a calm empty first-use archive with five independent VoiceNotes, Telegram, AI, Backup, and Recovery Ceremony readiness lanes.
+- Capture remains available when AI is unavailable. Backup remains distinct from restoration, and Recovery Ceremony remains Blocked in every v9 fixture with all three prerequisites unevidenced.
+- A real local `.txt` selection can create exactly one temporary Uploaded Journal without revealing the populated regression fixture or persisting any content.
+- Fixture choice and Search text remain page-memory-only. No hostname, callback path, identifier, credential, recovery key, or false connection/backup/restore claim appears.
+- The allowed closure is limited to: **First-use readiness is prototype-represented with synthetic fixtures; integrations, recovery, implementation, and operations remain unverified.**
+
+### Verification and release
+
+- Frozen v6–v8 behavior, responsive widths, compact reflow observations, light/dark, reduced motion, keyboard/focus, target size, URL/title/storage privacy, syntax, console, and current-run evidence passed.
+- Nothing was deployed or published. V9 is a local fictional-data frontend prototype only.
+- V10 `PVA-005 Resilient Application Shell` was released from the queue after the freeze.
+
+---
+
+## 2026-08-14 — v10 Resilient Application Shell independent QA Pass
+
+### Outcome
+
+Product, Design, and Project Management approved `PVA-005 Resilient Application Shell`. After adversarial repair and complete fresh independent QA by `/root/v10_independent_qa`, v10 passed with Critical 0, High 0, Medium 0, and Low 0. The implementation/evidence commit is recorded by the following freeze entry; these are the immutable QA-bound UI identities:
+
+- `index-v10.html`: `9a8a1da6fc00ff4f694cb00dba3f5784168ab1a9d45b16ca680c410d6d330428`
+- `app-v10.js`: `5e0876d7e5ce91040b7b921a1a1fe10746304ae85f39c66f001166e56b8793ca`
+- `styles-v10.css`: `3f38acbe74ffdac691b5963a779b27d61f3f19e3f03775aabec626b74bb12869`
+- `styles-v10-almanac.css`: `7ca0b5ad77cef1e08681479cd1d79d9dd1dafb70e520d1e0ee04d15860b38b8b`
+- `styles-v10-readiness.css`: `e2c07c35b05307ff682ed0ecb21ceb4e33fcb8b5a45f2cd227b23d86584cd42e`
+- `styles-v10-resilience.css`: `d69e52e73bfb2f72c378fbed3b60e1268790cdc91c642dbae347be01b642201c`
+
+### Implemented and verified
+
+- Added coordinated initial loading, verified-month request/failure, partial-photo failure, persistent connection interruption, bounded unsaved Correction, session expiry/reauthentication, total/settled server failure, and explicit guarded Retry states.
+- Operation identities coalesce rapid repeat activation and reject stale callbacks. Month history commits once, media never duplicates, Correction stays at zero until an explicit post-reconnect Retry and then exactly one, and server recovery resolves once.
+- The unsaved Correction retains its draft and caret through saving/failure, guards Escape/Back/navigation/reload, and never enters URL, history payload, storage, requests, or logs.
+- Session and unknown/total-failure states remove private archive DOM and inherited live/toast text. Synthetic reauthentication returns only to a generic Calendar and never imitates Cloudflare login or proves authentication.
+- State priority prevents restored notices, connection failures, local failures, total server errors, and unsaved confirmation from exposing contradictory or competing primary actions.
+- Responsive and accessibility repairs include compact recovery visibility, dialog/footer reflow, orientation focus reconciliation, 44 px compact primaries, dark-theme primary contrast, and the exact 700 px journal-title boundary.
+- Seventeen current-run PNGs cover connection, loading, month/server/media failure, Retry phases, session/return, Correction/leave, compact and landscape states. Light/dark, reduced motion, reflow-equivalent zoom observations, semantics, keyboard/focus, privacy/network/storage, and frozen v6–v9 regressions passed.
+
+### Evidence boundary and next milestone
+
+The only permitted closure is: **The resilient application shell is prototype-represented with synthetic fixtures; connectivity, server behavior, authentication, persistence, and idempotency enforcement remain unverified.** Nothing was deployed or published. V11 `PVA-006 Needs Date Review` is the next queued milestone after the documentation-only freeze record.

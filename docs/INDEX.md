@@ -66,6 +66,14 @@ Current status: **G0 planning baseline complete. G1 is blocked on Arun's explici
 | [Calendar UI v8 prototype guide](../prototypes/calendar-ui/README-v8.md) | Local routes, Cross-month Almanac interaction contract, inherited regressions, and prototype evidence boundaries. |
 | [Cross-month Almanac v8 council](prototypes/v8/COUNCIL-v8.md) | Product, Design, and Project reconciliation for PVA-003. |
 | [Cross-month Almanac v8 independent QA](../design-qa-v8.md) | Exact artifact fingerprints, full interaction/responsive regression matrix, resolved findings, Pass verdict, and evidence boundary. |
+| [First-use Readiness prototype v9](prototypes/CALENDAR-UI-PROTOTYPE-v9.md) | Fourth remediation slice: empty Calendar plus independent VoiceNotes, Telegram, AI, Backup, and always-blocked Recovery Ceremony readiness. |
+| [Calendar UI v9 prototype guide](../prototypes/calendar-ui/README-v9.md) | Local routes, truthful readiness fixtures, inherited regressions, and evidence boundaries. |
+| [First-use Readiness v9 council](prototypes/v9/COUNCIL-v9.md) | Product, Design, and Project reconciliation for PVA-004. |
+| [First-use Readiness v9 independent QA](../design-qa-v9.md) | Exact artifact fingerprints, current-run interaction/responsive regression matrix, resolved findings, Pass verdict, and evidence boundary. |
+| [Resilient Application Shell prototype v10](prototypes/CALENDAR-UI-PROTOTYPE-v10.md) | Fifth remediation slice: coordinated loading, failure, interruption, unsaved-work, session, and guarded-retry states. |
+| [Calendar UI v10 prototype guide](../prototypes/calendar-ui/README-v10.md) | Local run instructions, shell-state contract, deliberate limits, and review artifacts. |
+| [Resilient Application Shell v10 council](prototypes/v10/COUNCIL-v10.md) | Approved Product, Design, and Project contract for PVA-005. |
+| [Resilient Application Shell v10 independent QA](../design-qa-v10.md) | Exact six-file fingerprint, current-run shell-state and regression matrix, Pass verdict, and evidence boundary. |
 
 ## Discovery and research record
 
