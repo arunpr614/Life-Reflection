@@ -2,10 +2,11 @@
 
 - **Observed:** 2026-08-14 19:51 IST
 - **Purpose:** Cold-start evidence digest for the five-role execution council
+- **Snapshot status:** Historical pre-publication snapshot; for current repository/GitHub/Project/Wiki state use the P0 execution-control review and GitHub Project sync runbook
 - **Evidence boundary:** Local/public read-only inspection only; no private deployment resource or authentic media was accessed
 - **Roadmap attachment:** `PC-001` execution-control revalidation; no new roadmap task
 
-## Confirmed current state
+## Confirmed state at observation time
 
 - The repository contains governing documents, deterministic roadmap/Wiki/workbook tooling, and frozen fictional static prototypes. Direct inventory found no production application tree, database migration set, deployable application container/IaC, production test suite, recovery implementation, or application-risk CI.
 - Frozen v6–v10 evidence is limited to exact static prototype bytes and fictional browser behavior. v11 is queued with every gate unstarted. Frozen evidence remains read-only.

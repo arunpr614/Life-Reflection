@@ -1,12 +1,37 @@
 # Phase 1 GitHub Project V2 sync
 
-Status: the 2026-08-14 live baseline is recorded below; the current P0 controls require a new read-only parity check and a narrowly staged saved-view filter update before synchronization can be called current
+Status: current as of the 2026-08-14 P0 publication reconciliation; two quiescent read-only verifier snapshots returned zero mismatches
 
 Target: <https://github.com/users/arunpr614/projects/1>
 
 Canonical source: [`PHASE1-ROADMAP-MANIFEST.json`](./PHASE1-ROADMAP-MANIFEST.json)
 
 Tool: [`sync_phase1_github.mjs`](../../tools/sync_phase1_github.mjs)
+
+## P0 live reconciliation — 2026-08-14
+
+The P0 control package was merged through [PR #64](https://github.com/arunpr614/Life-Reflection/pull/64). Clean fetched source, `origin/main`, and remote `main` all resolved to merge commit `dbd497b496c0bfb982d67a61d6b93ab29d7c59ad`; published head `a3701d2d3e14d7c87b39f9c30a26a03d098292cf` is its ancestor. Five-seat review binds exact candidate `1391bea9abcc899aefcad446324d7c0a2b0199c2`; the published head has the same tree except for the append-only running-log and P0 control-review attestation updates.
+
+The live update was deliberately split into least-expansive stages:
+
+1. Retain sanitized rollback snapshots for all 58 issues, 12 milestones, Project items, fields, and complete view configurations.
+2. Run `--apply --project-only --skip-views` to create/populate the required task fields and reconcile all 58 issue-backed items without touching issue content or saved views.
+3. Apply **Phase 1 Status** and **Phase 1 Roadmap** separately, verifying between mutations. Both now use `repo:arunpr614/Life-Reflection is:issue label:phase1`; Status remains a board grouped by Status and Roadmap remains grouped by Milestone.
+4. Review an issue-only dry run, then run `--apply --issues-only` without `--close-done`. This updated the 58 existing issue bodies and changed only issue titles #22 and #24 from Timeline to Almanac.
+5. Run `--verify` twice with a 15-second quiescent interval.
+
+The final verified state is:
+
+- 58 unique managed issues and 58 issue-backed Project items;
+- 45 issues open and 13 closed, unchanged by the P0 synchronization;
+- 40 Backlog, 4 Next, 1 In progress, and 13 Done;
+- exactly five expected labels and six task-bound P0 dossier links on every issue;
+- all 58 issues assigned across the expected 12 milestones, with R10 still undated;
+- 986/986 managed field comparisons passing: 17 fields across 58 tasks;
+- 58 `Incomplete`, zero `Ready`, and zero tasks/issues with `executionAllowed=true`; and
+- two 437-byte verifier outputs, captured at 23:30:14 and 23:30:35 IST, each with `passed: true` and `mismatchCount: 0`; the files are byte-identical at SHA-256 `4f94bf15d12ef1bfbdb2eda1679ec1ae836d301af8ef74109e5c6e67c1c2ccfc`.
+
+The first Status-view apply attempt failed before mutation because seven target fields did not yet exist. The safe recovery was to populate Project fields first, then apply each saved view separately. The reconciliation created or deleted no issue, changed no issue state, changed no Project workflow, and wrote no private content. The package remains a planning/control publication; it is not implementation, deployment, recovery, or production evidence.
 
 ## Decision
 
@@ -29,9 +54,9 @@ The earlier live apply and independent read-only reconciliation on 2026-08-14 es
 
 - GitHub CLI 2.94.0 is installed and includes `gh project` field/item commands.
 - The credential initially lacked Project access; it was subsequently refreshed outside this spike and now has `project`. The smallest direct Project query succeeds.
-- Sanitized live metadata confirms Project #1 is linked to `arunpr614/Life-Reflection` and had 25 GraphQL-visible fields at the baseline. All 11 then-required board fields—including built-in Milestone—existed with the expected types. The seven task-readiness fields introduced by the current candidate are not claimed live until the staged apply and read-only verification complete. Status has exactly Backlog, Next, In progress, and Done.
+- Sanitized live metadata confirms Project #1 is linked to `arunpr614/Life-Reflection` and had 25 GraphQL-visible fields at the historical baseline. All 11 then-required board fields—including built-in Milestone—existed with the expected types. The current P0 reconciliation has since created/populated every required task-readiness field and verified all 17 managed fields for all 58 tasks. Status has exactly Backlog, Next, In progress, and Done.
 - The authorized apply created or synchronized 58 issue-backed Phase 1 items and 12 milestones; issue state is 45 open and 13 evidence-backed Done/closed. A later owner-requested cleanup removed the eight initial-spike `[PVA-001]` through `[PVA-008]` drafts and the template `Monthly roadmap`, `Quarterly roadmap`, and `Backlog` views. The Project now contains the 58 canonical issues and separately filtered merged pull-request records, with no draft items; only the canonical **Phase 1 Status** and **Phase 1 Roadmap** views remain.
-- At the earlier baseline, every task matched its issue title, body, labels, milestone, state, Project item, and the ten then-managed Project field values: 580 field-value checks with zero mismatches. This is historical evidence, not parity for the current 17-field/dossier candidate. Status remains planned as exactly 40 Backlog, 4 Next, 1 In progress, and 13 Done. R10 has no milestone due date or task dates.
+- At the earlier baseline, every task matched its issue title, body, labels, milestone, state, Project item, and the ten then-managed Project field values: 580 field-value checks with zero mismatches. The P0 reconciliation above supersedes that historical count with 986/986 current managed-field comparisons. Status is exactly 40 Backlog, 4 Next, 1 In progress, and 13 Done. R10 has no milestone due date or task dates.
 - **Phase 1 Status** and **Phase 1 Roadmap** were observed with the broad `repo:arunpr614/Life-Reflection is:issue` filter. That historical filter must not be described as Phase 1 containment: the current canonical filter is `repo:arunpr614/Life-Reflection is:issue label:phase1`. The board grouping and roadmap date/grouping settings remain UI-managed.
 - The first saved-view attempt exposed a live compatibility failure: the published user-owned `POST /users/{user_id}/projectsV2/{project_number}/views` route returned 404 with API version `2026-03-10`. The idempotent recovery used the live GraphQL view mutations and succeeded without deleting or duplicating existing content.
 - Live GraphQL schema introspection shows `createProjectV2View`, `updateProjectV2View`, and `deleteProjectV2View`. `CreateProjectV2ViewInput` accepts name, layout, project ID, and visible-field configuration. `UpdateProjectV2ViewInput` additionally accepts a filter. Neither input exposes grouping or roadmap date-field selection.
@@ -293,7 +318,7 @@ node tools/sync_phase1_github.mjs --apply --close-done
 - [x] **Phase 1 Roadmap** groups rows by Milestone.
 - [x] **Start date** and **Target date** drive the roadmap bars.
 - [x] Month zoom is retained; no optional date marker is required for this baseline.
-- [ ] Both views use the exact `repo:arunpr614/Life-Reflection is:issue label:phase1` filter and display exactly the 58 managed tasks. The broad historical filter remains observed until the staged live update and read-only verification succeed.
+- [x] Both views use the exact `repo:arunpr614/Life-Reflection is:issue label:phase1` filter and display exactly the 58 managed tasks; two quiescent read-only verifier snapshots confirm zero drift.
 - [x] R10 dates remain blank until its measured threshold trigger is approved.
 
 ## First-party sources

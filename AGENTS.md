@@ -271,11 +271,11 @@ Treat these as known controls, not optional improvement ideas. If the compensati
 
 ## Current GitHub automation hazard
 
-At the last live snapshot, both delivery views still used the broad filter `repo:arunpr614/Life-Reflection is:issue`. The current sync candidate requires `repo:arunpr614/Life-Reflection is:issue label:phase1`, but that narrowing is not live evidence until a staged view-only apply and read-only verification pass. Project #1 also has workflows that can auto-add open issues/PRs and sub-issues, set Backlog on add, set Done on close, and close items moved to Done.
+The 2026-08-14 P0 publication reconciliation verified that both delivery views now use `repo:arunpr614/Life-Reflection is:issue label:phase1`; the Status board remains grouped by Status and the Roadmap remains grouped by Milestone. Two quiescent read-only verifier snapshots returned zero mismatches. Project #1 still has workflows that can auto-add open issues/PRs and sub-issues, set Backlog on add, set Done on close, and close items moved to Done. The reviewed API does not expose their complete filters and effects, and the P0 publication did not change them.
 
 Therefore:
 
-- Do not create unrelated or Wayfinder issues until an authorized hardening change narrows both delivery views and Project auto-add/workflow boundaries to `label:phase1`, or places those issues in a separate Project.
+- Do not create unrelated or Wayfinder issues until an authorized hardening change narrows the Project auto-add/workflow boundaries to `label:phase1`, or places those issues in a separate Project. Saved-view narrowing is complete but does not satisfy the workflow gate.
 - View filtering alone is not containment; hidden items can still affect shared Status, closure automation, raw Project state, and Insights.
 - After any issue creation, confirm that only canonical `phase1` delivery issues feed the two delivery views and delivery workflows.
 - Do not change workflow rules casually; audit their filters and effects, preserve unrelated behavior, and verify the full projection afterward.

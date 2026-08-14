@@ -594,3 +594,131 @@ Repository publication and live synchronization have not occurred at this entry.
 ### Next action
 
 Rerun the complete control suite after this attestation-only delta, commit and publish through a reviewed PR, prove a clean fetched remote-main checkout, then stage both views, issue/Project synchronization, two parity passes, and Wiki publication. Keep every task implementation blocked.
+
+---
+
+## 2026-08-14 23:35 IST — P0 controls published and live planning surfaces reconciled
+
+**Entry author:** AI agent (Codex) · **Triggered by:** Arun's explicit `Resume` after pausing at the post-merge, post-Project-field/view checkpoint.
+
+### Planned since last entry
+
+Complete the already accepted P0 control-package publication without beginning implementation: verify the reviewed commit on remote `main`, synchronize only the existing 58 delivery issues, require two quiescent zero-drift checks, publish the cumulative Wiki from the exact merged source, and record public-safe evidence. Preserve the fail-closed state for every task and leave private-system work behind its named owner gate.
+
+### Done
+
+- Confirmed the clean publication worktree, fetched `origin/main`, and remote `main` all resolve to merge commit `dbd497b496c0bfb982d67a61d6b93ab29d7c59ad`; reviewed P0 head `a3701d2d3e14d7c87b39f9c30a26a03d098292cf` is its ancestor. [PR #64](https://github.com/arunpr614/Life-Reflection/pull/64) is merged with successful checks.
+- Verified the resumed pre-sync drift was exactly 62 items: 58 issue bodies, two issue titles, and the two corresponding Project titles. The already-applied Project field/view stage remained correct.
+- Reviewed the issue-only dry run, then ran `node tools/sync_phase1_github.mjs --apply --issues-only` without `--close-done`. The operation updated 58 existing issue projections, created no issue, changed no issue state, and left the public issue map unchanged.
+- Confirmed issue state remains 45 open / 13 closed, every issue has five expected labels and six task-bound P0 dossier links, all 12 milestone assignments match, and only #22 and #24 changed from Timeline to Almanac.
+- Confirmed Project status remains 40 Backlog / 4 Next / 1 In progress / 13 Done. Independent Project Management repeated all 986 managed field comparisons, view/grouping checks, readiness checks, and issue/milestone checks read-only and returned `Go`.
+- Ran two live `--verify` snapshots with a 15-second quiescent interval. Both returned `passed: true`, `mismatchCount: 0`, and are byte-identical at SHA-256 `4f94bf15d12ef1bfbdb2eda1679ec1ae836d301af8ef74109e5c6e67c1c2ccfc`.
+- Built the Wiki twice from merged source `dbd497b496c0bfb982d67a61d6b93ab29d7c59ad` and the complete prior Wiki clone. Both 455-page candidates were byte-identical, mapped all 449 Markdown sources exactly once, and found no live-only page to preserve.
+- Published Wiki commit `29562d6863eadc61ac8e2e2fcf3bece7f1ceffdb` normally on `master`, without force. A fresh clone verified the remote head, clean tree, 455 pages, Home, Documentation Index, Page Audit, and Page Audit SHA-256 `97277551604f8f837b855d42372c9628ce1d0fe8b935941d797488a2c540090b`.
+- Updated the P0 execution-control review and GitHub Project sync runbook with the actual merge, staged mutation, parity, Wiki, failure/recovery, and evidence-boundary facts on branch `codex/p0-publication-evidence`.
+
+### Cross-lane notes
+
+- The existing 58 delivery issues and two canonical Project views were the only live planning surfaces changed. No workflow, non-delivery issue, draft item, private system, credential, authentic content, application runtime, infrastructure, or deployment was touched.
+- All 348 task artifacts remain Draft, all 58 dossiers remain Incomplete/Hold, and `executionAllowed` remains false for every task. The historical `In progress` roadmap status for `SPK-R0-001` is not implementation authorization.
+
+### Learned
+
+- The first Status-view apply attempt before the pause failed before mutation because seven target fields did not yet exist. Populating Project fields first with `--project-only --skip-views`, then applying each view separately, was the safe recovery and should remain the standard order for a fresh Project.
+- Issue state and Project status are separate mutation planes. Omitting `--close-done` preserved the reviewed 45/13 split while still refreshing issue bodies, labels, milestones, and non-Done open state idempotently.
+- The generated Wiki index is `Documentation-Index.md`, not `Page-Index.md`; an initial fresh-clone assertion used the wrong expected filename, failed without mutation, and passed after checking the generated file set.
+- A zero-mismatch verifier snapshot is useful but insufficient alone for a stability claim; two byte-identical snapshots after a quiescent interval, plus an independent Project Manager read, provide the bounded planning-parity evidence used here.
+
+### Deployed / Released
+
+- Repository P0 control package: merged through [PR #64](https://github.com/arunpr614/Life-Reflection/pull/64) at `dbd497b496c0bfb982d67a61d6b93ab29d7c59ad`.
+- GitHub planning projection: 58 existing issues, 58 issue-backed Project items, 17 managed fields per task, and both canonical saved views reconciled with zero verifier drift.
+- Wiki: published on `master` at `29562d6863eadc61ac8e2e2fcf3bece7f1ceffdb` from merged source `dbd497b496c0bfb982d67a61d6b93ab29d7c59ad`.
+- No application, infrastructure, private integration, recovery process, or production release was deployed.
+
+### Documents created or updated this period
+
+**Updated:**
+
+- `docs/council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md` — changed the bounded P0 disposition from accepted/pending to published with exact live evidence.
+- `docs/project/PHASE1-GITHUB-PROJECT-SYNC.md` — recorded the staged apply sequence, recovery, final counts, two-pass parity, and completed saved-view containment.
+- `RUNNING_LOG.md` — appended this publication and reconciliation handoff without changing prior bytes.
+
+### Current remaining to-do
+
+1. Complete independent Product, Project Management, and publication-safety review of the evidence-only diff, run the complete static-control suite, then publish the evidence branch through a second reviewed PR.
+2. After that evidence PR merges, regenerate and republish the Wiki once from the final merge commit so Page Audit points at final `main`; verify the remote Wiki head and page set without making another repository edit.
+3. Before any task can become Ready, harden the readiness control debts already identified: symmetric derived Artifact readiness, synthetic positive/negative execution fixtures, approval-registry current-checkout/merged-state checks, unique role-bound attestations, stronger private-authority evidence semantics, and generator protection for externally approved artifacts.
+4. Run the task-specific R0 Council readiness wave only after those gate controls pass. Do not implement `SPK-R0-001`, `ENG-R0-001`, or another R0 task until its six artifacts and five seats approve one exact revision and the manifest records `executionAllowed=true`.
+
+### Open questions / decisions needed
+
+1. No owner input is needed for the remaining public P0 evidence publication. `P0-OA-001` is still required before any private-system read in the later R0 lane; credentials must use an approved private delivery mechanism and must not appear in issues, documents, logs, or chat.
+2. `P0-OA-002` remains required before any future non-delivery issue or Project workflow mutation. The current work deliberately did not cross that boundary.
+
+### Session self-critique
+
+- The first view apply should have been preceded by field-existence reconciliation; the failed pre-mutation attempt was harmless but avoidable. The runbook now records the corrected order.
+- Parity JSON is retained only as sanitized temporary execution evidence; the canonical repository record stores its timestamp, size, hash, and result rather than the transient file itself.
+- The Wiki will temporarily reference the first merged publication source until the evidence PR merges and the final one-way Wiki refresh completes. Do not call that final source alignment complete before the second Wiki verification.
+
+### Action items for the next agent
+
+1. On `codex/p0-publication-evidence`, inspect the specialist verdicts, run `git diff --check`, `node tools/P0-validate-execution-controls.mjs`, the default GitHub dry run, the live read-only verifier, syntax checks, link/public-safety checks, and a deterministic Wiki build from the candidate commit.
+2. Commit, push, open a draft PR, require the Phase 1 static controls to pass, mark ready, and merge with a merge commit.
+3. Fetch the final `origin/main`, build the Wiki from that exact merge plus the complete current Wiki clone, publish normally without force, and verify fresh-clone Home/Documentation Index/Page Audit/source SHA.
+4. Keep every implementation lane blocked while clearing the readiness-control debts and obtaining task-specific Council decisions.
+
+### State snapshot
+
+- **Current phase / version:** P0 execution-control package published; live issue/Project parity and first Wiki publication verified; evidence-only reconciliation in progress.
+- **Active branch:** `codex/p0-publication-evidence` from `dbd497b496c0bfb982d67a61d6b93ab29d7c59ad`.
+- **Working tree:** Expected dirty only for the two evidence documents and this append until reviewed and committed.
+- **Deployed/runtime state:** No application deployment. Deployment remains **Unknown — private read authority pending**. GitHub planning surfaces and Wiki only are published.
+- **Next milestone:** Merge the evidence-only PR, align the Wiki to that final merge, then harden task readiness before any R0 implementation.
+
+---
+
+## 2026-08-14 23:40 IST — Correction: Project task-readiness fields were also live-mutated
+
+**Entry author:** AI agent (Codex) · **Triggered by:** independent Project Manager review of the 23:35 publication entry.
+
+### Correction
+
+The 23:35 Cross-lane note said the existing 58 delivery issues and two canonical Project views were the only live planning surfaces changed. That sentence underreported the completed Project stage. The P0 live reconciliation also created or populated the required task-readiness fields across all 58 issue-backed Project items, producing 986 verified managed values: 17 fields for each task. No prior log text was rewritten; this entry corrects the record append-only.
+
+The exact live mutation boundary was:
+
+- the existing 58 delivery issue projections, with 45 open / 13 closed preserved;
+- the 17 managed task fields across the existing 58 issue-backed Project items; and
+- the filters/configuration of the two existing canonical Phase 1 views.
+
+No Project workflow, issue state, non-delivery issue, private system, credential, authentic content, application runtime, infrastructure, or deployment was changed.
+
+### Current-truth reconciliation
+
+- Updated `AGENTS.md` to record that saved-view narrowing is complete while workflow containment remains unreadable/unapproved and therefore fail-closed.
+- Updated `docs/project/PROJECT-TRACKER.md` to record published P0 controls, reconciled planning surfaces, the evidence/readiness-hardening phase, and the continuing implementation Hold.
+- Updated `docs/INDEX.md` to distinguish the package-level `Published` disposition from all 58 task-level Holds.
+- Classified `docs/council/execution/P0-PHASE1-CONTEXT-DIGEST.md` explicitly as the historical 19:51 pre-publication snapshot rather than current evidence.
+
+### State snapshot
+
+- **Current phase / version:** P0 controls published; live issue, 17-field Project, saved-view, and first-Wiki reconciliation verified; evidence-only PR preparation continues.
+- **Execution authority:** 58 Incomplete/Hold, zero Ready, zero `executionAllowed`; no implementation authorized.
+- **Next milestone:** Obtain renewed independent GO on the reconciled diff, publish the evidence PR, then align the Wiki once to final `main`.
+
+---
+
+## 2026-08-14 23:44 IST — Correction: exact review provenance and Wiki terminology
+
+**Entry author:** AI agent (Codex) · **Triggered by:** independent Product and publication-safety review of the evidence record.
+
+### Corrections
+
+- The 23:35 entry called `a3701d2d3e14d7c87b39f9c30a26a03d098292cf` the reviewed P0 head. Exact five-seat review binds candidate `1391bea9abcc899aefcad446324d7c0a2b0199c2`; PR #64 has no native GitHub review objects. PR #64 **published** sibling head `a3701d2d3e14d7c87b39f9c30a26a03d098292cf`. A tree comparison shows that the published head differs from the five-seat-reviewed candidate only in `RUNNING_LOG.md` and `docs/council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md`, which carry the append-only log and final attestation record. The 348 task artifacts and other control bytes match the reviewed candidate.
+- References in the 23:35 entry to the “first Wiki publication” or “first-Wiki reconciliation” mean the **P0 Wiki refresh**. A prior 96-page Wiki already existed at `0e0b7276a9b0d907bdc0050ad4bbf6f14eab0ecf`; the P0 refresh advanced it to the verified 455-page commit `29562d6863eadc61ac8e2e2fcf3bece7f1ceffdb`.
+- The two `mismatchCount: 0` snapshots verify repository issues and GitHub Project state. Wiki publication is separate evidence established by the normal Wiki push and fresh-clone verification; it is not part of the issue/Project verifier.
+- PR #64 changed the repository static-controls CI workflow. The unchanged-workflow claim is limited to GitHub Project automation workflows/rules during live reconciliation, which were not mutated.
+
+No prior log text was changed. The current package/task boundary remains unchanged: P0 package `Published`; 58 task dossiers Incomplete/Hold; zero Ready; zero `executionAllowed`; no implementation, private-system read, authentic-media processing, deployment, or production claim.
