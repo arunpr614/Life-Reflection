@@ -6,7 +6,7 @@
 | --- | --- |
 | Release | R9 — Private Launch Acceptance and Stabilization |
 | Document type | Product requirements document |
-| Status | Planning draft; not an approval, launch, deployment, or release record |
+| Status | Council-reviewed planning baseline; not an implementation, deployment, launch, or release-acceptance record |
 | Accountable role | Product owner |
 | Proposed start | 2027-02-22 |
 | Proposed target | 2027-03-12 |
@@ -41,7 +41,7 @@ R9 adds no net-new feature behavior. Every included ID is an integrated acceptan
 
 ## Owner scenarios
 
-1. The owner confirms one-user access/denial and completes manual text, authorized photo, prospective voice, explicit date, review, Calendar, Timeline, Search, and Journal Day journeys.
+1. The owner confirms one-user access/denial and completes manual text, authorized photo, prospective voice, explicit date, review, Calendar, Monthly Almanac, Search, and Journal Day journeys.
 2. The owner corrects, resolves a source conflict, redates, reviews history, deletes/restores, permanently deletes a synthetic fixture, manages Source and Artwork Suppression, and validates ordinary-day visibility.
 3. The owner uses only configurations that passed their frozen evaluations, reviews text/art privacy disclosures, protects/replaces generated fields, handles refusal/failure/budget states, and confirms real-photo cover precedence.
 4. The owner creates and independently validates an encrypted export containing current, history, Trash, suppressions, originals, generated artifacts, relationships, and checksums.
@@ -55,7 +55,7 @@ R9 adds no net-new feature behavior. Every included ID is an integrated acceptan
 - Scope and source truth: LID-SCP-001 through LID-SCP-004 pass owner/private boundary, Journal Date, Original Timestamp, source/derived, and source-empty-day scenarios.
 - Capture: LID-TG-001 through LID-TG-010, LID-VN-001 through LID-VN-007, and LID-UP-001 through LID-UP-003 pass authorization, validation, durable capture, dating/review, duplicate, original/derivative, prospective/replay/lifecycle/suppression, and file-preservation scenarios.
 - Source lifecycle: LID-SRC-001 through LID-SRC-004 pass immutable revision, Correction, three-way conflict choice, atomic redating, and exact source-set binding scenarios.
-- Reflection: LID-REF-001 through LID-REF-007 pass Calendar, Timeline, deterministic Search, Journal Day, visual/theme/motion, browser/accessibility, and management-safety scenarios.
+- Reflection: LID-REF-001 through LID-REF-007 pass Calendar, Monthly Almanac, deterministic Search, Journal Day, visual/theme/motion, browser/accessibility, and management-safety scenarios.
 - Generated text: LID-AIT-001 through LID-AIT-007 pass evaluation, configuration, output, scheduling, protection/replacement, typed privacy, failure, source-race, and provenance scenarios.
 - Artwork: LID-AIA-001 through LID-AIA-011 pass evaluation, Brief, manual/sweep eligibility, style/label, refusal, versions, cover, suppression, staleness, and typed configuration scenarios.
 - Operations: LID-OPS-001 through LID-OPS-018 pass access, callback, secrets, encryption, staging, watermarks, transition-readiness, private delivery, references, Trash, backup/restore, Recovery Ceremony, export, health, alerts, logs, budget, and failure-isolation scenarios.

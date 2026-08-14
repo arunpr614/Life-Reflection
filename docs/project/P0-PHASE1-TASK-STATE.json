@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "1.0.0",
+  "asOf": "2026-08-14",
+  "evidenceBoundary": "A status records the state of its named work package only. Planning evidence does not prove implementation, deployment, production readiness, or release acceptance.",
+  "defaultStatus": "Backlog",
+  "statusOverrides": {
+    "AUD-001": "Done",
+    "PC-001": "Done",
+    "SPK-R0-001": "In progress",
+    "PRD-R0-001": "Done",
+    "UX-R0-001": "Next",
+    "ARCH-R0-001": "Next",
+    "ENG-R0-001": "Next",
+    "REL-R0-001": "Next",
+    "PRD-R1-001": "Done",
+    "PRD-R2-001": "Done",
+    "PRD-R3-001": "Done",
+    "PRD-R4-001": "Done",
+    "PRD-R5-001": "Done",
+    "PRD-R6-001": "Done",
+    "PRD-R7-001": "Done",
+    "PRD-R8-001": "Done",
+    "PRD-R9-001": "Done",
+    "PID-R10-001": "Done"
+  },
+  "evidenceReferences": {
+    "AUD-001": [
+      "docs/audits/PROTOTYPE-V5-FEATURE-AUDIT.md"
+    ],
+    "PC-001": [
+      "docs/council/COUNCIL-REVIEW.md",
+      "docs/council/PHASE1-COUNCIL-DECISION-RECORD.md",
+      "docs/council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md"
+    ],
+    "SPK-R0-001": [
+      "docs/research/HETZNER-SHARED-HOST-DEPLOYMENT-SPIKE.md",
+      "docs/architecture/HETZNER-SHARED-HOST-RUNBOOK.md"
+    ],
+    "PRD-R0-001": [
+      "docs/product/releases/PRD-R0-SHARED-HOST-PRIVATE-FOUNDATION.md"
+    ],
+    "PRD-R1-001": [
+      "docs/product/releases/PRD-R1-MANUAL-JOURNAL-ARCHIVE.md"
+    ],
+    "PRD-R2-001": [
+      "docs/product/releases/PRD-R2-TELEGRAM-PHOTO-CAPTURE.md"
+    ],
+    "PRD-R3-001": [
+      "docs/product/releases/PRD-R3-RETRIEVAL-DATE-INTEGRITY.md"
+    ],
+    "PRD-R4-001": [
+      "docs/product/releases/PRD-R4-SOURCE-HISTORY-LIFECYCLE.md"
+    ],
+    "PRD-R5-001": [
+      "docs/product/releases/PRD-R5-PROSPECTIVE-VOICENOTES-SYNC.md"
+    ],
+    "PRD-R6-001": [
+      "docs/product/releases/PRD-R6-GENERATED-TEXT-REFLECTION.md"
+    ],
+    "PRD-R7-001": [
+      "docs/product/releases/PRD-R7-GENERATED-ARTWORK.md"
+    ],
+    "PRD-R8-001": [
+      "docs/product/releases/PRD-R8-OPERATIONAL-SCALE-RESILIENCE.md"
+    ],
+    "PRD-R9-001": [
+      "docs/product/releases/PRD-R9-PRIVATE-LAUNCH-ACCEPTANCE.md"
+    ],
+    "PID-R10-001": [
+      "docs/product/releases/PID-R10-OBJECT-STORE-TRANSITION.md"
+    ]
+  }
+}

@@ -1,14 +1,14 @@
 # Life in Days — UX specification
 
 - **Document owner:** Product Council — UI/UX Design Lead
-- **Updated:** 2026-08-13
-- **Status:** Detailed planning specification; no interface has been designed, implemented, tested, or deployed
+- **Updated:** 2026-08-14
+- **Status:** Comprehensive planning contract with fictional v1–v10 prototype inputs; no working application interface has been implemented, tested, or deployed
 - **Product boundary:** Private, single-user responsive web application
 - **Primary user:** Arun
 - **Journal timezone:** Fixed `Asia/Kolkata`
 - **Locale conventions:** `en-IN`, Monday-first calendar
 
-This specification translates the confirmed discovery decisions into an interaction and presentation contract. It does not authorize implementation, paid evaluation, provider configuration, credential collection, or deployment. The proposed shared understanding still requires Arun's explicit confirmation. If this document conflicts with `CONTEXT.md` or `docs/discovery/REQUIREMENTS.md`, those sources win and this document must be corrected.
+This specification translates the confirmed discovery decisions into an interaction and presentation contract. The dated [P0 execution authorization](../council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md), not this document by itself, governs implementation, evaluation, credentials, and deployment. Task-specific Product, Architecture, Design, QA, dependency, authority, and council gates must still pass before implementation begins. If this document conflicts with the governing PRD or a higher-precedence direct Product Owner decision, this document must be corrected.
 
 ## 1. Source references and requirement notation
 
@@ -40,7 +40,7 @@ The core experience loop is:
 1. Arun continues journaling in VoiceNotes and sending photographs through Telegram.
 2. Life in Days quietly assembles those authentic Source Items into a Journal Day.
 3. The application may add clearly labeled Derived Artifacts without replacing the sources.
-4. Arun revisits days through an image-first calendar, timeline, deterministic search, and Journal Day detail.
+4. Arun revisits days through an image-first Calendar, Monthly Almanac, deterministic Search, and Journal Day detail.
 5. When an import, date, derivation, backup, or provider needs attention, the application explains the specific condition without implying that the authentic memory was lost.
 
 ### 2.1 Jobs to be done
@@ -58,7 +58,7 @@ The core experience loop is:
 
 `UX-PRIN-01` Authentic Source Items and AI-created Derived Artifacts must never share labels, visual treatment, or provenance language that could make them seem equivalent. `REQ-PROVENANCE`, `REQ-AI`
 
-`UX-PRIN-02` A real Daily Photo must always outrank Generated Artwork in Calendar Cover selection. Generated Artwork must always carry a visible `AI artwork` label. `REQ-AI`
+`UX-PRIN-02` A real Daily Photo must always outrank Generated Artwork in Calendar Cover selection. Generated Artwork must be disclosed as `AI artwork` in its accessible name and wherever the artwork is selected, opened, or inspected; the Calendar tile itself uses progressive disclosure and no persistent source-type overlay chip. `REQ-AI`
 
 `UX-PRIN-03` The UI must distinguish “captured,” “processed,” “generated,” “backed up,” and “restore verified.” One state must never be used as evidence for another.
 
@@ -95,7 +95,7 @@ The core experience loop is:
 | Level | Surface | Purpose |
 | --- | --- | --- |
 | Primary | Calendar | Image-first month overview and entry point to a Journal Day |
-| Primary | Timeline | Chronological visual browsing across months |
+| Primary | Monthly Almanac | Chronological visual browsing across months |
 | Primary | Search | Deterministic date, text, and tag retrieval |
 | Primary/contextual | Journal Day detail | Full reflection and item-level management for one date |
 | Secondary | Upload Journal | Global manual `.txt`/`.md` capture |
@@ -113,27 +113,27 @@ The core experience loop is:
 
 `UX-IA-03` Needs Date Review must appear in navigation only when it contains items, while remaining reachable through Management when empty.
 
-`UX-IA-04` A Journal Day with no live Source Items must not appear in Calendar or Timeline, even if historical Derived Artifacts remain. Its history remains reachable through History/management. `REQ-REFLECTION`
+`UX-IA-04` A Journal Day with no live Source Items must not appear in Calendar or Monthly Almanac, even if historical Derived Artifacts remain. Its history remains reachable through History/management. `REQ-REFLECTION`
 
 ### 4.2 Navigation model
 
 #### Wide viewport
 
-- A persistent left navigation rail contains Calendar, Timeline, and Search.
-- A visually separate Management group contains History, Trash, Export, System Health, and Settings.
-- A prominent but quiet `Upload journal` action sits near the top of the rail.
-- Needs Date Review appears below the upload action with a count badge only when unresolved items exist.
-- The rail can collapse to icons, but icon-only mode must expose accessible names and tooltips.
-- The current section uses both a shape/background treatment and text weight; color alone is insufficient.
+- The approved Calendar/Almanac switcher sits near Search; do not add a competing Timeline tab or persistent primary-navigation rail.
+- Monthly Almanac may expose a collapsible local month/year index. It is contextual to Almanac and does not become global navigation.
+- Upload Journal remains a prominent but quiet global action.
+- Needs Date Review appears with a count only when unresolved items exist and remains reachable through Settings/More when empty.
+- History, Trash, Suppressions, Export, System Health, and other management surfaces live under Settings/More.
+- The current Calendar/Almanac selection uses shape/background, text weight, and an accessible current-state announcement; color alone is insufficient.
 
 #### Compact viewport
 
-- A four-item bottom bar contains Calendar, Timeline, Search, and More.
+- Compact navigation exposes Calendar, Monthly Almanac, Search, and More while preserving the same Calendar/Almanac relationship.
 - More opens a full-height sheet or page with Upload Journal, Needs Date Review, History, Trash, Export, System Health, and Settings.
 - Journal Day detail replaces the browse surface in the navigation stack and has a clear back action that restores month, query, filters, and scroll position.
 - Bottom navigation must not cover save bars, dialogs, gallery controls, or the final lines of journal text.
 
-`UX-NAV-01` Browser Back must return to the exact prior browsing context where practical: selected month, search query, Include history state, loaded timeline boundary, and scroll position.
+`UX-NAV-01` Browser Back must return to the exact prior browsing context where practical: selected month, search query, Include history state, loaded Almanac boundary, and scroll position.
 
 `UX-NAV-02` Previous/next navigation inside Journal Day detail moves between populated, visible Journal Days, not every calendar date. An adjacent-date calendar picker remains available for direct selection.
 
@@ -155,7 +155,7 @@ Life in Days
 │       ├── Upload Journal
 │       ├── Artwork and Visual Brief
 │       └── Day history
-├── Timeline
+├── Monthly Almanac (chronological browsing)
 │   └── Journal Day
 ├── Search
 │   ├── Current results
@@ -228,19 +228,17 @@ Every tile contains, in priority order:
 
 1. Journal Date number.
 2. Calendar Cover, when eligible.
-3. A visible `AI artwork` badge when the cover is generated.
-4. A restrained source-presence indicator or accessible text summary when helpful.
-5. Attention status only when the day has a stale/conflicted/failed derived state that needs review.
+3. No persistent source-type, `AI artwork`, or attention overlay chip. The accessible name conveys generated/source/attention context, and the selected Museum Margin/detail exposes it visibly.
 
 `UX-CAL-04` When at least one Daily Photo exists, the selected real photo is the Calendar Cover. Generated Artwork cannot be shown as the cover in that state. `REQ-AI`
 
-`UX-CAL-05` When no Daily Photo exists and Active Artwork exists, Active Artwork may be the Calendar Cover and must carry a persistent visible `AI artwork` label.
+`UX-CAL-05` When no Daily Photo exists and Active Artwork exists, Active Artwork may be the Calendar Cover. The Calendar tile uses no persistent overlay chip; its accessible name identifies `AI artwork`, and the selected Museum Margin/detail carries the persistent visible label.
 
 `UX-CAL-06` When a visible Journal Day has neither a Daily Photo nor Active Artwork, its tile uses a neutral paper/ink treatment with the date and optional concise title. It must not fabricate a stock image, gradient “memory,” or generated description.
 
 `UX-CAL-07` A date without a visible Journal Day is a quiet empty cell. It must not say `Missed`, `Incomplete`, show a streak gap, or expose an artwork-generation action.
 
-`UX-CAL-08` Today, selected day, keyboard focus, and attention state must use distinct treatments and not rely on color alone.
+`UX-CAL-08` Today, selected day, and keyboard focus use distinct non-overlay cell outlines and do not rely on color alone. Attention is conveyed in the accessible name and selected detail rather than a Calendar overlay chip.
 
 ### 6.3 Interaction and accessibility
 
@@ -260,18 +258,18 @@ Every tile contains, in priority order:
 
 ### 6.5 Future wireframe annotation — `WF-01` and `WF-02`
 
-- `WF-01 Calendar / wide`: validate the balance between photo-led tiles and legible dates at a 12-column desktop content width; annotate real versus AI cover badges, empty Journal Day, attention state, and nav rail.
+- `WF-01 Calendar / wide`: validate the balance between photo-led tiles and legible dates at a 12-column desktop content width; annotate accessible source/AI cover disclosure, empty Journal Day, attention state, and the approved Calendar/Almanac switcher near Search. Do not add overlay badges or a persistent primary-navigation rail.
 - `WF-02 Calendar / compact`: validate a seven-column layout at 320 CSS pixels without horizontal scrolling. Dates must remain operable even when images are visually cropped inside the tile; no content is centrally cropped at the source level.
 
-## 7. Timeline experience
+## 7. Monthly Almanac — chronological browsing
 
 **Source:** `REQ-REFLECTION`
 
-`UX-TIME-01` Timeline shows visible Journal Days in reverse chronological order by default, grouped by month and year.
+`UX-TIME-01` Monthly Almanac shows visible Journal Days in reverse chronological order by default, grouped by month and year. The stable `UX-TIME-*` IDs retain traceability; `Timeline` is not a separate user-facing destination.
 
 `UX-TIME-02` Each card includes Journal Date, Calendar Cover or neutral no-image treatment, title, summary preview, selected tags, source counts, and explicit `AI artwork` labeling where relevant.
 
-`UX-TIME-03` Real-photo cover rules are identical to Calendar. Timeline must not independently choose a generated or second photo.
+`UX-TIME-03` Real-photo cover rules are identical to Calendar. Monthly Almanac must not independently choose a generated or second photo.
 
 `UX-TIME-04` Long summaries truncate visually with `Read day`; source journals never appear as a feed excerpt unless the user opens the Journal Day.
 
@@ -279,7 +277,7 @@ Every tile contains, in priority order:
 
 `UX-TIME-06` A month/year jump control may move to the first visible Journal Day in that period. It must not become an On This Day or year-mosaic experience.
 
-Timeline empty/loading/error states follow Calendar language. A stale derived field may show a subtle `Review update` badge; an AI failure must not suppress the authentic day card.
+Monthly Almanac empty/loading/error states follow Calendar language. A stale derived field may show a subtle `Review update` badge; an AI failure must not suppress the authentic day card.
 
 ### Future wireframe annotation — `WF-03`
 
@@ -450,7 +448,7 @@ Show global date selection, inline prefilled date, safe preview, duplicate warni
 
 **Source:** `REQ-CAPTURE`, `REQ-PROVENANCE`, `LANG`
 
-`UX-DATE-01` Needs Date Review is a holding queue, not a Journal Day and not an error trash bin. Every item is preserved but absent from Calendar and Timeline until resolved.
+`UX-DATE-01` Needs Date Review is a holding queue, not a Journal Day and not an error trash bin. Every item is preserved but absent from Calendar and Monthly Almanac until resolved.
 
 `UX-DATE-02` A queue card shows source type, safe thumbnail or source title, Original Timestamp when available, the rejected/missing date reason, and `Assign Journal Date`.
 
@@ -476,7 +474,7 @@ Include a photo with invalid `YYYY-MM-DD`, a Voice Journal with missing creation
 
 `UX-REDATE-03` The move is all-or-nothing. Until the server confirms, the item remains visibly on its current day; failure leaves both days unchanged.
 
-`UX-REDATE-04` After success, show links to the source and destination Journal Days. If the source day has no remaining live Source Items, it disappears from Calendar/Timeline but stays available through History.
+`UX-REDATE-04` After success, show links to the source and destination Journal Days. If the source day has no remaining live Source Items, it disappears from Calendar/Monthly Almanac but stays available through History.
 
 `UX-REDATE-05` Generated Artwork that no longer belongs to the resulting source-revision set must leave the active gallery/cover and remain in history with a clear reason. It must not silently follow the moved source.
 
@@ -604,7 +602,7 @@ Stress-test long text, screen-reader diff labels, compact stacked comparison, un
 
 `UX-HIST-04` Selecting a historical version never makes it current until an explicit action is confirmed. Viewing history is read-only.
 
-`UX-HIST-05` A Journal Day hidden because it has no live Source Items opens with `Historical day — not shown in Calendar or Timeline` and management/restoration options only.
+`UX-HIST-05` A Journal Day hidden because it has no live Source Items opens with `Historical day — not shown in Calendar or Monthly Almanac` and management/restoration options only.
 
 `UX-HIST-06` Provider provenance includes provider, requested and returned model where available, generation date, prompt/template version, source revision set, and cost/safety state. Credentials, raw request payloads, and internal identifiers are never displayed.
 
@@ -672,7 +670,7 @@ Show recoverable Voice Journal, photo with shared Media Asset, expiring item, pe
 
 `UX-DUP-03` Different Journal Date: warn that identical bytes already appear on another date but permit addition because the same photograph may represent multiple days.
 
-`UX-DUP-04` Web provenance may show `Same media as another day` with a private link to that date, but ordinary Calendar/Timeline tiles do not need duplicate badges.
+`UX-DUP-04` Web provenance may show `Same media as another day` with a private link to that date, but ordinary Calendar/Monthly Almanac cards do not need duplicate badges.
 
 `UX-DUP-05` Duplicate warnings must never expose another Journal Day's title or journal text in Telegram. Date alone is sufficient.
 
@@ -739,7 +737,7 @@ Show fixed journal rules, integration activation warning, independent provider d
 - AI total/text/artwork spend for the current month;
 - Text Provider and Artwork Provider credential/configuration state.
 
-`UX-HEALTH-02` Status vocabulary is `Healthy`, `Attention`, `Failed`, `Blocked`, `Not configured`, or `Never verified`. `Never verified` must not appear green.
+`UX-HEALTH-02` Durable operational evidence uses exactly `unknown`, `never run`, `success`, `delayed`, `failed`, or `blocked`, matching `LID-OPS-014`. The UI renders those states respectively as `Unknown`, `Never verified`, `Healthy`, `Attention — delayed`, `Failed`, and `Blocked`. `Unknown` and `Never verified` never appear green. `Not configured` is a separate prerequisite/configuration state; it must not be substituted for job evidence or treated as success.
 
 `UX-HEALTH-03` Backup success and restore evidence are separate cards. The UI must never infer recoverability from backup upload alone.
 
@@ -839,7 +837,7 @@ Show the complete content manifest, encrypted default, unencrypted warning, pass
 4. Reliable creation timestamp derives Journal Date in `Asia/Kolkata`; missing timestamp routes to Needs Date Review.
 5. A Voice Journal Source Item becomes visible and preserves Original Timestamp/revision provenance.
 6. After the 15-minute Source Quiet Period, eligible text derivation begins.
-7. Calendar/Timeline display the Journal Day even if AI is pending/failed.
+7. Calendar/Monthly Almanac display the Journal Day even if AI is pending/failed.
 8. Late upstream changes create revisions and may trigger stale/conflict review.
 
 **UX invariants:** no historical auto-import, no fuzzy tags, no webhook receipt-time dating fallback, no silent merge, no source deletion upstream. `REQ-CAPTURE`, `REQ-PROVENANCE`
@@ -879,7 +877,7 @@ Show the complete content manifest, encrypted default, unencrypted warning, pass
 
 ### Flow F — revisit a day
 
-1. Enter through Calendar, Timeline, or Search.
+1. Enter through Calendar, Monthly Almanac, or Search.
 2. Recognize real versus AI cover before opening.
 3. Read gallery, generated reflection, and full sources in that order.
 4. Inspect provenance/history only when desired.
@@ -991,10 +989,10 @@ Recommended layout bands:
 | Band | Width | Behavior |
 | --- | ---: | --- |
 | Compact | 320–599 px | Bottom navigation, one-column detail, stacked diff, full-width dialogs/sheets |
-| Medium | 600–1023 px | Adaptive rail/drawer, wider calendar, two-column management where readable |
-| Wide | 1024 px and above | Persistent rail, gallery/reading columns, side-by-side diff |
+| Medium | 600–1023 px | Adaptive management drawer, wider calendar, two-column management where readable |
+| Wide | 1024 px and above | Calendar/Almanac switcher near Search, gallery/reading columns, side-by-side diff |
 
-`UX-RESP-02` Calendar must remain a seven-column month grid on compact screens; labels may shorten but dates and focus targets remain usable. Do not replace it with a list unless the user selects Timeline.
+`UX-RESP-02` Calendar must remain a seven-column month grid on compact screens; labels may shorten but dates and focus targets remain usable. Do not replace it with a list unless the user selects Monthly Almanac.
 
 `UX-RESP-03` Media uses a stable 4:5 presentation frame with non-destructive fit behavior. Original assets are never recropped or rewritten to satisfy layout.
 
@@ -1014,7 +1012,7 @@ Recommended layout bands:
 
 `UX-A11Y-01` Pages use one clear `h1`, logical nested headings, landmarks, and a skip link to main content.
 
-`UX-A11Y-02` Calendar uses an accessible grid/date-picker pattern with explicit month label and predictable focus; Timeline/Search remain lists/articles, not fake grids.
+`UX-A11Y-02` Calendar uses an accessible grid/date-picker pattern with explicit month label and predictable focus; Monthly Almanac/Search remain lists/articles, not fake grids.
 
 `UX-A11Y-03` Source and generated regions have programmatic headings. The `AI artwork` distinction is included in accessible names, not only overlaid visually.
 
@@ -1028,7 +1026,7 @@ Recommended layout bands:
 
 `UX-A11Y-07` Opening a modal moves focus to its heading or first relevant control; closing returns focus to the invoking control. Destructive dialogs trap focus until closed but never trap the user indefinitely.
 
-`UX-A11Y-08` Loading/re-rendering does not reset focus to the page top. Adding timeline results, resolving a queue item, or saving a field keeps a logical focus anchor.
+`UX-A11Y-08` Loading/re-rendering does not reset focus to the page top. Adding Monthly Almanac results, resolving a queue item, or saving a field keeps a logical focus anchor.
 
 `UX-A11Y-09` Touch targets meet at least the WCAG 2.2 AA 24-by-24 CSS-pixel minimum, with 44-by-44 preferred for primary mobile controls and calendar tiles where layout permits.
 
@@ -1133,11 +1131,11 @@ Every text/background pair and interactive state must be validated against WCAG 
 
 | Component | Responsibility | Essential states/accessibility |
 | --- | --- | --- |
-| App Shell | Global navigation, private context, content landmark | Wide rail, compact bottom bar, skip link |
+| App Shell | Global navigation, private context, content landmark | Calendar/Almanac switcher near Search, Settings/More management, compact navigation, skip link |
 | Month Navigator | Month/year movement | Previous/next/today, announced month change |
 | Calendar Grid | Month overview | Populated/empty/today/selected/focus/attention |
 | Journal Day Tile | Cover and date summary | Real cover, AI cover label, no-image day |
-| Timeline Card | Chronological preview | Real/AI/no image, stale indicator, source counts |
+| Almanac Card | Chronological preview | Real/AI/no image, stale indicator, source counts |
 | Search Box | Literal query entry | Label, clear, submit, no URL leakage |
 | Search Filters | Date/tag/history scope | Exact tags, Include history state |
 | Search Result | Match with provenance | Current/history/trash labels, highlighted snippet |
@@ -1151,11 +1149,11 @@ Every text/background pair and interactive state must be validated against WCAG 
 | Date Review Card | Undated item resolution | Reason, safe preview, date assignment |
 | Date Picker | Historical Journal Date selection | Monday-first, no future, timezone note |
 | Conflict Diff | Correction/upstream comparison | Side-by-side/stacked, additions/deletions labels |
-| Version Timeline | Source/derived history | Read-only view, explicit selection actions |
+| Version history | Source/derived history | Read-only view, explicit selection actions |
 | Stale Review Panel | Current/suggested field comparison | Use/keep/edit/resume actions |
 | Provider Select | Approved AI configuration | Evaluated options only, privacy/cost/lifecycle |
 | Budget Meter | AI usage and gates | Text equivalent, 80%/100% states |
-| Health Status Card | Operational evidence | Healthy/attention/failed/never verified |
+| Health Status Card | Operational evidence | `Unknown`, `Never verified`, `Healthy`, `Attention — delayed`, `Failed`, or `Blocked`; `Not configured` is a separate prerequisite/configuration state |
 | Storage Meter | Root/object status | Threshold numbers and emergency copy |
 | Trash Item | Recoverable deletion | Expiry, restore, permanent delete |
 | Suppression Item | Reconciliation/generation intent | Allow re-import/Allow generation |
@@ -1300,7 +1298,7 @@ The following experiences must not appear in navigation, empty states, settings,
 | Information architecture/navigation | `UX-IA-01`–`04`, `UX-NAV-01`–`04` | `REQ-REFLECTION`, `REQ-PRODUCT` |
 | Global behavior | `UX-GEN-01`–`14` | `REQ-PROVENANCE`, `REQ-CAPTURE`, `REQ-OPS`, `LANG` |
 | Calendar | `UX-CAL-01`–`11` | `REQ-REFLECTION`, `REQ-AI`, `REQ-PROVENANCE` |
-| Timeline | `UX-TIME-01`–`06` | `REQ-REFLECTION`, `REQ-AI` |
+| Monthly Almanac | `UX-TIME-01`–`06` | `REQ-REFLECTION`, `REQ-AI` |
 | Search | `UX-SEARCH-01`–`09` | `REQ-REFLECTION`, `REQ-PROVENANCE`, `REQ-DEFERRED` |
 | Journal Day | `UX-DAY-01`–`22` | `REQ-PROVENANCE`, `REQ-CAPTURE`, `REQ-AI`, `REQ-REFLECTION` |
 | Manual upload | `UX-UPLOAD-01`–`06` | `REQ-CAPTURE`, `REQ-REFLECTION` |

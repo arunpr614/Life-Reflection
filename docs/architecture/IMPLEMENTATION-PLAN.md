@@ -1,8 +1,8 @@
 # Life in Days — detailed implementation plan
 
-Updated: 2026-08-13
+Updated: 2026-08-14
 Owner: Product Council — Technical Architecture seat, integrated by the council chair
-Status: proposed implementation baseline; no implementation, evaluation, credential collection, infrastructure mutation, deployment, or launch has occurred or is authorized
+Status: shared architecture input; task entry is governed by the P0 task-dossier and Product Council readiness controls. No implementation, evaluation, credential collection, infrastructure mutation, deployment, or launch is claimed by this document.
 
 ## 1. Purpose and authority
 
@@ -11,12 +11,12 @@ This plan translates the [Product Requirements Document](../product/PRODUCT-REQU
 Precedence is:
 
 1. Arun's direct decisions and corrections.
-2. The shared understanding after Arun explicitly confirms it.
-3. Discovery requirements and `CONTEXT.md`.
+2. The P0 execution authorization and a task-specific Product Council readiness decision.
+3. Confirmed discovery requirements and `CONTEXT.md`.
 4. PRD and UX behavior.
-5. This implementation plan and tracker.
+5. This shared implementation-plan input and the task-specific technical plan.
 
-G0, the council planning baseline, is complete. The first unresolved gate is `GOV-008` / G1: Arun's explicit shared-understanding confirmation. Until G1 occurs, this document authorizes no code, paid evaluation, account configuration, secret collection, DNS change, server change, or deployment.
+The P0 execution authorization supersedes the earlier universal `GOV-008` / G1 confirmation stop. It authorizes local/public readiness-control work only. A substantive task may start only after its six P0-prefixed dossier artifacts pass the five-seat Product Council gate at a reviewed revision. Credentialed, private-host, paid-provider, authentic-content, deployment, recovery, and release acts remain separately owner-controlled where recorded.
 
 ## 2. Decision classification
 
@@ -24,7 +24,7 @@ The plan distinguishes confirmed product decisions from architectural recommenda
 
 | Area | Classification | Current position | Gate / evidence |
 | --- | --- | --- | --- |
-| Product model | Confirmed | Private, single-user, prospective visual memory archive in `Asia/Kolkata` | G1 owner confirmation |
+| Product model | Confirmed | Private, single-user, prospective visual memory archive in `Asia/Kolkata` | P0 execution authorization; task-specific council readiness |
 | Deployment shape | Confirmed boundary | One existing Hetzner server, Cloudflare routing, best-effort availability | G2 architecture acceptance; G7 deployment authorization |
 | Application shape | Recommendation | One TypeScript modular monolith with a web process and a worker process | ADR-001 at G2 |
 | Browser UI | Recommendation | Responsive React application served from the same origin as the API | ADR-001; UX prototype review |
@@ -70,7 +70,7 @@ No recommendation becomes a decision merely because it appears here. A gated fai
 
 ### 3.4 Product and UX drivers
 
-- Image-first calendar, timeline, deterministic search, and Journal Day detail are primary surfaces.
+- Image-first Calendar, Monthly Almanac, deterministic Search, and Journal Day detail are primary surfaces; there is no separate user-facing Timeline destination.
 - All failure, stale, conflict, date-review, Trash, suppression, and provider states need accessible UI.
 - The web application targets current desktop/mobile browsers, keyboard access, reduced motion, and WCAG 2.2 AA contrast.
 - There is no native app, offline-first synchronization, multi-user model, reminder loop, coaching, or public content in MVP.
@@ -245,7 +245,7 @@ Generated assets, secrets, live databases, media, exports, provider responses, a
 2. A Source Revision is append-only. A Correction points to a base revision and never mutates upstream data.
 3. A source/Correction conflict cannot resolve automatically and offers exactly the three approved actions.
 4. Moving a Source Item updates old/new Journal Days, visibility, search, cover, and stale projections in one database transaction.
-5. A Source Item/Daily Photo may lack a Journal Day only while durably held in Needs Date Review; it is absent from ordinary calendar/timeline queries but remains manageable.
+5. A Source Item/Daily Photo may lack a Journal Day only while durably held in Needs Date Review; it is absent from ordinary Calendar/Monthly Almanac queries but remains manageable.
 6. A Daily Photo references one Media Asset; duplicate logical photos need not duplicate physical bytes.
 7. A Generated Artwork can be Calendar Cover only when no live Daily Photo exists.
 8. Protected title/summary/tag fields retain the selected value when sources change; replacement is a separate reviewable version.
@@ -369,7 +369,7 @@ Route names are recommendations, not frozen APIs. All schemas must be explicit a
 | Method/path family | Purpose | Critical rules |
 | --- | --- | --- |
 | `GET /api/calendar` | Month projection | Authenticated; no hidden empty days; real-photo cover invariant |
-| `GET /api/timeline` | Cursor-based chronological days | Stable opaque cursor; no personal query values in URL logs where avoidable |
+| `GET /api/almanac` | Cursor-based chronological Journal Days for Monthly Almanac | Stable opaque cursor; no personal query values in URL logs where avoidable |
 | `POST /api/search` | Text/date/tag search | Body-based query; Include history explicit; private/no-store |
 | `GET /api/days/:date` | Journal Day detail | Fixed date grammar; provenance and current/history separation |
 | `POST /api/uploads/journals` | `.txt`/`.md` upload | Auth, CSRF, 1 MiB/UTF-8/type/date/duplicate checks |
@@ -670,8 +670,8 @@ Initial design targets are acceptance hypotheses, not production claims:
 
 - serialize heavy image derivation at concurrency one on the small host;
 - keep webhook validation/queueing fast and bound request/download time;
-- paginate timeline/search/history and avoid loading full journals into month views;
-- serve precomputed local thumbnails, not Original images, in calendar/timeline;
+- paginate Monthly Almanac/Search/History and avoid loading full journals into month views;
+- serve precomputed local thumbnails, not Original images, in Calendar/Monthly Almanac;
 - enforce upload/image/queue/export concurrency and memory budgets;
 - checkpoint WAL and monitor database/media/export/temporary space;
 - load-test synthetic archives at 1, 5, and 10 GB media plus multi-year metadata;
@@ -795,7 +795,7 @@ Each slice includes domain, adapter, UI state, health, privacy, failure, export,
 ### Phase 5 — Reflection and lifecycle (`M5`)
 
 - Build design tokens/shell and accessible navigation (`UXD-*`).
-- Calendar, timeline, Journal Day detail, gallery/cover, provenance/history, Needs Date Review (`REF-*`).
+- Calendar, Monthly Almanac, Journal Day detail, gallery/cover, provenance/history, Needs Date Review (`REF-*`).
 - Lexical/date/tag search and Include history (`SRH-*`).
 - Corrections/conflict/redating/Trash/suppression/re-import flows (`LFC-*`).
 - Validate at 320 px through desktop, keyboard, zoom, reduced motion, and supported browsers.
@@ -876,7 +876,7 @@ Only after explicit deployment authorization:
 
 | Gate/risk | Why unresolved | Resolution evidence |
 | --- | --- | --- |
-| Shared understanding | Owner has not yet supplied explicit confirmation | `GOV-008` written confirmation |
+| Shared understanding | Earlier universal confirmation stop superseded by the scope-bounded P0 execution authorization | [P0 execution authorization](../council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md); per-task council readiness |
 | Exact stack/runtime | Empty repository; target-host compatibility unproven | ADR-001 spike and council review |
 | SQLCipher/FTS | Native build/concurrency/backup behavior must be proven | ADR-002 test report |
 | Crypto/key design | High-consequence and recovery-dependent | ADR-004, test vectors, security review, Recovery Ceremony |

@@ -1,10 +1,12 @@
 # Life in Days — project tracker
 
-Updated: 2026-08-13
+Updated: 2026-08-14
 Owner: Product Council, coordinated by the Project Manager
 Product owner and final decision-maker: Arun
-Current phase: planning baseline; implementation is not authorized
-Current blocking gate: G1, pending Arun's explicit confirmation of the [proposed shared understanding](../discovery/SHARED-UNDERSTANDING.md). G0 is complete; that planning approval authorizes no implementation or external mutation.
+Current phase: P0 execution-control remediation; no substantive implementation task is authorized
+Current blocking gate: every task must pass the [P0 task Definition of Ready](../council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md). The P0 execution authorization supersedes the earlier universal G1 confirmation stop, but all 58 task dossiers remain Incomplete/Hold and private or owner-controlled acts retain their explicit gates.
+
+Operational status, issue identity, and schedule projections are governed by the generated [Phase 1 roadmap manifest](PHASE1-ROADMAP-MANIFEST.json), [task state ledger](P0-PHASE1-TASK-STATE.json), and [task artifact register](P0-PHASE1-TASK-ARTIFACT-REGISTER.json). The G1/GOV-008 dependency labels retained below are historical planning lineage, not current task-entry authority.
 
 This is the execution system for the Life in Days MVP. It converts the approved discovery record into milestones, epics, tasks, evidence gates, and operating controls. The canonical product intent remains in [REQUIREMENTS.md](../discovery/REQUIREMENTS.md) and the canonical terminology remains in [CONTEXT.md](../../CONTEXT.md). If this tracker and those sources differ, the confirmed requirements and domain language take precedence until the discrepancy is resolved through change control.
 
@@ -29,8 +31,8 @@ Task owner names are roles, not staffing claims: **PO** (Arun), **PM**, **Produc
 | Gate | Decision required | Entry evidence | Exit evidence and approver | Status |
 | --- | --- | --- | --- | --- |
 | **G0 — Planning baseline** | Council artifacts faithfully cover the approved discovery record. | Discovery requirements, research, model reports, storage report, and glossary exist. | PRD, implementation plan, UX direction, architecture recommendations, traceability matrix, and tracker passed the recorded cross-document council review with no open P0/P1 planning gap. | **Complete** |
-| **G1 — Shared understanding** | The proposed product understanding is confirmed without hidden assumptions. | [Proposed shared understanding](../discovery/SHARED-UNDERSTANDING.md) and [requirements](../discovery/REQUIREMENTS.md). | Arun explicitly confirms the shared understanding. This confirmation authorizes only the next approved planning/evaluation steps; deployment remains separately gated. | **Blocked** |
-| **G2 — Architecture baseline** | The deployment shape, data model, encryption/key design, trust boundaries, job model, and rollback approach are acceptable. | G1; architecture questions and threat model prepared. | Reviewed architecture record and required ADRs, including the no-additional-cost encryption/key design; PO accepts material trade-offs. | Not started |
+| **G1 — Shared understanding** | The product scope is confirmed without hidden assumptions. | [Proposed shared understanding](../discovery/SHARED-UNDERSTANDING.md), [requirements](../discovery/REQUIREMENTS.md), and P0 execution authorization. | [P0 execution authorization](../council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md) supersedes the earlier universal confirmation stop while preserving separate task, private, deployment, and human gates. | **Complete** |
+| **G2 — Architecture baseline** | The deployment shape, data model, encryption/key design, trust boundaries, job model, and rollback approach are acceptable. | G1; task-specific architecture questions and threat model prepared. | Reviewed architecture record and required ADRs, including the no-additional-cost encryption/key design; the task council decision accepts material trade-offs. | Not started |
 | **G3 — Risk-retiring evaluations** | VoiceNotes assumptions and candidate AI models are proven or the affected decision branch is reopened. | G1; synthetic test data; budget-limited credentials supplied through an approved secret path. | VoiceNotes spike report; signed text and artwork scorecards; passing provider/model selections or explicit PO reconsideration. | Not started |
 | **G4 — Build readiness** | The team has implementable, testable slices with privacy controls and no unresolved critical dependency. | G2 and applicable G3 results; PRD and implementation plan baselined. | Ready backlog, acceptance criteria, test strategy, development environment, and traceability matrix reviewed by Product, Architecture, UX, Security/Privacy, and QA. | Not started |
 | **G5 — Feature complete** | Every MVP capability works end to end in a non-production environment. | Core, capture, reflection, AI, lifecycle, and operations epics meet their exit criteria. | Full requirements traceability; no open severity-1/2 defects; all excluded/deferred behavior remains absent or disabled. | Not started |
@@ -41,7 +43,7 @@ Task owner names are roles, not staffing claims: **PO** (Arun), **PM**, **Produc
 
 Rules:
 
-- G1 blocks paid evaluation execution, application implementation, provider configuration, secret collection, and deployment.
+- The task-specific P0 Definition of Ready blocks substantive execution until the required Product, Architecture, Design, QA, Delivery, and Council artifacts pass at a reviewed revision.
 - Credentials are requested only when a confirmed, approved step needs them and only through the secrets path defined at G2.
 - A failed VoiceNotes or AI hard gate reopens that decision branch; it is never bypassed by an undocumented fallback.
 - G7 requires fresh deployment authorization even after implementation and evaluations are complete.
@@ -52,11 +54,11 @@ Rules:
 | Milestone | Outcome | Primary deliverables | Entry / exit relationship | Status |
 | --- | --- | --- | --- | --- |
 | **M0 — Council planning baseline** | One coherent, traceable execution baseline. | Detailed PRD, UX specification, implementation plan, tracker, 78-row traceability matrix, role charters, and council review record. | Starts from completed discovery; exited through G0 on 2026-08-13. | **Complete** |
-| **M1 — Confirmed architecture baseline** | Product scope and hard-to-reverse technical choices are explicitly accepted. | Shared-understanding confirmation, system/data diagrams, threat model, ADRs, test strategy. | G1 then G2. | Blocked by G1 |
+| **M1 — Confirmed architecture baseline** | Product scope and hard-to-reverse technical choices are explicitly accepted. | Task-bound system/data diagrams, threat model, ADRs, test strategy, and council readiness evidence. | G1 then G2. | Not started; task dossiers Incomplete |
 | **M2 — Integration and model qualification** | Unknown external behavior and model choices are resolved with synthetic evidence. | VoiceNotes spike; text evaluation; artwork evaluation; provider dropdown decision. | G1 required; exits through G3. | Not started |
 | **M3 — Trustworthy archive foundation** | The canonical data model, private media pipeline, encryption, jobs, and source provenance work locally. | Database schema, storage abstraction, encrypted media store, lifecycle primitives, internal APIs. | G2 and relevant G3 outcomes; contributes to G4. | Not started |
 | **M4 — Capture complete** | Telegram photos, VoiceNotes journals, and manual journal files arrive durably and idempotently. | Telegram integration, VoiceNotes reconciliation, upload flows, Needs Date Review. | M3; exits when capture epics pass. | Not started |
-| **M5 — Reflection experience complete** | Arun can revisit, understand, search, and manage Journal Days across supported devices. | Calendar, timeline, Journal Day detail, galleries, search, Corrections, conflict and Trash flows. | M3 and M4. | Not started |
+| **M5 — Reflection experience complete** | Arun can revisit, understand, search, and manage Journal Days across supported devices. | Calendar, Monthly Almanac, Journal Day detail, galleries, Search, Corrections, conflict and Trash flows. | M3 and M4. | Not started |
 | **M6 — Derived intelligence complete** | Text artifacts and artwork are trustworthy, controllable, budgeted, and visibly distinct from sources. | Provider adapters, derivation jobs, field protection, manual artwork, Artwork Sweep, provenance UI. | M2, M3, and source flows. | Not started |
 | **M7 — Resilience and privacy complete** | Export, backup, restore, security, privacy, health, accessibility, and operational controls are proven. | Restic/B2 recovery, export/restore, privacy tests, health view, runbooks, accessibility evidence. | M3–M6; contributes to G6. | Not started |
 | **M8 — Private release candidate** | A full candidate passes requirements, browser, failure, security, and recovery testing. | Traceability matrix, regression results, threat review, PO acceptance evidence. | G5 then G6. | Not started |
@@ -97,7 +99,7 @@ Rules:
 ### E01 GOV — Product governance and council artifacts
 
 Objective: preserve approved product intent, surface unresolved decisions, and make every implementation claim traceable.
-Exit criteria: G0 and G1 are resolved, all council artifacts agree on MVP/deferred boundaries, and every later change follows the approved process.
+Exit criteria: G0 and G1 are resolved, P0 execution controls are installed, all council artifacts agree on MVP/deferred boundaries, and every later change follows the approved process.
 
 | ID | Task / outcome | Owner | Depends on | Status | Acceptance / evidence | Milestone |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -108,7 +110,7 @@ Exit criteria: G0 and G1 are resolved, all council artifacts agree on MVP/deferr
 | GOV-005 | Define the artwork-model market scan and blind visual protocol. | AI Evaluation / UX | GOV-003 | Complete | [Artwork evaluation report](../discovery/AI-ARTWORK-MODEL-EVALUATION.md) contains hard gates, two-stage blind test, budget, and selection rules. | M0 |
 | GOV-006 | Decide the cost-aware live-media and recovery-store direction. | Architect / Platform/SRE | GOV-003 | Complete | [Media storage report](../discovery/MEDIA-STORAGE-EVALUATION.md) records root-to-R2 and independent B2 recovery direction and thresholds. | M0 |
 | GOV-007 | Prepare a concise shared-understanding statement for owner confirmation. | Product | GOV-003–006 | Complete | [Proposed shared understanding](../discovery/SHARED-UNDERSTANDING.md) covers promise, trust model, capture, reflection, AI, privacy, recovery, operations, and deferrals. | M0 |
-| GOV-008 | Obtain Arun's explicit shared-understanding confirmation. | PO | GOV-007 | **Blocked** | Written confirmation exists; its scope is recorded without interpreting it as deployment authorization. | M1 |
+| GOV-008 | Resolve the shared-understanding authorization boundary. | PO | GOV-007 | **Complete** | [P0 execution authorization](../council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md) records the scope-bounded superseding decision without interpreting it as private-host, credential, deployment, authentic-content, recovery, or release authorization. | M1 |
 | GOV-009 | Produce and council-review the detailed PRD. | Product / Council | GOV-003, GOV-007 | **Complete** | [Product Requirements](../product/PRODUCT-REQUIREMENTS.md) defines 78 stable requirements with priorities, acceptance behavior, edge cases, risks, and non-goals; [council review](../council/COUNCIL-REVIEW.md) records Product approval and closed discrepancies. | M0 |
 | GOV-010 | Produce and council-review the implementation plan. | Architect / Council | GOV-003, GOV-006 | **Complete** | [Implementation Plan](../architecture/IMPLEMENTATION-PLAN.md) sequences architecture, slices, migrations, tests, secrets, deployment, rollback, and evidence gates without authorizing execution; Architecture approved it in the [council review](../council/COUNCIL-REVIEW.md). | M0 |
 | GOV-011 | Establish this stable-ID project tracker. | PM | GOV-003–007 | Complete | This file contains milestones, epics, tasks, dependencies, evidence, registers, release controls, and backlog. | M0 |
@@ -176,9 +178,9 @@ Exit criteria: database constraints and domain tests prove all canonical invaria
 | DOM-003 | Model Derived Artifacts, exact source-revision binding, versions, stale state, and per-field protection. | Backend | ARC-003 | Not started | Title/summary/tag/brief/artwork provenance and protection state are independent and history is retained. | M3 |
 | DOM-004 | Model Daily Photo order, selected real-photo cover, Active Artwork, and real-photo cover precedence. | Backend | ARC-003 | Not started | Constraints prevent Generated Artwork covering a day with a live Daily Photo and preserve chronological/reordered gallery state. | M3 |
 | DOM-005 | Implement atomic Journal Date moves across both affected Journal Days. | Backend | DOM-001–004 | Not started | One transaction updates membership, covers, search, staleness, and art eligibility; rollback leaves neither partial day. | M3 |
-| DOM-006 | Implement Needs Date Review as a first-class holding state. | Backend / Frontend | DOM-001 | Not started | Undated/invalid/future items remain durable but absent from ordinary calendar/timeline until an explicit valid date is assigned. | M3 |
+| DOM-006 | Implement Needs Date Review as a first-class holding state. | Backend / Frontend | DOM-001 | Not started | Undated/invalid/future items remain durable but absent from ordinary Calendar/Monthly Almanac until an explicit valid date is assigned. | M3 |
 | DOM-007 | Model Media Asset separately from Daily Photo references and global plaintext checksum deduplication. | Backend | ARC-003, PRV-004 | Not started | Same bytes can support multiple photo records/dates without duplicate storage; reference and Trash state control physical deletion. | M3 |
-| DOM-008 | Enforce ordinary-view visibility rules for empty Journal Days. | Backend | DOM-002–004, LFC-006 | Not started | A day with no live Source Item is absent from calendar/timeline despite retained history, but remains accessible through management/history. | M5 |
+| DOM-008 | Enforce ordinary-view visibility rules for empty Journal Days. | Backend | DOM-002–004, LFC-006 | Not started | A day with no live Source Item is absent from Calendar/Monthly Almanac despite retained history, but remains accessible through management/history. | M5 |
 | DOM-009 | Build invariant fixtures and migration/constraint tests for the entire domain model. | Backend / QA | DOM-001–008 | Not started | Fixtures cover multiple sources/photos, conflicts, duplicate assets, redating, stale/protected artifacts, Trash, suppressions, and restoration. | M3 |
 
 ### E06 MED — Private media pipeline and root storage
@@ -525,11 +527,11 @@ flowchart LR
     M11 -. "must finish before G7 when triggered" .-> G7
 ```
 
-The critical path is currently stopped at **GOV-008 / G1**, Arun's shared-understanding confirmation. G0 and `GOV-012` are complete. Once Arun confirms, architecture and risk-retiring evaluations can run in parallel; build readiness requires both branches wherever their outcomes affect implementation.
+The critical path is currently stopped at the **task-specific P0 Definition of Ready**. G0, G1, and `GOV-012` are complete, but all 58 task dossiers remain Incomplete/Hold and zero tasks have `executionAllowed=true`. R0 architecture, design, QA, and delivery readiness artifacts are the next controlled planning work; private-host or credentialed execution remains owner-gated.
 
 ### Critical task chain
 
-1. **GOV-008 / G1** — obtain Arun's explicit shared-understanding confirmation; G0 council reconciliation is already complete.
+1. **P0 task dossier and council readiness** — approve the task-bound Product, Architecture, Design, QA, Delivery, and Council artifacts at a reviewed revision before substantive execution.
 2. **ARC-001 → ARC-005 → ARC-008** — establish trust boundaries, encryption/storage decision, and accepted architecture.
 3. In parallel:
    - **VNO-001 → VNO-005** — prove or reopen the VoiceNotes contract.

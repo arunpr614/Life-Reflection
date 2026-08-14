@@ -6,7 +6,7 @@
 | --- | --- |
 | Release | R6 — Generated Text Reflection |
 | Document type | Product requirements document |
-| Status | Planning draft; not an approval or release record |
+| Status | Council-reviewed planning baseline; not an implementation, deployment, or release-acceptance record |
 | Accountable role | Product owner |
 | Proposed start | 2026-12-14 |
 | Proposed target | 2027-01-08 |

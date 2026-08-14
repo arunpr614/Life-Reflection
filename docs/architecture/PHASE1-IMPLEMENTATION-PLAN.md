@@ -2,25 +2,25 @@
 
 - **Date:** 2026-08-14
 - **Owner:** Product Council — Technical Architect
-- **Status:** Detailed implementation baseline; implementation and deployment have not started
+- **Status:** Detailed shared architecture baseline; task-specific plans and council readiness still govern entry; implementation and deployment have not started
 **Roadmap vocabulary:** Backlog · Next · In progress · Done
 
 ## 1. Purpose and evidence boundary
 
-This plan turns the [global PRD](../product/PRODUCT-REQUIREMENTS.md), [UX specification](../design/UX-SPECIFICATION.md), v5 [HTML](../../prototypes/calendar-ui/index-v5.html), [JavaScript](../../prototypes/calendar-ui/app-v5.js), and [CSS](../../prototypes/calendar-ui/styles-v5.css), the [v5 feature audit](../audits/PROTOTYPE-V5-FEATURE-AUDIT.md), and [shared-host spike](../research/HETZNER-SHARED-HOST-DEPLOYMENT-SPIKE.md) into implementation-ready architecture and roadmap work packages.
+This plan turns the [global PRD](../product/PRODUCT-REQUIREMENTS.md), [UX specification](../design/UX-SPECIFICATION.md), v5 [HTML](../../prototypes/calendar-ui/index-v5.html), [JavaScript](../../prototypes/calendar-ui/app-v5.js), and [CSS](../../prototypes/calendar-ui/styles-v5.css), the [v5 feature audit](../audits/PROTOTYPE-V5-FEATURE-AUDIT.md), and [shared-host spike](../research/HETZNER-SHARED-HOST-DEPLOYMENT-SPIKE.md) into shared architecture input and roadmap work packages. It is not a substitute for a task-specific P0 Technical Plan or council decision.
 
 The v5 HTML/JavaScript/CSS and screenshots are interaction evidence using fictional browser-memory fixtures. They are not application, persistence, integration, encryption, authentication, accessibility-conformance, backup, recovery, deployment, or production evidence.
 
-Only the planning artifacts explicitly linked in a `Done` row are complete. Every product implementation, live-provider integration, host change, deployment, and launch task remains `Next` or `Backlog` until its own acceptance evidence exists.
+Only the bounded planning artifacts explicitly linked in a `Done` row are complete. Every substantive task remains blocked until its six P0-prefixed task artifacts are approved at a reviewed revision and the manifest records `executionAllowed=true`; live-provider integration, host change, deployment, and launch retain their additional explicit gates.
 
 ### Source precedence
 
 1. Direct owner decisions and corrections.
 2. [Phase1 Roadmap Manifest](../project/PHASE1-ROADMAP-MANIFEST.json) for release, task, status, date, dependency, and roadmap metadata.
-3. Product Council release-specific PRDs/PID after they are accepted.
-4. Stable `LID-*` requirements in the global PRD and canonical domain language.
-5. UX behavior and accepted prototype decisions.
-6. This plan, the deployment spike, and runbooks.
+3. Stable `LID-*` requirements in the global PRD and canonical domain language.
+4. UX behavior and accepted prototype decisions.
+5. Council-reviewed release PRDs/PID as parent planning inputs, plus the task-specific P0 Product, Architecture, Design, QA, Delivery, and Council artifacts for entry decisions.
+6. This shared plan, the deployment spike, and runbooks.
 
 An architecture recommendation cannot weaken a product acceptance criterion. A failed proof gate reopens the decision; it does not silently change product behavior.
 
@@ -32,7 +32,7 @@ An architecture recommendation cannot weaken a product acceptance criterion. A f
 | R0 — Shared-Host Private Foundation | 2026-08-17 to 2026-08-28 | Open a synthetic private shell; prove backup/restore and safe shared-host coexistence | Host qualification, stack/DB/crypto ADRs, Compose, Access, recovery foundation |
 | R1 — Manual Journal Archive | 2026-08-31 to 2026-09-18 | Upload a `.txt`/`.md` journal, revisit its day, export and restore it | Core domain, manual capture, calendar/day vertical slice |
 | R2 — Telegram Photo Capture | 2026-09-21 to 2026-10-09 | Send a photo, receive durable acknowledgement, revisit it privately | Callback boundary, image validation/encryption, duplicates, date instructions |
-| R3 — Retrieval and Date Integrity | 2026-10-12 to 2026-10-30 | Browse calendar/timeline, find a source, resolve uncertain dates | Retrieval, Needs Date Review, date/redating invariants, accessibility |
+| R3 — Retrieval and Date Integrity | 2026-10-12 to 2026-10-30 | Browse Calendar/Monthly Almanac, find a source, resolve uncertain dates | Retrieval, Needs Date Review, date/redating invariants, accessibility |
 | R4 — Source History and Lifecycle Safety | 2026-11-02 to 2026-11-20 | Correct without overwriting, resolve conflict, Trash/restore, inspect history | Revisions, Corrections, conflicts, suppressions, lifecycle/export |
 | R5 — Prospective VoiceNotes Sync | 2026-11-23 to 2026-12-11 | Prospectively import a qualifying synthetic/approved VoiceNotes journal and reconcile it | Contract spike, activation boundary, durable reconciliation, lifecycle |
 | R6 — Generated Text Reflection | 2026-12-14 to 2027-01-08 | Generate and safely review title/summary/tags from approved journal text | Model qualification, text adapter, provenance, budget, protection/failures |
@@ -216,7 +216,7 @@ All routes require a valid Cloudflare Access assertion at origin. State changes 
 
 | Interface family | Representative capability | Requirements |
 | --- | --- | --- |
-| `/api/calendar`, `/api/timeline`, `/api/days/:date` | Calendar/timeline/day queries without full-text leakage | `LID-REF-001`, `002`, `004` |
+| `/api/calendar`, `/api/almanac`, `/api/days/:date` | Calendar/Monthly Almanac/day queries without full-text leakage | `LID-REF-001`, `002`, `004` |
 | `/api/search` POST | Body-only lexical/date/tag query; optional history flag | `LID-REF-003`, `LID-OPS-016` |
 | `/api/uploads/journals` | Review/commit `.txt`/`.md` with deliberate date and idempotency | `LID-UP-001`–`003` |
 | `/api/date-review/*` | List, preview, resolve preserved undated sources | `LID-TG-006`, `LID-VN-004` |
@@ -309,7 +309,7 @@ An unknown outcome is reconciled using provider idempotency/request identity whe
 
 ### R3 — retrieval and date integrity
 
-- Complete Calendar, cross-month Timeline, day detail/gallery, private description, match-reason Search and Include History.
+- Complete Calendar, cross-month Monthly Almanac, day detail/gallery, private description, match-reason Search and Include History.
 - Needs Date Review queue and resolution preview.
 - Atomic redating projections and stale-job rejection.
 - Loading/error/session/interruption states; 320 px, zoom, keyboard, screen reader, reduced motion, contrast and browser evidence.
@@ -393,10 +393,10 @@ This table is rendered from the [Phase1 Roadmap Manifest](../project/PHASE1-ROAD
 | `ENG-R2-001` | Telegram Authorization & Durable Capture | Backlog | R2 | 2026-09-24 to 2026-10-02 | Implement secret/sender/chat authorization, media validation, exact dating, review holding, and post-commit acknowledgement. | `LID-TG-001`, `LID-TG-002`, `LID-TG-003`, `LID-TG-004`, `LID-TG-005`, `LID-TG-006`, `LID-OPS-005`, `LID-OPS-011`, `LID-OPS-015`, `LID-OPS-018` | `UX-R2-001`, `ARCH-R2-001`, `REL-R1-001` | [PRD R2 TELEGRAM PHOTO CAPTURE](../product/releases/PRD-R2-TELEGRAM-PHOTO-CAPTURE.md) | [UX DESIGN REVIEW](../council/UX-DESIGN-REVIEW.md)<br>[UX SPECIFICATION](../design/UX-SPECIFICATION.md)<br>[index v5](../../prototypes/calendar-ui/index-v5.html) |
 | `ENG-R2-002` | Gallery/Cover/Dedup/Derivatives | Backlog | R2 | 2026-09-28 to 2026-10-06 | Implement durable gallery order, real-photo cover, global checksum references, captions, byte-preserved Originals, and local metadata-free thumbnails. | `LID-TG-007`, `LID-TG-008`, `LID-TG-009`, `LID-TG-010`, `LID-OPS-009`, `LID-OPS-011`, `LID-OPS-018` | `ENG-R2-001` | [PRD R2 TELEGRAM PHOTO CAPTURE](../product/releases/PRD-R2-TELEGRAM-PHOTO-CAPTURE.md) | [UX DESIGN REVIEW](../council/UX-DESIGN-REVIEW.md)<br>[UX SPECIFICATION](../design/UX-SPECIFICATION.md)<br>[index v5](../../prototypes/calendar-ui/index-v5.html) |
 | `REL-R2-001` | Media Privacy/Restore Acceptance | Backlog | R2 | 2026-10-07 to 2026-10-09 | Execute capture, invalid input/date, album, duplicate, cover, Original, AI-exclusion, media restore, and rollback fixtures. | `LID-TG-001`, `LID-TG-002`, `LID-TG-003`, `LID-TG-004`, `LID-TG-005`, `LID-TG-006`, `LID-TG-007`, `LID-TG-008`, `LID-TG-009`, `LID-TG-010`, `LID-OPS-005`, `LID-OPS-009`, `LID-OPS-011`, `LID-OPS-015`, `LID-OPS-018` | `ENG-R2-001`, `ENG-R2-002` | [PRD R2 TELEGRAM PHOTO CAPTURE](../product/releases/PRD-R2-TELEGRAM-PHOTO-CAPTURE.md) | [UX DESIGN REVIEW](../council/UX-DESIGN-REVIEW.md)<br>[UX SPECIFICATION](../design/UX-SPECIFICATION.md)<br>[index v5](../../prototypes/calendar-ui/index-v5.html) |
-| `PRD-R3-001` | Retrieval & Date Integrity PRD | Done | R3 | 2026-10-12 to 2026-10-14 | Define cross-month Timeline, exact retrieval, query privacy, Date Review, and atomic redating invariants. | `LID-SRC-003`, `LID-REF-002`, `LID-REF-003`, `LID-REF-006`, `LID-OPS-011`, `LID-OPS-018` | `PC-001` | [PRD R3 RETRIEVAL DATE INTEGRITY](../product/releases/PRD-R3-RETRIEVAL-DATE-INTEGRITY.md) | [UX DESIGN REVIEW](../council/UX-DESIGN-REVIEW.md)<br>[UX SPECIFICATION](../design/UX-SPECIFICATION.md)<br>[index v5](../../prototypes/calendar-ui/index-v5.html) |
-| `UX-R3-001` | Timeline/Search/Date Review Designs | Backlog | R3 | 2026-10-12 to 2026-10-16 | Design Timeline, search scope/results/history, Date Review, redating preview, interruption, and failure states. | `LID-SRC-003`, `LID-REF-002`, `LID-REF-003`, `LID-REF-006` | `PRD-R3-001` | [PRD R3 RETRIEVAL DATE INTEGRITY](../product/releases/PRD-R3-RETRIEVAL-DATE-INTEGRITY.md) | [UX DESIGN REVIEW](../council/UX-DESIGN-REVIEW.md)<br>[UX SPECIFICATION](../design/UX-SPECIFICATION.md)<br>[index v5](../../prototypes/calendar-ui/index-v5.html) |
+| `PRD-R3-001` | Retrieval & Date Integrity PRD | Done | R3 | 2026-10-12 to 2026-10-14 | Define the cross-month Monthly Almanac, exact retrieval, query privacy, Date Review, and atomic redating invariants. | `LID-SRC-003`, `LID-REF-002`, `LID-REF-003`, `LID-REF-006`, `LID-OPS-011`, `LID-OPS-018` | `PC-001` | [PRD R3 RETRIEVAL DATE INTEGRITY](../product/releases/PRD-R3-RETRIEVAL-DATE-INTEGRITY.md) | [UX DESIGN REVIEW](../council/UX-DESIGN-REVIEW.md)<br>[UX SPECIFICATION](../design/UX-SPECIFICATION.md)<br>[index v5](../../prototypes/calendar-ui/index-v5.html) |
+| `UX-R3-001` | Almanac/Search/Date Review Designs | Backlog | R3 | 2026-10-12 to 2026-10-16 | Design the Monthly Almanac, search scope/results/history, Date Review, redating preview, interruption, and failure states. | `LID-SRC-003`, `LID-REF-002`, `LID-REF-003`, `LID-REF-006` | `PRD-R3-001` | [PRD R3 RETRIEVAL DATE INTEGRITY](../product/releases/PRD-R3-RETRIEVAL-DATE-INTEGRITY.md) | [UX DESIGN REVIEW](../council/UX-DESIGN-REVIEW.md)<br>[UX SPECIFICATION](../design/UX-SPECIFICATION.md)<br>[index v5](../../prototypes/calendar-ui/index-v5.html) |
 | `ARCH-R3-001` | Search Index & Redating Transaction | Backlog | R3 | 2026-10-12 to 2026-10-16 | Define encrypted lexical indexes, query/log privacy, date-review storage, and one-transaction old/new-day redating. | `LID-SRC-003`, `LID-REF-002`, `LID-REF-003`, `LID-REF-006`, `LID-OPS-011`, `LID-OPS-018` | `PRD-R3-001`, `REL-R2-001` | [PRD R3 RETRIEVAL DATE INTEGRITY](../product/releases/PRD-R3-RETRIEVAL-DATE-INTEGRITY.md) | [UX DESIGN REVIEW](../council/UX-DESIGN-REVIEW.md)<br>[UX SPECIFICATION](../design/UX-SPECIFICATION.md)<br>[index v5](../../prototypes/calendar-ui/index-v5.html) |
-| `ENG-R3-001` | Timeline/Search/Date Review/Redating | Backlog | R3 | 2026-10-15 to 2026-10-28 | Implement cross-month browsing, deterministic lexical/date/tag/caption retrieval, review resolution, and atomic redating. | `LID-SRC-003`, `LID-REF-002`, `LID-REF-003`, `LID-REF-006`, `LID-OPS-011`, `LID-OPS-018` | `UX-R3-001`, `ARCH-R3-001`, `REL-R2-001` | [PRD R3 RETRIEVAL DATE INTEGRITY](../product/releases/PRD-R3-RETRIEVAL-DATE-INTEGRITY.md) | [UX DESIGN REVIEW](../council/UX-DESIGN-REVIEW.md)<br>[UX SPECIFICATION](../design/UX-SPECIFICATION.md)<br>[index v5](../../prototypes/calendar-ui/index-v5.html) |
+| `ENG-R3-001` | Almanac/Search/Date Review/Redating | Backlog | R3 | 2026-10-15 to 2026-10-28 | Implement cross-month Almanac browsing, deterministic lexical/date/tag/caption retrieval, review resolution, and atomic redating. | `LID-SRC-003`, `LID-REF-002`, `LID-REF-003`, `LID-REF-006`, `LID-OPS-011`, `LID-OPS-018` | `UX-R3-001`, `ARCH-R3-001`, `REL-R2-001` | [PRD R3 RETRIEVAL DATE INTEGRITY](../product/releases/PRD-R3-RETRIEVAL-DATE-INTEGRITY.md) | [UX DESIGN REVIEW](../council/UX-DESIGN-REVIEW.md)<br>[UX SPECIFICATION](../design/UX-SPECIFICATION.md)<br>[index v5](../../prototypes/calendar-ui/index-v5.html) |
 | `REL-R3-001` | Query Privacy & Date Atomicity Acceptance | Backlog | R3 | 2026-10-29 to 2026-10-30 | Verify exact results, opt-in history, zero query leakage, two-day atomicity, index recovery, restore, and rollback. | `LID-SRC-003`, `LID-REF-002`, `LID-REF-003`, `LID-REF-006`, `LID-OPS-011`, `LID-OPS-018` | `ENG-R3-001` | [PRD R3 RETRIEVAL DATE INTEGRITY](../product/releases/PRD-R3-RETRIEVAL-DATE-INTEGRITY.md) | [UX DESIGN REVIEW](../council/UX-DESIGN-REVIEW.md)<br>[UX SPECIFICATION](../design/UX-SPECIFICATION.md)<br>[index v5](../../prototypes/calendar-ui/index-v5.html) |
 | `PRD-R4-001` | Lifecycle PRD | Done | R4 | 2026-11-02 to 2026-11-04 | Define Corrections, conflict choices, source binding, History, Trash, suppressions, confirmations, and complete export. | `LID-SCP-004`, `LID-SRC-001`, `LID-SRC-002`, `LID-SRC-004`, `LID-REF-007`, `LID-OPS-010`, `LID-OPS-011`, `LID-OPS-013`, `LID-OPS-018` | `PC-001` | [PRD R4 SOURCE HISTORY LIFECYCLE](../product/releases/PRD-R4-SOURCE-HISTORY-LIFECYCLE.md) | [UX DESIGN REVIEW](../council/UX-DESIGN-REVIEW.md)<br>[UX SPECIFICATION](../design/UX-SPECIFICATION.md) |
 | `UX-R4-001` | Diff/History/Trash/Export Designs | Backlog | R4 | 2026-11-02 to 2026-11-06 | Design accessible diff, Correction, History, Trash, suppression, confirmation, and encrypted-export workflows. | `LID-SCP-004`, `LID-SRC-001`, `LID-SRC-002`, `LID-SRC-004`, `LID-REF-007`, `LID-OPS-010`, `LID-OPS-013` | `PRD-R4-001` | [PRD R4 SOURCE HISTORY LIFECYCLE](../product/releases/PRD-R4-SOURCE-HISTORY-LIFECYCLE.md) | [UX DESIGN REVIEW](../council/UX-DESIGN-REVIEW.md)<br>[UX SPECIFICATION](../design/UX-SPECIFICATION.md) |
@@ -498,7 +498,7 @@ Allowed operational fields are: time, opaque internal correlation ID, component,
 
 Forbidden fields include journal/source/derived text, titles, tags, captions, private filenames, Visual Briefs, prompts/responses, images, thumbnails, EXIF, provider identifiers tied to personal content, Access assertion/email, tokens, object keys, signed URLs, query text, private host identifiers and raw stack variables.
 
-System Health derives from completed durable evidence and distinguishes: unknown, never run, healthy, delayed, blocked, failed and recovery verified. It includes capture, reconciliation, queue, capacity, AI budget/config health, backup/check/restore, export cleanup, schema/app version and Recovery Ceremony state.
+System Health derives from completed durable evidence and records exactly: `unknown`, `never run`, `success`, `delayed`, `failed`, or `blocked`. The UX label for `success` is `Healthy`; `recovery verified` is separate evidence/detail attached to a successful restore or ceremony result, never a seventh core state. Health includes capture, reconciliation, queue, capacity, AI budget/config health, backup/check/restore, export cleanup, schema/app version and Recovery Ceremony detail.
 
 Failure isolation rules:
 

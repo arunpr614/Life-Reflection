@@ -6,7 +6,7 @@
 | --- | --- |
 | Release | R2 — Telegram Photo Capture |
 | Document type | Product requirements document |
-| Status | Planning draft; not an approval or release record |
+| Status | Council-reviewed planning baseline; not an implementation, deployment, or release-acceptance record |
 | Accountable role | Product owner |
 | Proposed start | 2026-09-21 |
 | Proposed target | 2026-10-09 |
@@ -148,7 +148,7 @@ Rollback must be independently executable. It must not strand an acknowledged ca
 ## Explicit non-goals
 
 - VoiceNotes.
-- Cross-month Timeline, general Search UI, Corrections, redating, History, Trash, suppressions, and complete export.
+- Cross-month Monthly Almanac, general Search UI, Corrections, redating, History, Trash, suppressions, and complete export.
 - AI text analysis, image analysis, photo description, generated artwork, or provider fallback.
 - Video, audio, RAW, OCR, PDF, Word, or unsupported image formats.
 - Sharing, reminders, coaching, public media URLs, direct bucket access, or object-store cutover.

@@ -6,7 +6,7 @@
 | --- | --- |
 | Release | R1 — Manual Journal Archive |
 | Document type | Product requirements document |
-| Status | Planning draft; not an approval or release record |
+| Status | Council-reviewed planning baseline; not an implementation, deployment, or release-acceptance record |
 | Accountable role | Product owner |
 | Proposed start | 2026-08-31 |
 | Proposed target | 2026-09-18 |
@@ -143,7 +143,7 @@ Rollback must restore the prior application version without losing accepted R1 s
 ## Explicit non-goals
 
 - Blank browser composition, PDF, Word, OCR, or formats other than UTF-8 .txt and .md.
-- Telegram photos, VoiceNotes, Timeline, Search, Corrections, redating, History, Trash, suppressions, or complete export.
+- Telegram photos, VoiceNotes, Monthly Almanac, Search, Corrections, redating, History, Trash, suppressions, or complete export.
 - AI-generated text, Visual Briefs, or artwork.
 - Sharing, reminders, coaching, social behavior, public access, native apps, offline-first behavior, or legacy-browser support.
 - Object-store transition.

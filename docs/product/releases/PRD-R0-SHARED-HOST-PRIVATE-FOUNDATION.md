@@ -6,7 +6,7 @@
 | --- | --- |
 | Release | R0 — Shared-Host Private Foundation |
 | Document type | Product requirements document |
-| Status | Planning draft; not an approval or release record |
+| Status | Council-reviewed planning baseline; not an implementation, deployment, or release-acceptance record |
 | Accountable role | Product owner |
 | Proposed start | 2026-08-17 |
 | Proposed target | 2026-08-28 |
@@ -44,7 +44,7 @@ Excluded means not owned by R0. It does not change the governing backlog or auth
 
 1. The owner reaches the private shell through the approved human access boundary, while an unauthenticated, expired, or non-owner request sees no HTML, API, media, search, or export content.
 2. A callback request reaches only an opaque machine path; unknown hosts, paths, methods, or oversized requests fail without entering a human route.
-3. The owner views System Health and can distinguish never run, unknown, healthy, delayed, failed, and blocked synthetic states.
+3. The owner views System Health and can distinguish durable `unknown`, `never run`, `success`, `delayed`, `failed`, and `blocked` synthetic states; `success` is labeled `Healthy` in the UI.
 4. An operator creates an encrypted synthetic backup, restores it into a disposable environment, and records elapsed recovery time without exposing recovery material.
 5. A synthetic upgrade is rolled back and the shell returns to the pre-change state without material regression to co-resident services.
 
@@ -142,7 +142,7 @@ Rollback must remove or revert the R0 application, routes, processes, schedules,
 
 - Authentic journal or photo ingestion.
 - Telegram or VoiceNotes integration.
-- Calendar, Timeline, Search, Journal Day management, Corrections, Trash, or export.
+- Calendar, Monthly Almanac, Search, Journal Day management, Corrections, Trash, or export.
 - AI text or artwork.
 - Public access, sharing, multi-user records, native apps, offline-first behavior, or a high-availability promise.
 - A live object-store transition.

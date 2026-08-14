@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.1.0",
+  "asOf": "2026-08-14",
+  "evidenceBoundary": "This file is the editable readiness-state input. An override cannot authorize execution unless named artifact reviews, exact hashes and merged revisions, structured Design coverage, all five council-seat verdicts, dependencies, authority, owner actions, and blockers all pass validation.",
+  "approvalModel": {
+    "artifactReviewDecisions": [
+      "hold",
+      "approved",
+      "not-applicable"
+    ],
+    "councilSeatVerdicts": [
+      "hold",
+      "approved",
+      "not-applicable"
+    ],
+    "designStateDimensions": [
+      "normal",
+      "empty",
+      "loading",
+      "error",
+      "interruption",
+      "destructive"
+    ],
+    "designAccessibilityDimensions": [
+      "keyboard",
+      "focus",
+      "screenReader",
+      "targetSize",
+      "contrast",
+      "zoom",
+      "reducedMotion"
+    ],
+    "privateAuthorityEvidenceReferencePattern": "^P0-AUTH-[A-Z0-9-]{4,}$"
+  },
+  "taskOverrides": {}
+}

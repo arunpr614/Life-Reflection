@@ -2,7 +2,7 @@
 
 Updated: 2026-08-13
 
-Status: active for product-definition and implementation-planning work. The council does not authorize provider evaluation, application implementation, credential collection, infrastructure mutation, deployment, or launch. Those actions remain behind the gates defined below.
+Status: preserved planning-council record. Its original universal authorization stop is superseded by the directly activated 2026-08-14 Goal only as recorded in the [P0 execution authorization](execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md). All truthful implementation, deployment, recovery, and launch evidence disclaimers remain in force.
 
 ## Purpose
 
@@ -106,6 +106,8 @@ Must define the proposed system architecture, domain/data model, boundaries, sec
 
 No later gate can compensate for an earlier gate that has not passed.
 
+> **Current execution interpretation:** The table above remains historical planning provenance. The activated Goal replaces G1 as a universal stop with release-specific evidence gates and a five-seat execution council. Routine R0–R8 decisions are delegated when every named gate passes; accounts/MFA/secrets, material terms/spend/provider choices, authentic content/UAT, recovery-key custody and human ceremony steps, final R9 authority, and irreversible R10 stages remain human-only.
+
 ## RACI by workstream
 
 | Workstream | Product | Design | Project | Architecture | Arun |
@@ -156,6 +158,19 @@ Legend: **A** accountable, **R** responsible, **C** consulted, **I** informed.
 | --- | --- | --- |
 | 2026-08-13 | Council formation and planning-artifact draft | Four role-agents assigned; independent Product, UX, Architecture, and Project review began. |
 | 2026-08-13 | [Planning-baseline review](COUNCIL-REVIEW.md) | All four specialist seats approved after reconciliation. G0 closed with no open P0/P1 planning blocker; G1 remains blocked on Arun's explicit shared-understanding confirmation. |
+| 2026-08-14 | [P0 execution-control review](execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md) | A five-seat execution council was formed under the directly activated Goal. Local P0 remediation may proceed; private/live R0 remains held. |
+
+## 2026-08-14 execution-council addendum
+
+| Execution seat | Current accountability | Durable charter |
+| --- | --- | --- |
+| Expert Product Manager | 71-requirement boundary, release outcomes, acceptance, non-goals and product veto | [Execution Council Charter](execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md) |
+| Expert UI/UX Designer | Complete journeys/states, content, responsive/accessibility/usability and design veto | [Execution Council Charter](execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md) |
+| Technical Architect | Architecture, threats, storage, host admission, migration, recovery, rollback and technical veto | [Execution Council Charter](execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md) |
+| Independent QA Lead | Test strategy, evidence integrity, severity, privacy/security, browser/accessibility and QA veto | [QA Lead Charter](agents/P0-QA-LEAD.md) |
+| Expert Project Manager | Dependencies, risk/change, status, GitHub, workbook, Wiki and delivery-evidence veto | [Execution Council Charter](execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md) |
+
+The primary agent chairs and integrates but does not replace any seat. Current RACI and non-delegable boundaries are normative in the execution charter and authorization addendum.
 
 ## References
 
@@ -166,3 +181,5 @@ Legend: **A** accountable, **R** responsible, **C** consulted, **I** informed.
 - [AI artwork evaluation protocol](../discovery/AI-ARTWORK-MODEL-EVALUATION.md)
 - [Media storage evaluation](../discovery/MEDIA-STORAGE-EVALUATION.md)
 - [Planning-baseline council review](COUNCIL-REVIEW.md)
+- [P0 execution authorization](execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md)
+- [P0 execution decisions](execution/P0-PHASE1-EXECUTION-DECISIONS.md)

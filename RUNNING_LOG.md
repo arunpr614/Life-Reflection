@@ -396,3 +396,201 @@ Created `docs/project/AI-AGENT-RESOURCE-INDEX-2026-08-14-15-10-39-IST.md` as a c
 ### Evidence boundary
 
 The index is an orientation snapshot, not a product decision or implementation claim. Current source documents and live GitHub evidence remain authoritative, and status-sensitive facts must be refreshed after the filename timestamp.
+
+---
+
+## 2026-08-14 — Wayfinder Phase 1 adoption research
+
+### Outcome
+
+Created `docs/research/WAYFINDER-PHASE1-GITHUB-INTEGRATION-RESEARCH.md` as a deep, source-grounded assessment of how the explicitly invoked Wayfinder skill could support Phase 1.
+
+### Recommendation
+
+- Adopt Wayfinder conditionally as a release-scoped decision-readiness layer, not as a replacement for the 58-task roadmap or as an implementation engine.
+- Begin with a maximum two-week R0 pilot only if charting exposes genuine unresolved decision fog.
+- Preserve the roadmap manifest and governing product/design/architecture artifacts as authoritative.
+- Before any live pilot, narrow the sync-owned delivery views and auto-add boundary to `label:phase1`, keep decision issues out of Project #1, audit shared close/status workflows, and revalidate the exact 58-task projection.
+- Expand only through just-in-time maps for uncertainty-heavy R5–R7 decisions or trigger-activated R10.
+
+### Evidence boundary
+
+The research inspected the installed skill, current project artifacts, live GitHub state read-only, the upstream skill source, and GitHub-owned capability documentation. No Wayfinder issues, labels, relationships, views, automation, or other live GitHub state were created or changed.
+
+### Validation
+
+- All 152 local Markdown-link occurrences across the report and updated navigation files resolve.
+- All 22 public external report links returned successfully; the private Project link was verified through authenticated read-only access.
+- Whitespace and public-safety scans passed with no local paths, private Project node identifiers, credential-like strings, or task/session UUIDs in the changed files.
+
+---
+
+## 2026-08-14 — Living roadmap and Excel agent contract
+
+### Outcome
+
+Created root-level `AGENTS.md` as the repository-wide operating contract for every AI agent that changes Phase 1 delivery state.
+
+### Contract
+
+- Requires every accepted roadmap change to reconcile the governing evidence, editable manifest generator, generated JSON and Markdown plans, GitHub issues and Project when authorized, public issue map, seven-sheet Excel release plan, and running log in the same change.
+- Defines the exact status/evidence policy, dry-run-first commands, least-expansive live-sync modes, workbook regeneration and visual/formula checks, read-only GitHub reconciliation, R10 date invariant, and definition of complete.
+- Corrects the GitHub sync runbook's primary apply example and records the current open-first, evidence-link, live-verifier, issue-identity, workbook-coverage, and generated-date limitations with fail-closed compensating controls.
+- Records the current broad-view and Project auto-workflow contamination hazard and prohibits unrelated or Wayfinder issue creation until the delivery boundary is hardened or isolated.
+- Preserves explicit authorization, public-repository privacy, truthful implementation/deployment claims, and partial-failure recovery boundaries.
+
+### Evidence boundary
+
+This change adds documentation and navigation only. It does not modify the roadmap manifest, GitHub issues, Project fields/views/workflows, Excel workbook, application code, infrastructure, or deployment state.
+
+---
+
+## 2026-08-14 19:16 — Autonomous P0-to-production Codex Goal prompt prepared
+
+### Outcome
+
+Created `docs/project/CODEX-GOAL-PROMPT-P0-TO-PRODUCTION.md` as a copy-ready Goal for a future Codex agent. The stored artifact is a template only: this documentation task did not activate the Goal or begin Phase 1 implementation.
+
+### Scope decision
+
+- Defined P0 as the 71 launch-blocking PRD requirements delivered through P0/R0–R9, not only the completed two-task P0 planning milestone and not only roadmap tasks whose Priority field is High.
+- Kept the canonical baseline at 58 tasks: 55 P0/R0–R9 work packages and three conditional R10 tasks. R10 remains date-free unless its measured trigger is approved.
+- Preserved the seven deferred P3/P4 requirement IDs outside R0–R9.
+- Required truthful production completion through R9 owner UAT, Recovery Ceremony, immutable seven-day observation, and final human proceed authority; the Goal cannot simulate those acts.
+
+### Goal operating contract
+
+- Requires the new agent to remain in the current Phase 1 worktree, preserve existing unpublished commits, read the complete authority/context sequence, and refresh live facts before acting.
+- Creates a five-seat execution council for Technical Architecture, Product Management, independent QA, UI/UX Design, and Project Management, with role charters, stable execution artifacts, vetoes, and wave-based scheduling when concurrency is limited.
+- Delegates routine R0–R8 decisions to the council while retaining non-delegable owner actions and a consolidated public-safe Owner Action Ledger.
+- Defines the R0–R9 implementation, evidence, deployment, recovery, rollback, and release loop, plus the early-hard-trigger versus normal post-R9 branches for R10.
+- Makes the GitHub issues/Project roadmap, Markdown plan, issue map, seven-sheet Excel workbook, Wiki, and running log synchronized living projections under `AGENTS.md`.
+- Requires Project workflow snapshots/rollback, repeatable remote-main-pinned Wiki publication, private deployment authority before any private infrastructure read/write, AI-blind authentic-media handling, and a private credential-incident ladder.
+- Gives standing authorization for direct append-only use of the `codex-project-running-log` skill at release events and at least every 45 minutes when material state changes.
+
+### Independent review and verification
+
+- A cold-reader agent, an adversarial authorization/safety agent, and an independent document validator returned final GO verdicts with no remaining P0/P1/P2 findings after revisions.
+- Validated 176 Markdown destinations across the prompt and navigation edits: 169 local and seven external, with zero missing local targets.
+- Reconciled the manifest to 12 releases, 58 tasks, 55 P0/R0–R9 work packages, 71 active requirements, seven deferred requirements, and null R10 dates.
+- Verified balanced Markdown fences, unique headings, final newline, no trailing whitespace, and syntax-clean roadmap, GitHub-sync, and Wiki generator scripts.
+- The frozen v10 prototype syntax check passed from `prototypes/calendar-ui`. An initial root-level npm invocation correctly exposed that the repository root has no `package.json`; validation was rerun from the actual prototype package.
+- The protected changed-content scan found no absolute local path, task/session identifier, private Project node identifier, credential-like value, or private-key marker.
+
+### Documents created or updated this period
+
+**Created:**
+
+- `docs/project/CODEX-GOAL-PROMPT-P0-TO-PRODUCTION.md`
+
+**Updated:**
+
+- `README.md`
+- `docs/INDEX.md`
+- `RUNNING_LOG.md`
+
+### Evidence and external-state boundary
+
+No roadmap status, manifest task, GitHub issue, Project item/field/view/workflow, Excel workbook, Wiki page, application code, infrastructure, credential, deployment, or production state changed. The three documentation files and this append are local and awaiting the scoped local commit at this entry.
+
+### Next action
+
+Validate the complete staged candidate and create the local documentation commit. The Product Owner may then copy the prompt's Goal section into a new Codex Goal when ready; no Goal was started by this task.
+
+---
+
+## 2026-08-14 21:09 IST — P0 task-readiness control candidate assembled
+
+### Outcome
+
+Resumed the now-active autonomous Goal after Arun's explicit pause/resume and assembled a local P0 execution-control candidate. The candidate installs a task-specific Product Council Definition of Ready before any engineering implementation can start. It does not approve implementation: all 58 task dossiers remain `Incomplete`, all 58 remain on Hold, and `executionAllowed` is false for every task.
+
+### Council and task controls
+
+- Added the execution Council charter, authorization record, decision log, context digest, owner-action ledger, QA seat, P0 control review, and task Definition of Ready under P0-prefixed filenames.
+- Added canonical task-state, readiness-override, and artifact-register JSON controls.
+- Generated six P0-prefixed draft artifacts for each of the 58 existing roadmap tasks: Product PRD, technical plan, design spec, QA plan, delivery checklist, and Council readiness decision. The 348 artifacts are drafts, not specialist approvals.
+- Made generation non-destructive by default: existing specialist-authored content is preserved, draft replacement requires explicit `--refresh-drafts`, and non-draft artifacts are never overwritten by refresh.
+- Added a fail-closed validator for task/artifact identity, paths, hashes, scenario coverage, Council verdicts, private-authority requirements, health states, R4 conflict outcomes, R10 date invariants, and authentic-media boundaries.
+- Extended the GitHub dry-run projection so each existing issue carries its task-specific DoR table and six exact artifact links, while the Roadmap projection manages 17 task-bound fields. No live issue, Project, view, or workflow state has been changed yet.
+
+### Product and UX reconciliation
+
+- Standardized the three R4 conflict outcomes to keep the Correction, display the newest upstream revision, or create a new Correction based on both.
+- Standardized durable health states to `unknown`, `never run`, `success`, `delayed`, `failed`, and `blocked`; `recovery verified` remains evidence detail rather than a health state.
+- Reconciled the Monthly Almanac as the sole chronological browsing destination, retained the Calendar/Almanac switcher near Search, kept management under Settings/More, and removed any persistent Calendar status overlay requirement.
+- Preserved the privacy contract: R0 remains synthetic-only, R1 is the first authentic-text gate with consent, and authentic photos or photo-derived data remain structurally excluded from AI.
+
+### Workbook evidence
+
+- Regenerated `outputs/phase1/Life-in-Days-Phase1-Release-Plan.xlsx` and the P0-prefixed review copy at `outputs/P0-review-20260814-2106/P0-Life-in-Days-Phase1-Release-Plan.xlsx` from the same in-memory workbook.
+- The two workbooks are byte-identical with SHA-256 `6630f1a50a4b657ed8a3f94e67160283c5f209e23be9a6c2417175239c37c708`.
+- Verified seven sheets, 58 unique canonical issue URLs, 348 task artifact projections, 78 requirements, all seven explicit deferrals, three blank-date R10 tasks, zero execution-authorized tasks, zero formula errors, and a healthy XLSX archive.
+- Visually reviewed 20 rendered regions covering every row of every worksheet. The task, readiness, release, traceability, risk, and trigger-only states are legible and consistent with the manifest.
+
+### Evidence and external-state boundary
+
+All substantive changes in this entry are local to the Phase1 project folder. Read-only GitHub/Wiki inspection was used where needed. No GitHub issue, Project field, view, workflow, Wiki page, infrastructure, provider, credential, authentic memory, application runtime, deployment, or production state was mutated. Deployment remains exactly `Unknown — private read authority pending`.
+
+### Owner information needed later
+
+No owner input is required to finish the local/public P0 control package or prepare the existing-issue projection. Before later gated work, the owner must provide private deployment authority, the approved workflow-capture attestation needed before non-delivery/workflow mutation, an approved secret-delivery mechanism, and the release-specific consent/authentication/provider/spend/UAT/recovery decisions named in the Owner Action Ledger. Secrets must not be posted in tickets, documents, or chat.
+
+### Next action
+
+Prove deterministic Wiki generation against the current live Wiki snapshot, run the complete local control suite, obtain fresh Product, Architecture, Design, independent QA, and Delivery verdicts on this exact candidate, then publish through a reviewed branch/PR before any issue or Roadmap synchronization. R0 implementation remains prohibited until its own task-specific dossier reaches Council `Ready`.
+
+---
+
+## 2026-08-14 21:40 IST — P0 Design veto remediated and approval gate hardened
+
+### Outcome
+
+Fresh UI/UX review held the first P0 candidate because R4 still retained conflict-suggestion language, Calendar/Almanac guidance still contained rail/badge/Timeline contradictions, the Health Status Card inventory omitted exact states, and the validator did not machine-enforce task-level Design or individual council approvals. The local candidate was corrected; it has not yet received final five-seat acceptance or been published.
+
+### Corrective changes
+
+- Replaced R4 conflict-suggestion persistence with the exact recorded three-choice model: keep the Correction, display the newest upstream revision, or create a new Correction based on both.
+- Removed stale user-facing Timeline, persistent-navigation-rail, and Calendar overlay-badge instructions; standardized the public chronological surface and API contract on Monthly Almanac.
+- Made the Health Status Card inventory enumerate `Unknown`, `Never verified`, `Healthy`, `Attention — delayed`, `Failed`, and `Blocked`, with `Not configured` separate.
+- Added structured six-artifact reviews, exact candidate revision and dossier digest binding, five named council-seat verdicts, task-bound journey/state/accessibility scenario coverage, specialist-concurred Architecture/Design not-applicable handling, published-revision/blob verification, and an opaque private-authority evidence reference gate.
+- Adopted a non-self-referential sequence: six stable artifacts form candidate commit C; external attestations bind C and its digest; a later registry commit records those attestations without modifying the six artifacts.
+- Refreshed only the 348 artifacts still marked `draft`. A subsequent default generator run preserved all 348, proving that non-draft protection and the normal create-missing path remain intact.
+
+### Validation and projections
+
+- The execution-control validator passes with 78 requirements, 71 active, seven deferred, 58 tasks, 348 draft artifacts, 58 Incomplete dossiers, zero Ready, zero execution-authorized, and blank R10 dates.
+- The GitHub dry run parses at 598,245 bytes and contains 58 task markers, 58 named artifact-review tables, 58 five-seat records, 58 structured Design-assurance sections, and 58 `Execution allowed: No` projections.
+- The seven-sheet workbook was regenerated from the revised manifest. The P0 review copy and grandfathered canonical copy are byte-identical at SHA-256 `bf243b130813c775f6c18519b16146531d8365c4c1d9a03a52ddccc562938d21`; 58 issue URLs, zero Ready/allowed tasks, three blank-date R10 tasks, 20 rendered regions, and zero formula errors remain asserted.
+
+### Evidence and external-state boundary
+
+All changes remain local to the Phase1 project folder. No GitHub issue, Project field/view/workflow, Wiki page, private system, provider, authentic content/media, deployment, or production state was changed. Deployment remains exactly `Unknown — private read authority pending`; every implementation task remains on Hold.
+
+### Next action
+
+Freeze a new exact candidate, obtain fresh Product, Design, Architecture, independent QA, and Project Manager publication verdicts on that candidate, then use the reviewed PR sequence before any live issue, Roadmap, or Wiki synchronization.
+
+---
+
+## 2026-08-14 21:56 IST — Five-seat P0 publication review passed
+
+### Outcome
+
+Product Management, UI/UX Design, Technical Architecture, independent QA, and Project Management each returned `Go` for publishing exact candidate `1391bea9abcc899aefcad446324d7c0a2b0199c2` as the P0 control package only. The control review now records that five-seat result and permits the normal branch/PR/check/merge publication sequence. This acceptance does not approve any task: all 348 artifacts remain draft, all 58 dossiers remain Incomplete/Hold, and `executionAllowed` remains false for every task.
+
+### Verified publication boundary
+
+- Product confirmed 78 requirements, 71 active, the exact seven deferrals, all 58 task Product artifacts, exact R4 outcomes, Health/Almanac truth, and owner gates.
+- Design confirmed all four prior vetoes cleared and the named exact-revision review, five-seat, structured journey/state/accessibility, and specialist-concurred not-applicable controls present.
+- Architecture confirmed the non-self-referential candidate/registry model, dossier digest, published-commit/artifact-byte checks, generator preservation, workbook/Wiki repeatability, and private-authority reference gate.
+- Independent QA reran CI-equivalent checks, generator preservation, the 598,245-byte GitHub dry run, workbook/Wiki checks, prefix validation, and protected public-safety scans.
+- Project Management reconciled 58 tasks/issues/items, 348 artifacts, 93 dependency edges, status/date counts, workbook/running-log parity, mutation order, rollback, and two-pass quiescent verification.
+
+### External-state boundary
+
+Repository publication and live synchronization have not occurred at this entry. Live verification still has the expected 660 pre-sync differences; the two Project views still use the broad issue filter. No private system, workflow, authentic content/media, deployment, or production state was accessed or changed. No owner input is required for public P0 publication or synchronization of the existing 58 delivery issues.
+
+### Next action
+
+Rerun the complete control suite after this attestation-only delta, commit and publish through a reviewed PR, prove a clean fetched remote-main checkout, then stage both views, issue/Project synchronization, two parity passes, and Wiki publication. Keep every task implementation blocked.

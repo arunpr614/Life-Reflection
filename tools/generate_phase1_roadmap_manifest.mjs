@@ -4,11 +4,40 @@ import path from "node:path";
 const repoRoot = path.resolve(import.meta.dirname, "..");
 const repoUrl = "https://github.com/arunpr614/Life-Reflection";
 const generatedAt = "2026-08-14";
+const executionGovernance = {
+  contextDigest: "docs/council/execution/P0-PHASE1-CONTEXT-DIGEST.md",
+  councilCharter: "docs/council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md",
+  authorization: "docs/council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md",
+  decisions: "docs/council/execution/P0-PHASE1-EXECUTION-DECISIONS.md",
+  ownerActionLedger: "docs/council/execution/P0-OWNER-ACTION-LEDGER.md",
+  qaCharter: "docs/council/agents/P0-QA-LEAD.md",
+  p0Review: "docs/council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md",
+  taskState: "docs/project/P0-PHASE1-TASK-STATE.json",
+  taskReadinessState: "docs/project/P0-PHASE1-TASK-READINESS-STATE.json",
+  taskDefinitionOfReady: "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
+  taskArtifactRegister: "docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json",
+};
+const taskState = JSON.parse(
+  fs.readFileSync(path.join(repoRoot, executionGovernance.taskState), "utf8"),
+);
+const allowedStatuses = new Set(["Backlog", "Next", "In progress", "Done"]);
+if (!allowedStatuses.has(taskState.defaultStatus)) {
+  throw new Error(`Invalid default task status: ${taskState.defaultStatus}`);
+}
+for (const [taskId, status] of Object.entries(taskState.statusOverrides ?? {})) {
+  if (!allowedStatuses.has(status)) throw new Error(`${taskId}: invalid task status ${status}`);
+}
 const issueMapPath = path.join(repoRoot, "docs/project/PHASE1-GITHUB-ISSUES.json");
 let issueMap = {};
 if (fs.existsSync(issueMapPath)) {
   issueMap = JSON.parse(fs.readFileSync(issueMapPath, "utf8")).issues ?? {};
 }
+const taskArtifactRegister = JSON.parse(
+  fs.readFileSync(path.join(repoRoot, executionGovernance.taskArtifactRegister), "utf8"),
+);
+const taskDossierById = Object.fromEntries(
+  taskArtifactRegister.tasks.map((record) => [record.taskId, record]),
+);
 
 const releases = [
   {
@@ -219,10 +248,7 @@ const designByRelease = {
 const architecturePath = "docs/architecture/PHASE1-IMPLEMENTATION-PLAN.md";
 
 function taskStatus(id) {
-  if (id === "AUD-001" || id === "PC-001" || id.startsWith("PRD-") || id.startsWith("PID-")) return "Done";
-  if (id === "SPK-R0-001") return "In progress";
-  if (["UX-R0-001", "ARCH-R0-001", "ENG-R0-001", "REL-R0-001"].includes(id)) return "Next";
-  return "Backlog";
+  return taskState.statusOverrides?.[id] ?? taskState.defaultStatus;
 }
 
 function priorityFor(milestone) {
@@ -249,23 +275,28 @@ function ownerFor(id) {
   if (id.startsWith("ARCH-") || id.startsWith("SPK-")) return "Technical Architect";
   if (id.startsWith("ENG-")) return "Engineering";
   if (id.startsWith("EVAL-")) return "Product Manager + Technical Architect";
-  if (id.startsWith("QA-")) return "Project Manager + QA";
+  if (id.startsWith("QA-")) return "Independent QA + Project Manager";
+  if (id.startsWith("REL-")) return "Project Manager + Independent QA";
   if (id.startsWith("AUD-")) return "Product Manager + UI/UX Designer";
   return "Project Manager";
 }
 
-function evidenceFor(id, milestone) {
+function evidenceFor(id, milestone, title, description) {
   if (id === "AUD-001") return "Published v5 feature audit with a source hash and requirement-by-requirement evidence classification.";
-  if (id === "PC-001") return "All four council reviews, decision record, 58-task manifest, validated workbook, and live roadmap reconcile.";
-  if (id.startsWith("PRD-") || id.startsWith("PID-")) return `Release document ${prdPaths[milestone]} exists, passes link/requirement validation, and states owner approval as a separate release gate.`;
-  if (id.startsWith("UX-")) return "Release-specific flows, empty/loading/error/destructive states, responsive behavior, keyboard/screen-reader notes, and design sign-off are linked.";
-  if (id.startsWith("ARCH-")) return "Approved ADRs, threat/data-flow diagrams, capacity assumptions, migration/rollback design, and restore contract are linked.";
-  if (id.startsWith("ENG-")) return "Merged implementation, tests, migration evidence, sanitized deployment record, and no-regression proof are linked.";
-  if (id.startsWith("EVAL-")) return "Signed evaluation report records fixtures, hard-gate outcomes, exact provider/model snapshot, measured cost, and decision.";
-  if (id.startsWith("QA-")) return "Executed test matrix, defects, accessibility/security evidence, restore evidence, and owner-visible results are linked.";
+  if (id === "PC-001") return "Historical four-seat planning evidence and the five-seat P0 execution-control review, decision record, 58-task manifest, validated workbook, and live roadmap reconcile without inflating planning Done.";
+  if (id.startsWith("PRD-") || id.startsWith("PID-")) return `Release document ${prdPaths[milestone]} exists, passes link/requirement validation, and separates council-delegated evidence gates from specifically named non-delegable human acts.`;
+  if (id.startsWith("UX-")) return `Approved task-specific design for ${id} — ${title} links complete normal/empty/loading/error/interruption/destructive states, responsive behavior, accessibility annotations, prototype dispositions, and Designer sign-off.`;
+  if (id.startsWith("ARCH-")) return `Approved task-specific technical plan for ${id} — ${title} links owned modules, ADRs, threats/data flows, interfaces/data shapes, capacity, migration, restore, rollback, and Architect sign-off.`;
+  if (id.startsWith("ENG-")) return `Merged implementation for ${id} — ${title} proves “${description}” with task-specific tests, immutable build/SBOM, migrations, sanitized deployment evidence when authorized, separate-path restore, rollback, and no-regression results.`;
+  if (id.startsWith("EVAL-")) return `Signed task-specific evaluation for ${id} — ${title} records frozen fixtures/protocol, exact provider/model snapshots, hard-gate outcomes, measured cost/latency, privacy checks, and council decision.`;
+  if (id.startsWith("QA-")) return `Independent task-specific matrix for ${id} — ${title} links executed scenarios, defects/retests, privacy/security/accessibility/browser evidence, restore/rollback results, reviewer independence, and permitted claim.`;
   if (id === "SPK-R0-001") return "Research report plus sanitized live host capacity/topology, collision, restart, backup/restore, rollback, and co-resident non-regression evidence.";
   if (id === "SPK-R5-001") return "Synthetic VoiceNotes contract report proves identity, OAuth renewal, authoritative retrieval, tag/date/transcript, replay, reconciliation, and failure behavior.";
-  return "Release checklist, owner walkthrough, backup/restore evidence for new shapes, rollback result, defect gate, and go/no-go record are linked.";
+  return `Release acceptance for ${id} — ${title} links independent QA, five-seat review, every task-specific dossier, backup/separate-path restore for each new shape, rollback, defect gate, and proceed/hold/rollback record; a human attestation is included only for a named non-delegable act.`;
+}
+
+function evidenceReferencePathsFor(id) {
+  return taskState.evidenceReferences?.[id] ?? [];
 }
 
 function impactFor(id, milestone) {
@@ -322,10 +353,10 @@ const definitions = [
   ["ENG-R2-002", "R2", "Gallery/Cover/Dedup/Derivatives", "2026-09-28", "2026-10-06", "Implement durable gallery order, real-photo cover, global checksum references, captions, byte-preserved Originals, and local metadata-free thumbnails.", ["ENG-R2-001"], ["LID-TG-007", "LID-TG-008", "LID-TG-009", "LID-TG-010", "LID-OPS-009", "LID-OPS-011", "LID-OPS-018"]],
   ["REL-R2-001", "R2", "Media Privacy/Restore Acceptance", "2026-10-07", "2026-10-09", "Execute capture, invalid input/date, album, duplicate, cover, Original, AI-exclusion, media restore, and rollback fixtures.", ["ENG-R2-001", "ENG-R2-002"], req.R2],
 
-  ["PRD-R3-001", "R3", "Retrieval & Date Integrity PRD", "2026-10-12", "2026-10-14", "Define cross-month Timeline, exact retrieval, query privacy, Date Review, and atomic redating invariants.", ["PC-001"], req.R3],
-  ["UX-R3-001", "R3", "Timeline/Search/Date Review Designs", "2026-10-12", "2026-10-16", "Design Timeline, search scope/results/history, Date Review, redating preview, interruption, and failure states.", ["PRD-R3-001"], ["LID-SRC-003", "LID-REF-002", "LID-REF-003", "LID-REF-006"]],
+  ["PRD-R3-001", "R3", "Retrieval & Date Integrity PRD", "2026-10-12", "2026-10-14", "Define the cross-month Monthly Almanac, exact retrieval, query privacy, Date Review, and atomic redating invariants.", ["PC-001"], req.R3],
+  ["UX-R3-001", "R3", "Almanac/Search/Date Review Designs", "2026-10-12", "2026-10-16", "Design the Monthly Almanac, search scope/results/history, Date Review, redating preview, interruption, and failure states.", ["PRD-R3-001"], ["LID-SRC-003", "LID-REF-002", "LID-REF-003", "LID-REF-006"]],
   ["ARCH-R3-001", "R3", "Search Index & Redating Transaction", "2026-10-12", "2026-10-16", "Define encrypted lexical indexes, query/log privacy, date-review storage, and one-transaction old/new-day redating.", ["PRD-R3-001", "REL-R2-001"], req.R3],
-  ["ENG-R3-001", "R3", "Timeline/Search/Date Review/Redating", "2026-10-15", "2026-10-28", "Implement cross-month browsing, deterministic lexical/date/tag/caption retrieval, review resolution, and atomic redating.", ["UX-R3-001", "ARCH-R3-001", "REL-R2-001"], req.R3],
+  ["ENG-R3-001", "R3", "Almanac/Search/Date Review/Redating", "2026-10-15", "2026-10-28", "Implement cross-month Almanac browsing, deterministic lexical/date/tag/caption retrieval, review resolution, and atomic redating.", ["UX-R3-001", "ARCH-R3-001", "REL-R2-001"], req.R3],
   ["REL-R3-001", "R3", "Query Privacy & Date Atomicity Acceptance", "2026-10-29", "2026-10-30", "Verify exact results, opt-in history, zero query leakage, two-day atomicity, index recovery, restore, and rollback.", ["ENG-R3-001"], req.R3],
 
   ["PRD-R4-001", "R4", "Lifecycle PRD", "2026-11-02", "2026-11-04", "Define Corrections, conflict choices, source binding, History, Trash, suppressions, confirmations, and complete export.", ["PC-001"], req.R4],
@@ -372,6 +403,8 @@ const definitions = [
 
 const tasks = definitions.map(([id, milestone, title, startDate, targetDate, description, dependencies, requirementIds]) => {
   const status = taskStatus(id);
+  const taskDossier = taskDossierById[id];
+  if (!taskDossier) throw new Error(`${id}: missing task-artifact register record`);
   const task = {
     id,
     title,
@@ -393,7 +426,27 @@ const tasks = definitions.map(([id, milestone, title, startDate, targetDate, des
     designArtifactUrls: designByRelease[milestone].map(urlFor),
     architecturePath,
     architectureUrl: urlFor(architecturePath),
-    acceptanceEvidence: evidenceFor(id, milestone),
+    acceptanceEvidence: evidenceFor(id, milestone, title, description),
+    evidenceReferencePaths: evidenceReferencePathsFor(id),
+    evidenceReferenceUrls: evidenceReferencePathsFor(id).map(urlFor),
+    evidenceState: ["In progress", "Done"].includes(status) ? "Linked" : "Not yet provided",
+    taskDossier,
+    artifactReadiness: taskDossier.artifactReadiness,
+    executionDecision: taskDossier.executionDecision,
+    executionAllowed: taskDossier.executionAllowed,
+    executionScope: taskDossier.executionScope,
+    taskPrdPath: taskDossier.artifacts.product.path,
+    taskPrdUrl: taskDossier.artifacts.product.url,
+    taskArchitecturePath: taskDossier.artifacts.architecture.path,
+    taskArchitectureUrl: taskDossier.artifacts.architecture.url,
+    taskDesignPath: taskDossier.artifacts.design.path,
+    taskDesignUrl: taskDossier.artifacts.design.url,
+    taskQaPath: taskDossier.artifacts.qa.path,
+    taskQaUrl: taskDossier.artifacts.qa.url,
+    taskDeliveryPath: taskDossier.artifacts.delivery.path,
+    taskDeliveryUrl: taskDossier.artifacts.delivery.url,
+    taskCouncilPath: taskDossier.artifacts.council.path,
+    taskCouncilUrl: taskDossier.artifacts.council.url,
     rollbackRestoreImpact: impactFor(id, milestone),
     doneMeaning: status === "Done"
       ? "This planning artifact is complete; it does not claim feature implementation, deployment, production readiness, or release acceptance."
@@ -428,6 +481,24 @@ if (expectedIds.some((id) => !uniqueIds.has(id))) throw new Error("Canonical tas
 if (allProductRequirements.length !== 78 || new Set(allProductRequirements).size !== 78) {
   throw new Error(`Expected 78 unique product requirements; got ${allProductRequirements.length}/${new Set(allProductRequirements).size}`);
 }
+if (taskArtifactRegister.tasks.length !== 58 || Object.keys(taskDossierById).length !== 58) {
+  throw new Error(`Expected 58 unique task-artifact records; got ${taskArtifactRegister.tasks.length}/${Object.keys(taskDossierById).length}`);
+}
+const unknownStatusOverrides = Object.keys(taskState.statusOverrides ?? {}).filter((id) => !uniqueIds.has(id));
+const unknownEvidenceEntries = Object.keys(taskState.evidenceReferences ?? {}).filter((id) => !uniqueIds.has(id));
+if (unknownStatusOverrides.length || unknownEvidenceEntries.length) {
+  throw new Error(`Task-state ledger contains unknown task IDs: ${[...unknownStatusOverrides, ...unknownEvidenceEntries].join(", ")}`);
+}
+for (const task of tasks) {
+  if (["In progress", "Done"].includes(task.status) && task.evidenceReferencePaths.length === 0) {
+    throw new Error(`${task.id}: ${task.status} requires at least one retrievable evidence reference`);
+  }
+  for (const filePath of task.evidenceReferencePaths) {
+    if (!fs.existsSync(path.join(repoRoot, filePath))) {
+      throw new Error(`${task.id}: evidence reference does not exist: ${filePath}`);
+    }
+  }
+}
 
 const requirementMap = allProductRequirements.map((id) => {
   const deferred = deferredRequirements.find((entry) => entry.id === id);
@@ -460,6 +531,9 @@ const manifest = {
     governingPrd: "docs/product/PRODUCT-REQUIREMENTS.md",
     governingUxSpecification: "docs/design/UX-SPECIFICATION.md",
     reviewedPrototype: "prototypes/calendar-ui/index-v5.html",
+    latestFrozenPrototype: "prototypes/calendar-ui/index-v10.html",
+    executionGovernance,
+    deploymentState: "Unknown — private read authority pending",
     roadmapStatusValues: ["Backlog", "Next", "In progress", "Done"],
   },
   statusPolicy: {
@@ -478,6 +552,10 @@ const manifest = {
     activeRequirementCount: activeRequirements.length,
     explicitlyDeferredRequirementCount: deferredRequirements.length,
     statusCounts: Object.fromEntries(["Backlog", "Next", "In progress", "Done"].map((status) => [status, tasks.filter((task) => task.status === status).length])),
+    artifactReadinessCounts: Object.fromEntries(
+      [...new Set(tasks.map((task) => task.artifactReadiness))].sort().map((state) => [state, tasks.filter((task) => task.artifactReadiness === state).length]),
+    ),
+    executionAllowedCount: tasks.filter((task) => task.executionAllowed).length,
   },
 };
 
@@ -500,7 +578,7 @@ const taskRows = tasks.map((task) => {
   const prd = mdLink(path.basename(task.prdPidPath), task.prdPidPath);
   const design = task.designArtifactPaths.map((filePath) => mdLink(path.basename(filePath), filePath)).join("; ");
   const requirements = task.requirementIds.length ? task.requirementIds.map((id) => `\`${id}\``).join(", ") : "Planning-only";
-  return `| \`${task.id}\` | ${task.status} | ${task.milestone} | ${task.ownerRole} | ${displayDate(task.startDate)} | ${displayDate(task.targetDate)} | ${escapeCell(task.description)} | ${requirements} | ${prd} | ${design} |`;
+  return `| \`${task.id}\` | ${task.status} | ${task.artifactReadiness} | ${task.executionAllowed ? "Yes" : "No"} | ${task.milestone} | ${task.ownerRole} | ${displayDate(task.startDate)} | ${displayDate(task.targetDate)} | ${escapeCell(task.description)} | ${requirements} | ${prd} | ${design} |`;
 }).join("\n");
 
 const requirementRows = requirementMap.map((entry) =>
@@ -522,6 +600,8 @@ const releasePlan = `# Life in Days — Phase 1 Release Plan
 Deliver eleven gated releases after the P0 planning baseline. R0 admits synthetic fixtures only. R1 is the first release allowed to contain authentic owner memories. R10 is intentionally date-free and cannot start until approved storage watermarks trigger it.
 
 The release plan contains exactly **${tasks.length} task work packages**. The same manifest drives this document, the review workbook, repository issues, and the live GitHub Project. A task may move to \`Done\` only when its own named evidence exists. Completing a PRD or design task does not complete its feature release.
+
+Current execution uses a five-seat council and the directly activated Goal under these public-safe records: ${Object.entries(executionGovernance).map(([key, filePath]) => mdLink(key, filePath)).join("; ")}. Routine R0–R8 decisions are council-delegated only when every named gate passes. Named account/MFA/secret, terms/spend/provider, authentic-content/UAT, recovery-key/ceremony, final R9, and irreversible R10 acts remain human-only. Deployment is **Unknown — private read authority pending**.
 
 ## 2. Roadmap status contract
 
@@ -546,8 +626,8 @@ Every row carries the metadata required in GitHub: lane, milestone, dates, descr
 
 Task dependency links are progressive handoffs unless a release entry gate explicitly says otherwise. Discovery, definition, design, and architecture work may overlap while inputs stabilize; a dependent task cannot close, admit authentic data, or pass a release gate until its prerequisite evidence exists. Milestone dependencies in Section 3 remain hard release-entry gates.
 
-| ID | Status | Milestone | Owner | Start | Target | Description | Requirement IDs | PRD/PID | Design artifacts |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ID | Status | Artifact readiness | Execution allowed | Milestone | Owner | Start | Target | Description | Requirement IDs | Parent PRD/PID | Shared design inputs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 ${taskRows}
 
 ## 5. Requirement coverage
@@ -561,13 +641,17 @@ ${requirementRows}
 ## 6. Release governance
 
 1. The Project Manager owns dates, dependencies, status hygiene, evidence links, and the weekly GitHub Project review.
-2. The Product Manager owns the governing and release PRDs; an authored PRD is planning evidence, while owner approval remains a separate release entry gate.
+2. The Product Manager owns the governing and release PRDs; an authored PRD is planning evidence, not implementation or release acceptance.
 3. The UI/UX Designer owns release-specific flows, responsive/accessibility states, and design evidence. v5 remains design intent only.
 4. The Technical Architect owns ADRs, the shared-host envelope, threat/data flows, migrations, deployment, recovery, and rollback contracts.
-5. Engineering and QA attach implementation and executed evidence to the issue before a delivery task moves to Done.
-6. Any entry-gate failure moves the affected item to Backlog or keeps it In progress; dates move before privacy, recovery, accessibility, or non-regression gates are weakened.
-7. Every release that adds a persistent data shape must restore that shape and prove rollback independently before its release-acceptance item closes.
-8. R10 remains undated in the workbook and GitHub Project until the measured trigger is approved.
+5. The Independent QA Lead owns test strategy, evidence integrity, defect severity, privacy/security/browser/accessibility validation and release vetoes, and cannot certify a candidate it implemented.
+6. Engineering and independent QA attach implementation and executed evidence to the applicable existing task before a delivery task moves to Done.
+7. The Project Manager owns dependency/status truth and keeps GitHub, Project, workbook, Wiki, and running log reconciled.
+8. Routine R0–R8 promotion uses council delegation only after all gates pass; specifically named human acts remain separate gates.
+9. Any entry-gate failure moves the affected item to Backlog or keeps it In progress; dates move before privacy, recovery, accessibility, or non-regression gates are weakened.
+10. Every release that adds a persistent data shape must restore that shape and prove rollback independently before its release-acceptance item closes.
+11. R10 remains undated in the workbook and GitHub Project until the measured trigger is approved.
+12. No substantive task execution begins until the task-bound Product, Architecture, Design, QA, Delivery and Council artifacts satisfy the P0 Definition of Ready. Shared sources are parent inputs only.
 
 ## 7. GitHub Project visualization contract
 
