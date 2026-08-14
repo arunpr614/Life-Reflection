@@ -377,7 +377,12 @@ const footerContent = `Generated from [${REPOSITORY}@${commit.slice(0, 12)}](${G
 writeFileSync(join(outputDirectory, "_Footer.md"), footerContent);
 
 const auditCandidates = [
-  ...sourcePages.map((page) => ({ source: page.source, page: page.slug, content: page.content })),
+  ...sourcePages.map((page) => ({
+    source: page.source,
+    page: page.slug,
+    content: page.content,
+    sourceDigest: page.sourceDigest,
+  })),
   { source: "Generated Wiki navigation", page: "_Sidebar", content: sidebarContent },
   { source: "Generated Wiki landing page", page: "Home", content: homeContent },
   { source: "Generated non-Markdown inventory", page: "Asset-Catalog", content: assetCatalog },
