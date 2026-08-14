@@ -57,6 +57,23 @@ Make the control plane understandable without teaching an operator its JSON sche
 7. Candidate revision, dossier digest, role-bound attestations, and public-safe evidence references.
 8. Structural validation, publication, external parity, and remaining limitations.
 
+## Existing 17-field Project mapping
+
+No new Project field, field rename, view, or workflow is required. Gate B changes only the generated values in the existing managed payload:
+
+| Required concept | Existing Project value | Exact presentation contract |
+| --- | --- | --- |
+| Historical Roadmap state | `Status` plus `Task summary` | Native Status stays `Done`; the first Task summary line is `Roadmap status: Planning Done — historical`. |
+| Derived artifact completeness | `Artifact readiness` | Exact `Incomplete` or `Ready`; no icon-only or validation-pass substitute. |
+| Derived permission and bounded scope | `Execution scope` | First line `Execution allowed: No|Yes`; second line `Scope: <canonical scope>`. The field name remains unchanged. |
+| Blockers and next safe action | `Task summary` | After historical status: `Blockers: <stable codes or None>` and `Next action: <one safe action>`. |
+| Six artifacts and effective review evidence | `PRD / PID`, `Design artifact`, `Architecture plan`, `QA plan`, `Delivery control`, `Council decision`, and `Task dossier` | Dedicated links remain; Task dossier lists all six. Issue body carries the expanded state/reviewer table. |
+| Candidate, digest, evidence, and structural validation | `Evidence` | Ordered lines: `Control validation`, `Candidate revision`, `Dossier digest`, `Required evidence`, `References`, and remaining limitation. Missing values use `Not yet recorded`. |
+| Traceability and ownership | `Requirement IDs`, `Owner role` | Stable IDs and accountable role; no readiness inference. |
+| Schedule and prioritization | `Start date`, `Target date`, `Priority` | Existing values remain estimates/control metadata and never imply permission. R10 blanks remain blank. |
+
+The issue body remains the detailed accessible surface for seat rationales, Design coverage, private-authority state, owner actions, open decisions, and blockers. The Project fields provide a first-read summary plus links; every value is generated from the same manifest/dossier record.
+
 ## Frozen language
 
 | Concept | Required presentation |
@@ -106,6 +123,7 @@ Blank, `null`, a green success icon, and an unlabeled `Passed` are not acceptabl
 - **Normal, empty, loading:** `PC-001-D-001`.
 - **Error, interruption, destructive/protected action:** `PC-001-D-003`.
 - **Keyboard, focus, screen reader, target size, contrast, zoom, and reduced motion:** `PC-001-D-002`.
+- **Machine-state wording:** the register and manifest show `applicable` plus these mapped scenario IDs while reviews remain Hold; operator text says `Proposed coverage mapped — approval pending` until a valid Design attestation exists.
 
 ## Design verification scenarios
 

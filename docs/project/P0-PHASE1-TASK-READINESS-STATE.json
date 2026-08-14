@@ -32,5 +32,87 @@
     ],
     "privateAuthorityEvidenceReferencePattern": "^P0-AUTH-[A-Z0-9-]{4,}$"
   },
-  "taskOverrides": {}
+  "taskOverrides": {
+    "PC-001": {
+      "openDecisions": [
+        "Exact-candidate five-seat planning approval and publication are pending.",
+        "Implementation fixture evidence has not yet been executed."
+      ],
+      "designCoverage": {
+        "applicability": "applicable",
+        "journeyIds": [
+          "PC-001-D-001",
+          "PC-001-D-002",
+          "PC-001-D-003"
+        ],
+        "stateCoverage": {
+          "normal": [
+            "PC-001-D-001"
+          ],
+          "empty": [
+            "PC-001-D-001"
+          ],
+          "loading": [
+            "PC-001-D-001"
+          ],
+          "error": [
+            "PC-001-D-003"
+          ],
+          "interruption": [
+            "PC-001-D-003"
+          ],
+          "destructive": [
+            "PC-001-D-003"
+          ]
+        },
+        "accessibilityCoverage": {
+          "keyboard": [
+            "PC-001-D-002"
+          ],
+          "focus": [
+            "PC-001-D-002"
+          ],
+          "screenReader": [
+            "PC-001-D-002"
+          ],
+          "targetSize": [
+            "PC-001-D-002"
+          ],
+          "contrast": [
+            "PC-001-D-002"
+          ],
+          "zoom": [
+            "PC-001-D-002"
+          ],
+          "reducedMotion": [
+            "PC-001-D-002"
+          ]
+        },
+        "notApplicableRationale": null
+      },
+      "council": {
+        "unresolvedBlockers": [
+          "The six PC-001 artifacts are in review; exact-candidate five-seat planning approval and publication are incomplete.",
+          "The control-hardening implementation and executable fixture evidence do not yet exist."
+        ],
+        "seatVerdicts": {
+          "product": {
+            "rationale": "Planning packet is in review; no permitting attestation is recorded in the central registry."
+          },
+          "design": {
+            "rationale": "Proposed Design coverage is mapped; exact-candidate approval is pending."
+          },
+          "architecture": {
+            "rationale": "Planning packet is in review; no permitting attestation is recorded in the central registry."
+          },
+          "qa": {
+            "rationale": "Planning review is not executed implementation-test evidence."
+          },
+          "project": {
+            "rationale": "Planning packet is in review; merge, sync, and parity evidence are pending."
+          }
+        }
+      }
+    }
+  }
 }

@@ -62,7 +62,7 @@ No readiness-control code edit begins before Gate A is merged and five-seat-appr
 | Readiness register/manifest | Recomputed hashes; 58 tasks, zero allowed | New schema/derived fields validated; truthful counts |
 | Issue #3 | Existing six links remain live; closed/Done historical | Exact merged evidence links/fields; no reopen churn |
 | Other 57 issues | No mutation unless generated payload changes | Synchronize only reviewed generated deltas |
-| Private Project | No workflow mutation | Existing 17 task fields parity; views/containment unchanged |
+| Private Project | No workflow mutation | Existing 17 managed values only: Status plus historical label in Task summary; derived readiness in Artifact readiness; derived permission plus scope in Execution scope; blockers/next action in Task summary; candidate/digest/validation in Evidence; six links in dedicated fields/Task dossier. Views/containment unchanged. |
 | Workbook | Rebuild both copies if a projected value/hash changes | Seven sheets, 58 issue URLs, formulas/renders, R10 blanks verified |
 | Wiki | Publish only after merged material source change | Deterministic exact-main Page Audit; no live-only loss |
 | Running log | Append planning decision and exact branch/commit state | Append implementation, QA, merge, sync, Wiki, parity, and limitations |

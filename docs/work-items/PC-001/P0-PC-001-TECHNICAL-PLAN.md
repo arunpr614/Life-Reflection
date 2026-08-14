@@ -83,6 +83,19 @@ The evaluator returns:
 
 Unknown, malformed, missing, stale, duplicate, expired, or mismatched evidence fails closed. Stable gate codes are public-safe and include the task ID and corrective action in CLI output.
 
+## Existing Project projection contract
+
+Gate B does not add, rename, delete, or reconfigure a Project field or workflow. It changes only `projectValues(task)` in `tools/sync_phase1_github.mjs` so the existing 17 managed values expose the Design hierarchy:
+
+- `Status` remains the canonical Roadmap status; `Task summary` starts with `Roadmap status: Planning Done — historical` for PC-001, followed by stable blockers and one next action.
+- `Artifact readiness` receives only the derived `Incomplete|Ready` value.
+- `Execution scope` becomes a two-line value: derived `Execution allowed: No|Yes`, then canonical `Scope: ...`.
+- `Evidence` becomes ordered public-safe lines for structural validation, candidate revision, dossier digest, required evidence, references, and remaining limitation.
+- the six artifact fields plus `Task dossier` retain exact merged URLs; detailed review/coverage/authority/action records remain in the generated issue body and linked Council artifact.
+- `Requirement IDs`, `Owner role`, dates, and priority retain their current meanings; R10 date blanks remain untouched.
+
+The sync dry-run and `PC-001-CTL-R02` compare all 17 values. This value-only change requires no `P0-OA-002`; any future field/view/workflow mutation is outside this plan and remains gated.
+
 ## Evaluation phases
 
 1. **Candidate:** six task artifacts are committed; reviews bind exact candidate bytes and dossier digest.
