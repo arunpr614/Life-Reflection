@@ -45,6 +45,7 @@ The prototypes use browser-memory-only behavior and simulated states. They do no
 | Phase 1 design review | [UX Design Review](docs/council/UX-DESIGN-REVIEW.md) |
 | Architecture | [Phase 1 Implementation Plan](docs/architecture/PHASE1-IMPLEMENTATION-PLAN.md) |
 | Shared-host deployment | [Hetzner Shared-host Spike](docs/research/HETZNER-SHARED-HOST-DEPLOYMENT-SPIKE.md) |
+| Wayfinder adoption | [Wayfinder Phase 1 Adoption Report](docs/research/WAYFINDER-PHASE1-GITHUB-INTEGRATION-RESEARCH.md) |
 | GitHub roadmap research | [GitHub Projects Roadmap Research](docs/research/GITHUB-PROJECTS-ROADMAP-RESEARCH.md) |
 | Historical roadmap pilot | [GitHub Roadmap Design Spike](docs/spikes/LIFE-IN-DAYS-GITHUB-ROADMAP-DESIGN.md) |
 | Delivery task source | [Phase 1 Roadmap Manifest](docs/project/PHASE1-ROADMAP-MANIFEST.json) |

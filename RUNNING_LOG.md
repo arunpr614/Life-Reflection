@@ -396,3 +396,29 @@ Created `docs/project/AI-AGENT-RESOURCE-INDEX-2026-08-14-15-10-39-IST.md` as a c
 ### Evidence boundary
 
 The index is an orientation snapshot, not a product decision or implementation claim. Current source documents and live GitHub evidence remain authoritative, and status-sensitive facts must be refreshed after the filename timestamp.
+
+---
+
+## 2026-08-14 — Wayfinder Phase 1 adoption research
+
+### Outcome
+
+Created `docs/research/WAYFINDER-PHASE1-GITHUB-INTEGRATION-RESEARCH.md` as a deep, source-grounded assessment of how the explicitly invoked Wayfinder skill could support Phase 1.
+
+### Recommendation
+
+- Adopt Wayfinder conditionally as a release-scoped decision-readiness layer, not as a replacement for the 58-task roadmap or as an implementation engine.
+- Begin with a maximum two-week R0 pilot only if charting exposes genuine unresolved decision fog.
+- Preserve the roadmap manifest and governing product/design/architecture artifacts as authoritative.
+- Before any live pilot, narrow the sync-owned delivery views and auto-add boundary to `label:phase1`, keep decision issues out of Project #1, audit shared close/status workflows, and revalidate the exact 58-task projection.
+- Expand only through just-in-time maps for uncertainty-heavy R5–R7 decisions or trigger-activated R10.
+
+### Evidence boundary
+
+The research inspected the installed skill, current project artifacts, live GitHub state read-only, the upstream skill source, and GitHub-owned capability documentation. No Wayfinder issues, labels, relationships, views, automation, or other live GitHub state were created or changed.
+
+### Validation
+
+- All 152 local Markdown-link occurrences across the report and updated navigation files resolve.
+- All 22 public external report links returned successfully; the private Project link was verified through authenticated read-only access.
+- Whitespace and public-safety scans passed with no local paths, private Project node identifiers, credential-like strings, or task/session UUIDs in the changed files.
