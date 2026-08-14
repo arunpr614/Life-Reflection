@@ -518,49 +518,49 @@
             "required": true,
             "path": "docs/work-items/PC-001/P0-PC-001-PRD.md",
             "url": "https://github.com/arunpr614/Life-Reflection/blob/main/docs/work-items/PC-001/P0-PC-001-PRD.md",
-            "state": "draft",
-            "sha256": "730cf36213bf7f54c66dfca2248e3c4dcba6d2f3a49e6527e733ce6fa2958cdd",
-            "contentState": "draft"
+            "state": "in-review",
+            "sha256": "477d5a18f5adb70598de876637d9fc2db1a8b07f68fefbdfc7ebe070aed8a8fb",
+            "contentState": "in-review"
           },
           "architecture": {
             "required": true,
             "path": "docs/work-items/PC-001/P0-PC-001-TECHNICAL-PLAN.md",
             "url": "https://github.com/arunpr614/Life-Reflection/blob/main/docs/work-items/PC-001/P0-PC-001-TECHNICAL-PLAN.md",
-            "state": "draft",
-            "sha256": "5b17e4017b3fab7fdd1eabbf04ec27378731a13479a96d2f36c37b01c91c3411",
-            "contentState": "draft"
+            "state": "in-review",
+            "sha256": "c04dca8359e3293b5d464430f75c493d92a3cca505e85a63d7f6f422ee26c2b3",
+            "contentState": "in-review"
           },
           "design": {
             "required": true,
             "path": "docs/work-items/PC-001/P0-PC-001-DESIGN-SPEC.md",
             "url": "https://github.com/arunpr614/Life-Reflection/blob/main/docs/work-items/PC-001/P0-PC-001-DESIGN-SPEC.md",
-            "state": "draft",
-            "sha256": "5fe815ff5bc15bf37ed927be58c361f96369df50b474b23fe570c3d64c2a3f2a",
-            "contentState": "draft"
+            "state": "in-review",
+            "sha256": "aabb3b264002dcb8ad8b329054f133be456467a47c001880191153b212925dbf",
+            "contentState": "in-review"
           },
           "qa": {
             "required": true,
             "path": "docs/work-items/PC-001/P0-PC-001-QA-PLAN.md",
             "url": "https://github.com/arunpr614/Life-Reflection/blob/main/docs/work-items/PC-001/P0-PC-001-QA-PLAN.md",
-            "state": "draft",
-            "sha256": "1aee690fcf17ce65bc4ad91bcd276c91bbc98dfdbd9c19e2fe2d2ce481d78493",
-            "contentState": "draft"
+            "state": "in-review",
+            "sha256": "5776c99f4d27bf4eb1b3107491a3af25cead7abfef54b582df08ee0ecd45349c",
+            "contentState": "in-review"
           },
           "delivery": {
             "required": true,
             "path": "docs/work-items/PC-001/P0-PC-001-DELIVERY-CHECKLIST.md",
             "url": "https://github.com/arunpr614/Life-Reflection/blob/main/docs/work-items/PC-001/P0-PC-001-DELIVERY-CHECKLIST.md",
-            "state": "draft",
-            "sha256": "519e983065d1829b92ec01718e7ed3d151e4ee172f4dde7cd80792bf630b33a8",
-            "contentState": "draft"
+            "state": "in-review",
+            "sha256": "13472d612994335956107cc1717fe5749d752a490c9d5f864df5e91d254c6cad",
+            "contentState": "in-review"
           },
           "council": {
             "required": true,
             "path": "docs/work-items/PC-001/P0-PC-001-COUNCIL-READINESS.md",
             "url": "https://github.com/arunpr614/Life-Reflection/blob/main/docs/work-items/PC-001/P0-PC-001-COUNCIL-READINESS.md",
-            "state": "draft",
-            "sha256": "b2b9727f389accb6b6a6a2a34b270390beac896ef956d4a822bc1e651a91a13b",
-            "contentState": "draft"
+            "state": "in-review",
+            "sha256": "b01136fe1979d079157a8cedfbfcdb4d361a18016e9d7b2b9bbeedc1c726a1ff",
+            "contentState": "in-review"
           }
         },
         "requirementIds": [],
@@ -734,27 +734,27 @@
           "artifacts": {
             "product": {
               "path": "docs/work-items/PC-001/P0-PC-001-PRD.md",
-              "sha256": "730cf36213bf7f54c66dfca2248e3c4dcba6d2f3a49e6527e733ce6fa2958cdd"
+              "sha256": "477d5a18f5adb70598de876637d9fc2db1a8b07f68fefbdfc7ebe070aed8a8fb"
             },
             "architecture": {
               "path": "docs/work-items/PC-001/P0-PC-001-TECHNICAL-PLAN.md",
-              "sha256": "5b17e4017b3fab7fdd1eabbf04ec27378731a13479a96d2f36c37b01c91c3411"
+              "sha256": "c04dca8359e3293b5d464430f75c493d92a3cca505e85a63d7f6f422ee26c2b3"
             },
             "design": {
               "path": "docs/work-items/PC-001/P0-PC-001-DESIGN-SPEC.md",
-              "sha256": "5fe815ff5bc15bf37ed927be58c361f96369df50b474b23fe570c3d64c2a3f2a"
+              "sha256": "aabb3b264002dcb8ad8b329054f133be456467a47c001880191153b212925dbf"
             },
             "qa": {
               "path": "docs/work-items/PC-001/P0-PC-001-QA-PLAN.md",
-              "sha256": "1aee690fcf17ce65bc4ad91bcd276c91bbc98dfdbd9c19e2fe2d2ce481d78493"
+              "sha256": "5776c99f4d27bf4eb1b3107491a3af25cead7abfef54b582df08ee0ecd45349c"
             },
             "delivery": {
               "path": "docs/work-items/PC-001/P0-PC-001-DELIVERY-CHECKLIST.md",
-              "sha256": "519e983065d1829b92ec01718e7ed3d151e4ee172f4dde7cd80792bf630b33a8"
+              "sha256": "13472d612994335956107cc1717fe5749d752a490c9d5f864df5e91d254c6cad"
             },
             "council": {
               "path": "docs/work-items/PC-001/P0-PC-001-COUNCIL-READINESS.md",
-              "sha256": "b2b9727f389accb6b6a6a2a34b270390beac896ef956d4a822bc1e651a91a13b"
+              "sha256": "b01136fe1979d079157a8cedfbfcdb4d361a18016e9d7b2b9bbeedc1c726a1ff"
             }
           }
         }

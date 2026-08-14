@@ -1,65 +1,98 @@
-# PC-001 — task product requirements
+# PC-001 — readiness-control hardening product requirements
 
 - **Task ID:** `PC-001`
 - **Artifact kind:** `product`
-- **Artifact state:** `draft`
-- **Roadmap status:** `Done`
+- **Artifact state:** `in-review`
+- **Roadmap status:** `Done` — historical planning only
 - **Milestone:** `P0`
 - **Execution allowed:** `false`
-- **Evidence boundary:** Creation of this draft does not approve implementation, deployment, testing, restore, release, or production use.
+- **Scale and stage:** corrective control enhancement; planning candidate in review
+- **Team:** Life in Days Phase 1 Product Council
+- **Authoring role:** Expert Product Manager
+- **Triad partners:** UI/UX Designer and Technical Architect seats
+- **Legal contact / applicable countries / market segments:** N/A — internal single-owner governance tooling; no product/data-capture change
+- **Evidence boundary:** this packet may authorize only local/public readiness-control hardening after exact-candidate five-seat review. It does not authorize R0 feature work, private access, authentic content, deployment, release, or production use.
 
-## Parent product source
+## Parent product and control sources
 
-- [docs/product/PRODUCT-REQUIREMENTS.md](../../product/PRODUCT-REQUIREMENTS.md)
-- [docs/product/PRODUCT-REQUIREMENTS.md](../../product/PRODUCT-REQUIREMENTS.md)
+- [Governing product requirements](../../product/PRODUCT-REQUIREMENTS.md)
+- [Phase 1 execution authorization](../../council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md)
+- [Task Definition of Ready](../../council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md)
+- [Published P0 control review](../../council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md)
 
-## Task outcome
+## Context and problem
 
-Reconcile Product, Design, Architecture, and Project Management decisions into one delivery baseline.
+The P0 control plane correctly holds all 58 tasks today, but its first execution-permitting path has never run. Editable input can currently supply `artifactReadiness`, `executionDecision`, and `executionAllowed`; the validator evaluates the complete gate set only after `executionAllowed` is already true. Reviewer identity is free text, private authority is regex-level metadata, and `--refresh-drafts` can rely on a Markdown state marker after external review evidence exists.
 
-This artifact narrows the parent release contract to `PC-001`. It does not expand the release, change source precedence, or make a shared parent document task approval.
+That asymmetry makes the future first Ready decision vulnerable to stale, optimistic, or weakly bound input. The corrective slice must make authorization a reproducible result of evidence, never an assertion supplied by an override.
 
-## Scope and traceability
+## Outcome
 
-- **Task type:** Planning
-- **Owner role:** Project Manager
-- **Requirement IDs:** Planning-only
-- **Dependencies:** `AUD-001`
-- **Deferred requirements excluded:** `LID-UP-004`, `LID-DEF-001`, `LID-DEF-002`, `LID-DEF-003`, `LID-DEF-004`, `LID-DEF-005`, `LID-DEF-006`
+Harden the existing 58-task control plane so one shared evaluator derives readiness and execution authorization from exact task artifacts, publication evidence, five role-bound Council attestations, dependency evidence, per-action human gates, scope-compatible authority, and blockers. Prove the permitting and rejecting paths with fictional fixtures before any R0 task may pass the Definition of Ready.
+
+## Goals
+
+1. Preserve the current truthful all-Hold baseline while removing every direct path that can assert derived readiness or permission.
+2. Give Product Council and operators one deterministic, public-safe explanation of why a task is or is not permitted to start.
+3. Prevent review evidence, candidate bindings, or attestations from being overwritten by draft refresh.
+4. Require clean, exact, fetched `origin/main` state at the moment an approved task is activated or externally synchronized.
+
+## Stakeholders
+
+- **Primary operator:** Project Manager maintaining issue, Project, workbook, Wiki, and status parity.
+- **Decision makers:** Product Manager, UI/UX Designer, Technical Architect, Independent QA, and Project Manager as five distinct Council seats.
+- **Implementer:** the primary Codex integrator for this bounded corrective slice.
+- **Human authority:** Product Owner or designated deployment authority only when a later private/human gate becomes due; no owner action is due for this local/public hardening.
+
+## Corrective P0 requirements
+
+| ID | Product requirement | Acceptance boundary |
+| --- | --- | --- |
+| `PC-001-CR-001` | Artifact readiness is derived from the six effective artifact states. | Product, QA, Delivery, and Council are approved; Architecture and Design are approved or validly not applicable; a stale `Incomplete` or false `Ready` projection fails validation. |
+| `PC-001-CR-002` | Execution decision and `executionAllowed` are derived from one fail-closed gate evaluation. | Overrides cannot supply either field; every failed gate yields `executionAllowed=false` and named reasons. |
+| `PC-001-CR-003` | Both permitting paths and each atomic rejection path are executable fixtures. | A positive local-synthetic case, a fictional private-authority case, and one isolated negative mutation per gate run in CI. |
+| `PC-001-CR-004` | Candidate approval and runtime activation are separate, non-self-referential phases. | Reviews bind an exact published candidate and artifact digest; actual start and external sync require a clean checkout whose `HEAD` exactly equals fetched `origin/main`. |
+| `PC-001-CR-005` | Reviewers are registry-backed and role-bound. | Five distinct seat identities map to exact roles; attestations bind revision and digest; the QA identity is neither implementer nor evidence-producing test author. |
+| `PC-001-CR-006` | Private authority and owner actions are structured and scope-specific. | Public-safe records bind task, requested scope/action, verifier identity/role, validity window, pass result, opaque custody reference, and the due Owner Action ID. Regex-only evidence never permits. |
+| `PC-001-CR-007` | Draft refresh is protected and mutation-safe. | All targets are preflighted before the first write; any marker, review, candidate, seat, or attestation protection refuses the entire refresh with original hashes unchanged. |
+| `PC-001-CR-008` | Human-facing evidence is unambiguous and accessible. | Roadmap status, artifact readiness, execution permission, blockers, next action, exact bindings, and validation outcome remain distinct in CLI, Markdown, issues, Project, workbook, and Wiki. |
+| `PC-001-CR-009` | Generation and projections remain deterministic and reconciled. | Two isolated generations are byte-identical; the 58-task baseline, seven deferred requirements, issue/Project/workbook/Wiki projections, and two quiescent parity snapshots have zero unexplained drift. |
+| `PC-001-CR-010` | Public controls remain private- and authentic-data blind. | Tests reject sensitive sentinels; no private connection or authentic-media processing occurs; deployment stays `Unknown — private read authority pending`. |
 
 ## Product acceptance scenarios
 
-1. **`PC-001-P-001` — Outcome:** the task produces exactly the outcome above and the result is reviewable without implying a later task or release is complete.
-2. **`PC-001-P-002` — Boundary:** every mapped requirement is addressed, every deferred requirement stays absent, and no authentic/private/human-only act is inferred from synthetic or public evidence.
-3. **`PC-001-P-003` — Evidence:** the task's named acceptance evidence is retrievable, task-bound, independently reviewable, and no broader than the supported claim.
+1. **`PC-001-P-001` — Derived permission:** valid local-synthetic and fictional-private evidence produce the exact expected derived readiness, decision, and permission; every one-gate mutation fails closed with a stable reason.
+2. **`PC-001-P-002` — Trust boundary:** role identity, QA independence, owner-action evidence, private authority, exact-main activation, and public-safety rules reject incomplete, stale, mismatched, expired, or sensitive input.
+3. **`PC-001-P-003` — Delivery truth:** all-Hold compatibility, deterministic generation, protected refresh, issue/Project/workbook/Wiki parity, and status semantics remain exact without implying product implementation or deployment.
 
-## Required acceptance evidence
+## Success metrics
 
-Historical four-seat planning evidence and the five-seat P0 execution-control review, decision record, 58-task manifest, validated workbook, and live roadmap reconcile without inflating planning Done.
-
-## Product metric
-
-Primary task metric: all mapped requirement outcomes and the three task scenarios have retrievable pass/fail evidence, with zero unresolved scope or product decision.
+- Zero editable derived authorization fields.
+- Two positive execution fixtures and at least one isolated negative fixture for every gate predicate.
+- Zero negative fixtures that permit execution; zero partial writes on a refused refresh.
+- Two deterministic isolated generations and two quiescent live verifier snapshots with zero mismatches.
+- 58 canonical tasks, 348 task artifacts, 71 active requirements, seven deferred requirements, and status distribution `40/4/1/13` preserved unless a separately approved product change alters them.
 
 ## Non-goals
 
-- Do not implement work owned by a dependent or later task.
-- Do not admit authentic content without its named owner gate.
-- Do not treat a prototype, document, code path, CI result, deployment, or backup upload as release acceptance.
-- Do not add the seven deferred requirements.
+- No Life in Days application UI, prototype, R0 feature, host probe, credential use, private read, deployment, migration, backup, restore, or release work.
+- No 59th task or issue, no issue #3 status/state change, and no Project workflow-rule change.
+- No approval of any R0 dossier and no inference that historical `Done` means execution-ready.
+- No private target/account detail, credential, recovery value, raw response, authentic journal, photo, or photo-derived data in public evidence.
 
-## Owner actions
+## Risks and mitigations
 
-- `P0-OA-001` — see the Owner Action Ledger
-- `P0-OA-002` — see the Owner Action Ledger
+| Risk | Mitigation |
+| --- | --- |
+| A bootstrap correction appears to authorize itself. | Keep `executionAllowed=false`; merge this planning packet before code edits; require a fresh five-seat code review afterward. |
+| Publication checks become self-referential. | Separate task-candidate review, approval-record publication, and runtime exact-main activation. |
+| A broad schema migration disturbs 58 truthful Hold dossiers. | Use backwards-safe defaults and prove the existing 58/348 baseline byte-for-byte or with reviewed deterministic deltas. |
+| Public evidence leaks private authority detail. | Store only scope class, verifier role/ID, window, pass/fail, Owner Action link, and opaque reference; scan sensitive sentinels. |
 
-These are relevant future gates, not a request for secrets or owner action during local task-artifact authoring. Their due/satisfied state is recorded separately in the readiness register.
+## Required acceptance evidence
 
-## Open product decisions
-
-- Five-seat task-level Product approval is pending.
-- Acceptance scenarios must be confirmed against the exact stable candidate before this artifact can become `approved`.
+The merged planning candidate, five exact-candidate Council dispositions, implementation commit and diff, automated fixture matrix, independent QA rerun, clean-main activation check, deterministic generation evidence, regenerated register/manifest/workbook, issue and Project verification, source-aligned Wiki audit, append-only running-log entry, and two zero-mismatch parity snapshots.
 
 ## Product Manager disposition
 
-**Draft / Hold.** The parent PRD/PID is a planning input. Substantive execution is not permitted until this exact task artifact and the complete dossier pass council review.
+**In review / Hold.** The corrective requirements are bounded and ready for exact-candidate Council review. Control-code edits may begin only after all five seats approve the committed planning packet; all R0 and private work remain held.

@@ -1,73 +1,145 @@
-# PC-001 — task technical plan
+# PC-001 — readiness-control hardening technical plan
 
 - **Task ID:** `PC-001`
 - **Artifact kind:** `architecture`
-- **Artifact state:** `draft`
-- **Roadmap status:** `Done`
+- **Artifact state:** `in-review`
+- **Roadmap status:** `Done` — historical planning only
 - **Milestone:** `P0`
 - **Execution allowed:** `false`
-- **Evidence boundary:** Creation of this draft does not approve implementation, deployment, testing, restore, release, or production use.
+- **Evidence boundary:** this plan covers local/public control tooling and generated public-safe evidence only. It does not authorize application, private-host, deployment, or release work.
 
-## Parent inputs
+## Inputs
 
-- [docs/product/PRODUCT-REQUIREMENTS.md](../../product/PRODUCT-REQUIREMENTS.md)
-- [docs/architecture/PHASE1-IMPLEMENTATION-PLAN.md](../../architecture/PHASE1-IMPLEMENTATION-PLAN.md)
-- [docs/council/UX-DESIGN-REVIEW.md](../../council/UX-DESIGN-REVIEW.md)
-- [docs/design/UX-SPECIFICATION.md](../../design/UX-SPECIFICATION.md)
-- [prototypes/calendar-ui/index-v5.html](../../../prototypes/calendar-ui/index-v5.html)
-- [docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md](../../council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md)
-- [docs/council/agents/P0-QA-LEAD.md](../../council/agents/P0-QA-LEAD.md)
-- [docs/council/execution/P0-OWNER-ACTION-LEDGER.md](../../council/execution/P0-OWNER-ACTION-LEDGER.md)
+- [Task product requirements](./P0-PC-001-PRD.md)
+- [Task Definition of Ready](../../council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md)
+- [Execution authorization](../../council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md)
+- [Owner Action Ledger](../../council/execution/P0-OWNER-ACTION-LEDGER.md)
+- [Published P0 control review](../../council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md)
 
 ## Technical objective
 
-Translate **Integrated Council Planning Package** into a reversible, bounded implementation or evidence plan for this task only:
+Replace assertion-based readiness with one pure, fail-closed evaluation contract. The generator projects derived state, the validator independently recomputes it, the fixture harness exercises both positive and negative paths, and a separate start verifier enforces clean exact-main activation without embedding a commit's own SHA in itself.
 
-> Reconcile Product, Design, Architecture, and Project Management decisions into one delivery baseline.
+## Frozen decisions
 
-## Required task-specific decisions
-
-| Area | Required before approval | Current draft state |
+| Area | Decision | Rejected alternative |
 | --- | --- | --- |
-| Modules and files | Exact owned packages/files, interfaces, and PR decomposition | Not frozen |
-| ADRs | Accepted decisions and explicitly rejected alternatives | Not frozen |
-| APIs and integrations | Inputs, outputs, auth, validation, timeouts, retries, pagination, rate/size bounds | Not frozen |
-| Data and schema | Shapes, invariants, indexes, migrations, compatibility, inventory | Not frozen |
-| Trust boundaries | Threats, secrets, logs, cache, private evidence, AI allowlists/exclusions | Not frozen |
-| Concurrency | Transactions, idempotency, replay, leases, crash/restart behavior | Not frozen |
-| Operations | Capacity assumptions, dependency failure, observability, alerts | Not frozen |
-| Recovery | Backup, separate-path restore, rollback and forward-fix | Not frozen |
+| Derivation | One shared pure evaluator returns artifact readiness, decision, permission, and stable gate reasons. Validator recomputes and compares every projection. | Trusting an override or checking gates only after permission is asserted. |
+| Artifact readiness | Derived only from six effective artifact states. | Coupling artifact completeness to dependency, authority, or runtime gates. |
+| Permission | Derived from artifacts, coverage, exact candidate, role-bound attestations, dependencies, actions, scope, blockers, and verdict. | A mutable Boolean or optimistic default. |
+| Publication | Candidate review, approval-record publication, and runtime start are three explicit phases. | A self-referential approval-registry SHA. |
+| Identity | Stable reviewer IDs resolve through a P0 reviewer registry to one required role; Council seats are distinct and QA is independent. | Arbitrary nonempty reviewer names. |
+| Human/private evidence | Per-action and authority records are structured, public-safe, scoped, time-bounded, and opaque-reference backed. | Aggregate `ownerActionsSatisfied` or `verified` plus a regex string. |
+| Refresh | Complete protection/preflight and staging occur before any target mutation; refusal leaves original hashes unchanged. | Sequential marker-only overwrites. |
+| Compatibility | Existing 58 all-Hold dossiers remain valid under fail-closed defaults. | Bulk promotion or hand-written exceptions. |
 
-## Task contracts
+## Owned implementation surface
 
-- **Requirements:** Planning-only
-- **Dependencies:** `AUD-001`
-- **Persistent-state / recovery impact:** Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.
-- **Health vocabulary:** durable state is exactly one of `unknown`, `never run`, `success`, `delayed`, `failed`, or `blocked`; `Healthy` is the UX label for `success`. Recovery verification is separate evidence/detail.
-- **Authentic-media boundary:** no agent or AI-controlled tool opens, renders, thumbnails, OCRs, screenshots, or inspects authentic photos or photo-derived data.
+### Existing files to modify
 
-## Technical verification scenarios
+- `tools/P0-generate-task-artifacts.mjs` — reject derived override keys, preflight/stage refresh, project evaluator output.
+- `tools/P0-validate-execution-controls.mjs` — recompute derived values unconditionally and validate role, attestation, authority, action, and exact-main contracts.
+- `docs/project/P0-PHASE1-TASK-READINESS-STATE.json` — versioned input schema containing only source evidence and requested scope, never derived authorization.
+- `docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json` — generated projection.
+- `docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md` and `P0-PHASE1-EXECUTION-DECISIONS.md` — executable control semantics.
+- `.github/workflows/prototype-syntax.yml` — run the P0 fixture harness in addition to the baseline validator.
+- Generated manifest, release plan, issue projection, workbook inputs, Wiki projection, and documentation index only when their source fields change.
 
-1. **`PC-001-T-001` — Boundary and failure:** invalid, absent, repeated, interrupted, or out-of-order inputs fail safely and leave no partial or falsely successful state.
-2. **`PC-001-T-002` — Recovery:** every persistent shape introduced or changed by this task is inventoried, backed up, restored in a separate empty path, compared, and rolled back or forward-fixed.
-3. **`PC-001-T-003` — Isolation:** privacy, security, resource, dependency, and co-resident failure cannot broaden access, leak sensitive data, or corrupt an accepted earlier release.
+### New P0-prefixed files planned
 
-## Proposed sequence
+- `tools/P0-readiness-gates.mjs` — pure normalization, digest, gate evaluation, and stable reason codes.
+- `tools/P0-test-execution-controls.mjs` — table-driven positive, negative, determinism, refresh-protection, and safety fixtures.
+- `tools/P0-verify-execution-start.mjs` — task start/runtime preflight requiring clean `HEAD === fetched origin/main` and derived permission.
+- `docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json` — stable public-safe reviewer IDs and allowed roles.
+- `docs/council/execution/P0-OWNER-ACTION-STATE.json` — machine-readable, public-safe per-action status/evidence projection aligned to the Markdown ledger.
 
-1. Freeze task-owned modules/files, interfaces, schemas, ADRs, threats, and fixtures.
-2. Obtain Design and QA concurrence on states, errors, accessibility, scenario IDs, evidence, and stop conditions.
-3. Record exact dependency-entry and authority evidence.
-4. Implement only the smallest council-approved scope with fictional/synthetic fixtures.
-5. Produce immutable build, migration, test, restore, rollback, and no-regression evidence.
-6. Submit a stable commit and artifact hashes to independent QA and the full council.
+No new unprefixed document, artifact, tool, fixture, or output basename may be introduced. Existing canonical/generated names remain grandfathered.
+
+## Data contracts
+
+### Reviewer and attestation
+
+Each approved artifact review and permitting Council seat contains `reviewerId`, `reviewedRevision`, `artifactSha256` where applicable, `dossierDigest`, `evidenceReference`, and `attestationDigest`. The registry resolves `reviewerId` to exactly one required seat role. The five Council reviewer IDs must be unique. The QA reviewer ID must not appear in the candidate's `implementerIds` or evidence-producer IDs.
+
+`attestationDigest` is the SHA-256 of a canonical payload containing task ID, artifact kind or seat, verdict/decision, reviewer ID/role, reviewed revision, dossier digest, artifact hash where applicable, and evidence reference. A changed field invalidates the attestation.
+
+### Owner action
+
+Each action record contains `actionId`, `status`, `requiredForScopeClasses`, `result`, `verifierId`, `verifierRole`, `verifiedAt`, and `evidenceReference`. The evaluator derives satisfaction only for actions due for the requested scope. Pending future actions do not block a local scope; a due action without passing evidence does.
+
+### Private authority
+
+A private-permitting record contains `authorityId`, `taskId`, `scopeClass`, `allowedActionClass`, `verifierId`, `verifierRole`, `windowStart`, `windowEnd`, `result=pass`, `ownerActionId=P0-OA-001`, `evidenceReference`, and candidate binding. It must be current and compatible with the requested action. No target/account/topology/credential/raw evidence is stored publicly.
+
+### Derived result
+
+The evaluator returns:
+
+- `artifactReadiness`: `Incomplete` or `Ready`;
+- `executionDecision`: one canonical human-readable decision;
+- `executionAllowed`: Boolean;
+- `gateResults`: ordered `{code, passed, reason}` records; and
+- normalized evidence used to compute the result.
+
+Unknown, malformed, missing, stale, duplicate, expired, or mismatched evidence fails closed. Stable gate codes are public-safe and include the task ID and corrective action in CLI output.
+
+## Evaluation phases
+
+1. **Candidate:** six task artifacts are committed; reviews bind exact candidate bytes and dossier digest.
+2. **Approval record:** a later normal PR records structured reviews/attestations. Structural CI proves candidate publication and internal consistency; it does not claim runtime activation.
+3. **Activation:** after merge, `P0-verify-execution-start.mjs --task <ID>` fetches `origin`, requires a clean worktree, current branch/main relationship, exact `HEAD === origin/main`, a published approval record, and derived permission. External synchronization may consume permission only from this state.
+
+## Refresh transaction
+
+1. Read every target artifact and the entire readiness input before writing.
+2. Compute all intended outputs and protection reasons in memory.
+3. Protect any non-draft marker or any artifact/task carrying a non-Hold review, candidate binding, non-Hold seat, attestation, or evidence binding.
+4. If any protected target would change, exit nonzero before the first write and report only public-safe paths/reasons.
+5. Stage every new file, verify staged hashes, then promote the complete planned set; on a handled failure restore original bytes and verify original hashes.
+6. Recompute the register only after successful promotion; report created/refreshed/preserved counts.
+
+The test harness injects failures at every handled write boundary and requires original artifact/register hashes and filenames to remain unchanged.
+
+## Verification matrix
+
+- `PC-001-CTL-P01`: valid local-synthetic permitting path.
+- `PC-001-CTL-P02`: fictional structured private-authority path.
+- `PC-001-CTL-N01`: derived fields and every artifact/review/candidate byte gate.
+- `PC-001-CTL-N02`: every Design journey/state/accessibility dimension and valid N/A route.
+- `PC-001-CTL-N03`: reviewer identity, role, uniqueness, attestation, and QA independence.
+- `PC-001-CTL-N04`: candidate/approval publication plus dirty, stale, wrong-HEAD, and unmerged activation denial.
+- `PC-001-CTL-N05`: dependency, requirement/scenario, scope/verdict, decision, blocker, action, and veto gates.
+- `PC-001-CTL-N06`: missing, expired, failed, wrong-scope/action/verifier/custody private authority.
+- `PC-001-CTL-N07`: protected and injected-failure refresh with zero partial mutation.
+- `PC-001-CTL-R01`: deterministic generation and backwards-safe 58/348 all-Hold baseline.
+- `PC-001-CTL-R02`: post-merge issue, Project, workbook, Wiki, and two-snapshot parity.
+- `PC-001-CTL-S01`: sensitive/public-safety and authentic-media exclusion sentinels.
+
+## Implementation sequence
+
+1. Merge this planning-only six-artifact packet after five-seat exact-candidate review.
+2. Add pure evaluator and its complete fixture harness; run it before integrating generator/validator.
+3. Migrate the readiness schema with fail-closed defaults and reviewer/action registries.
+4. Integrate generator derivation and protected refresh; prove deterministic output.
+5. Integrate independent validator recomputation and runtime start verification.
+6. Update CI and governing control documentation.
+7. Regenerate projections/workbook and perform local QA/security/public-safety checks.
+8. Obtain fresh Independent QA plus full Council review on the exact implementation candidate.
+9. Merge normally, synchronize from exact main, rebuild Wiki, and obtain two zero-mismatch verifier snapshots.
+
+## Recovery and rollback
+
+This slice changes no product database or runtime service. Rollback is a normal revert of the merged control commit followed by deterministic regeneration from the previous schema, register, manifest, workbook, and Wiki source. Before schema adoption, capture exact hashes and validate a backwards-read path or explicit version rejection; never silently interpret a future schema with older code.
 
 ## Stop conditions
 
-- Any required decision above remains unfrozen.
-- Private target facts or authority are needed but unavailable.
-- A human-only owner action is due.
-- A privacy, security, recovery, accessibility, evidence, or specialist veto remains.
+- The six planning artifacts do not receive five-seat approval at one exact candidate revision.
+- Any derived field remains user-settable or any negative fixture permits execution.
+- Reviewer roles/uniqueness/QA independence, per-action evidence, or authority scope cannot be proven.
+- Refresh can partially mutate protected files, generation is nondeterministic, or baseline/parity drifts.
+- A private target fact, credential, authentic content, Project workflow change, or new issue becomes necessary.
+- Any Sev-1/Sev-2, critical/high privacy/security issue, or specialist veto remains.
 
 ## Technical Architect disposition
 
-**Draft / Hold.** The global implementation plan is useful source material but is not this task's approved detailed plan.
+**In review / Hold.** The implementation design is complete enough for exact-candidate Council review. No control-code edit starts until the merged planning packet is approved; no R0 or private work is included.
