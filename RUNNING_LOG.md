@@ -372,3 +372,7 @@ Product, Design, and Project Management approved `PVA-005 Resilient Application 
 ### Evidence boundary and next milestone
 
 The only permitted closure is: **The resilient application shell is prototype-represented with synthetic fixtures; connectivity, server behavior, authentication, persistence, and idempotency enforcement remain unverified.** Nothing was deployed or published. V11 `PVA-006 Needs Date Review` is the next queued milestone after the documentation-only freeze record.
+
+### Freeze record
+
+The immutable v10 implementation/evidence commit is `ffabe0d`; the documentation-only freeze record is `497c98d`. Neither freeze step changed the six independently passed UI hashes. V11 is released from the queue while all of its gates remain unstarted.

@@ -4,7 +4,7 @@
 - **Owner:** Project Manager agent
 - **Product owner:** Arun
 - **Baseline:** Prototype v5 at commit `00e5689`; feature audit at commit `f74455f`
-- **Current state:** v10 Resilient Application Shell independently passed at implementation/evidence commit `ffabe0d` and is frozen by the following documentation-only record; v11 Needs Date Review is released but remains `Queued` with every gate `—`
+- **Current state:** v10 Resilient Application Shell is frozen at implementation/evidence commit `ffabe0d` with freeze record `497c98d`; v11 Needs Date Review is released but remains `Queued` with every gate `—`
 - **Goal:** Close every prototype-representable gap in the [v5 feature audit](../audits/PROTOTYPE-V5-FEATURE-AUDIT.md) through immutable, consecutively numbered prototype versions, with Product, UX, council, implementation, and independent QA evidence for every version.
 
 This tracker governs the prototype-completeness loop only. It does not authorize or prove backend implementation, provider qualification, integration behavior, security controls, persistence, deployment, backup, restoration, or production readiness. The [PRD](../product/PRODUCT-REQUIREMENTS.md) and [UX specification](../design/UX-SPECIFICATION.md) remain authoritative for behavior. When this tracker differs from those sources or a direct decision from Arun, the higher-authority source wins and the discrepancy must be recorded in the iteration ledger.
@@ -537,3 +537,13 @@ Entries below are chronological evidence. **Never edit, reorder, or delete an ex
 - Freeze readiness: implementation/evidence commit `ffabe0d` binds the exact passed bytes. This following documentation-only freeze record does not modify any v10 UI, QA, handoff, Council, guide, or evidence artifact and does not imply a second QA pass; its Git identifier is recorded by the next append-only tracker entry.
 - No v10 prototype, Council contract, evidence capture, guide, handoff, or design-QA artifact may be edited by v11 or a later package. A necessary correction requires a new append-only disposition, a changed fingerprint, and fresh independent QA.
 - Next version released from queue: v11 `PVA-006 Needs Date Review`. Its execution-register status remains `Queued`, and Product, Design, Council, Implementation, and QA gates all remain `—` until its roles start.
+
+### 2026-08-14 — v10 — frozen
+
+- Immutable v10 implementation and evidence commit: `ffabe0d` (`prototype: add v10 resilient application shell`); freeze record: `497c98d` (`docs: freeze v10 prototype`).
+- The freeze binds the independently passed artifact identities: `index-v10.html` SHA-256 `9a8a1da6fc00ff4f694cb00dba3f5784168ab1a9d45b16ca680c410d6d330428`; `app-v10.js` SHA-256 `5e0876d7e5ce91040b7b921a1a1fe10746304ae85f39c66f001166e56b8793ca`; `styles-v10.css` SHA-256 `3f38acbe74ffdac691b5963a779b27d61f3f19e3f03775aabec626b74bb12869`; `styles-v10-almanac.css` SHA-256 `7ca0b5ad77cef1e08681479cd1d79d9dd1dafb70e520d1e0ee04d15860b38b8b`; `styles-v10-readiness.css` SHA-256 `e2c07c35b05307ff682ed0ecb21ceb4e33fcb8b5a45f2cd227b23d86584cd42e`; `styles-v10-resilience.css` SHA-256 `d69e52e73bfb2f72c378fbed3b60e1268790cdc91c642dbae347be01b642201c`.
+- All mandatory v10 gates remain **A**, package status remains **Complete**, and final findings remain Critical 0, High 0, Medium 0, Low 0. Only audit gap 3's interruption/failure portion and the frontend-prototype representation of `LID-OPS-018` close.
+- No second QA pass is implied: freeze record `497c98d` records the existing exact-hash Pass without changing any v10 UI, QA, Council, guide, handoff, or evidence artifact.
+- No v10 artifact may be edited by v11 or a later package. Any correction requires a new append-only disposition, changed fingerprint, and fresh complete independent QA.
+- V11 `PVA-006 Needs Date Review` is released from the queue but remains `Queued`, with Product, Design, Council, Implementation, and QA gates all `—` until its roles start.
+- This freeze remains fictional frontend-prototype evidence only and does not prove connectivity, server behavior, persistence, authentication, idempotency outside the page, deployment, formal accessibility conformance, operations, or production readiness.
