@@ -8,9 +8,15 @@ const repoUrl = `https://github.com/${repo}`;
 const projectOwner = "arunpr614";
 const projectNumber = 1;
 const projectUrl = `https://github.com/users/${projectOwner}/projects/${projectNumber}`;
+const canonicalViewFilter = `repo:${repo} is:issue label:phase1`;
 const manifestPath = path.join(repoRoot, "docs/project/PHASE1-ROADMAP-MANIFEST.json");
 const issueMapPath = path.join(repoRoot, "docs/project/PHASE1-GITHUB-ISSUES.json");
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+let existingIssueMapDocument = null;
+if (fs.existsSync(issueMapPath)) {
+  existingIssueMapDocument = JSON.parse(fs.readFileSync(issueMapPath, "utf8"));
+}
+const issueMap = existingIssueMapDocument?.issues ?? {};
 
 const args = new Set(process.argv.slice(2));
 const supportedArgs = new Set([
@@ -20,6 +26,10 @@ const supportedArgs = new Set([
   "--issues-only",
   "--project-only",
   "--skip-views",
+  "--verify",
+  "--views-only",
+  "--view-status",
+  "--view-roadmap",
 ]);
 const unknownArgs = [...args].filter((arg) => !supportedArgs.has(arg));
 if (unknownArgs.length) throw new Error(`Unknown argument(s): ${unknownArgs.join(", ")}`);
@@ -29,6 +39,15 @@ const closeDone = args.has("--close-done");
 const issuesOnly = args.has("--issues-only");
 const projectOnly = args.has("--project-only");
 const skipViews = args.has("--skip-views");
+const verify = args.has("--verify");
+const viewsOnly = args.has("--views-only");
+const viewStatus = args.has("--view-status");
+const viewRoadmap = args.has("--view-roadmap");
+const selectedViewName = viewStatus
+  ? "Phase 1 Status"
+  : viewRoadmap
+    ? "Phase 1 Roadmap"
+    : null;
 
 if (args.has("--help")) {
   console.log(`Usage: node tools/sync_phase1_github.mjs [options]
@@ -40,6 +59,10 @@ Options:
   --project-only   Require the 58 issues to exist; update only Project V2.
   --issues-only    Synchronize labels, milestones, and issues; skip Project V2.
   --skip-views     Skip creation of the two saved Project V2 views.
+  --verify         Read-only live parity check; makes no GitHub or local-file changes.
+  --views-only     Update exactly one saved view and no issues/items/fields.
+  --view-status    Select Phase 1 Status; requires --views-only.
+  --view-roadmap   Select Phase 1 Roadmap; requires --views-only.
   --close-done     Close evidence-backed Done issues (requires --apply).
   --help           Show this help.
 `);
@@ -49,6 +72,17 @@ Options:
 if (closeDone && !apply) throw new Error("--close-done requires --apply");
 if (projectOnly && issuesOnly) throw new Error("--project-only and --issues-only are mutually exclusive");
 if (projectOnly && closeDone) throw new Error("--close-done cannot be combined with --project-only");
+if (verify && apply) throw new Error("--verify is read-only and cannot be combined with --apply");
+if (verify && (projectOnly || issuesOnly || closeDone || skipViews || viewsOnly || viewStatus || viewRoadmap)) {
+  throw new Error("--verify cannot be combined with mutation-selection options");
+}
+if ((viewStatus || viewRoadmap) && !viewsOnly) throw new Error("--view-status/--view-roadmap require --views-only");
+if (viewsOnly && (!selectedViewName || (viewStatus && viewRoadmap))) {
+  throw new Error("--views-only requires exactly one of --view-status or --view-roadmap");
+}
+if (viewsOnly && (projectOnly || issuesOnly || closeDone || skipViews)) {
+  throw new Error("--views-only cannot be combined with issue/item/full-project options");
+}
 
 function runGh(ghArgs, { input, allowFailure = false } = {}) {
   const result = spawnSync("gh", ghArgs, {
@@ -156,6 +190,13 @@ const projectFieldSpecs = [
   },
   { name: "PRD / PID", dataType: "TEXT" },
   { name: "Design artifact", dataType: "TEXT" },
+  { name: "Architecture plan", dataType: "TEXT" },
+  { name: "QA plan", dataType: "TEXT" },
+  { name: "Delivery control", dataType: "TEXT" },
+  { name: "Council decision", dataType: "TEXT" },
+  { name: "Task dossier", dataType: "TEXT" },
+  { name: "Artifact readiness", dataType: "TEXT" },
+  { name: "Execution scope", dataType: "TEXT" },
   { name: "Requirement IDs", dataType: "TEXT" },
   { name: "Evidence", dataType: "TEXT" },
   { name: "Owner role", dataType: "TEXT" },
@@ -176,6 +217,13 @@ const savedViewSpecs = [
       "Owner role",
       "PRD / PID",
       "Design artifact",
+      "Architecture plan",
+      "QA plan",
+      "Delivery control",
+      "Council decision",
+      "Task dossier",
+      "Artifact readiness",
+      "Execution scope",
       "Requirement IDs",
       "Evidence",
       "Task summary",
@@ -216,6 +264,41 @@ function issueBody(task, issueNumbers) {
     .join("\n- ");
   const start = task.startDate ?? "Blank — trigger-gated";
   const target = task.targetDate ?? "Blank — trigger-gated";
+  const evidenceReferences = task.evidenceReferencePaths?.length
+    ? task.evidenceReferencePaths
+      .map((filePath, index) => `- ${mdLink(filePath, task.evidenceReferenceUrls[index])}`)
+      .join("\n")
+    : "- Not yet provided; the acceptance text below describes what must exist.";
+  const dossier = task.taskDossier;
+  const artifactLabels = { product: "Product", architecture: "Architecture", design: "Design", qa: "QA", delivery: "Delivery", council: "Council" };
+  const artifactRows = Object.entries(dossier.artifacts)
+    .map(([kind, artifact]) => {
+      const review = dossier.artifactReviews[kind];
+      const reviewer = review.reviewer
+        ? `${review.reviewer}${review.reviewedRevision ? ` at \`${review.reviewedRevision.slice(0, 12)}…\`` : " (revision missing)"}`
+        : "Not yet recorded";
+      return `| ${artifactLabels[kind]} | \`${artifact.state}\` | \`${review.decision}\` | ${reviewer} | ${mdLink(artifact.path, artifact.url)} | \`${artifact.sha256.slice(0, 16)}…\` |`;
+    })
+    .join("\n");
+  const seatLabels = { product: "Product Manager", design: "UI/UX Designer", architecture: "Technical Architect", qa: "Independent QA", project: "Project Manager" };
+  const seatRows = Object.entries(dossier.council.seatVerdicts)
+    .map(([seat, record]) => `| ${seatLabels[seat]} | \`${record.verdict}\` | ${record.reviewer ?? "Not yet recorded"} | ${record.rationale} |`)
+    .join("\n");
+  const designStateCoverage = Object.entries(dossier.designCoverage.stateCoverage)
+    .map(([dimension, scenarioIds]) => `${dimension}: ${scenarioIds.length ? scenarioIds.map((id) => `\`${id}\``).join(", ") : "not yet mapped"}`)
+    .join("; ");
+  const designAccessibilityCoverage = Object.entries(dossier.designCoverage.accessibilityCoverage)
+    .map(([dimension, scenarioIds]) => `${dimension}: ${scenarioIds.length ? scenarioIds.map((id) => `\`${id}\``).join(", ") : "not yet mapped"}`)
+    .join("; ");
+  const ownerActions = dossier.ownerActions.length
+    ? dossier.ownerActions.map((id) => `\`${id}\``).join(", ")
+    : "None currently mapped";
+  const openDecisions = dossier.openDecisions.length
+    ? dossier.openDecisions.map((decision) => `- ${decision}`).join("\n")
+    : "- None";
+  const blockers = dossier.council.unresolvedBlockers.length
+    ? dossier.council.unresolvedBlockers.map((blocker) => `- ${blocker}`).join("\n")
+    : "- None";
 
   return `<!-- phase1-roadmap-id: ${task.id} -->
 ## Outcome
@@ -235,20 +318,70 @@ ${task.description}
 | Proposed start | ${start} |
 | Proposed target | ${target} |
 | Date basis | ${task.dateBasis} |
+| Artifact readiness | **${task.artifactReadiness}** |
+| Execution allowed | **${task.executionAllowed ? "Yes" : "No"}** |
+| Execution scope | \`${task.executionScope}\` |
 
 ## Traceability
 
 - **Requirement IDs:** ${requirements}
 - **Dependencies:** ${dependencies}
 - **Dependency semantics:** Progressive handoff is allowed, but this task cannot close or cross its evidence/release gate before prerequisite evidence exists.
-- **PRD / PID:** ${mdLink(task.prdPidPath, task.prdPidUrl)}
-- **Design artifacts:** ${designLinks}
-- **Architecture:** ${mdLink(task.architecturePath, task.architectureUrl)}
+- **Parent PRD / PID:** ${mdLink(task.prdPidPath, task.prdPidUrl)}
+- **Shared design inputs:** ${designLinks}
+- **Global architecture input:** ${mdLink(task.architecturePath, task.architectureUrl)}
 - **Canonical manifest:** ${mdLink("docs/project/PHASE1-ROADMAP-MANIFEST.json", `${repoUrl}/blob/main/docs/project/PHASE1-ROADMAP-MANIFEST.json`)}
+
+## Task-bound Definition of Ready
+
+| Discipline | Effective state | Review decision | Named exact-revision reviewer | Task artifact | SHA-256 prefix |
+| --- | --- | --- | --- | --- | --- |
+${artifactRows}
+
+- **Council verdict:** \`${dossier.council.verdict}\`
+- **Council decision:** ${mdLink(dossier.council.decisionPath, dossier.council.decisionUrl)}
+- **Reviewed revision:** ${dossier.council.reviewedRevision ? `\`${dossier.council.reviewedRevision}\`` : "Not yet recorded"}
+- **Dossier digest:** ${dossier.candidate.dossierDigest ? `\`${dossier.candidate.dossierDigest}\`` : "Not yet recorded"}
+- **Dependency entry evidence satisfied:** ${dossier.dependenciesEntryEvidenceSatisfied ? "Yes" : "No"}
+- **Private authority state:** \`${dossier.privateAuthorityState}\`
+- **Private authority evidence reference:** ${dossier.privateAuthorityEvidenceReference ? `\`${dossier.privateAuthorityEvidenceReference}\`` : "Not yet recorded / not due"}
+- **Relevant owner actions (due only at their named gate):** ${ownerActions}
+- **Currently due owner actions satisfied:** ${dossier.ownerActionsSatisfied ? "Yes" : "No"}
+- **Acceptance scenario IDs:** ${dossier.acceptanceScenarioIds.map((id) => `\`${id}\``).join(", ")}
+
+### Five-seat council record
+
+| Seat | Verdict | Named reviewer | Rationale |
+| --- | --- | --- | --- |
+${seatRows}
+
+### Structured Design assurance
+
+- **Applicability:** \`${dossier.designCoverage.applicability}\`
+- **Journeys:** ${dossier.designCoverage.journeyIds.length ? dossier.designCoverage.journeyIds.map((id) => `\`${id}\``).join(", ") : "Not yet mapped"}
+- **State coverage:** ${designStateCoverage}
+- **Accessibility coverage:** ${designAccessibilityCoverage}
+- **Not-applicable rationale:** ${dossier.designCoverage.notApplicableRationale ?? "None recorded"}
+
+### Open decisions
+
+${openDecisions}
+
+### Council blockers
+
+${blockers}
+
+The roadmap status is not a readiness override. Substantive execution remains blocked unless \`executionAllowed=true\` for the exact reviewed revision and artifact hashes.
 
 ## Acceptance evidence required
 
 ${task.acceptanceEvidence}
+
+## Evidence references
+
+${evidenceReferences}
+
+Evidence links establish only the bounded claim recorded by the source. A planning document or prototype is not implementation, deployment, restore, or release evidence.
 
 ## Rollback / restore impact
 
@@ -265,15 +398,25 @@ Managed from the Phase 1 roadmap manifest. Update the manifest and synchronize t
 }
 
 function projectValues(task) {
+  const evidenceReferences = task.evidenceReferenceUrls?.length
+    ? task.evidenceReferenceUrls.join("\n")
+    : "Not yet provided";
   return {
     "Status": task.status,
     "Start date": task.startDate,
     "Target date": task.targetDate,
     "Priority": task.priority,
-    "PRD / PID": task.prdPidUrl,
-    "Design artifact": task.designArtifactUrls.join("\n"),
+    "PRD / PID": task.taskPrdUrl,
+    "Design artifact": task.taskDesignUrl,
+    "Architecture plan": task.taskArchitectureUrl,
+    "QA plan": task.taskQaUrl,
+    "Delivery control": task.taskDeliveryUrl,
+    "Council decision": task.taskCouncilUrl,
+    "Task dossier": Object.values(task.taskDossier.artifacts).map((artifact) => artifact.url).join("\n"),
+    "Artifact readiness": task.artifactReadiness,
+    "Execution scope": task.executionScope,
     "Requirement IDs": task.requirementIds.length ? task.requirementIds.join(", ") : "Planning-only",
-    "Evidence": task.acceptanceEvidence,
+    "Evidence": `Required: ${task.acceptanceEvidence}\nReferences: ${evidenceReferences}`,
     "Owner role": task.ownerRole,
     "Task summary": task.description,
   };
@@ -282,6 +425,15 @@ function projectValues(task) {
 function validateManifest() {
   if (manifest.tasks.length !== 58) {
     throw new Error(`Expected the canonical 58 tasks; found ${manifest.tasks.length}`);
+  }
+  const fieldNames = projectFieldSpecs.map((spec) => spec.name);
+  if (new Set(fieldNames).size !== fieldNames.length) {
+    throw new Error("Project field specifications must have unique names");
+  }
+  for (const view of savedViewSpecs) {
+    if (view.visibleFieldNames?.some((name) => name !== "Milestone" && !fieldNames.includes(name))) {
+      throw new Error(`${view.name} references an unmanaged visible field`);
+    }
   }
   const ids = new Set();
   for (const task of manifest.tasks) {
@@ -299,13 +451,18 @@ function validateManifest() {
 
 validateManifest();
 
+const plannedIssueNumbers = Object.fromEntries(
+  manifest.tasks.map((task) => [task.id, issueMap[task.id]?.number ?? null]),
+);
+
 const plan = {
   repository: repo,
   project: projectUrl,
   selection: {
-    issues: !projectOnly,
-    project: !issuesOnly,
-    views: !issuesOnly && !skipViews,
+    issues: !projectOnly && !viewsOnly,
+    projectItemsAndFields: !issuesOnly && !viewsOnly,
+    views: viewsOnly || (!issuesOnly && !skipViews),
+    selectedView: selectedViewName,
     closeDone,
   },
   authorization: {
@@ -328,6 +485,8 @@ const plan = {
     startDate: task.startDate,
     targetDate: task.targetDate,
     priority: task.priority,
+    body: issueBody(task, plannedIssueNumbers),
+    projectValues: projectValues(task),
   })),
   projectSync: {
     items: manifest.tasks.length,
@@ -338,6 +497,7 @@ const plan = {
     })),
     fieldWritesPerItem: projectFieldSpecs.length,
     views: savedViewSpecs,
+    canonicalViewFilter,
     applyBoundary: "addProjectV2ItemById runs before item field updates; existing items are returned rather than duplicated",
     uiOnlyAfterSync: [
       "Open Phase 1 Status and select Status as the board's column field.",
@@ -351,8 +511,13 @@ const plan = {
   },
 };
 
-if (!apply) {
-  console.log(JSON.stringify({ mode: "dry-run", ...plan }, null, 2));
+if (!apply && !verify) {
+  await new Promise((resolve, reject) => {
+    process.stdout.write(`${JSON.stringify({ mode: "dry-run", ...plan }, null, 2)}\n`, (error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
   process.exit(0);
 }
 
@@ -360,11 +525,30 @@ function loadExistingIssues() {
   const issues = apiPaginated(`repos/${repo}/issues?state=all&per_page=100`)
     .filter((issue) => !issue.pull_request);
   const issueById = {};
-  for (const issue of issues) {
-    const match = issue.title.match(/^\[([^\]]+)\]/);
-    if (!match || !manifest.tasks.some((task) => task.id === match[1])) continue;
-    if (issueById[match[1]]) throw new Error(`Multiple repository issues match task ${match[1]}`);
-    issueById[match[1]] = issue;
+  for (const task of manifest.tasks) {
+    const mappedNumber = issueMap[task.id]?.number ?? null;
+    const marker = `<!-- phase1-roadmap-id: ${task.id} -->`;
+    const candidates = issues.filter((issue) =>
+      issue.title.startsWith(`[${task.id}]`) ||
+      issue.body?.includes(marker) ||
+      (mappedNumber !== null && issue.number === mappedNumber));
+    if (candidates.length > 1) {
+      throw new Error(`${task.id}: multiple issues match title/body-marker/issue-map identity`);
+    }
+    if (!candidates.length) continue;
+    const issue = candidates[0];
+    const signals = {
+      title: issue.title.startsWith(`[${task.id}]`),
+      marker: issue.body?.includes(marker) === true,
+      phase1Label: issue.labels.some((label) => (typeof label === "string" ? label : label.name) === "phase1"),
+      issueMap: mappedNumber === issue.number && issueMap[task.id]?.url === issue.html_url,
+      manifest: manifest.tasks.some((candidate) => candidate.id === task.id),
+    };
+    const failedSignals = Object.entries(signals).filter(([, passed]) => !passed).map(([name]) => name);
+    if (failedSignals.length) {
+      throw new Error(`${task.id}: issue identity failed ${failedSignals.join(", ")}`);
+    }
+    issueById[task.id] = issue;
   }
   return issueById;
 }
@@ -405,8 +589,8 @@ function syncRepository() {
   const issueById = loadExistingIssues();
   const issueNumbers = Object.fromEntries(Object.entries(issueById).map(([id, issue]) => [id, issue.number]));
 
-  // First pass keeps new issues open so existing Project auto-add workflows can see them.
-  // Evidence-backed Done issues close only when --close-done is explicit.
+  // First pass never changes issue state. This prevents evidence-backed Done
+  // issues from being reopened transiently while their metadata is refreshed.
   for (const task of manifest.tasks) {
     const milestone = milestoneByTitle[task.milestone];
     if (!milestone) throw new Error(`No GitHub milestone resolved for ${task.milestone}`);
@@ -416,7 +600,6 @@ function syncRepository() {
       body: issueBody(task, issueNumbers),
       milestone: milestone.number,
       labels: issueLabels,
-      state: "open",
     };
     const existing = issueById[task.id];
     const issue = existing
@@ -431,9 +614,12 @@ function syncRepository() {
     const issue = issueById[task.id];
     const payload = {
       body: issueBody(task, issueNumbers),
-      state: closeDone && task.status === "Done" ? "closed" : "open",
     };
-    if (closeDone && task.status === "Done") payload.state_reason = "completed";
+    if (task.status !== "Done") payload.state = "open";
+    if (closeDone && task.status === "Done") {
+      payload.state = "closed";
+      payload.state_reason = "completed";
+    }
     api("PATCH", `repos/${repo}/issues/${issue.number}`, payload);
   }
 
@@ -722,20 +908,23 @@ function nodeFieldId(fields, name) {
   return id;
 }
 
-function createSavedViews(projectId) {
+function createSavedViews(projectId, onlyViewName = null) {
   const existingViews = queryProjectViews(projectId);
   const viewFields = Object.fromEntries(queryProjectFields(projectId).map((field) => [field.name, field]));
-  const filter = `repo:${repo} is:issue`;
+  const filter = canonicalViewFilter;
   const created = [];
   const updated = [];
+  const before = [];
+  const after = [];
 
-  for (const spec of savedViewSpecs) {
+  for (const spec of savedViewSpecs.filter((candidate) => !onlyViewName || candidate.name === onlyViewName)) {
     const matches = existingViews.filter((view) => view.name === spec.name);
     if (matches.length > 1) throw new Error(`Multiple Project views match ${spec.name}`);
     const configuration = spec.visibleFieldNames
       ? { visibleFieldIds: spec.visibleFieldNames.map((name) => nodeFieldId(viewFields, name)) }
       : undefined;
     let view = matches[0];
+    if (view) before.push({ name: view.name, layout: view.layout, filter: view.filter });
 
     if (!view) {
       const data = graphql(`
@@ -759,7 +948,7 @@ function createSavedViews(projectId) {
       updated.push(spec.name);
     }
 
-    graphql(`
+    const data = graphql(`
       mutation UpdatePhase1View($input: UpdateProjectV2ViewInput!) {
         updateProjectV2View(input: $input) {
           projectV2View { id name layout filter }
@@ -774,9 +963,12 @@ function createSavedViews(projectId) {
         ...(configuration ? { configuration } : {}),
       },
     });
+    const updatedView = data.updateProjectV2View?.projectV2View;
+    if (!updatedView) throw new Error(`GitHub did not return the updated Project view ${spec.name}`);
+    after.push({ name: updatedView.name, layout: updatedView.layout, filter: updatedView.filter });
   }
 
-  return { created, updated };
+  return { created, updated, before, after };
 }
 
 function syncProject(issueById) {
@@ -792,11 +984,167 @@ function syncProject(issueById) {
     projectItemByTask[task.id] = itemId;
   }
 
-  const views = skipViews ? { created: [], updated: [] } : createSavedViews(project.id);
+  const views = skipViews
+    ? { created: [], updated: [], before: [], after: [] }
+    : createSavedViews(project.id);
   return { projectItemByTask, views };
 }
 
+function normalizedFieldName(value) {
+  return String(value).toLowerCase().replaceAll(/[^a-z0-9]/g, "");
+}
+
+function projectItemField(item, fieldName) {
+  const expected = normalizedFieldName(fieldName);
+  const key = Object.keys(item).find((candidate) => normalizedFieldName(candidate) === expected);
+  return key ? item[key] : null;
+}
+
+function comparable(value) {
+  if (value === null || value === undefined) return "";
+  return String(value).trim();
+}
+
+function sortedStrings(values) {
+  return [...values].map(String).sort((left, right) => left.localeCompare(right));
+}
+
+function verifyLiveParity() {
+  const mismatches = [];
+  const issueById = loadExistingIssues();
+  requireAllIssues(issueById);
+  const issueNumbers = Object.fromEntries(Object.entries(issueById).map(([id, issue]) => [id, issue.number]));
+
+  for (const task of manifest.tasks) {
+    const issue = issueById[task.id];
+    const expectedLabels = [
+      "phase1",
+      "roadmap",
+      statusLabel(task.status),
+      priorityLabel(task.priority),
+      typeLabel(task.taskType),
+    ];
+    const actualLabels = issue.labels.map((label) => typeof label === "string" ? label : label.name);
+    if (issue.title !== task.issueTitle) mismatches.push(`${task.id}:issue-title`);
+    if (issue.body !== issueBody(task, issueNumbers)) mismatches.push(`${task.id}:issue-body`);
+    if (JSON.stringify(sortedStrings(actualLabels)) !== JSON.stringify(sortedStrings(expectedLabels))) {
+      mismatches.push(`${task.id}:issue-labels`);
+    }
+    if (issue.milestone?.title !== task.milestone) mismatches.push(`${task.id}:issue-milestone`);
+    const expectedState = task.status === "Done" ? "closed" : "open";
+    if (issue.state !== expectedState) mismatches.push(`${task.id}:issue-state`);
+    if (issueMap[task.id]?.expectedStatus !== task.status) mismatches.push(`${task.id}:issue-map-status`);
+    if (issueMap[task.id]?.expectedFinalState !== expectedState) mismatches.push(`${task.id}:issue-map-state`);
+    if (task.milestone === "R10" && issue.milestone?.due_on) mismatches.push(`${task.id}:r10-milestone-date`);
+  }
+
+  const itemResult = runGh([
+    "project", "item-list", String(projectNumber),
+    "--owner", projectOwner,
+    "--limit", "200",
+    "--format", "json",
+  ]);
+  const projectItems = JSON.parse(itemResult.stdout).items ?? [];
+  const issueItems = projectItems.filter((item) => item.content?.type === "Issue");
+  if (issueItems.length !== manifest.tasks.length) {
+    mismatches.push(`project:issue-item-count:${issueItems.length}`);
+  }
+
+  const itemByTask = {};
+  for (const item of issueItems) {
+    const markerId = item.content?.body?.match(/<!-- phase1-roadmap-id: ([^ ]+) -->/)?.[1] ?? null;
+    if (!markerId || !manifest.tasks.some((task) => task.id === markerId)) {
+      mismatches.push(`project:unexpected-issue:${item.content?.number ?? "unknown"}`);
+      continue;
+    }
+    if (itemByTask[markerId]) {
+      mismatches.push(`${markerId}:duplicate-project-item`);
+      continue;
+    }
+    itemByTask[markerId] = item;
+  }
+
+  for (const task of manifest.tasks) {
+    const item = itemByTask[task.id];
+    if (!item) {
+      mismatches.push(`${task.id}:missing-project-item`);
+      continue;
+    }
+    const issue = issueById[task.id];
+    if (item.content.number !== issue.number) mismatches.push(`${task.id}:project-issue-number`);
+    if (item.content.title !== task.issueTitle) mismatches.push(`${task.id}:project-title`);
+    if (item.milestone?.title !== task.milestone) mismatches.push(`${task.id}:project-milestone`);
+    const actualLabels = item.labels ?? [];
+    const expectedLabels = [
+      "phase1",
+      "roadmap",
+      statusLabel(task.status),
+      priorityLabel(task.priority),
+      typeLabel(task.taskType),
+    ];
+    if (JSON.stringify(sortedStrings(actualLabels)) !== JSON.stringify(sortedStrings(expectedLabels))) {
+      mismatches.push(`${task.id}:project-labels`);
+    }
+    for (const [fieldName, expectedValue] of Object.entries(projectValues(task))) {
+      const actualValue = projectItemField(item, fieldName);
+      if (comparable(actualValue) !== comparable(expectedValue)) {
+        mismatches.push(`${task.id}:project-field:${fieldName}`);
+      }
+    }
+  }
+
+  const project = queryProject();
+  const views = queryProjectViews(project.id);
+  for (const spec of savedViewSpecs) {
+    const matches = views.filter((view) => view.name === spec.name);
+    if (matches.length !== 1) {
+      mismatches.push(`view:${spec.name}:count:${matches.length}`);
+      continue;
+    }
+    if (matches[0].layout !== spec.layout) mismatches.push(`view:${spec.name}:layout`);
+    if (matches[0].filter !== canonicalViewFilter) mismatches.push(`view:${spec.name}:filter`);
+  }
+
+  const statusCounts = Object.fromEntries(
+    ["Backlog", "Next", "In progress", "Done"].map((status) => [
+      status,
+      manifest.tasks.filter((task) => projectItemField(itemByTask[task.id] ?? {}, "Status") === status).length,
+    ]),
+  );
+
+  return {
+    mode: "verify-read-only",
+    repository: repo,
+    project: projectUrl,
+    canonicalTasks: manifest.tasks.length,
+    issueItems: issueItems.length,
+    pullRequestItems: projectItems.filter((item) => item.content?.type === "PullRequest").length,
+    statusCounts,
+    viewFilter: canonicalViewFilter,
+    mismatchCount: mismatches.length,
+    mismatches,
+    passed: mismatches.length === 0,
+  };
+}
+
 runGh(["auth", "status", "--hostname", "github.com"]);
+
+if (verify) {
+  const report = verifyLiveParity();
+  console.log(JSON.stringify(report, null, 2));
+  if (!report.passed) process.exitCode = 1;
+} else if (viewsOnly) {
+  const project = queryProject();
+  const views = createSavedViews(project.id, selectedViewName);
+  console.log(JSON.stringify({
+    mode: "apply-view-only",
+    repository: repo,
+    project: projectUrl,
+    selectedView: selectedViewName,
+    canonicalViewFilter,
+    views,
+  }, null, 2));
+} else {
 
 let issueById;
 let milestoneByTitle = {};
@@ -810,9 +1158,9 @@ if (projectOnly) {
 let projectResult = null;
 if (!issuesOnly) projectResult = syncProject(issueById);
 
-const issueMap = {
+const updatedIssueMapDocument = {
   schemaVersion: "1.0.0",
-  generatedAt: new Date().toISOString(),
+  generatedAt: existingIssueMapDocument?.generatedAt ?? new Date().toISOString(),
   repository: repoUrl,
   project: projectUrl,
   issues: Object.fromEntries(manifest.tasks.map((task) => {
@@ -825,7 +1173,19 @@ const issueMap = {
     }];
   })),
 };
-fs.writeFileSync(issueMapPath, `${JSON.stringify(issueMap, null, 2)}\n`);
+const issueMapChanged = JSON.stringify({
+  repository: existingIssueMapDocument?.repository,
+  project: existingIssueMapDocument?.project,
+  issues: existingIssueMapDocument?.issues,
+}) !== JSON.stringify({
+  repository: updatedIssueMapDocument.repository,
+  project: updatedIssueMapDocument.project,
+  issues: updatedIssueMapDocument.issues,
+});
+if (issueMapChanged) {
+  updatedIssueMapDocument.generatedAt = new Date().toISOString();
+  fs.writeFileSync(issueMapPath, `${JSON.stringify(updatedIssueMapDocument, null, 2)}\n`);
+}
 
 console.log(JSON.stringify({
   mode: projectOnly
@@ -846,5 +1206,7 @@ console.log(JSON.stringify({
   views: projectResult?.views ?? { created: [], updated: [] },
   expectedFinalStates: plan.finalIssueStates,
   issueMap: path.relative(repoRoot, issueMapPath),
+  issueMapChanged,
   uiOnlyRemaining: projectResult ? plan.projectSync.uiOnlyAfterSync : [],
 }, null, 2));
+}

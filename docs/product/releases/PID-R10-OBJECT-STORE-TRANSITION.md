@@ -6,7 +6,7 @@
 | --- | --- |
 | Release | R10 — Conditional Object-Store Transition |
 | Document type | Product implementation decision |
-| Status | Conditional planning draft; not approved, scheduled, started, tested, deployed, cut over, or accepted |
+| Status | Council-reviewed conditional planning baseline; trigger and every irreversible stage remain unapproved, unscheduled, unstarted, untested, undeployed, uncut over, and unaccepted |
 | Accountable role | Product owner |
 | Proposed start | Blank — trigger only |
 | Proposed target | Blank — trigger only |

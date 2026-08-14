@@ -6,7 +6,7 @@
 | --- | --- |
 | Release | R8 — Operational Scale and Resilience |
 | Document type | Product requirements document |
-| Status | Planning draft; not an approval or release record |
+| Status | Council-reviewed planning baseline; not an implementation, deployment, or release-acceptance record |
 | Accountable role | Product owner |
 | Proposed start | 2027-02-01 |
 | Proposed target | 2027-02-19 |
@@ -62,7 +62,7 @@ LID-OPS-007 remains explicitly outside R8 transition execution. R8 validates sto
 - LID-OPS-011: application-consistent encrypted backup includes every current/historical source, file, media, derived artifact, revision, Correction, review item, Trash record, suppression, job, usage, manifest, and minimum rebuild configuration without runtime secrets.
 - LID-OPS-011: repository check and sampled database/text/photo/artwork restores succeed; a full disposable-environment drill measures against four hours; upload completion is not labeled recovery.
 - LID-OPS-018: restarts resume idempotent jobs; each dependency fault remains visible without cross-provider fallback or loss of healthy authentic-source browsing/correction; copy makes no high-availability promise.
-- LID-REF-006: capture management, Calendar, Timeline, Search, Journal Day, Settings, History, Trash, export, health, text generation, and artwork flows meet the full supported browser/responsive/accessibility contract.
+- LID-REF-006: capture management, Calendar, Monthly Almanac, Search, Journal Day, Settings, History, Trash, export, health, text generation, and artwork flows meet the full supported browser/responsive/accessibility contract.
 - Integrated regression: all 70 IDs named above have representative happy, boundary, failure, privacy, recovery, and rollback coverage proportional to their risk.
 
 ## Nonfunctional acceptance

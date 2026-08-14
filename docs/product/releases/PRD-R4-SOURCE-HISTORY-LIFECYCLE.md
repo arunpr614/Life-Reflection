@@ -6,7 +6,7 @@
 | --- | --- |
 | Release | R4 — Source History and Lifecycle Safety |
 | Document type | Product requirements document |
-| Status | Planning draft; not an approval or release record |
+| Status | Council-reviewed planning baseline; not an implementation, deployment, or release-acceptance record |
 | Accountable role | Product owner |
 | Proposed start | 2026-11-02 |
 | Proposed target | 2026-11-20 |
@@ -42,9 +42,9 @@ Excluded means not newly owned by R4. R0–R3 remain inherited regression gates,
 ## Owner scenarios
 
 1. The owner corrects displayed journal text while retaining the original source and every source revision.
-2. A later upstream revision conflicts with a Correction; the owner sees an accessible diff and chooses exactly one of Keep my Correction, Use source update, or Save source update as suggestion.
+2. A later upstream revision conflicts with a Correction; the owner sees an accessible diff and chooses exactly one of Keep the Correction, Display newest upstream revision, or Create a new Correction based on both.
 3. The owner inspects why a generated artifact is current, stale, or historical based on the exact source revisions bound to it.
-4. Deleting the last live source hides the Journal Day from Calendar, Timeline, and default Search while exact-date History remains available.
+4. Deleting the last live source hides the Journal Day from Calendar, Monthly Almanac, and default Search while exact-date History remains available.
 5. The owner restores an item from 30-day Trash and sees day visibility, cover, retrieval, stale state, and suppression relationships recalculate.
 6. Permanent deletion requires explicit confirmation and respects shared Media Asset references and upstream suppression intent.
 7. The owner requests an encrypted export, receives a one-time passphrase through the approved non-persistent flow, downloads once, and validates a package containing current, history, Trash, suppressions, originals, checksums, and manifest.
@@ -52,14 +52,14 @@ Excluded means not newly owned by R4. R0–R3 remain inherited regression gates,
 ## Functional acceptance
 
 - LID-SRC-001: a Correction changes displayed text or Journal Date without changing original source content or revisions; it records author, time, and base revision; removing it restores the selected source display without deleting history.
-- LID-SRC-002: conflict view offers an accessible diff and exactly three distinct outcomes—keep Correction, use source update, or retain source update as suggestion—with idempotent result and no silent merge.
+- LID-SRC-002: conflict view offers an accessible diff and exactly three distinct outcomes—keep the Correction, display newest upstream revision, or create a new Correction based on both—with an idempotent result, no silent merge, and no fourth automatic resolution.
 - LID-SRC-004: every derived artifact binds to the exact contributing source revisions; the UI and export distinguish current, stale, and historical artifacts after correction, redating, source update, Trash, restore, or source-set change.
-- LID-SCP-004: a day with no live Source Item disappears atomically from ordinary Calendar, Timeline, and default Search while remaining reachable by exact date in management/history.
+- LID-SCP-004: a day with no live Source Item disappears atomically from ordinary Calendar, Monthly Almanac, and default Search while remaining reachable by exact date in management/history.
 - LID-REF-007: correction, conflict choice, redating, deletion, restore, permanent deletion, suppression changes, export, and other source-changing/destructive actions explain their effect before confirmation and report actual outcome.
 - LID-OPS-010: deletion enters 30-day Trash, removes content from ordinary views/search, and supports restore; permanent live deletion follows reference and suppression rules and cannot reconstruct deleted content through normal export/restore.
 - LID-OPS-013: export contains JSON, Markdown, browsable HTML, original sources/photos, generated artifacts when present, revisions, Corrections, checksums, manifest, and clearly separated Trash and suppressions; it passes an import/restore validator.
 - LID-OPS-013: encrypted export uses a one-time passphrase that is not persisted; unencrypted export requires explicit warning; server artifacts expire after the defined first-successful-download or time boundary; restart/partial cleanup behavior follows an approved lifecycle decision.
-- LID-OPS-011: Corrections, revisions, bindings, conflict suggestions, Trash timestamps, reference state, suppressions, export metadata, and hidden-day state are backed up and restored with relationship checks.
+- LID-OPS-011: Corrections, revisions, bindings, recorded conflict-resolution choices, Trash timestamps, reference state, suppressions, export metadata, and hidden-day state are backed up and restored with relationship checks.
 - LID-OPS-018: lifecycle scheduler, export, or upstream failure does not make healthy source browsing/correction unavailable; idempotent jobs resume safely.
 
 ## Nonfunctional acceptance
@@ -73,14 +73,14 @@ Excluded means not newly owned by R4. R0–R3 remain inherited regression gates,
 
 ## Design contract
 
-R4 design covers Correction editor, base-revision identity, accessible diff, each of the three conflict outcomes, suggestion review, current/stale/historical labeling, History, source-empty day, Trash list/detail/expiry, restore, permanent deletion, reference-aware messages, Source Suppression and Artwork Suppression distinction, export format choice, privacy warning, one-time passphrase handoff, progress, restart, expiration, cleanup, validation, and failure.
+R4 design covers Correction editor, base-revision identity, accessible diff, each of the three conflict outcomes, the manual based-on-both Correction workspace, current/stale/historical labeling, History, source-empty day, Trash list/detail/expiry, restore, permanent deletion, reference-aware messages, Source Suppression and Artwork Suppression distinction, export format choice, privacy warning, one-time passphrase handoff, progress, restart, expiration, cleanup, validation, and failure.
 
 The [UX specification](../../design/UX-SPECIFICATION.md) is normative. [Prototype v5](../../../prototypes/calendar-ui/index-v5.html) offers partial conflict and management direction but does not cover complete History, Trash, suppressions, export lifecycle, durable diff state, or recovery.
 
 ## Architecture and dependency gates
 
 - R3 has an evidence-backed proceed decision; date/search atomicity and all existing data-shape recovery remain intact.
-- Revision, Correction, suggestion, exact source-set binding, stale/historical status, hidden-day, Trash, permanent-deletion, Media Asset reference, and suppression decisions are reviewable.
+- Revision, Correction, the exact selected conflict-resolution choice, exact source-set binding, stale/historical status, hidden-day, Trash, permanent-deletion, Media Asset reference, and suppression decisions are reviewable.
 - Export-lifecycle design proves passphrase non-persistence, restart behavior, partial-file cleanup, first-successful-download semantics, expiry, and validator contract before implementation.
 - Retention and deletion behavior explicitly separates live deletion from encrypted backup retention.
 - Backup/restore and rollback plans cover every R4 lifecycle and export relationship, including an interrupted destructive action.
@@ -111,7 +111,7 @@ Correction and conflict flows must expose source and changed text through semant
 
 ## Recovery and rollback
 
-R4 adds Corrections, source revisions, suggestions, binding versions/status, hidden-day management access, Trash/expiry state, suppression records, permanent-deletion audit state, and export lifecycle records. Exit requires encrypted backup and executed restore/import validation across all relationships and byte checksums.
+R4 adds Corrections, source revisions, recorded conflict-resolution choices, binding versions/status, hidden-day management access, Trash/expiry state, suppression records, permanent-deletion audit state, and export lifecycle records. A conflict-resolution choice is never modeled as a fourth suggestion outcome. Exit requires encrypted backup and executed restore/import validation across all relationships and byte checksums.
 
 Rollback must preserve lifecycle intent. It cannot resurrect permanently deleted content, drop a suppression, flatten revisions, select the wrong conflict outcome, or expose a plaintext export. The evidence must cover interrupted correction, delete, restore, expiry, and export jobs plus compatibility or controlled snapshot restoration.
 

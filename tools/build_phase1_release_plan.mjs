@@ -10,7 +10,7 @@ if (!/^[A-Za-z0-9_-]+$/.test(threadId)) {
 const outputDir = path.join(repoRoot, "outputs", threadId);
 const publicOutputDir = path.join(repoRoot, "outputs", "phase1");
 const previewDir = path.join("/tmp", `life-in-days-phase1-workbook-${threadId}`);
-const outputPath = path.join(outputDir, "Life-in-Days-Phase1-Release-Plan.xlsx");
+const outputPath = path.join(outputDir, "P0-Life-in-Days-Phase1-Release-Plan.xlsx");
 const publicOutputPath = path.join(publicOutputDir, "Life-in-Days-Phase1-Release-Plan.xlsx");
 const manifestPath = path.join(repoRoot, "docs/project/PHASE1-ROADMAP-MANIFEST.json");
 
@@ -19,6 +19,47 @@ const { releases, tasks, requirementMap } = manifest;
 
 if (tasks.length !== 58 || requirementMap.length !== 78 || releases.length !== 12) {
   throw new Error(`Unexpected manifest shape: ${releases.length} releases, ${tasks.length} tasks, ${requirementMap.length} requirements`);
+}
+
+const dossierUrlFields = [
+  "taskPrdUrl",
+  "taskArchitectureUrl",
+  "taskDesignUrl",
+  "taskQaUrl",
+  "taskDeliveryUrl",
+  "taskCouncilUrl",
+];
+const issueUrlPattern = /^https:\/\/github\.com\/arunpr614\/Life-Reflection\/issues\/\d+$/;
+const issueUrls = tasks.map((task) => task.github?.issueUrl);
+if (issueUrls.some((url) => !issueUrlPattern.test(url)) || new Set(issueUrls).size !== tasks.length) {
+  throw new Error("All 58 tasks must have unique canonical Life-Reflection GitHub issue URLs.");
+}
+for (const task of tasks) {
+  if (typeof task.artifactReadiness !== "string" || typeof task.executionAllowed !== "boolean" || !task.executionScope) {
+    throw new Error(`${task.id} is missing an artifact readiness, execution permission, or execution scope field.`);
+  }
+  for (const field of dossierUrlFields) {
+    const url = task[field];
+    if (typeof url !== "string" || !url.includes(`/docs/work-items/${task.id}/P0-${task.id}-`)) {
+      throw new Error(`${task.id} has an invalid ${field}: ${url ?? "missing"}`);
+    }
+  }
+}
+const readyCount = tasks.filter((task) => task.artifactReadiness === "Ready").length;
+const executionAllowedCount = tasks.filter((task) => task.executionAllowed).length;
+if ((manifest.summary.artifactReadinessCounts.Ready ?? 0) !== readyCount
+  || manifest.summary.executionAllowedCount !== executionAllowedCount) {
+  throw new Error("Manifest readiness summary does not match task-level readiness fields.");
+}
+if (tasks.some((task) => task.executionAllowed && task.artifactReadiness !== "Ready")) {
+  throw new Error("Execution cannot be allowed unless the task dossier is Ready.");
+}
+const r10Release = releases.find((release) => release.id === "R10");
+const r10Tasks = tasks.filter((task) => task.milestone === "R10");
+if (!r10Release || r10Release.startDate !== null || r10Release.targetDate !== null
+  || r10Tasks.length !== 3
+  || r10Tasks.some((task) => task.startDate !== null || task.targetDate !== null)) {
+  throw new Error("R10 must remain trigger-only with null release and task dates.");
 }
 
 await fs.mkdir(outputDir, { recursive: true });
@@ -122,6 +163,16 @@ function addStatusConditionalFormatting(range) {
   range.conditionalFormats.add("containsText", { text: "Done", format: { fill: statusFill.Done, font: { color: colors.green, bold: true } } });
 }
 
+function addReadinessConditionalFormatting(range) {
+  range.conditionalFormats.add("containsText", { text: "Incomplete", format: { fill: colors.redLight, font: { color: colors.red, bold: true } } });
+  range.conditionalFormats.add("containsText", { text: "Ready", format: { fill: colors.greenLight, font: { color: colors.green, bold: true } } });
+}
+
+function addExecutionAllowedConditionalFormatting(range) {
+  range.conditionalFormats.add("containsText", { text: "Yes", format: { fill: colors.greenLight, font: { color: colors.green, bold: true } } });
+  range.conditionalFormats.add("containsText", { text: "No", format: { fill: colors.amberLight, font: { color: colors.amber, bold: true } } });
+}
+
 function dateColumns(range) {
   range.setNumberFormat(excelDateFormat);
   range.format.horizontalAlignment = "center";
@@ -132,11 +183,11 @@ addTitle(
   summary,
   "U",
   "Life in Days — Phase 1 Release Plan",
-  "Review workbook generated from PHASE1-ROADMAP-MANIFEST.json on 2026-08-14. Dates are proposed planning estimates; evidence gates control delivery. R0 is synthetic-only and R10 is trigger-only.",
+  `Review workbook generated from PHASE1-ROADMAP-MANIFEST.json on 2026-08-14. All ${tasks.length} task dossiers are currently Incomplete; ${manifest.summary.executionAllowedCount} are execution-authorized. Dates are estimates; evidence gates control delivery.`,
 );
 summary.getRange("A5:B5").values = [["Plan metric", "Value"]];
 styleHeader(summary.getRange("A5:B5"));
-summary.getRange("A6:A14").values = [
+summary.getRange("A6:A16").values = [
   ["Roadmap tasks"],
   ["Done planning tasks"],
   ["In progress"],
@@ -145,9 +196,11 @@ summary.getRange("A6:A14").values = [
   ["Milestones"],
   ["Requirements"],
   ["Active coverage"],
+  ["Dossiers Ready"],
+  ["Execution allowed"],
   ["Planning completion"],
 ];
-summary.getRange("B6:B14").formulas = [
+summary.getRange("B6:B16").formulas = [
   ["=COUNTA('Roadmap Tasks'!$A$6:$A$63)"],
   ["=COUNTIF('Roadmap Tasks'!$C$6:$C$63,\"Done\")"],
   ["=COUNTIF('Roadmap Tasks'!$C$6:$C$63,\"In progress\")"],
@@ -156,16 +209,22 @@ summary.getRange("B6:B14").formulas = [
   ["=COUNTA('Release Plan'!$A$6:$A$17)"],
   ["=COUNTA('Requirement Map'!$A$6:$A$83)"],
   ["=COUNTIF('Requirement Map'!$B$6:$B$83,\"<>Deferred\")"],
+  ["=COUNTIF('Roadmap Tasks'!$D$6:$D$63,\"Ready\")"],
+  ["=COUNTIF('Roadmap Tasks'!$E$6:$E$63,\"Yes\")"],
   ["=B7/B6"],
 ];
-styleBody(summary.getRange("A6:B14"));
-summary.getRange("B14").setNumberFormat("0.0%");
-summary.getRange("A16:H16").merge();
-summary.getRange("A16:H16").values = [["Council release sequence"]];
-summary.getRange("A16:H16").format = { fill: colors.slate, font: { bold: true, color: colors.white, size: 12 } };
-summary.getRange("A17:H17").values = [["Milestone", "Release", "Start", "Target", "Outcome", "Entry dependency", "Tasks", "Status note"]];
-styleHeader(summary.getRange("A17:H17"));
-summary.getRange("A18:H29").values = releases.map((release) => [
+styleBody(summary.getRange("A6:B16"));
+summary.getRange("A14:B14").format.fill = readyCount === tasks.length ? colors.greenLight : colors.redLight;
+summary.getRange("A14:B14").format.font = { color: readyCount === tasks.length ? colors.green : colors.red, bold: true };
+summary.getRange("A15:B15").format.fill = executionAllowedCount > 0 ? colors.greenLight : colors.amberLight;
+summary.getRange("A15:B15").format.font = { color: executionAllowedCount > 0 ? colors.green : colors.amber, bold: true };
+summary.getRange("B16").setNumberFormat("0.0%");
+summary.getRange("A18:H18").merge();
+summary.getRange("A18:H18").values = [["Council release sequence"]];
+summary.getRange("A18:H18").format = { fill: colors.slate, font: { bold: true, color: colors.white, size: 12 } };
+summary.getRange("A19:H19").values = [["Milestone", "Release", "Start", "Target", "Outcome", "Entry dependency", "Tasks", "Status note"]];
+styleHeader(summary.getRange("A19:H19"));
+summary.getRange("A20:H31").values = releases.map((release) => [
   release.id,
   release.name,
   toDate(release.startDate),
@@ -175,9 +234,9 @@ summary.getRange("A18:H29").values = releases.map((release) => [
   tasks.filter((task) => task.milestone === release.id).length,
   release.id === "R10" ? "Dates intentionally blank" : "Evidence-gated estimate",
 ]);
-styleBody(summary.getRange("A18:H29"));
-dateColumns(summary.getRange("C18:D29"));
-summary.getRange("A18:A29").format.font = { bold: true, color: colors.teal };
+styleBody(summary.getRange("A20:H31"));
+dateColumns(summary.getRange("C20:D31"));
+summary.getRange("A20:A31").format.font = { bold: true, color: colors.teal };
 
 summary.getRange("K5:L5").values = [["Status", "Tasks"]];
 styleHeader(summary.getRange("K5:L5"));
@@ -194,7 +253,7 @@ addStatusConditionalFormatting(summary.getRange("K6:K9"));
 summary.getRange("K12:L12").values = [["Milestone", "Tasks"]];
 styleHeader(summary.getRange("K12:L12"));
 summary.getRange("K13:K24").values = releases.map((release) => [release.id]);
-summary.getRange("L13:L24").formulas = releases.map((_, i) => [`=COUNTIF('Roadmap Tasks'!$D$6:$D$63,K${13 + i})`]);
+summary.getRange("L13:L24").formulas = releases.map((_, i) => [`=COUNTIF('Roadmap Tasks'!$G$6:$G$63,K${13 + i})`]);
 styleBody(summary.getRange("K13:L24"));
 
 const statusChart = summary.charts.add("bar", summary.getRange("K5:L9"));
@@ -206,28 +265,28 @@ releaseChart.title = "Tasks by milestone";
 releaseChart.hasLegend = false;
 releaseChart.setPosition("N16", "U30");
 
-summary.getRange("A5:U30").format.verticalAlignment = "top";
-summary.getRange("A1:A30").format.columnWidth = 20;
-summary.getRange("B1:B30").format.columnWidth = 22;
-summary.getRange("C1:D30").format.columnWidth = 13;
-summary.getRange("E1:E30").format.columnWidth = 42;
-summary.getRange("F1:F30").format.columnWidth = 34;
-summary.getRange("G1:G30").format.columnWidth = 10;
-summary.getRange("H1:H30").format.columnWidth = 24;
-summary.getRange("K1:K30").format.columnWidth = 18;
-summary.getRange("L1:L30").format.columnWidth = 10;
+summary.getRange("A5:U31").format.verticalAlignment = "top";
+summary.getRange("A1:A31").format.columnWidth = 20;
+summary.getRange("B1:B31").format.columnWidth = 22;
+summary.getRange("C1:D31").format.columnWidth = 13;
+summary.getRange("E1:E31").format.columnWidth = 42;
+summary.getRange("F1:F31").format.columnWidth = 34;
+summary.getRange("G1:G31").format.columnWidth = 10;
+summary.getRange("H1:H31").format.columnWidth = 24;
+summary.getRange("K1:K31").format.columnWidth = 18;
+summary.getRange("L1:L31").format.columnWidth = 10;
 summary.freezePanes.freezeRows(3);
 
 // Release Plan
 addTitle(
   releaseSheet,
-  "I",
+  "L",
   "Milestone Release Plan",
-  "Every milestone is independently reviewable. Start/Target are proposed estimates in Asia/Kolkata. R10 remains blank until the approved storage trigger exists.",
+  "Every milestone is independently reviewable, but task entry requires its own approved dossier. Start/Target are proposed estimates in Asia/Kolkata. R10 remains blank until the approved storage trigger exists.",
 );
-releaseSheet.getRange("A5:I5").values = [["Milestone", "Release", "Start", "Target", "Days", "Meaningful outcome", "Exit evidence", "Entry dependency", "Date basis"]];
-styleHeader(releaseSheet.getRange("A5:I5"));
-releaseSheet.getRange("A6:I17").values = releases.map((release) => [
+releaseSheet.getRange("A5:L5").values = [["Milestone", "Release", "Start", "Target", "Days", "Meaningful outcome", "Exit evidence", "Entry dependency", "Date basis", "Tasks", "Dossiers Ready", "Execution allowed"]];
+styleHeader(releaseSheet.getRange("A5:L5"));
+releaseSheet.getRange("A6:L17").values = releases.map((release) => [
   release.id,
   release.name,
   toDate(release.startDate),
@@ -237,12 +296,18 @@ releaseSheet.getRange("A6:I17").values = releases.map((release) => [
   release.exitEvidence,
   release.dependency,
   release.startDate ? "Estimate; evidence gates control" : "Trigger-only; no commitment",
+  null,
+  null,
+  null,
 ]);
 releaseSheet.getRange("E6:E17").formulas = releases.map((_, i) => [`=IF(OR(C${6 + i}=\"\",D${6 + i}=\"\"),\"\",D${6 + i}-C${6 + i}+1)`]);
-styleBody(releaseSheet.getRange("A6:I17"));
+releaseSheet.getRange("J6:J17").formulas = releases.map((_, i) => [`=COUNTIF('Roadmap Tasks'!$G$6:$G$63,A${6 + i})`]);
+releaseSheet.getRange("K6:K17").formulas = releases.map((_, i) => [`=COUNTIFS('Roadmap Tasks'!$G$6:$G$63,A${6 + i},'Roadmap Tasks'!$D$6:$D$63,\"Ready\")`]);
+releaseSheet.getRange("L6:L17").formulas = releases.map((_, i) => [`=COUNTIFS('Roadmap Tasks'!$G$6:$G$63,A${6 + i},'Roadmap Tasks'!$E$6:$E$63,\"Yes\")`]);
+styleBody(releaseSheet.getRange("A6:L17"));
 dateColumns(releaseSheet.getRange("C6:D17"));
 releaseSheet.getRange("A6:A17").format = { fill: colors.tealLight, font: { bold: true, color: colors.teal }, verticalAlignment: "top", borders: { preset: "all", style: "thin", color: colors.line } };
-releaseSheet.tables.add("A5:I17", true, "ReleasePlanTable");
+releaseSheet.tables.add("A5:L17", true, "ReleasePlanTable");
 releaseSheet.getRange("A1:A17").format.columnWidth = 12;
 releaseSheet.getRange("B1:B17").format.columnWidth = 34;
 releaseSheet.getRange("C1:D17").format.columnWidth = 13;
@@ -251,28 +316,32 @@ releaseSheet.getRange("F1:F17").format.columnWidth = 42;
 releaseSheet.getRange("G1:G17").format.columnWidth = 48;
 releaseSheet.getRange("H1:H17").format.columnWidth = 32;
 releaseSheet.getRange("I1:I17").format.columnWidth = 26;
-releaseSheet.getRange("A6:I17").format.rowHeight = 62;
+releaseSheet.getRange("J1:L17").format.columnWidth = 14;
+releaseSheet.getRange("A6:L17").format.rowHeight = 62;
 releaseSheet.freezePanes.freezeRows(5);
 releaseSheet.freezePanes.freezeColumns(2);
 
 // Roadmap Tasks
 addTitle(
   taskSheet,
-  "T",
+  "AC",
   "Detailed Roadmap Tasks — 58 Work Packages",
-  "The same stable task IDs are used in the Markdown plan, workbook, repository issues, and live GitHub Project. Done on a planning item never implies feature implementation or deployment.",
+  "Every stable task ID projects six P0-prefixed dossier artifacts into its existing issue and Roadmap item. All current dossiers are Incomplete/Hold; Done on a planning item never implies implementation or deployment.",
 );
 const taskHeaders = [
-  "ID", "Title", "Status", "Milestone", "Type", "Owner role", "Priority", "Start", "Target", "Days",
-  "Requirement IDs", "Dependencies", "PRD / PID link", "Design artifact link", "Architecture link", "Description",
-  "Acceptance evidence", "Rollback / restore impact", "Done meaning", "GitHub issue",
+  "ID", "Title", "Status", "Artifact readiness", "Execution allowed", "Execution scope", "Milestone", "Type", "Owner role", "Priority", "Start", "Target", "Days",
+  "Requirement IDs", "Dependencies", "Parent PRD / PID", "Task PRD", "Task technical plan", "Task design spec", "Task QA plan", "Task delivery checklist", "Task council readiness",
+  "Shared design input", "Shared architecture input", "Description", "Acceptance evidence", "Rollback / restore impact", "Done meaning", "GitHub issue",
 ];
-taskSheet.getRange("A5:T5").values = [taskHeaders];
-styleHeader(taskSheet.getRange("A5:T5"));
-taskSheet.getRange("A6:T63").values = tasks.map((task) => [
+taskSheet.getRange("A5:AC5").values = [taskHeaders];
+styleHeader(taskSheet.getRange("A5:AC5"));
+const taskRows = tasks.map((task) => [
   task.id,
   task.title,
   task.status,
+  task.artifactReadiness,
+  task.executionAllowed ? "Yes" : "No",
+  task.executionScope,
   task.milestone,
   task.taskType,
   task.ownerRole,
@@ -283,6 +352,12 @@ taskSheet.getRange("A6:T63").values = tasks.map((task) => [
   join(task.requirementIds),
   join(task.dependencies),
   task.prdPidUrl,
+  task.taskPrdUrl,
+  task.taskArchitectureUrl,
+  task.taskDesignUrl,
+  task.taskQaUrl,
+  task.taskDeliveryUrl,
+  task.taskCouncilUrl,
   task.designArtifactUrls[0],
   task.architectureUrl,
   task.description,
@@ -291,30 +366,39 @@ taskSheet.getRange("A6:T63").values = tasks.map((task) => [
   task.doneMeaning,
   task.github.issueUrl ?? "Pending GitHub sync",
 ]);
-taskSheet.getRange("J6:J63").formulas = tasks.map((_, i) => [`=IF(OR(H${6 + i}=\"\",I${6 + i}=\"\"),\"\",I${6 + i}-H${6 + i}+1)`]);
-styleBody(taskSheet.getRange("A6:T63"));
-dateColumns(taskSheet.getRange("H6:I63"));
+if (taskHeaders.length !== 29 || taskRows.some((row) => row.length !== taskHeaders.length)) {
+  throw new Error(`Roadmap Tasks shape mismatch: ${taskHeaders.length} headers and row widths ${[...new Set(taskRows.map((row) => row.length))].join(", ")}.`);
+}
+taskSheet.getRange("A6:AC63").values = taskRows;
+taskSheet.getRange("M6:M63").formulas = tasks.map((_, i) => [`=IF(OR(K${6 + i}=\"\",L${6 + i}=\"\"),\"\",L${6 + i}-K${6 + i}+1)`]);
+styleBody(taskSheet.getRange("A6:AC63"));
+dateColumns(taskSheet.getRange("K6:L63"));
 addStatusConditionalFormatting(taskSheet.getRange("C6:C63"));
+addReadinessConditionalFormatting(taskSheet.getRange("D6:D63"));
+addExecutionAllowedConditionalFormatting(taskSheet.getRange("E6:E63"));
 taskSheet.getRange("C6:C63").dataValidation = { rule: { type: "list", values: ["Backlog", "Next", "In progress", "Done"] } };
-taskSheet.getRange("D6:D63").dataValidation = { rule: { type: "list", values: releases.map((release) => release.id) } };
-taskSheet.getRange("G6:G63").dataValidation = { rule: { type: "list", values: ["High", "Medium", "Low"] } };
-taskSheet.tables.add("A5:T63", true, "RoadmapTasksTable");
+taskSheet.getRange("G6:G63").dataValidation = { rule: { type: "list", values: releases.map((release) => release.id) } };
+taskSheet.getRange("J6:J63").dataValidation = { rule: { type: "list", values: ["High", "Medium", "Low"] } };
+taskSheet.tables.add("A5:AC63", true, "RoadmapTasksTable");
 taskSheet.getRange("A1:A63").format.columnWidth = 16;
 taskSheet.getRange("B1:B63").format.columnWidth = 34;
 taskSheet.getRange("C1:C63").format.columnWidth = 14;
-taskSheet.getRange("D1:D63").format.columnWidth = 11;
-taskSheet.getRange("E1:E63").format.columnWidth = 19;
-taskSheet.getRange("F1:F63").format.columnWidth = 28;
+taskSheet.getRange("D1:D63").format.columnWidth = 17;
+taskSheet.getRange("E1:E63").format.columnWidth = 14;
+taskSheet.getRange("F1:F63").format.columnWidth = 38;
 taskSheet.getRange("G1:G63").format.columnWidth = 11;
-taskSheet.getRange("H1:I63").format.columnWidth = 13;
-taskSheet.getRange("J1:J63").format.columnWidth = 8;
-taskSheet.getRange("K1:K63").format.columnWidth = 38;
-taskSheet.getRange("L1:L63").format.columnWidth = 27;
-taskSheet.getRange("M1:O63").format.columnWidth = 42;
-taskSheet.getRange("P1:P63").format.columnWidth = 48;
-taskSheet.getRange("Q1:S63").format.columnWidth = 52;
-taskSheet.getRange("T1:T63").format.columnWidth = 28;
-taskSheet.getRange("A6:T63").format.rowHeight = 78;
+taskSheet.getRange("H1:H63").format.columnWidth = 19;
+taskSheet.getRange("I1:I63").format.columnWidth = 28;
+taskSheet.getRange("J1:J63").format.columnWidth = 11;
+taskSheet.getRange("K1:L63").format.columnWidth = 13;
+taskSheet.getRange("M1:M63").format.columnWidth = 8;
+taskSheet.getRange("N1:N63").format.columnWidth = 38;
+taskSheet.getRange("O1:O63").format.columnWidth = 27;
+taskSheet.getRange("P1:X63").format.columnWidth = 42;
+taskSheet.getRange("Y1:Y63").format.columnWidth = 48;
+taskSheet.getRange("Z1:AB63").format.columnWidth = 52;
+taskSheet.getRange("AC1:AC63").format.columnWidth = 28;
+taskSheet.getRange("A6:AC63").format.rowHeight = 90;
 taskSheet.freezePanes.freezeRows(5);
 taskSheet.freezePanes.freezeColumns(2);
 
@@ -325,7 +409,7 @@ const weeks = [];
 for (let cursor = new Date(timelineStart); cursor <= timelineEnd; cursor.setUTCDate(cursor.getUTCDate() + 7)) {
   weeks.push(new Date(cursor));
 }
-const timelineEndColumnIndex = 6 + weeks.length;
+const timelineEndColumnIndex = 8 + weeks.length;
 function excelColumn(index) {
   let n = index;
   let out = "";
@@ -341,40 +425,44 @@ addTitle(
   timelineSheet,
   timelineEndColumn,
   "Task Roadmap Timeline — Weekly Planning View",
-  "Bars show proposed task windows only. Blank R10 rows are intentional. Status colors: gray Backlog, blue Next, amber In progress, green Done.",
+  "Bars show proposed task windows only; Readiness and Allowed are independent start gates. Blank R10 rows are intentional. Status colors: gray Backlog, blue Next, amber In progress, green Done.",
 );
-timelineSheet.getRange(`A5:${timelineEndColumn}5`).values = [["ID", "Title", "Status", "Milestone", "Start", "Target", ...weeks]];
+timelineSheet.getRange(`A5:${timelineEndColumn}5`).values = [["ID", "Title", "Status", "Readiness", "Allowed", "Milestone", "Start", "Target", ...weeks]];
 styleHeader(timelineSheet.getRange(`A5:${timelineEndColumn}5`));
-timelineSheet.getRange("A6:F63").values = tasks.map((task) => [task.id, task.title, task.status, task.milestone, toDate(task.startDate), toDate(task.targetDate)]);
-styleBody(timelineSheet.getRange("A6:F63"));
-dateColumns(timelineSheet.getRange("E6:F63"));
-timelineSheet.getRange(`G5:${timelineEndColumn}5`).setNumberFormat("dd-mmm");
-timelineSheet.getRange(`G6:${timelineEndColumn}63`).formulas = tasks.map((_, rowIndex) => weeks.map((__, weekIndex) => {
-  const col = excelColumn(7 + weekIndex);
+timelineSheet.getRange("A6:H63").values = tasks.map((task) => [task.id, task.title, task.status, task.artifactReadiness, task.executionAllowed ? "Yes" : "No", task.milestone, toDate(task.startDate), toDate(task.targetDate)]);
+styleBody(timelineSheet.getRange("A6:H63"));
+dateColumns(timelineSheet.getRange("G6:H63"));
+timelineSheet.getRange(`I5:${timelineEndColumn}5`).setNumberFormat("dd-mmm");
+timelineSheet.getRange(`I6:${timelineEndColumn}63`).formulas = tasks.map((_, rowIndex) => weeks.map((__, weekIndex) => {
+  const col = excelColumn(9 + weekIndex);
   const row = 6 + rowIndex;
-  return `=IF(OR($E${row}=\"\",$F${row}=\"\"),\"\",IF(AND(${col}$5<=$F${row},${col}$5+6>=$E${row}),\"■\",\"\"))`;
+  return `=IF(OR($G${row}=\"\",$H${row}=\"\"),\"\",IF(AND(${col}$5<=$H${row},${col}$5+6>=$G${row}),\"■\",\"\"))`;
 }));
-timelineSheet.getRange(`G6:${timelineEndColumn}63`).format = {
+timelineSheet.getRange(`I6:${timelineEndColumn}63`).format = {
   horizontalAlignment: "center",
   verticalAlignment: "center",
   font: { color: colors.white, bold: true, size: 9 },
   borders: { preset: "all", style: "thin", color: "#E2E8F0" },
 };
-const ganttRange = timelineSheet.getRange(`G6:${timelineEndColumn}63`);
-ganttRange.conditionalFormats.addCustom('=AND(G6="■",$C6="Backlog")', { fill: "#94A3B8", font: { color: "#94A3B8" } });
-ganttRange.conditionalFormats.addCustom('=AND(G6="■",$C6="Next")', { fill: colors.blue, font: { color: colors.blue } });
-ganttRange.conditionalFormats.addCustom('=AND(G6="■",$C6="In progress")', { fill: "#F59E0B", font: { color: "#F59E0B" } });
-ganttRange.conditionalFormats.addCustom('=AND(G6="■",$C6="Done")', { fill: "#22C55E", font: { color: "#22C55E" } });
+const ganttRange = timelineSheet.getRange(`I6:${timelineEndColumn}63`);
+ganttRange.conditionalFormats.addCustom('=AND(I6="■",$C6="Backlog")', { fill: "#94A3B8", font: { color: "#94A3B8" } });
+ganttRange.conditionalFormats.addCustom('=AND(I6="■",$C6="Next")', { fill: colors.blue, font: { color: colors.blue } });
+ganttRange.conditionalFormats.addCustom('=AND(I6="■",$C6="In progress")', { fill: "#F59E0B", font: { color: "#F59E0B" } });
+ganttRange.conditionalFormats.addCustom('=AND(I6="■",$C6="Done")', { fill: "#22C55E", font: { color: "#22C55E" } });
 addStatusConditionalFormatting(timelineSheet.getRange("C6:C63"));
+addReadinessConditionalFormatting(timelineSheet.getRange("D6:D63"));
+addExecutionAllowedConditionalFormatting(timelineSheet.getRange("E6:E63"));
 timelineSheet.getRange("A1:A63").format.columnWidth = 16;
 timelineSheet.getRange("B1:B63").format.columnWidth = 34;
 timelineSheet.getRange("C1:C63").format.columnWidth = 14;
-timelineSheet.getRange("D1:D63").format.columnWidth = 11;
-timelineSheet.getRange("E1:F63").format.columnWidth = 13;
-timelineSheet.getRange(`G1:${timelineEndColumn}63`).format.columnWidth = 9;
-timelineSheet.getRange("A6:F63").format.rowHeight = 28;
+timelineSheet.getRange("D1:D63").format.columnWidth = 16;
+timelineSheet.getRange("E1:E63").format.columnWidth = 11;
+timelineSheet.getRange("F1:F63").format.columnWidth = 11;
+timelineSheet.getRange("G1:H63").format.columnWidth = 13;
+timelineSheet.getRange(`I1:${timelineEndColumn}63`).format.columnWidth = 9;
+timelineSheet.getRange("A6:H63").format.rowHeight = 28;
 timelineSheet.freezePanes.freezeRows(5);
-timelineSheet.freezePanes.freezeColumns(6);
+timelineSheet.freezePanes.freezeColumns(8);
 
 // Requirement Map
 addTitle(
@@ -427,20 +515,22 @@ const risks = [
   ["RAID-008", "Risk", "R2/R8", "Small-host image work exhausts memory or disk.", "Technical Architect", "R2 and R8", "Bounded staging/decoder, one heavy job, watermarks, backpressure, and fault tests.", "Open"],
   ["RAID-009", "Risk", "R6/R7", "AI output is mistaken for authentic source truth.", "Product + Design + QA", "R6 and R7", "Separate records, persistent labels, provenance, protected fields, and owner acceptance.", "Open"],
   ["RAID-010", "Risk", "R10", "Object-store transition starts without a measured need or recovery proof.", "Project Manager", "R10", "Keep dates blank; require trigger, inventory, dual-write, restore, observation, and rollback.", "Open"],
+  ["RAID-011", "Risk", "All", "A task starts from shared plans or roadmap status without task-specific Product Council readiness.", "Project Manager", "Every task entry", "Require six P0-prefixed task artifacts, exact hashes/revision, five-seat verdict, and executionAllowed=true.", "Open — all 58 dossiers Incomplete"],
+  ["RAID-012", "Risk", "P0", "Broad Project views or unreadable workflows admit non-delivery items or change status unexpectedly.", "Project Manager", "GitHub synchronization", "Narrow views one at a time to phase1; do not mutate unreadable workflows; verify exact issue/field parity after publication.", "Open — live hardening pending"],
 ];
 riskSheet.getRange("A5:H5").values = [["ID", "Type", "Milestone", "Risk / assumption / dependency", "Owner", "Trigger", "Response", "Status"]];
 styleHeader(riskSheet.getRange("A5:H5"));
-riskSheet.getRange("A6:H15").values = risks;
-styleBody(riskSheet.getRange("A6:H15"));
-riskSheet.getRange("B6:B15").conditionalFormats.add("containsText", { text: "Risk", format: { fill: colors.redLight, font: { color: colors.red, bold: true } } });
-riskSheet.getRange("B6:B15").conditionalFormats.add("containsText", { text: "Assumption", format: { fill: colors.amberLight, font: { color: colors.amber, bold: true } } });
-riskSheet.getRange("B6:B15").conditionalFormats.add("containsText", { text: "Dependency", format: { fill: colors.blueLight, font: { color: colors.blue, bold: true } } });
-riskSheet.getRange("A18:H18").merge();
-riskSheet.getRange("A18:H18").values = [["Milestone entry and exit gates"]];
-riskSheet.getRange("A18:H18").format = { fill: colors.slate, font: { bold: true, color: colors.white, size: 12 } };
-riskSheet.getRange("A19:H19").values = [["Milestone", "Release", "Start", "Target", "Entry dependency", "Exit evidence", "Rollback/restore rule", "Decision state"]];
-styleHeader(riskSheet.getRange("A19:H19"));
-riskSheet.getRange("A20:H31").values = releases.map((release) => [
+riskSheet.getRange("A6:H17").values = risks;
+styleBody(riskSheet.getRange("A6:H17"));
+riskSheet.getRange("B6:B17").conditionalFormats.add("containsText", { text: "Risk", format: { fill: colors.redLight, font: { color: colors.red, bold: true } } });
+riskSheet.getRange("B6:B17").conditionalFormats.add("containsText", { text: "Assumption", format: { fill: colors.amberLight, font: { color: colors.amber, bold: true } } });
+riskSheet.getRange("B6:B17").conditionalFormats.add("containsText", { text: "Dependency", format: { fill: colors.blueLight, font: { color: colors.blue, bold: true } } });
+riskSheet.getRange("A20:H20").merge();
+riskSheet.getRange("A20:H20").values = [["Milestone entry and exit gates"]];
+riskSheet.getRange("A20:H20").format = { fill: colors.slate, font: { bold: true, color: colors.white, size: 12 } };
+riskSheet.getRange("A21:H21").values = [["Milestone", "Release", "Start", "Target", "Entry dependency", "Exit evidence", "Rollback/restore rule", "Decision state"]];
+styleHeader(riskSheet.getRange("A21:H21"));
+riskSheet.getRange("A22:H33").values = releases.map((release) => [
   release.id,
   release.name,
   toDate(release.startDate),
@@ -448,19 +538,23 @@ riskSheet.getRange("A20:H31").values = releases.map((release) => [
   release.dependency,
   release.exitEvidence,
   release.id === "P0" ? "Planning evidence only; no production mutation." : "Restore every new persistent shape and prove reversible rollback before acceptance.",
-  release.id === "R10" ? "Trigger not approved; dates blank" : "Planned; evidence-gated",
+  release.id === "P0"
+    ? "Hold — control candidate under review"
+    : release.id === "R10"
+      ? "Trigger not approved; dates blank"
+      : "Hold — task dossiers Incomplete",
 ]);
-styleBody(riskSheet.getRange("A20:H31"));
-dateColumns(riskSheet.getRange("C20:D31"));
-riskSheet.getRange("A1:A31").format.columnWidth = 15;
-riskSheet.getRange("B1:B31").format.columnWidth = 18;
-riskSheet.getRange("C1:D31").format.columnWidth = 14;
-riskSheet.getRange("E1:E31").format.columnWidth = 30;
-riskSheet.getRange("F1:F31").format.columnWidth = 32;
-riskSheet.getRange("G1:G31").format.columnWidth = 52;
-riskSheet.getRange("H1:H31").format.columnWidth = 24;
-riskSheet.getRange("A6:H15").format.rowHeight = 56;
-riskSheet.getRange("A20:H31").format.rowHeight = 70;
+styleBody(riskSheet.getRange("A22:H33"));
+dateColumns(riskSheet.getRange("C22:D33"));
+riskSheet.getRange("A1:A33").format.columnWidth = 15;
+riskSheet.getRange("B1:B33").format.columnWidth = 18;
+riskSheet.getRange("C1:D33").format.columnWidth = 14;
+riskSheet.getRange("E1:E33").format.columnWidth = 30;
+riskSheet.getRange("F1:F33").format.columnWidth = 32;
+riskSheet.getRange("G1:G33").format.columnWidth = 52;
+riskSheet.getRange("H1:H33").format.columnWidth = 30;
+riskSheet.getRange("A6:H17").format.rowHeight = 62;
+riskSheet.getRange("A22:H33").format.rowHeight = 72;
 riskSheet.freezePanes.freezeRows(5);
 riskSheet.freezePanes.freezeColumns(2);
 
@@ -477,6 +571,10 @@ const guideRows = [
   ["Governing product", "docs/product/PRODUCT-REQUIREMENTS.md", "78 stable requirement IDs."],
   ["Governing design", "docs/design/UX-SPECIFICATION.md", "Prototype v5 is interaction intent only."],
   ["Implementation plan", "docs/architecture/PHASE1-IMPLEMENTATION-PLAN.md", "Detailed technical sequence, architecture, security, recovery, and task contracts."],
+  ["Task Definition of Ready", "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md", "Every substantive task requires Product, Architecture, Design, QA, Delivery, and Council approval."],
+  ["Task artifact register", "docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json", "Paths, states, SHA-256, scenario IDs, owner actions, execution scope, and council decision."],
+  ["Current task readiness", `${manifest.summary.artifactReadinessCounts.Incomplete} Incomplete; ${manifest.summary.executionAllowedCount} execution-authorized`, "Artifact generation is not specialist approval; roadmap status is not a start override."],
+  ["GitHub projection", "58 existing issues; 17 managed Project fields; six dossier links per task", "Publish only from merged remote main, then verify read-only by stable task ID."],
   ["Deployment spike", "docs/research/HETZNER-SHARED-HOST-DEPLOYMENT-SPIKE.md", "Live host capacity/readiness remains unverified until sanitized evidence exists."],
   ["Roadmap", "https://github.com/users/arunpr614/projects/1", "Four lanes: Backlog, Next, In progress, Done."],
   ["Date semantics", "Start/Target are proposed estimates in Asia/Kolkata.", "Evidence gates move dates; dates never weaken gates."],
@@ -493,11 +591,11 @@ guideSheet.getRange("A5:C5").values = [["Topic", "Decision / instruction", "Revi
 styleHeader(guideSheet.getRange("A5:C5"));
 guideSheet.getRange(`A6:C${5 + guideRows.length}`).values = guideRows;
 styleBody(guideSheet.getRange(`A6:C${5 + guideRows.length}`));
-guideSheet.getRange("A6:A21").format = { fill: colors.tealLight, font: { bold: true, color: colors.teal }, verticalAlignment: "top", wrapText: true, borders: { preset: "all", style: "thin", color: colors.line } };
-guideSheet.getRange("A1:A21").format.columnWidth = 24;
-guideSheet.getRange("B1:B21").format.columnWidth = 72;
-guideSheet.getRange("C1:C21").format.columnWidth = 58;
-guideSheet.getRange("A6:C21").format.rowHeight = 54;
+guideSheet.getRange(`A6:A${5 + guideRows.length}`).format = { fill: colors.tealLight, font: { bold: true, color: colors.teal }, verticalAlignment: "top", wrapText: true, borders: { preset: "all", style: "thin", color: colors.line } };
+guideSheet.getRange(`A1:A${5 + guideRows.length}`).format.columnWidth = 24;
+guideSheet.getRange(`B1:B${5 + guideRows.length}`).format.columnWidth = 72;
+guideSheet.getRange(`C1:C${5 + guideRows.length}`).format.columnWidth = 58;
+guideSheet.getRange(`A6:C${5 + guideRows.length}`).format.rowHeight = 58;
 guideSheet.freezePanes.freezeRows(5);
 
 // Formula and workbook validation
@@ -515,29 +613,60 @@ for (const sheet of sheets) {
 if (formulaErrors.length) throw new Error(`Formula errors: ${formulaErrors.join(", ")}`);
 
 const overviewInspect = await workbook.inspect({ kind: "sheet", include: "id,name", maxChars: 5000 });
-const summaryInspect = await workbook.inspect({ kind: "region", sheetId: "Executive Summary", range: "A5:L24", maxChars: 8000 });
-const taskFormulaInspect = await workbook.inspect({ kind: "formula", sheetId: "Roadmap Tasks", range: "H5:J12", maxChars: 4000, options: { maxResults: 30 } });
-const timelineFormulaInspect = await workbook.inspect({ kind: "formula", sheetId: "Roadmap Timeline", range: "E5:L12", maxChars: 5000, options: { maxResults: 50 } });
+const inspectionSpecs = [
+  ["EXECUTIVE SUMMARY", "Executive Summary", "A5:L31", 9000],
+  ["RELEASE PLAN", "Release Plan", "A5:L17", 7000],
+  ["ROADMAP TASK SAMPLE", "Roadmap Tasks", "A5:AC9", 10000],
+  ["ROADMAP TIMELINE SAMPLE", "Roadmap Timeline", "A5:P9", 7000],
+  ["REQUIREMENT MAP SAMPLE", "Requirement Map", "A5:F12", 6000],
+  ["RISKS AND GATES", "Risks & Gates", "A5:H33", 10000],
+  ["REVIEW GUIDE", "Review Guide", `A5:C${5 + guideRows.length}`, 9000],
+];
+const regionInspections = [];
+for (const [label, sheetId, range, maxChars] of inspectionSpecs) {
+  const result = await workbook.inspect({ kind: "region", sheetId, range, maxChars });
+  regionInspections.push(`\n${label}\n${result.ndjson ?? String(result)}`);
+}
+const taskFormulaInspect = await workbook.inspect({ kind: "formula", sheetId: "Roadmap Tasks", range: "K5:M12", maxChars: 4000, options: { maxResults: 30 } });
+const timelineFormulaInspect = await workbook.inspect({ kind: "formula", sheetId: "Roadmap Timeline", range: "G5:P12", maxChars: 6000, options: { maxResults: 60 } });
+const releaseFormulaInspect = await workbook.inspect({ kind: "formula", sheetId: "Release Plan", range: "C5:L17", maxChars: 6000, options: { maxResults: 80 } });
+const requirementFormulaInspect = await workbook.inspect({ kind: "formula", sheetId: "Requirement Map", range: "F5:F16", maxChars: 3000, options: { maxResults: 20 } });
 await fs.writeFile(path.join(previewDir, "workbook-inspect.txt"), [
   "SHEETS",
   overviewInspect.ndjson ?? String(overviewInspect),
-  "\nSUMMARY",
-  summaryInspect.ndjson ?? String(summaryInspect),
+  ...regionInspections,
   "\nTASK FORMULAS",
   taskFormulaInspect.ndjson ?? String(taskFormulaInspect),
   "\nTIMELINE FORMULAS",
   timelineFormulaInspect.ndjson ?? String(timelineFormulaInspect),
+  "\nRELEASE FORMULAS",
+  releaseFormulaInspect.ndjson ?? String(releaseFormulaInspect),
+  "\nREQUIREMENT FORMULAS",
+  requirementFormulaInspect.ndjson ?? String(requirementFormulaInspect),
   `\nFORMULA ERRORS: ${formulaErrors.length}`,
 ].join("\n"));
 
 const previewSpecs = [
-  ["Executive Summary", "A1:U30", 1.0, "01-executive-summary.png"],
-  ["Release Plan", "A1:I17", 1.0, "02-release-plan.png"],
-  ["Roadmap Tasks", "A1:T18", 0.65, "03-roadmap-tasks.png"],
-  ["Roadmap Timeline", `A1:${timelineEndColumn}20`, 0.55, "04-roadmap-timeline.png"],
-  ["Requirement Map", "A1:F25", 0.9, "05-requirement-map.png"],
-  ["Risks & Gates", "A1:H31", 0.8, "06-risks-and-gates.png"],
-  ["Review Guide", "A1:H21", 0.7, "07-review-guide.png"],
+  ["Executive Summary", "A1:U31", 1.0, "01-executive-summary.png"],
+  ["Release Plan", "A1:L17", 0.9, "02-release-plan.png"],
+  ["Roadmap Tasks", "A1:M20", 0.65, "03a-roadmap-tasks-metadata-r01-r20.png"],
+  ["Roadmap Tasks", "A21:M35", 0.65, "03b-roadmap-tasks-metadata-r21-r35.png"],
+  ["Roadmap Tasks", "A36:M50", 0.65, "03c-roadmap-tasks-metadata-r36-r50.png"],
+  ["Roadmap Tasks", "A51:M63", 0.65, "03d-roadmap-tasks-metadata-r51-r63.png"],
+  ["Roadmap Tasks", "N1:AC20", 0.45, "03e-roadmap-tasks-details-r01-r20.png"],
+  ["Roadmap Tasks", "N21:AC35", 0.45, "03f-roadmap-tasks-details-r21-r35.png"],
+  ["Roadmap Tasks", "N36:AC50", 0.45, "03g-roadmap-tasks-details-r36-r50.png"],
+  ["Roadmap Tasks", "N51:AC63", 0.45, "03h-roadmap-tasks-details-r51-r63.png"],
+  ["Roadmap Timeline", `A1:${timelineEndColumn}20`, 0.5, "04a-roadmap-timeline-r01-r20.png"],
+  ["Roadmap Timeline", `A21:${timelineEndColumn}35`, 0.5, "04b-roadmap-timeline-r21-r35.png"],
+  ["Roadmap Timeline", `A36:${timelineEndColumn}50`, 0.5, "04c-roadmap-timeline-r36-r50.png"],
+  ["Roadmap Timeline", `A51:${timelineEndColumn}63`, 0.5, "04d-roadmap-timeline-r51-r63.png"],
+  ["Requirement Map", "A1:F25", 0.9, "05a-requirement-map-r01-r25.png"],
+  ["Requirement Map", "A26:F45", 0.9, "05b-requirement-map-r26-r45.png"],
+  ["Requirement Map", "A46:F65", 0.9, "05c-requirement-map-r46-r65.png"],
+  ["Requirement Map", "A66:F83", 0.9, "05d-requirement-map-r66-r83.png"],
+  ["Risks & Gates", "A1:H33", 0.8, "06-risks-and-gates.png"],
+  ["Review Guide", `A1:C${5 + guideRows.length}`, 0.8, "07-review-guide.png"],
 ];
 for (const [sheetName, range, scale, fileName] of previewSpecs) {
   const preview = await workbook.render({ sheetName, range, scale, format: "png" });
@@ -565,5 +694,10 @@ console.log(JSON.stringify({
   releases: releases.length,
   tasks: tasks.length,
   requirements: requirementMap.length,
+  issueUrls: issueUrls.length,
+  readyCount,
+  executionAllowedCount,
+  r10BlankDateTasks: r10Tasks.length,
+  previewCount: previewSpecs.length,
   formulaErrors: formulaErrors.length,
 }, null, 2));

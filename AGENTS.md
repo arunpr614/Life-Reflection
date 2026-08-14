@@ -29,16 +29,42 @@ If live GitHub mutation is not explicitly authorized or cannot be completed safe
 
 Direct owner instructions outrank repository documents. Do not silently resolve a conflict between authoritative sources; record it in the council decision record and the affected task before proceeding.
 
+## Current activated execution and artifact naming
+
+The Product Owner directly activated the committed Phase 1 P0-to-production Goal on 2026-08-14. The current public-safe execution authority is recorded in:
+
+- [`P0-PHASE1-EXECUTION-AUTHORIZATION.md`](docs/council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md);
+- [`P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md`](docs/council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md);
+- [`P0-PHASE1-EXECUTION-DECISIONS.md`](docs/council/execution/P0-PHASE1-EXECUTION-DECISIONS.md); and
+- [`P0-OWNER-ACTION-LEDGER.md`](docs/council/execution/P0-OWNER-ACTION-LEDGER.md).
+
+Every one of the 58 canonical tasks is also governed by the [P0 task Definition of Ready](docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md) and [task artifact register](docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json). A substantive task may start only when its Product, Architecture, Design, QA, Delivery, and Council artifacts pass at an exact reviewed revision and the manifest records `executionAllowed=true`. Roadmap status, code, a prototype, a shared PRD, or a global plan cannot override this gate. All task dossiers begin as drafts; generation is not approval.
+
+That activation supersedes historical universal G1/“implementation not authorized” stops, but it changes no implementation, test, deployment, recovery, or production evidence by itself. Routine R0–R8 decisions are delegated to the five-seat execution council only when every named gate passes. Human-only account/MFA/secret, terms/spend/provider, authentic-content, authentic-photo UAT, recovery-key, Recovery Ceremony, final R9, and irreversible R10 acts remain non-delegable.
+
+Every newly created document or evidence/build artifact must have a basename beginning `P0-`. Existing canonical files, generated outputs, stable IDs, frozen v6–v10 artifacts, runtime/config filenames, and `RUNNING_LOG.md` are grandfathered; edit them under normal change control rather than renaming or duplicating them.
+
+Before any private host/provider/tunnel/backup/production read or mutation, require the complete private deployment-authority record. Until then, use the exact state **Unknown — private read authority pending** and continue only local/public/synthetic work.
+
 ## Authority and projection chain
 
 ```text
-approved evidence and governing documents
+approved evidence, task state, and governing documents
                 |
                 v
-tools/generate_phase1_roadmap_manifest.mjs   <- edit releases/tasks/status here
+tools/generate_phase1_roadmap_manifest.mjs   <- edit releases/tasks; status comes from the P0 task-state ledger
                 |
                 +--> docs/project/PHASE1-ROADMAP-MANIFEST.json
                 +--> docs/project/PHASE1-RELEASE-PLAN.md
+                |
+                v
+tools/P0-generate-task-artifacts.mjs
+                |
+                +--> docs/work-items/<TASK-ID>/P0-<TASK-ID>-*.md
+                +--> docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json
+                |
+                v
+rerun the manifest generator to embed dossier hashes/readiness
                 |
                 v
 tools/sync_phase1_github.mjs
@@ -104,14 +130,21 @@ Do not renumber a stable task or requirement ID casually. A scope change must up
 
 ```sh
 node --check tools/generate_phase1_roadmap_manifest.mjs
+node --check tools/P0-generate-task-artifacts.mjs
+node --check tools/P0-validate-execution-controls.mjs
 node --check tools/sync_phase1_github.mjs
 node --check tools/build_phase1_release_plan.mjs
 
 node tools/generate_phase1_roadmap_manifest.mjs
+node tools/P0-generate-task-artifacts.mjs
+node tools/generate_phase1_roadmap_manifest.mjs
+node tools/P0-validate-execution-controls.mjs
 node tools/sync_phase1_github.mjs
 ```
 
 The sync command is dry-run by default: it starts no `gh` process and writes no file. Review the complete plan and correct source drift before any mutation.
+
+The task-artifact generator creates missing artifacts, preserves existing specialist content, and recomputes the register. Use `--refresh-drafts` only for an explicitly reviewed bootstrap/remediation rewrite; it may replace every still-draft task artifact and therefore must not be used casually after specialist drafting starts. It never replaces non-draft artifacts.
 
 Validate the generated contract dynamically; status counts must match the current manifest rather than a historical snapshot:
 
@@ -148,11 +181,11 @@ node tools/sync_phase1_github.mjs --apply --project-only
 node tools/sync_phase1_github.mjs --apply --close-done
 ```
 
-Do not casually run plain `--apply` against the live baseline: without `--close-done`, the script intentionally sets every canonical issue to open and can reopen evidence-backed Done issues. Use `--close-done` only after evidence review.
+Do not casually run plain `--apply` against the live baseline. It updates issue metadata, opens non-Done issues, and preserves existing Done issue state; `--close-done` additionally closes only manifest-Done tasks. Use `--close-done` only after evidence review.
 
 Keep the stable `[TASK-ID]` prefix at the beginning of every managed issue title; the sync uses it as issue identity, and removing it can create a duplicate. Managed issue bodies and label sets are replaced by a full repository sync, so put durable evidence and metadata in the governing documents and generator rather than relying on manual issue-only edits.
 
-The current full sync uses an open-first pass before applying final issue state. Even with `--close-done`, existing Done issues can be temporarily reopened. Do not use full sync for a Project-only change; when repository metadata truly must change, use an explicitly authorized maintenance window and verify final issue state immediately. Then verify again after two consecutive read-only snapshots show no further relevant issue or Project workflow changes; an immediate pass alone can precede asynchronous automation. A partial failure after the first pass can leave drift.
+The current full sync does not use an open-first state transition: its first pass preserves issue state, and its second pass opens non-Done items and optionally closes Done items. Do not use full sync for a Project-only change; when repository metadata truly must change, use an explicitly authorized maintenance window and verify final issue state immediately. Then verify again after two consecutive read-only snapshots show no further relevant issue or Project workflow changes; an immediate pass alone can precede asynchronous automation. A partial failure can still leave drift because GitHub mutations are not transactional.
 
 The operation is idempotent by stable task ID but is not transactional. On an API or network failure, stop, inspect the partial state, fix the authoritative source or access problem, and rerun the appropriate idempotent mode. Never claim synchronization until a read-only reconciliation passes. Deletion of an issue, milestone, field, option, item, or view is a separate destructive action and needs explicit authorization.
 
@@ -171,7 +204,7 @@ workbook_run_id="$(date +%Y%m%d%H%M%S)"
 node tools/build_phase1_release_plan.mjs "$workbook_run_id"
 
 shasum -a 256 \
-  "outputs/$workbook_run_id/Life-in-Days-Phase1-Release-Plan.xlsx" \
+  "outputs/$workbook_run_id/P0-Life-in-Days-Phase1-Release-Plan.xlsx" \
   outputs/phase1/Life-in-Days-Phase1-Release-Plan.xlsx
 ```
 
@@ -199,9 +232,9 @@ gh issue list --repo arunpr614/Life-Reflection --state all --limit 100 \
   --json number,title,state,labels,milestone,url
 ```
 
-Compare, do not merely count. Require one issue-backed Project item for every manifest task and exact agreement for title, body, labels, milestone, issue state, Status, Priority, dates, Owner role, PRD/PID, design artifacts, requirements, evidence, and summary. The raw Project can contain separately filtered PR records, so it need not total 58; the two delivery views must contain exactly the manifest's current 58 `phase1` issues.
+Compare, do not merely count. Require one issue-backed Project item for every manifest task and exact agreement for title, body, labels, milestone, issue state, all 17 managed Project fields, six dossier links and hashes, readiness, execution scope, and explicit execution authorization. The raw Project can contain separately filtered PR records, so it need not total 58; the two delivery views must contain exactly the manifest's current 58 `phase1` issues.
 
-These CLI commands are discovery dumps, not a pass/fail verifier. The repository currently has no reusable live-parity command. Until one exists, export paginated read-only metadata to a temporary location, compare it task-by-task against the manifest and issue map using stable IDs, and record the sanitized counts and mismatch total. Do not repeat a historical “580 checks” claim without performing a fresh comparison. If this becomes routine, implement a read-only `--verify` tool rather than relying on visual sampling.
+These CLI commands are discovery dumps, not the pass/fail result. Use `node tools/sync_phase1_github.mjs --verify` for the reusable read-only live-parity check, then retain only its sanitized counts and mismatch list. Do not repeat the historical “580 checks” claim; the current contract manages 17 fields and must be verified from the current merged revision.
 
 Open GitHub and visually verify the UI-only settings:
 
@@ -228,8 +261,8 @@ Generated issue and artifact links target `main`. Do not claim publication is co
 
 ## Current tool limitations — fail closed
 
-- `acceptanceEvidence` currently describes the evidence required; it is not itself proof and the sync does not require an evidence URL. Before `In progress` or `Done`, record retrievable evidence links in the governing artifact and affected issue or decision record, then review them manually. Never let status logic or `--close-done` substitute for that review.
-- The sync currently discovers an issue from its title prefix. Before full apply, require the title `[TASK-ID]`, hidden body marker, `phase1` label, issue-map entry, and manifest ID to agree. Stop on any collision or mismatch; the current script does not enforce all five signals.
+- `acceptanceEvidence` describes the evidence required; it is not itself proof. Before `In progress` or `Done`, record retrievable evidence links in the task dossier and affected issue or decision record, then review them manually. Never let status logic, `executionAllowed`, or `--close-done` substitute for semantic review.
+- The sync enforces five identity signals before mutation: title `[TASK-ID]`, hidden body marker, `phase1` label, issue-map entry, and manifest ID. Stop on any collision or mismatch.
 - The dry-run validates local shape but does not query live GitHub. A successful dry-run is not live reconciliation.
 - The built-in workbook inspection and PNGs do not cover every row. Whole-workbook programmatic inspection plus paginated rendering is mandatory until the builder itself performs those checks.
 - `generatedAt` and the workbook subtitle date are literals. Update both during every accepted refresh until the builder derives its date from the manifest.
@@ -238,7 +271,7 @@ Treat these as known controls, not optional improvement ideas. If the compensati
 
 ## Current GitHub automation hazard
 
-The current sync-owned delivery-view filter is broad: `repo:arunpr614/Life-Reflection is:issue`. Project #1 also has workflows that can auto-add open issues/PRs and sub-issues, set Backlog on add, set Done on close, and close items moved to Done.
+At the last live snapshot, both delivery views still used the broad filter `repo:arunpr614/Life-Reflection is:issue`. The current sync candidate requires `repo:arunpr614/Life-Reflection is:issue label:phase1`, but that narrowing is not live evidence until a staged view-only apply and read-only verification pass. Project #1 also has workflows that can auto-add open issues/PRs and sub-issues, set Backlog on add, set Done on close, and close items moved to Done.
 
 Therefore:
 

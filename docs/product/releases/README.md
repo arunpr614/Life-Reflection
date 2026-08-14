@@ -9,7 +9,7 @@ All dates are planning estimates, not commitments. Evidence gates control entry 
 | R0 | 2026-08-17 to 2026-08-28 | Synthetic-only private foundation with access, health, recovery, coexistence, and rollback evidence | [Shared-Host Private Foundation](PRD-R0-SHARED-HOST-PRIVATE-FOUNDATION.md) |
 | R1 | 2026-08-31 to 2026-09-18 | First memory-creating release: explicit-date text archive with Calendar and Journal Day | [Manual Journal Archive](PRD-R1-MANUAL-JOURNAL-ARCHIVE.md) |
 | R2 | 2026-09-21 to 2026-10-09 | Authorized durable photo capture, review-safe dating, gallery, cover, and derivatives | [Telegram Photo Capture](PRD-R2-TELEGRAM-PHOTO-CAPTURE.md) |
-| R3 | 2026-10-12 to 2026-10-30 | Cross-month Timeline, deterministic private Search, review resolution, and atomic redating | [Retrieval and Date Integrity](PRD-R3-RETRIEVAL-DATE-INTEGRITY.md) |
+| R3 | 2026-10-12 to 2026-10-30 | Cross-month Monthly Almanac, deterministic private Search, review resolution, and atomic redating | [Retrieval and Date Integrity](PRD-R3-RETRIEVAL-DATE-INTEGRITY.md) |
 | R4 | 2026-11-02 to 2026-11-20 | Corrections, conflicts, history, Trash, suppressions, and validated restorable export | [Source History and Lifecycle Safety](PRD-R4-SOURCE-HISTORY-LIFECYCLE.md) |
 | R5 | 2026-11-23 to 2026-12-11 | Spike-gated prospective VoiceNotes retrieval and replay-safe reconciliation | [Prospective VoiceNotes Sync](PRD-R5-PROSPECTIVE-VOICENOTES-SYNC.md) |
 | R6 | 2026-12-14 to 2027-01-08 | Optional evaluated generated text with privacy, protection, provenance, and budget controls | [Generated Text Reflection](PRD-R6-GENERATED-TEXT-REFLECTION.md) |

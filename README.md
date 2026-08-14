@@ -20,10 +20,12 @@ Life in Days is a proposed private, single-user visual memory archive that bring
 | Area | Status |
 | --- | --- |
 | Phase 1 Product Council package | Complete as a planning artifact; 58 work packages across P0 and R0–R10 |
-| Release PRDs/PID | Drafted for council/owner review; no release approval implied |
-| R0 shared-host coexistence spike | In progress: research and runbook prepared; sanitized live-host proof remains outstanding |
+| P0 execution authority | Activated under a five-seat execution council; local/public/synthetic work only until each named gate passes |
+| Per-task Product Council gate | 58 six-artifact P0 dossier bundles generated as drafts; 58 Incomplete/Hold, 0 Ready, and 0 with `executionAllowed=true` |
+| Release PRDs/PID | Council-reviewed planning baselines; task-specific approval and executed evidence remain separate |
+| R0 shared-host coexistence spike | Historically In progress; restricted to readiness/control documentation until its task dossier passes; no private-host probe authorized |
 | Latest frozen UI prototype | v10 Resilient Application Shell |
-| Product implementation and deployment | Not started; no implementation release is Done |
+| Product implementation and deployment | Substantive implementation has not started; live state is Unknown — private read authority pending; no implementation release is Done |
 | Conditional storage transition | R10 is trigger-gated and intentionally has no dates |
 
 The prototypes use browser-memory-only behavior and simulated states. They do not connect to VoiceNotes, Telegram, AI providers, storage, authentication, backup, or recovery systems.
@@ -37,6 +39,13 @@ The prototypes use browser-memory-only behavior and simulated states. They do no
 | Autonomous execution goal | [Codex Goal prompt — Phase 1 P0 requirements to private production](docs/project/CODEX-GOAL-PROMPT-P0-TO-PRODUCTION.md) |
 | Complete navigation | [Document index](docs/INDEX.md) |
 | Phase 1 council decision | [Product Council Decision Record](docs/council/PHASE1-COUNCIL-DECISION-RECORD.md) |
+| Current execution authority | [P0 Execution Authorization](docs/council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md) |
+| Five-seat execution council | [P0 Execution Council Charter](docs/council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md) |
+| Per-task start gate | [P0 Task Definition of Ready](docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md) |
+| Task artifact register | [P0 Task Artifact Register](docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json) |
+| Task readiness state | [P0 Task Readiness State](docs/project/P0-PHASE1-TASK-READINESS-STATE.json) |
+| Task dossier library | [P0 Task Work Items](docs/work-items/) |
+| Owner-only dependencies | [P0 Owner Action Ledger](docs/council/execution/P0-OWNER-ACTION-LEDGER.md) |
 | Detailed release plan | [Phase 1 Release Plan](docs/project/PHASE1-RELEASE-PLAN.md) |
 | Review workbook | [Phase 1 Excel Release Plan](outputs/phase1/Life-in-Days-Phase1-Release-Plan.xlsx) |
 | Live visualization | [Life Reflection GitHub Project](https://github.com/users/arunpr614/projects/1) |
@@ -87,6 +96,7 @@ The root `/` route is the historical v1 prototype, so use the explicit v10 URL. 
 - `docs/spikes/` — bounded design spikes and pilot proposals
 - `docs/project/` — gates, tasks, traceability, and prototype roadmap
 - `docs/council/` — governance, role charters, and review records
+- `docs/work-items/` — six P0-prefixed task-bound Product, Architecture, Design, QA, Delivery, and Council artifacts for every canonical issue
 - `docs/prototypes/` — versioned handoffs, council decisions, and screenshots
 - `outputs/` — generated review artifacts, including the Phase 1 Excel plan
 - `tools/` — deterministic generators and GitHub synchronization utilities

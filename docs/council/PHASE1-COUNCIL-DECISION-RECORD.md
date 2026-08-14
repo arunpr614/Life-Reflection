@@ -126,3 +126,17 @@ Task status, dates, and links are regenerated from the canonical manifest and sy
 ## Final planning conclusion
 
 The council accepts the package as a coherent plan for frequent, meaningful, owner-verifiable delivery on the existing-host constraint. Execution begins with the remaining R0 evidence gates. This planning decision does not claim those gates have passed and does not authorize authentic memories before R0 acceptance.
+
+## 2026-08-14 execution-authorization addendum
+
+The directly activated Phase 1 Goal is now the highest current execution authority. It preserves this planning decision and its evidence boundaries while superseding historical universal G1/“implementation not authorized” stops. The [P0 execution authorization](execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md) delegates routine R0–R8 decisions to a persistent five-seat execution council when every named gate passes and preserves all named human-only acts.
+
+The independent QA seat, current RACI, veto rules, Owner Action Ledger, and decisions are recorded in:
+
+- [P0 execution council charter](execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md)
+- [Independent QA Lead charter](agents/P0-QA-LEAD.md)
+- [P0 execution decisions](execution/P0-PHASE1-EXECUTION-DECISIONS.md)
+- [P0 Owner Action Ledger](execution/P0-OWNER-ACTION-LEDGER.md)
+- [P0 execution-control review](execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md)
+
+This addendum also records two source corrections before delivery reliance: R4 uses exactly keep the Correction, display newest upstream revision, or create a new Correction based on both; System Health derives the six PRD evidence states and maps them to explicit UX labels. Deployment remains **Unknown — private read authority pending**.

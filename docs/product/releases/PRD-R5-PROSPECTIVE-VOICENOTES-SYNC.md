@@ -6,7 +6,7 @@
 | --- | --- |
 | Release | R5 — Prospective VoiceNotes Sync |
 | Document type | Product requirements document |
-| Status | Planning draft; not an approval or release record |
+| Status | Council-reviewed planning baseline; not an implementation, deployment, or release-acceptance record |
 | Accountable role | Product owner |
 | Proposed start | 2026-11-23 |
 | Proposed target | 2026-12-11 |

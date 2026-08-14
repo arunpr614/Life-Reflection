@@ -6,7 +6,7 @@
 | --- | --- |
 | Release | R7 — Generated Artwork |
 | Document type | Product requirements document |
-| Status | Planning draft; not an approval or release record |
+| Status | Council-reviewed planning baseline; not an implementation, deployment, or release-acceptance record |
 | Accountable role | Product owner |
 | Proposed start | 2027-01-11 |
 | Proposed target | 2027-01-29 |

@@ -4,7 +4,7 @@ Updated: 2026-08-14
 
 This is the single navigation point for the Life in Days product, design, architecture, delivery, research, and governance documents.
 
-Current status: **The Phase 1 Product Council planning package is complete as documentation, with 58 work packages across P0 and R0–R10.** The R0 shared-host spike remains In progress because sanitized live-host evidence is still outstanding. Historical G0/G1 documents remain provenance; they do not supersede the direct Phase 1 instruction, governing PRD, or current council decision record. No implementation, credential collection, paid evaluation, provider configuration, infrastructure mutation, deployment, recovery exercise, or production verification is implied by these documents.
+Current status: **The Phase 1 planning package is complete as shared input, and the directly activated Goal now governs execution through a five-seat council and a per-task P0 Definition of Ready.** The roadmap remains 58 work packages across P0 and R0–R10; all 58 six-artifact task dossiers are drafts and Incomplete/Hold, zero tasks are Ready, and zero have `executionAllowed=true`. No implementation release is Done. The R0 shared-host spike retains its historical In-progress roadmap status but is restricted to readiness/control documentation; no private-host probe is authorized. Deployment is **Unknown — private read authority pending**. Historical G0/G1 documents remain provenance. No implementation, credential collection, paid evaluation, provider configuration, infrastructure mutation, deployment, recovery exercise, or production verification is implied by the planning baseline, artifact generation, or activation alone.
 
 ## Phase 1 delivery baseline
 
@@ -12,10 +12,19 @@ Current status: **The Phase 1 Product Council planning package is complete as do
 | --- | --- | --- |
 | [AI Agent Operating Contract](../AGENTS.md) | Mandatory same-change workflow for keeping the manifest, GitHub issues, Project roadmap views, issue map, Markdown plan, Excel workbook, and running log synchronized. | Repository-wide instruction for every AI agent; evidence and authorization gates remain controlling. |
 | [AI Agent Resource Index — 2026-08-14 15:10:39 IST](project/AI-AGENT-RESOURCE-INDEX-2026-08-14-15-10-39-IST.md) | Timestamped AI boot sequence, authority model, GitHub links, roadmap fields and views, milestone and 58-item task navigation, resource map, tooling, cautions, hashes, and complete tracked-file inventory. | Orientation snapshot only; current source documents and live GitHub evidence remain authoritative. |
-| [Codex Goal Prompt — P0 Requirements to Private Production](project/CODEX-GOAL-PROMPT-P0-TO-PRODUCTION.md) | Copy-ready autonomous execution contract covering the 71 active P0 requirements, same-worktree continuity, five-role execution council, release loop, GitHub/Excel/Wiki synchronization, running-log cadence, production evidence, and non-delegable owner gates. | Template only until the Product Owner launches it as a direct Codex Goal; storing it does not start execution or mutate production. |
+| [Codex Goal Prompt — P0 Requirements to Private Production](project/CODEX-GOAL-PROMPT-P0-TO-PRODUCTION.md) | Copy-ready autonomous execution contract covering the 71 active P0 requirements, same-worktree continuity, five-role execution council, release loop, GitHub/Excel/Wiki synchronization, running-log cadence, production evidence, and non-delegable owner gates. | Directly activated on 2026-08-14; the current public-safe interpretation is the P0 execution authorization below. Activation is not implementation or deployment evidence. |
+| [P0 Execution Context Digest](council/execution/P0-PHASE1-CONTEXT-DIGEST.md) | Refreshed repository, Git, GitHub/Project/Wiki, architecture, requirement/task, unknown, and next-work snapshot. | Current cold-start execution evidence; deployment remains unknown pending private authority. |
+| [P0 Execution Authorization](council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md) | Reconciles the activated Goal with historical authority, routine R0–R8 delegation, private deployment authority, and human-only acts. | Current execution authority beneath direct owner decisions. |
+| [P0 Execution Council Charter](council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md) | Five-seat membership, RACI, vetoes, release cadence, evidence, privacy, and naming controls. | Current execution governance. |
+| [P0 Execution Decisions](council/execution/P0-PHASE1-EXECUTION-DECISIONS.md) | Dated decisions for authority, naming, R4, Health, prototype queue, containment, Wiki, and next work. | Append-only execution change control. |
+| [P0 Task Definition of Ready](council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md) | Requires task-bound Product, Architecture, Design, QA, Delivery, and Council artifacts before substantive work. | Current start gate for all 58 canonical issues. |
+| [P0 Task Artifact Register](project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json) | Machine-readable artifact paths, hashes, scenario IDs, owner actions, readiness, execution scope, and council disposition. | Canonical task-dossier readiness source; currently 58 Incomplete and zero execution-authorized. |
+| [P0 Task Readiness State](project/P0-PHASE1-TASK-READINESS-STATE.json) | Editable task-level readiness/council overrides consumed by the dossier generator. | Change-controlled input; empty until an exact task passes specialist review. |
+| [P0 Task Work Items](work-items/) | Six P0-prefixed draft artifacts for each stable task ID. | Task-specific council inputs; generation is not approval. |
+| [P0 Owner Action Ledger](council/execution/P0-OWNER-ACTION-LEDGER.md) | Public-safe inventory of all foreseeable non-delegable R0–R10 actions and opaque evidence references. | Current consolidated human-dependency source. |
 | [Product Council Decision Record](council/PHASE1-COUNCIL-DECISION-RECORD.md) | Reconciles Product, UX, Architecture, and Project decisions, including P0/R0–R10, evidence gates, and the shared-host baseline. | Current Phase 1 council authority beneath the global PRD and direct owner instructions. |
-| [Phase 1 Release Plan](project/PHASE1-RELEASE-PLAN.md) | Detailed 58-task schedule with milestones, dates, descriptions, requirements, PRD/PID links, design links, ownership, and status rules. | Project Manager-owned delivery plan. |
-| [Phase 1 Roadmap Manifest](project/PHASE1-ROADMAP-MANIFEST.json) | Machine-readable source for the Markdown plan, workbook, repository issues, and live GitHub Project. | Canonical task/status/date/link source. |
+| [Phase 1 Release Plan](project/PHASE1-RELEASE-PLAN.md) | Detailed 58-task schedule with milestones, dates, descriptions, requirements, task readiness, execution authorization, parent PRD/PID links, design inputs, ownership, and status rules. | Project Manager-owned delivery plan. |
+| [Phase 1 Roadmap Manifest](project/PHASE1-ROADMAP-MANIFEST.json) | Machine-readable source for the Markdown plan, workbook, repository issues, and live GitHub Project, embedding every task dossier. | Canonical task/status/date/link/readiness projection. |
 | [GitHub Project Sync Runbook](project/PHASE1-GITHUB-PROJECT-SYNC.md) | Dry-run-first repository issue and Project V2 synchronization contract, schema, commands, recovery, and UI-only completion steps. | Operational publication guide; live verification is recorded separately from planning claims. |
 | [Phase 1 Excel Release Plan](../outputs/phase1/Life-in-Days-Phase1-Release-Plan.xlsx) | Seven-sheet review workbook with summary charts, release plan, 58 tasks, weekly timeline, requirement map, and risks/gates. | Review artifact generated from the manifest. |
 | [Product Manager Review](council/PRODUCT-MANAGER-REVIEW.md) | Product framing, release decomposition, 78-requirement assignment, outcomes, risks, and task seed. | Specialist council recommendation reconciled by the decision record. |
@@ -27,7 +36,7 @@ Current status: **The Phase 1 Product Council planning package is complete as do
 | [GitHub Projects Roadmap Research](research/GITHUB-PROJECTS-ROADMAP-RESEARCH.md) | Deep current-capability research on Roadmap layouts, views, fields, automation, APIs, limits, and GitHub's public roadmap. | Historical research snapshot that informed the current Project model. |
 | [GitHub Roadmap Design Spike](spikes/LIFE-IN-DAYS-GITHUB-ROADMAP-DESIGN.md) | Reversible eight-item pilot design, field taxonomy, view recipes, evidence policy, and operating rules. | Historical pilot design; the 58-task manifest now governs execution. |
 | [Shared-host Runbook](architecture/HETZNER-SHARED-HOST-RUNBOOK.md) | Sanitized commands, stop conditions, deployment, backup/restore, observation, and rollback sequence. | Execution guide; not evidence that commands have run. |
-| [Release PRDs and conditional PID](product/releases/) | R0–R9 release-specific requirements plus date-free R10 transition definition. | Drafted planning artifacts; owner approval remains a future gate. |
+| [Release PRDs and conditional PID](product/releases/) | R0–R9 release-specific requirements plus date-free R10 transition definition. | Drafted planning artifacts; routine R0–R8 evidence gates are council-delegated, while named human acts remain separate gates. |
 | [Life Reflection GitHub Project](https://github.com/users/arunpr614/projects/1) | Status and date visualization of all manifest work packages. | Live control surface; documents and issue evidence remain authoritative. |
 
 ## Start here
@@ -57,6 +66,8 @@ Current status: **The Phase 1 Product Council planning package is complete as do
 | [UI/UX Design Lead Charter](council/agents/UI-UX-DESIGN-LEAD.md) | Design role mission, owned outputs, responsibilities, decision rights, review checklist, and guardrails. |
 | [Project Manager Charter](council/agents/PROJECT-MANAGER.md) | Delivery-governance role mission, owned outputs, responsibilities, decision rights, review checklist, and guardrails. |
 | [Technical Architect Charter](council/agents/TECHNICAL-ARCHITECT.md) | Architecture role mission, owned outputs, responsibilities, decision rights, review checklist, and guardrails. |
+| [Independent QA Lead Charter](council/agents/P0-QA-LEAD.md) | QA independence, evidence bundle, test matrices, severity, veto, AI-blind, and release-verdict contract. |
+| [P0 Execution-control Review](council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md) | Five-seat readiness/acceptance findings, remediation checklist, and current Hold boundary. |
 
 ## Product, experience, architecture, and delivery
 
@@ -148,20 +159,23 @@ These documents preserve how the current planning baseline was reached. Later co
 ### To prepare Phase 1 implementation after the named gates
 
 1. [Product Requirements Document](product/PRODUCT-REQUIREMENTS.md)
-2. [Phase 1 Council Decision Record](council/PHASE1-COUNCIL-DECISION-RECORD.md)
-3. The applicable [release PRD/PID](product/releases/)
-4. [UX Design Review](council/UX-DESIGN-REVIEW.md) and release-specific design evidence
-5. [Phase 1 Implementation Plan](architecture/PHASE1-IMPLEMENTATION-PLAN.md)
-6. [Phase 1 Release Plan](project/PHASE1-RELEASE-PLAN.md) and [Roadmap Manifest](project/PHASE1-ROADMAP-MANIFEST.json)
-7. [Hetzner Shared-host Deployment Spike](research/HETZNER-SHARED-HOST-DEPLOYMENT-SPIKE.md) and [Runbook](architecture/HETZNER-SHARED-HOST-RUNBOOK.md) for R0
+2. [P0 Execution Authorization](council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md) and [Owner Action Ledger](council/execution/P0-OWNER-ACTION-LEDGER.md)
+3. [Phase 1 Council Decision Record](council/PHASE1-COUNCIL-DECISION-RECORD.md)
+4. The applicable [release PRD/PID](product/releases/)
+5. [UX Design Review](council/UX-DESIGN-REVIEW.md) and release-specific design evidence
+6. [Phase 1 Implementation Plan](architecture/PHASE1-IMPLEMENTATION-PLAN.md)
+7. [Phase 1 Release Plan](project/PHASE1-RELEASE-PLAN.md) and [Roadmap Manifest](project/PHASE1-ROADMAP-MANIFEST.json)
+8. [Hetzner Shared-host Deployment Spike](research/HETZNER-SHARED-HOST-DEPLOYMENT-SPIKE.md) and [Runbook](architecture/HETZNER-SHARED-HOST-RUNBOOK.md) for R0
 
 ### To understand evidence and governance
 
 1. [Phase 1 Product Council Charter](council/PRODUCT-COUNCIL-CHARTER.md)
-2. [Phase 1 Council Decision Record](council/PHASE1-COUNCIL-DECISION-RECORD.md)
-3. [Project Manager Review](council/PROJECT-MANAGER-REVIEW.md)
-4. [Phase 1 Release Plan](project/PHASE1-RELEASE-PLAN.md)
-5. [Requirements Traceability](project/REQUIREMENTS-TRACEABILITY.md)
+2. [P0 Execution Council Charter](council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md)
+3. [P0 Execution Decisions](council/execution/P0-PHASE1-EXECUTION-DECISIONS.md)
+4. [Phase 1 Council Decision Record](council/PHASE1-COUNCIL-DECISION-RECORD.md)
+5. [Project Manager Review](council/PROJECT-MANAGER-REVIEW.md)
+6. [Phase 1 Release Plan](project/PHASE1-RELEASE-PLAN.md)
+7. [Requirements Traceability](project/REQUIREMENTS-TRACEABILITY.md)
 
 ## Source precedence
 

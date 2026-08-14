@@ -5,6 +5,8 @@
 - **Product owner and final decision authority:** Product Owner
 - **Release-plan owner:** Project Manager
 
+> **2026-08-14 execution addendum:** The historical planning council is preserved. Current execution uses the five-seat council and delegated/human-only authority in [P0 Execution Council Charter](execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md) and [P0 Execution Authorization](execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md).
+
 ## Mandate
 
 The Product Council converts the frozen product requirements, UX specification, and v5 prototype into a release system that can deliver the complete private product through small, meaningful, independently verifiable production increments on the existing shared Hetzner host.
@@ -19,6 +21,7 @@ The council owns planning and evidence design. It does not claim that implementa
 | Expert Product Manager | Outcome scope, milestone boundaries, individual release requirements, non-goals and success measures | Product review and one PRD per release |
 | Expert UI/UX Designer | User flows, design-state coverage, accessibility, content, responsive behavior and prototype gaps | UX review and release-level design traceability |
 | Expert Technical Architect | Architecture, data/privacy boundaries, shared-host coexistence, implementation sequence, testing, deployment and rollback | Hetzner spike, implementation plan and runbook |
+| Independent QA Lead | Test strategy, regression, privacy/security, browser/accessibility, severity, evidence integrity and release vetoes | Independent release verdicts and linked evidence |
 | Expert Project Manager | Integrated schedule, dependencies, task ownership, risk/change control, workbook, GitHub milestones and roadmap truth | Release plan, Excel workbook, roadmap manifest and completion audit |
 
 The Product Council scopes releases together. No single discipline may trade away another discipline's launch-blocking acceptance contract.
@@ -60,9 +63,10 @@ Every roadmap task must contain:
 2. The Product Manager proposes milestone outcomes and requirement allocation.
 3. The UI/UX Designer tests each slice for coherent user value and names missing design work.
 4. The Technical Architect tests each slice for a deployable vertical path and names technical gates.
-5. The Project Manager reconciles dependencies, dates, risks, staffing assumptions and evidence into one release plan.
-6. The council records disagreements and the selected option in the decision record.
-7. The Project Manager publishes the workbook, repository artifacts, GitHub milestones/issues and Project fields from one validated roadmap manifest.
+5. The Independent QA Lead defines the independent test/evidence gate and recuses from candidates it implements.
+6. The Project Manager reconciles dependencies, dates, risks, staffing assumptions and evidence into one release plan.
+7. The council records disagreements and the selected option in the decision record.
+8. The Project Manager publishes the workbook, repository artifacts, GitHub milestones/issues and Project fields from one validated roadmap manifest.
 
 ## Release-ready gate
 
@@ -84,7 +88,7 @@ A release is Done only when:
 - new persistent data is included in verified backup, restore and export paths;
 - privacy, security, accessibility, browser and failure checks appropriate to the slice pass;
 - the production deployment and rollback evidence exists for that version; and
-- the Product Owner has completed the milestone walkthrough.
+- a fresh Independent QA Lead has passed the affected matrix, the full execution council has recorded a disposition, and any specifically named non-delegable owner act is complete. Routine R0–R8 promotion does not add a generic owner walkthrough.
 
 ## Publication and privacy boundary
 
@@ -95,5 +99,14 @@ Council artifacts are suitable for the public repository. They use placeholders 
 - Council planning review: at every release boundary or requirement change.
 - Delivery status: update GitHub Project when work starts, evidence lands, a gate blocks, or dates move.
 - Risk review: weekly while a release is active.
-- Release decision: Product Owner walkthrough before each production promotion.
+- Release decision: full five-seat council review; routine R0–R8 promotion uses delegated authority when all gates pass, while named human acts remain controlling.
 - Recovery review: after every new durable data type, then on the cadence defined by the implementation plan.
+
+## Execution references
+
+- [P0 context digest](execution/P0-PHASE1-CONTEXT-DIGEST.md)
+- [P0 execution council charter](execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md)
+- [P0 execution authorization](execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md)
+- [P0 execution decisions](execution/P0-PHASE1-EXECUTION-DECISIONS.md)
+- [P0 Owner Action Ledger](execution/P0-OWNER-ACTION-LEDGER.md)
+- [Independent QA Lead charter](agents/P0-QA-LEAD.md)

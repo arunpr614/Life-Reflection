@@ -2,16 +2,17 @@
 
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, posix, resolve } from "node:path";
 
 const REPOSITORY = "arunpr614/Life-Reflection";
 const GITHUB = `https://github.com/${REPOSITORY}`;
 const outputArgument = process.argv[2];
 const revision = process.argv[3] ?? "HEAD";
+const priorWikiArgument = process.argv[4] ?? null;
 
 if (!outputArgument) {
-  throw new Error("Usage: node tools/build-wiki.mjs <empty-output-directory> [revision]");
+  throw new Error("Usage: node tools/build-wiki.mjs <empty-output-directory> [revision] [prior-wiki-directory]");
 }
 
 function git(args, options = {}) {
@@ -28,11 +29,17 @@ const repositoryRoot = execFileSync("git", ["rev-parse", "--show-toplevel"], {
 const outputDirectory = isAbsolute(outputArgument)
   ? outputArgument
   : resolve(process.cwd(), outputArgument);
+const priorWikiDirectory = priorWikiArgument
+  ? (isAbsolute(priorWikiArgument) ? priorWikiArgument : resolve(process.cwd(), priorWikiArgument))
+  : null;
 
 if (existsSync(outputDirectory) && readdirSync(outputDirectory).length > 0) {
   throw new Error(`Output directory must be empty: ${outputDirectory}`);
 }
 mkdirSync(outputDirectory, { recursive: true });
+if (priorWikiDirectory && (!existsSync(priorWikiDirectory) || readdirSync(priorWikiDirectory).length === 0)) {
+  throw new Error(`Prior Wiki directory must exist and be non-empty: ${priorWikiDirectory}`);
+}
 
 const commit = git(["rev-parse", `${revision}^{commit}`]).trim();
 const commitDate = git(["show", "-s", "--format=%cI", commit]).trim();
@@ -270,6 +277,60 @@ if (unresolvedLinks.length > 0) {
   throw new Error(`Unresolved local links:\n${unresolvedLinks.join("\n")}`);
 }
 
+const generatedPageSlugs = new Set([
+  ...sourcePages.map((page) => page.slug),
+  "_Sidebar",
+  "Home",
+  "Asset-Catalog",
+  "Documentation-Changelog",
+  "_Footer",
+  "Page-Audit",
+]);
+const preservedLivePages = [];
+let priorChangelog = null;
+
+if (priorWikiDirectory) {
+  const priorAuditPath = join(priorWikiDirectory, "Page-Audit.md");
+  if (!existsSync(priorAuditPath)) {
+    throw new Error("Prior Wiki has no Page-Audit.md; generator ownership cannot be proven safely");
+  }
+  const priorAudit = readFileSync(priorAuditPath, "utf8");
+  const priorGeneratorOwnedAudit = priorAudit
+    .split("\n")
+    .filter((line) => line.startsWith("| ") && !line.startsWith("| Preserved live-only page:"))
+    .join("\n");
+  const priorOwnedSlugs = new Set(
+    [...priorGeneratorOwnedAudit.matchAll(new RegExp(`${GITHUB.replaceAll("/", "\\/")}\\/wiki\\/([A-Za-z0-9_-]+)`, "g"))]
+      .map((match) => decodeURIComponent(match[1])),
+  );
+  priorOwnedSlugs.add("Page-Audit");
+
+  const removedOwnedSlugs = [...priorOwnedSlugs].filter((slug) => !generatedPageSlugs.has(slug));
+  if (removedOwnedSlugs.length) {
+    throw new Error(
+      `Refusing to remove prior generator-owned Wiki pages without an explicit recoverable removal decision: ${removedOwnedSlugs.join(", ")}`,
+    );
+  }
+
+  const priorMarkdownFiles = readdirSync(priorWikiDirectory)
+    .filter((file) => file.endsWith(".md"))
+    .sort(naturalCompare);
+  for (const file of priorMarkdownFiles) {
+    const slug = file.slice(0, -3);
+    if (priorOwnedSlugs.has(slug)) continue;
+    if (generatedPageSlugs.has(slug)) {
+      throw new Error(`Prior live-only Wiki page collides with a generated page: ${file}`);
+    }
+    const content = readFileSync(join(priorWikiDirectory, file), "utf8");
+    preservedLivePages.push({ file, slug, content });
+  }
+
+  const priorChangelogPath = join(priorWikiDirectory, "Documentation-Changelog.md");
+  if (existsSync(priorChangelogPath)) {
+    priorChangelog = readFileSync(priorChangelogPath, "utf8");
+  }
+}
+
 function groupFor(source) {
   if (source.startsWith("docs/discovery/")) return "Discovery and research";
   if (/^docs\/(product|design|architecture|project)\//.test(source)) {
@@ -305,6 +366,13 @@ for (const group of groups) {
   for (const page of pages) sidebar.push(`- ${wikiLink(page.slug, page.title)}`);
   sidebar.push("");
 }
+if (preservedLivePages.length) {
+  sidebar.push("## Preserved live-only pages", "");
+  for (const page of preservedLivePages) {
+    sidebar.push(`- ${wikiLink(page.slug, titleFrom(page.content, page.file))}`);
+  }
+  sidebar.push("");
+}
 sidebar.push(
   "## Evidence and maintenance",
   "",
@@ -316,8 +384,43 @@ sidebar.push(
 const sidebarContent = `${sidebar.join("\n").trimEnd()}\n`;
 writeFileSync(join(outputDirectory, "_Sidebar.md"), sidebarContent);
 
+function statusTableValue(markdown, label) {
+  const row = markdown
+    .split("\n")
+    .find((line) => line.startsWith(`| ${label} |`));
+  if (!row) throw new Error(`README current-state row is missing: ${label}`);
+  const cells = row.split("|").map((cell) => cell.trim());
+  if (!cells[2]) throw new Error(`README current-state row has no value: ${label}`);
+  return cells[2];
+}
+
+const readmeAtCommit = readAtCommit("README.md");
+const manifestAtCommit = JSON.parse(readAtCommit("docs/project/PHASE1-ROADMAP-MANIFEST.json"));
+const executionAuthorizationSource = "docs/council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md";
+if (!trackedFileSet.has(executionAuthorizationSource)) {
+  throw new Error(`Committed execution authorization is missing: ${executionAuthorizationSource}`);
+}
+const executionAuthorizationAtCommit = readAtCommit(executionAuthorizationSource);
+const deploymentState = "Unknown — private read authority pending";
+if (
+  manifestAtCommit.project?.deploymentState !== deploymentState ||
+  !executionAuthorizationAtCommit.includes(deploymentState)
+) {
+  throw new Error("Manifest and execution authorization do not agree on the deployment state");
+}
+
+const roadmapState = `${manifestAtCommit.summary.taskCount} tasks: ${manifestAtCommit.summary.statusCounts.Backlog} Backlog, ${manifestAtCommit.summary.statusCounts.Next} Next, ${manifestAtCommit.summary.statusCounts["In progress"]} In progress, ${manifestAtCommit.summary.statusCounts.Done} planning-scoped Done`;
+const executionState = statusTableValue(readmeAtCommit, "P0 execution authority");
+const r0State = statusTableValue(readmeAtCommit, "R0 shared-host coexistence spike");
+const prototypeState = statusTableValue(readmeAtCommit, "Latest frozen UI prototype");
+const implementationState = statusTableValue(readmeAtCommit, "Product implementation and deployment");
+const r10State = statusTableValue(readmeAtCommit, "Conditional storage transition");
+if (!implementationState.includes(deploymentState)) {
+  throw new Error("README implementation/deployment state does not include the required unknown-live-state phrase");
+}
+
 const hero = `https://raw.githubusercontent.com/${REPOSITORY}/${commit}/docs/prototypes/v7/calendar-landing-light-1280-v7.png`;
-const homeContent = `# Life in Days\n\n> **Planning baseline and fictional static prototypes—not a working or deployed application.** No live integration, persistence, authentication, backup, recovery, accessibility-conformance, or production-readiness claim is made.\n\n![Life in Days fictional calendar prototype](${hero})\n\nLife in Days is a proposed private, single-user visual memory archive for textual VoiceNotes journals, Telegram photos, and manually uploaded text journals. It organizes source material into calendar-based **Journal Days** while keeping authentic content distinct from AI-derived titles, summaries, tags, briefs, and artwork.\n\n## Current state\n\n| Area | State |\n| --- | --- |\n| Planning | G0 baseline complete as documentation |\n| Owner confirmation | G1 blocked pending Arun's explicit shared-understanding confirmation |\n| Static prototype | v10 Resilient Application Shell is the latest frozen version |\n| Next prototype | v11 Needs Date Review is queued |\n| Implementation and deployment | Not authorized or started |\n\n## Read the project\n\n| Need | Page |\n| --- | --- |\n| Product promise and boundaries | ${wikiLink("Shared-Understanding", "Shared Understanding")} |\n| Complete product contract | ${wikiLink("Product-Requirements", "Product Requirements")} |\n| Screen, flow, and accessibility specification | ${wikiLink("UX-Specification", "UX Specification")} |\n| Proposed technical shape | ${wikiLink("Implementation-Plan", "Implementation Plan")} |\n| Gates, tasks, risks, and decisions | ${wikiLink("Project-Tracker", "Project Tracker")} |\n| Requirement-by-requirement coverage | ${wikiLink("Requirements-Traceability", "Requirements Traceability")} |\n| Versioned prototype roadmap | ${wikiLink("Prototype-Completeness-Tracker", "Prototype Completeness Tracker")} |\n| Every canonical document | ${wikiLink("Documentation-Index", "Documentation Index")} |\n| Code, screenshots, and non-document files | ${wikiLink("Asset-Catalog", "Asset Catalog")} |\n\n## Non-negotiable privacy boundary\n\n- Real photos and data derived from real photos never go to AI providers.\n- Authentic sources remain separate from Corrections, revisions, and derived artifacts.\n- Journal Dates use fixed \`Asia/Kolkata\` time and preserve immutable original timestamps.\n- The MVP has no sharing, public links, reminders, AI coaching, or historical import.\n- Repository examples and media remain fictional.\n\n## About this Wiki\n\nThis Wiki contains a full page for every Markdown artifact in repository commit [\`${commit.slice(0, 12)}\`](${GITHUB}/commit/${commit}). Relative document links are translated to Wiki pages; source code and media links are pinned to that commit. The Git-tracked documents remain authoritative. See the ${wikiLink("Page-Audit", "page audit")} for the one-to-one source mapping.\n`;
+const homeContent = `# Life in Days\n\n> **Planning baseline and fictional static prototypes—not a working or deployed application.** No live integration, persistence, authentication, backup, recovery, accessibility-conformance, or production-readiness claim is made.\n\n![Life in Days fictional calendar prototype](${hero})\n\nLife in Days is a proposed private, single-user visual memory archive for textual VoiceNotes journals, Telegram photos, and manually uploaded text journals. It organizes source material into calendar-based **Journal Days** while keeping authentic content distinct from AI-derived titles, summaries, tags, briefs, and artwork.\n\n## Current state\n\n| Area | State |\n| --- | --- |\n| Roadmap | ${roadmapState} |\n| Execution authority | ${executionState} |\n| R0 spike | ${r0State} |\n| Static prototype | ${prototypeState} |\n| Implementation and deployment | ${implementationState} |\n| Conditional transition | ${r10State} |\n\n## Read the project\n\n| Need | Page |\n| --- | --- |\n| Product promise and boundaries | ${wikiLink("Shared-Understanding", "Shared Understanding")} |\n| Complete product contract | ${wikiLink("Product-Requirements", "Product Requirements")} |\n| Current execution authority | ${wikiLink(pageBySource.get(executionAuthorizationSource), "P0 Execution Authorization")} |\n| Screen, flow, and accessibility specification | ${wikiLink("UX-Specification", "UX Specification")} |\n| Proposed technical shape | ${wikiLink("Implementation-Plan", "Implementation Plan")} |\n| Gates, tasks, risks, and decisions | ${wikiLink("Project-Tracker", "Project Tracker")} |\n| Requirement-by-requirement coverage | ${wikiLink("Requirements-Traceability", "Requirements Traceability")} |\n| Versioned prototype roadmap | ${wikiLink("Prototype-Completeness-Tracker", "Prototype Completeness Tracker")} |\n| Every canonical document | ${wikiLink("Documentation-Index", "Documentation Index")} |\n| Code, screenshots, and non-document files | ${wikiLink("Asset-Catalog", "Asset Catalog")} |\n\n## Non-negotiable privacy boundary\n\n- Real photos and data derived from real photos never go to AI providers.\n- Authentic sources remain separate from Corrections, revisions, and derived artifacts.\n- Journal Dates use fixed \`Asia/Kolkata\` time and preserve immutable original timestamps.\n- The MVP has no sharing, public links, reminders, AI coaching, or historical import.\n- Repository examples and media remain fictional.\n\n## About this Wiki\n\nThis Wiki contains a full page for every Markdown artifact in repository commit [\`${commit.slice(0, 12)}\`](${GITHUB}/commit/${commit}). Relative document links are translated to Wiki pages; source code and media links are pinned to that commit. The Git-tracked documents remain authoritative. Current state is parsed from committed README/manifest/authorization evidence and validated during generation. See the ${wikiLink("Page-Audit", "page audit")} for the one-to-one source mapping.\n`;
 writeFileSync(join(outputDirectory, "Home.md"), homeContent);
 
 const nonMarkdownFiles = trackedFiles.filter((file) => !file.toLowerCase().endsWith(".md"));
@@ -370,11 +473,26 @@ const assetCatalog = [
 ].join("\n");
 writeFileSync(join(outputDirectory, "Asset-Catalog.md"), assetCatalog);
 
-const changelogContent = `# Documentation changelog\n\n## ${commitDate.slice(0, 10)} — initial complete Wiki publication\n\n- Published a one-to-one Wiki page for all ${sourcePages.length} Markdown artifacts at repository commit [\`${commit.slice(0, 12)}\`](${GITHUB}/commit/${commit}).\n- Rewrote relative document links to their corresponding Wiki pages.\n- Pinned source-code and media links to the exact repository commit.\n- Cataloged all ${assetRows.length} non-Markdown artifacts with byte counts and SHA-256 digests.\n- Added generated navigation, provenance, and page-audit controls.\n\nFuture Wiki refreshes should be generated from a committed repository revision using [\`tools/build-wiki.mjs\`](${GITHUB}/blob/${commit}/tools/build-wiki.mjs).\n`;
+const publicationEntry = `## ${commitDate.slice(0, 10)} — source snapshot ${commit.slice(0, 12)}\n\n- Generated a one-to-one publication candidate for all ${sourcePages.length} Markdown artifacts at repository commit [\`${commit.slice(0, 12)}\`](${GITHUB}/commit/${commit}).\n- Rewrote relative document links, pinned code/media to the exact commit, and cataloged ${assetRows.length} non-Markdown artifacts.\n- Preserved ${preservedLivePages.length} proven live-only page(s) from the supplied prior Wiki snapshot.\n- This entry records generated source identity; remote publication is verified separately after normal Wiki push.\n`;
+const priorChangelogBody = priorChangelog
+  ? priorChangelog
+    .replace(/^# Documentation changelog\s*/i, "")
+    .replace(/\n*Future Wiki refreshes[^\n]*(?:\n|$)/g, "\n")
+    .trim()
+  : "";
+const commitAlreadyRecorded = priorChangelog?.includes(commit) === true;
+const changelogSections = commitAlreadyRecorded
+  ? priorChangelogBody
+  : [publicationEntry.trim(), priorChangelogBody].filter(Boolean).join("\n\n");
+const changelogContent = `# Documentation changelog\n\n${changelogSections}\n\nFuture Wiki refreshes must be generated from a committed repository revision using [\`tools/build-wiki.mjs\`](${GITHUB}/blob/${commit}/tools/build-wiki.mjs) and the complete prior Wiki clone.\n`;
 writeFileSync(join(outputDirectory, "Documentation-Changelog.md"), changelogContent);
 
 const footerContent = `Generated from [${REPOSITORY}@${commit.slice(0, 12)}](${GITHUB}/commit/${commit}) · Canonical content lives in Git · Fictional prototype data only\n`;
 writeFileSync(join(outputDirectory, "_Footer.md"), footerContent);
+
+for (const page of preservedLivePages) {
+  copyFileSync(join(priorWikiDirectory, page.file), join(outputDirectory, page.file));
+}
 
 const auditCandidates = [
   ...sourcePages.map((page) => ({
@@ -388,13 +506,18 @@ const auditCandidates = [
   { source: "Generated non-Markdown inventory", page: "Asset-Catalog", content: assetCatalog },
   { source: "Generated publication record", page: "Documentation-Changelog", content: changelogContent },
   { source: "Generated Wiki footer", page: "_Footer", content: footerContent },
+  ...preservedLivePages.map((page) => ({
+    source: `Preserved live-only page: ${page.file}`,
+    page: page.slug,
+    content: page.content,
+  })),
 ];
 const pageAuditContent = [
   "# Page audit",
   "",
   `Repository snapshot: [\`${commit}\`](${GITHUB}/commit/${commit})`,
   "",
-  `Coverage: **${sourcePages.length} of ${markdownFiles.length} Markdown sources mapped exactly once**. The table also fingerprints generated navigation and catalog pages. This audit page omits its own hash to avoid a recursive fingerprint.`,
+  `Coverage: **${sourcePages.length} of ${markdownFiles.length} Markdown sources mapped exactly once**. The table also fingerprints generated navigation/catalog pages and ${preservedLivePages.length} preserved live-only page(s). This audit page omits its own hash to avoid a recursive fingerprint.`,
   "",
   "| Canonical source | Wiki page | Source SHA-256 | Generated SHA-256 |",
   "| --- | --- | --- | --- |",
@@ -412,11 +535,13 @@ const pageAuditContent = [
   "- Relative Markdown links point to mapped Wiki pages.",
   "- Relative code, directory, and media links point to the exact repository commit.",
   "- Every source page appears in the generated sidebar.",
+  "- A supplied prior Wiki must have a valid Page Audit; unexpected live-only pages are preserved and indexed.",
+  "- Prior generator-owned pages are never removed silently; an explicit recoverable removal decision is required.",
   "",
 ].join("\n");
 writeFileSync(join(outputDirectory, "Page-Audit.md"), pageAuditContent);
 
-const expectedFiles = sourcePages.length + 6;
+const expectedFiles = sourcePages.length + 6 + preservedLivePages.length;
 const generatedFiles = readdirSync(outputDirectory).filter((file) => file.endsWith(".md"));
 if (generatedFiles.length !== expectedFiles) {
   throw new Error(`Expected ${expectedFiles} Wiki files, generated ${generatedFiles.length}`);
@@ -435,6 +560,8 @@ process.stdout.write(
       markdownSources: markdownFiles.length,
       nonMarkdownAssets: assetRows.length,
       wikiFiles: generatedFiles.length,
+      priorWikiSupplied: Boolean(priorWikiDirectory),
+      preservedLiveOnlyPages: preservedLivePages.map((page) => page.file),
       outputDirectory,
     },
     null,
