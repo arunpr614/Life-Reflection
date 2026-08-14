@@ -422,3 +422,23 @@ The research inspected the installed skill, current project artifacts, live GitH
 - All 152 local Markdown-link occurrences across the report and updated navigation files resolve.
 - All 22 public external report links returned successfully; the private Project link was verified through authenticated read-only access.
 - Whitespace and public-safety scans passed with no local paths, private Project node identifiers, credential-like strings, or task/session UUIDs in the changed files.
+
+---
+
+## 2026-08-14 — Living roadmap and Excel agent contract
+
+### Outcome
+
+Created root-level `AGENTS.md` as the repository-wide operating contract for every AI agent that changes Phase 1 delivery state.
+
+### Contract
+
+- Requires every accepted roadmap change to reconcile the governing evidence, editable manifest generator, generated JSON and Markdown plans, GitHub issues and Project when authorized, public issue map, seven-sheet Excel release plan, and running log in the same change.
+- Defines the exact status/evidence policy, dry-run-first commands, least-expansive live-sync modes, workbook regeneration and visual/formula checks, read-only GitHub reconciliation, R10 date invariant, and definition of complete.
+- Corrects the GitHub sync runbook's primary apply example and records the current open-first, evidence-link, live-verifier, issue-identity, workbook-coverage, and generated-date limitations with fail-closed compensating controls.
+- Records the current broad-view and Project auto-workflow contamination hazard and prohibits unrelated or Wayfinder issue creation until the delivery boundary is hardened or isolated.
+- Preserves explicit authorization, public-repository privacy, truthful implementation/deployment claims, and partial-failure recovery boundaries.
+
+### Evidence boundary
+
+This change adds documentation and navigation only. It does not modify the roadmap manifest, GitHub issues, Project fields/views/workflows, Excel workbook, application code, infrastructure, or deployment state.

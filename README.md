@@ -32,6 +32,7 @@ The prototypes use browser-memory-only behavior and simulated states. They do no
 
 | Area | Document |
 | --- | --- |
+| AI-agent operating contract | [Living Phase 1 roadmap and Excel instructions](AGENTS.md) |
 | AI-agent orientation | [Phase 1 AI Agent Resource Index — 2026-08-14 15:10:39 IST](docs/project/AI-AGENT-RESOURCE-INDEX-2026-08-14-15-10-39-IST.md) |
 | Complete navigation | [Document index](docs/INDEX.md) |
 | Phase 1 council decision | [Product Council Decision Record](docs/council/PHASE1-COUNCIL-DECISION-RECORD.md) |

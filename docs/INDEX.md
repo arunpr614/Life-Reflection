@@ -10,6 +10,7 @@ Current status: **The Phase 1 Product Council planning package is complete as do
 
 | Document | Purpose | Current role |
 | --- | --- | --- |
+| [AI Agent Operating Contract](../AGENTS.md) | Mandatory same-change workflow for keeping the manifest, GitHub issues, Project roadmap views, issue map, Markdown plan, Excel workbook, and running log synchronized. | Repository-wide instruction for every AI agent; evidence and authorization gates remain controlling. |
 | [AI Agent Resource Index — 2026-08-14 15:10:39 IST](project/AI-AGENT-RESOURCE-INDEX-2026-08-14-15-10-39-IST.md) | Timestamped AI boot sequence, authority model, GitHub links, roadmap fields and views, milestone and 58-item task navigation, resource map, tooling, cautions, hashes, and complete tracked-file inventory. | Orientation snapshot only; current source documents and live GitHub evidence remain authoritative. |
 | [Product Council Decision Record](council/PHASE1-COUNCIL-DECISION-RECORD.md) | Reconciles Product, UX, Architecture, and Project decisions, including P0/R0–R10, evidence gates, and the shared-host baseline. | Current Phase 1 council authority beneath the global PRD and direct owner instructions. |
 | [Phase 1 Release Plan](project/PHASE1-RELEASE-PLAN.md) | Detailed 58-task schedule with milestones, dates, descriptions, requirements, PRD/PID links, design links, ownership, and status rules. | Project Manager-owned delivery plan. |
@@ -121,6 +122,7 @@ These documents preserve how the current planning baseline was reached. Later co
 
 | Document | What it contains |
 | --- | --- |
+| [AI Agent Operating Contract](../AGENTS.md) | Mandatory living-roadmap, GitHub synchronization, Excel regeneration, validation, safety, and handoff workflow for AI agents. |
 | [Domain Language](../CONTEXT.md) | Canonical terms such as Journal Day, Journal Date, Source Item, Daily Photo, Original Timestamp, Correction, and Derived Artifact. |
 | [Repository README](../README.md) | Short project status, primary artifact links, and discovery entry points. |
 | [Publication Provenance](../PUBLICATION.md) | Scope of the clean public snapshot, intentional metadata exclusions, and the boundary between publication and product deployment. |

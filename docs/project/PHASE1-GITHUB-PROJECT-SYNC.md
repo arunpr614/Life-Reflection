@@ -212,11 +212,13 @@ Safe local dry-run; no `gh` process is started and no files are written:
 node tools/sync_phase1_github.mjs
 ```
 
-After approving GitHub mutations and refreshing the `project` scope, synchronize repository issues and Project #1:
+After reviewing every manifest Done task's named evidence, approving GitHub mutations, and refreshing the `project` scope, synchronize repository issues and Project #1 while preserving the intended open/closed projection:
 
 ```bash
-node tools/sync_phase1_github.mjs --apply
+node tools/sync_phase1_github.mjs --apply --close-done
 ```
+
+Do not use plain `--apply` against the live baseline unless intentionally reopening every managed issue: without `--close-done`, the script sets every canonical issue to open.
 
 If all 58 issues already exist and only Project #1 should change:
 
@@ -229,16 +231,17 @@ That project-only command is the least expansive recovery path when repository i
 Other guarded modes:
 
 ```bash
-node tools/sync_phase1_github.mjs --apply --issues-only
+node tools/sync_phase1_github.mjs --apply --issues-only --close-done
 node tools/sync_phase1_github.mjs --apply --project-only --skip-views
 node tools/sync_phase1_github.mjs --apply --close-done
 ```
 
-`--close-done` is deliberately separate because Project Status and GitHub issue state are different mutations. Only use it when the 13 manifest `Done` tasks' named evidence has been reviewed.
+`--close-done` is deliberately separate because Project Status and GitHub issue state are different mutations. Only use it when every current manifest `Done` task's named evidence has been reviewed. The full sync currently uses an open-first pass before the final-state pass, so existing Done issues can be temporarily reopened even with `--close-done`. Prefer `--project-only` whenever issue and milestone metadata are already correct; when full sync is necessary, run it only with explicit authority, verify final issue state immediately, and verify again after two consecutive read-only snapshots show no further relevant issue or Project workflow changes.
 
 ## Apply semantics and recovery
 
 - The operation is idempotent at the stable task-ID level and is safe to rerun after a partial failure.
+- It is not atomic: a failure after the open-first issue pass can leave previously Done issues open. Inspect and reconcile issue state before retrying or claiming success.
 - It does not delete issues, labels, milestones, Project items, Project fields, field options, or views.
 - It preserves unrelated Project single-select options and unrelated views.
 - It fails closed if the trigger-only R10 milestone acquires a due date. GitHub's milestone API rejects both `null` and an empty string as a clearing value, so clear that date in the GitHub UI before rerunning rather than silently retaining drift.
