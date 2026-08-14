@@ -497,12 +497,14 @@
       "evidenceReferencePaths": [
         "docs/council/COUNCIL-REVIEW.md",
         "docs/council/PHASE1-COUNCIL-DECISION-RECORD.md",
-        "docs/council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md"
+        "docs/council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md",
+        "docs/council/execution/releases/P0-PC-001-READINESS-HARDENING-PLANNING-REVIEW.md"
       ],
       "evidenceReferenceUrls": [
         "https://github.com/arunpr614/Life-Reflection/blob/main/docs/council/COUNCIL-REVIEW.md",
         "https://github.com/arunpr614/Life-Reflection/blob/main/docs/council/PHASE1-COUNCIL-DECISION-RECORD.md",
-        "https://github.com/arunpr614/Life-Reflection/blob/main/docs/council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md"
+        "https://github.com/arunpr614/Life-Reflection/blob/main/docs/council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md",
+        "https://github.com/arunpr614/Life-Reflection/blob/main/docs/council/execution/releases/P0-PC-001-READINESS-HARDENING-PLANNING-REVIEW.md"
       ],
       "evidenceState": "Linked",
       "taskDossier": {

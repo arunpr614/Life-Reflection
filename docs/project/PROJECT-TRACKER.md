@@ -527,22 +527,23 @@ flowchart LR
     M11 -. "must finish before G7 when triggered" .-> G7
 ```
 
-The critical path is currently stopped at the **task-specific P0 Definition of Ready**. G0, G1, and `GOV-012` are complete, but all 58 task dossiers remain Incomplete/Hold and zero tasks have `executionAllowed=true`. R0 architecture, design, QA, and delivery readiness artifacts are the next controlled planning work; private-host or credentialed execution remains owner-gated.
+The critical path is currently stopped at the **task-specific P0 Definition of Ready**. G0, G1, and `GOV-012` are complete, but all 58 task dossiers remain Incomplete/Hold and zero tasks have `executionAllowed=true`. The five-seat Council accepted the PC-001 readiness-hardening planning candidate at `d44dbfbc8d040baddf46b7288476d4dc53c81e8c`; its planning PR must merge before the bounded local/public control implementation starts. Artifact state is 342 Draft plus the six PC-001 artifacts In review. The current workbook remains on visual QA Hold pending layout repair and the complete R02 semantic/render check. R0 implementation, private-host reads, credentials, deployment, and release remain held.
 
 ### Critical task chain
 
-1. **P0 task dossier and council readiness** — approve the task-bound Product, Architecture, Design, QA, Delivery, and Council artifacts at a reviewed revision before substantive execution.
-2. **ARC-001 → ARC-005 → ARC-008** — establish trust boundaries, encryption/storage decision, and accepted architecture.
-3. In parallel:
+1. **PC-001 readiness controls** — merge the five-seat-approved planning packet, implement and independently test fail-closed derived authorization, then reconcile exact-main issue/Project/workbook/Wiki evidence before evaluating any R0 task entry.
+2. **P0 task dossier and council readiness** — approve the task-bound Product, Architecture, Design, QA, Delivery, and Council artifacts at a reviewed revision before substantive execution.
+3. **ARC-001 → ARC-005 → ARC-008** — establish trust boundaries, encryption/storage decision, and accepted architecture.
+4. In parallel:
    - **VNO-001 → VNO-005** — prove or reopen the VoiceNotes contract.
    - **AIQ-001 → AIQ-004/AIQ-007 → AIQ-009/AIQ-010** — qualify text/art models and production configurations.
-4. **ARC-003/ARC-004 + PRV-001/PRV-002 + DOM-001–009 + MED-001–006** — create the trustworthy archive foundation.
-5. **TEL-001–010 + VNO-006–011 + UPL-001–006** — complete capture.
-6. **REF-001–010 + SRH-001–006 + LFC-001–009 + TXT-001–008 + ART-001–010** — complete reflection and derived content.
-7. **SEC-002–009 + EXP-001–007 + BKP-001–010 + OPS-001–009 + UXD-005–009** — prove privacy, resilience, operation, and accessibility.
-8. **QAE-001–010 → DEP-005–013** — produce the release evidence, obtain deployment authorization, and configure production.
-9. **PRV-006 + BKP-006/BKP-007 + launch checklist → Recovery Ceremony → G9** — prove recoverability and make the final launch decision.
-10. **R2M-001–009** enters the critical path whenever a capacity watermark makes root-resident launch/operation unsafe.
+5. **ARC-003/ARC-004 + PRV-001/PRV-002 + DOM-001–009 + MED-001–006** — create the trustworthy archive foundation.
+6. **TEL-001–010 + VNO-006–011 + UPL-001–006** — complete capture.
+7. **REF-001–010 + SRH-001–006 + LFC-001–009 + TXT-001–008 + ART-001–010** — complete reflection and derived content.
+8. **SEC-002–009 + EXP-001–007 + BKP-001–010 + OPS-001–009 + UXD-005–009** — prove privacy, resilience, operation, and accessibility.
+9. **QAE-001–010 → DEP-005–013** — produce the release evidence, obtain deployment authorization, and configure production.
+10. **PRV-006 + BKP-006/BKP-007 + launch checklist → Recovery Ceremony → G9** — prove recoverability and make the final launch decision.
+11. **R2M-001–009** enters the critical path whenever a capacity watermark makes root-resident launch/operation unsafe.
 
 ### Epic dependency matrix
 

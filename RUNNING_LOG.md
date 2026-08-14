@@ -722,3 +722,48 @@ No Project workflow, issue state, non-delivery issue, private system, credential
 - PR #64 changed the repository static-controls CI workflow. The unchanged-workflow claim is limited to GitHub Project automation workflows/rules during live reconciliation, which were not mutated.
 
 No prior log text was changed. The current package/task boundary remains unchanged: P0 package `Published`; 58 task dossiers Incomplete/Hold; zero Ready; zero `executionAllowed`; no implementation, private-system read, authentic-media processing, deployment, or production claim.
+
+---
+
+## 2026-08-15 00:53 IST — PC-001 readiness-hardening plan receives exact R3 five-seat approval
+
+**Entry author:** AI agent (Codex) · **Triggered by:** the owner requirement that every implementation task have task-bound Product, Architecture, Design, QA, Delivery, and Council artifacts before work begins.
+
+### Planned since last entry
+
+Use existing governance task `PC-001` and issue #3 rather than creating a 59th task. Define a fail-closed readiness-control hardening slice, obtain Product Council approval on one exact six-artifact candidate, merge that planning packet through Gate A, and only then begin local/public control implementation on a separate branch and PR. Private-system reads, authentic content/media, R0 feature work, deployment, status churn, and Project workflow mutation remain outside this planning slice.
+
+### Done
+
+- Authored the six task-bound, P0-prefixed PC-001 planning artifacts covering Product, Technical Architecture, Design, QA, Delivery, and Council readiness. They remain `In review`; the task remains Incomplete and `executionAllowed=false`.
+- Reconciled the plan to a single derived fail-closed evaluator; positive and one-gate-negative fixtures; candidate, approval-record, and exact-clean-main activation phases; stable role-bound reviewer identities and QA independence; structured owner-action/private-authority evidence; atomic protected draft refresh; value-only mapping across the existing 17 Project fields; rollback; privacy sentinels; and post-merge reconciliation.
+- Rejected candidate `7d64fa1a54a37e056c1e0f9f34dba0c48cc0f4d1` after Design found unmapped machine coverage, an obsolete artifact-state oracle, and an incomplete Project value mapping. A provisional digest built from filename keys was also discarded before approval.
+- Superseded the five-seat-approved R2 candidate `8bbd52d61f6955ad4a96a7d16a1a5e8e8c1ee37f` after two isolated workbook exports proved that packaging-only OOXML relationship IDs can differ without semantic drift.
+- Defined the corrected R3 artifact-specific determinism boundary: JSON/Markdown controls, sync payloads, and Wiki trees are byte-stable; canonical/review workbook copies from one export have equal hashes; isolated workbook builds must match all sheets, used cells, formulas, links, counts, R10 blanks, and 20 rendered ranges.
+- Validated exact clean candidate `d44dbfbc8d040baddf46b7288476d4dc53c81e8c` with canonical dossier digest `sha256:32deebe971b1321a7ccd4203d4c861d93c4ec3d45ba3bf4c9fab2ea048b9eaed`.
+- Received fresh exact-candidate approvals from Product (`codex-agent:pc001-plan-product-r3-20260815`), Design (`codex-agent:pc001-plan-design-r3-20260815`), Architecture (`codex-agent:pc001-plan-architecture-r3-20260815`), Independent QA (`codex-agent:pc001-plan-qa-r3-20260815`), and Project/Delivery (`codex-agent:pc001-plan-project-r3-20260815`). No planning-scope veto remains.
+
+### QA and artifact boundary
+
+- Static validation passes with 78 requirements, 71 active, the exact seven deferred, 58 tasks, status distribution 40 Backlog / 4 Next / 1 In progress / 13 Done, 342 Draft artifacts, six In-review artifacts, 58 Incomplete tasks, zero Ready, and zero execution-authorized.
+- Independent workbook visual QA separately remains **Hold**: long Requirement Map mappings are clipped, task-detail continuation renders are too small and lack repeated title/header context, and the Review Guide preview lacks its title. Planning approval accepts the repair/test contract, not the current workbook.
+- Deployment remains `Unknown — private read authority pending`; authentic-media access remains false.
+
+### Current remaining to-do
+
+1. Commit the R3 five-seat review record and source projections without publishing the held workbook.
+2. Push a draft Gate A planning PR, pass repository controls, review, and merge the unchanged R3 artifact bytes.
+3. From exact merged `origin/main`, implement the bounded local/public readiness controls and workbook render repairs on a separate Gate B branch.
+4. Execute the complete `PC-001-CTL-P01`, `P02`, `N01..N07`, `R01`, `R02`, and `S01` matrix, including independent visual QA.
+5. Obtain fresh five-seat approval on the exact implementation candidate before merge, then reconcile issue #3, existing Project values, workbook, Wiki, append-only log, and two quiescent verifier snapshots.
+
+### Open questions / owner actions
+
+No owner input is required for Gate A or the later local/public control-hardening implementation. `P0-OA-001` still blocks every private-system read, and all later credential, provider, spend, deployment, recovery-material, or authentic-memory acts remain separately gated.
+
+### State snapshot
+
+- **Active branch:** `codex/p0-readiness-hardening-plan`, three planning commits ahead of `origin/main` before the attestation commit.
+- **Planning decision:** exact R3 packet approved by all five seats; merge required before code.
+- **Workbook evidence:** visual QA Hold; not accepted for publication evidence.
+- **Runtime/deployment:** no application code, R0 feature, private read, authentic-media processing, infrastructure change, deployment, or release occurred.
