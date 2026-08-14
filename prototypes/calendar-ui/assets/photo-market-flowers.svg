@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Synthetic flower-market photo fixture</title>
+  <desc id="desc">A fictional market table covered with orange, cream, and red flowers beneath a green awning.</desc>
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#c7c29d"/><stop offset="1" stop-color="#665d49"/></linearGradient>
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" seed="9"/><feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 .1 0"/></filter>
+  </defs>
+  <rect width="1200" height="800" fill="url(#wall)"/>
+  <path d="M0 0h1200v170L0 285z" fill="#1b4b3c"/><path d="M0 188L1200 74v62L0 252z" fill="#f0c56d" opacity=".7"/>
+  <rect x="74" y="183" width="1050" height="412" rx="18" fill="#493b2e" opacity=".52"/>
+  <rect y="570" width="1200" height="230" fill="#493225"/>
+  <g stroke="#3f6b46" stroke-width="12" stroke-linecap="round">
+    <path d="M110 680l64-274M250 690l30-315M405 695l-35-301M570 686l-20-313M755 691l28-313M930 690l45-303M1090 686l-10-275"/>
+  </g>
+  <g>
+    <g fill="#e36b32"><circle cx="130" cy="430" r="64"/><circle cx="230" cy="405" r="72"/><circle cx="325" cy="446" r="68"/></g>
+    <g fill="#f3c65b"><circle cx="430" cy="400" r="76"/><circle cx="535" cy="445" r="79"/><circle cx="650" cy="394" r="70"/></g>
+    <g fill="#e9dfbf"><circle cx="752" cy="433" r="74"/><circle cx="855" cy="393" r="68"/></g>
+    <g fill="#a9342f"><circle cx="948" cy="443" r="76"/><circle cx="1052" cy="408" r="72"/></g>
+    <g fill="#ffd98b" opacity=".75"><circle cx="205" cy="476" r="53"/><circle cx="590" cy="489" r="58"/><circle cx="835" cy="475" r="55"/></g>
+  </g>
+  <g fill="none" stroke="#f7deb1" stroke-width="7" opacity=".55"><circle cx="130" cy="430" r="30"/><circle cx="535" cy="445" r="34"/><circle cx="948" cy="443" r="31"/></g>
+  <rect width="1200" height="800" filter="url(#grain)" opacity=".38"/>
+</svg>

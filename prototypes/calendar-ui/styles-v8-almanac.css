@@ -1,0 +1,108 @@
+/* Final cascade layer for the v8 Almanac over the frozen v7-derived stylesheet. */
+.unified-v8 .almanac-shell-v8 {
+  grid-template-columns: clamp(300px, 23vw, 340px) minmax(0, 1fr);
+  background: var(--paper-raised);
+}
+
+.unified-v8 .almanac-shell-v8.is-collapsed {
+  grid-template-columns: 0 minmax(0, 1fr);
+}
+
+.unified-v8 .almanac-index-v8 {
+  top: calc(var(--banner-height) + 72px);
+  height: calc(100vh - var(--banner-height) - 72px);
+  padding: 18px 22px 22px;
+}
+
+.unified-v8 .almanac-index-v8.is-collapsed {
+  width: 0;
+  padding: 0;
+  border-right-color: transparent;
+}
+
+.unified-v8 .almanac-shell-v8 .almanac-reading {
+  width: min(100%, 1420px);
+  margin-inline: auto;
+  padding: clamp(38px, 5vw, 82px) clamp(28px, 7vw, 118px) 130px;
+}
+
+.unified-v8 .almanac-shell-v8.is-collapsed .almanac-reading {
+  width: min(100%, 1520px);
+  padding-inline: clamp(54px, 10vw, 180px);
+}
+
+.unified-v8 .almanac-title-page-v8 {
+  max-width: 1080px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px 30px;
+  margin: 0 auto clamp(68px, 8vw, 116px);
+  padding-bottom: 30px;
+}
+
+.unified-v8 .almanac-title-page-v8 h1 {
+  font-size: clamp(4rem, 8vw, 7.5rem);
+}
+
+.unified-v8 .almanac-title-page-v8 > p {
+  max-width: 58ch;
+  font-size: clamp(1.12rem, 1.6vw, 1.38rem);
+}
+
+.almanac-mobile-drawer-v8 {
+  width: min(380px, 94vw);
+}
+
+@media (max-width: 1279px) and (min-width: 961px) {
+  .unified-v8 .almanac-shell-v8 {
+    grid-template-columns: clamp(280px, 25vw, 310px) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 960px) {
+  .unified-v8 .almanac-shell-v8,
+  .unified-v8 .almanac-shell-v8.is-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  .unified-v8 .almanac-index-v8 {
+    display: none;
+  }
+
+  .unified-v8 .almanac-shell-v8 .almanac-reading,
+  .unified-v8 .almanac-shell-v8.is-collapsed .almanac-reading {
+    width: 100%;
+    padding: 42px clamp(18px, 6vw, 48px) 150px;
+  }
+
+  .almanac-drawer-backdrop-v8 {
+    z-index: 720;
+  }
+
+  .unified-v8 .almanac-read-day,
+  .unified-v8 .almanac-pagination-v8 .primary-button,
+  .unified-v8 .almanac-beginning-v8 .primary-button {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 700px) {
+  .unified-v8 .almanac-title-page-v8 {
+    grid-template-columns: 1fr;
+    margin-bottom: 72px;
+  }
+
+  .unified-v8 .almanac-title-page-v8 h1 {
+    font-size: clamp(3rem, 15vw, 5rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .unified-v8 .almanac-shell-v8 .almanac-reading,
+  .unified-v8 .almanac-shell-v8.is-collapsed .almanac-reading {
+    padding: 34px 14px 130px;
+  }
+
+  .almanac-mobile-drawer-v8 {
+    width: 100%;
+  }
+}

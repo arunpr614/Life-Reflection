@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Synthetic AI artwork fixture</title>
+  <desc id="desc">A clearly painterly teal and amber scene where ribbons of rain curve around a warm table.</desc>
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#143f46"/><stop offset=".5" stop-color="#256d70"/><stop offset="1" stop-color="#e0a35a"/></linearGradient>
+    <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="22" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="12"/></filter>
+  </defs>
+  <rect width="1200" height="800" fill="url(#paper)"/>
+  <g fill="none" stroke-linecap="round" filter="url(#rough)">
+    <path d="M-30 150Q270 25 440 210T850 202t390-80" stroke="#b6e0d4" stroke-width="42" opacity=".55"/>
+    <path d="M-40 280q285-130 498 23t402 24 390-100" stroke="#e5ddae" stroke-width="24" opacity=".65"/>
+    <path d="M-10 410q260-87 431 10t395 34 410-90" stroke="#79c0b0" stroke-width="52" opacity=".48"/>
+  </g>
+  <ellipse cx="610" cy="674" rx="350" ry="73" fill="#26302c" opacity=".42"/>
+  <path d="M350 522h520l-58 190H405z" fill="#704635"/><path d="M358 526h506l-34 58H378z" fill="#e1a25a"/>
+  <g transform="translate(455 428)"><path d="M0 0h125l-11 105H14z" fill="#f2d1a0"/><ellipse cx="63" cy="2" rx="62" ry="14" fill="#ffe8c5"/><ellipse cx="63" cy="4" rx="45" ry="8" fill="#653a2b"/><path d="M121 19c54-2 57 65 5 63" fill="none" stroke="#f2d1a0" stroke-width="17"/></g>
+  <g transform="translate(650 445)"><path d="M0 0h113l-9 91H12z" fill="#9dc6b6"/><ellipse cx="57" cy="2" rx="56" ry="13" fill="#c9e0d6"/><ellipse cx="57" cy="4" rx="41" ry="7" fill="#634036"/><path d="M109 17c47-2 52 57 4 55" fill="none" stroke="#9dc6b6" stroke-width="15"/></g>
+  <g fill="#f7dc8c" opacity=".7"><circle cx="205" cy="202" r="16"/><circle cx="934" cy="180" r="23"/><circle cx="1060" cy="446" r="14"/><circle cx="165" cy="526" r="19"/></g>
+</svg>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Synthetic AI artwork fixture</title>
+  <desc id="desc">A clearly illustrative midnight-blue garden with oversized luminous flowers and a small golden path.</desc>
+  <defs>
+    <radialGradient id="night" cx="50%" cy="35%" r="75%"><stop stop-color="#33476e"/><stop offset=".5" stop-color="#172945"/><stop offset="1" stop-color="#0c192a"/></radialGradient>
+    <radialGradient id="moon"><stop stop-color="#fff5c8"/><stop offset="1" stop-color="#d8b665"/></radialGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="9"/></filter>
+  </defs>
+  <rect width="1200" height="800" fill="url(#night)"/>
+  <circle cx="850" cy="158" r="76" fill="url(#moon)"/><circle cx="850" cy="158" r="110" fill="#f5da83" opacity=".18" filter="url(#soft)"/>
+  <path d="M0 510Q190 380 380 515T760 500T1200 480V800H0z" fill="#132b2f"/>
+  <path d="M525 800c50-121 77-209 70-298 67 82 97 177 112 298z" fill="#d2a34e" opacity=".82"/>
+  <path d="M0 650q260-130 500-35M1200 615Q925 500 700 612" fill="none" stroke="#285347" stroke-width="70" stroke-linecap="round"/>
+  <g stroke="#48785c" stroke-width="13" fill="none">
+    <path d="M140 658Q165 470 240 340M322 640q-17-166 80-285M975 650Q920 475 1000 320M805 620q24-150-62-251"/>
+  </g>
+  <g fill="#cd6c82" stroke="#f1a3ab" stroke-width="8"><path d="M238 342c-98-65-128 80-36 78-30 103 111 101 103 12 93 27 113-105 16-104 6-87-105-89-83 14z"/><path d="M999 322c-76-65-134 49-50 79-59 81 65 139 107 54 78 52 136-63 52-99 39-88-82-120-109-34z"/></g>
+  <g fill="#e7c66f" stroke="#f7e3a2" stroke-width="8"><path d="M402 356c-86-72-137 63-48 87-49 88 84 128 111 38 85 41 124-87 31-104 23-92-100-111-94-21z"/><path d="M744 369c-74-73-141 38-64 82-66 69 44 147 105 72 69 65 150-43 76-96 54-79-54-146-117-58z"/></g>
+  <g fill="#f4e0a7"><circle cx="255" cy="397" r="19"/><circle cx="417" cy="416" r="19"/><circle cx="766" cy="438" r="21"/><circle cx="1027" cy="398" r="20"/></g>
+  <g fill="#b6d18e" opacity=".75"><circle cx="94" cy="193" r="3"/><circle cx="179" cy="123" r="4"/><circle cx="384" cy="187" r="3"/><circle cx="630" cy="117" r="4"/><circle cx="1080" cy="192" r="3"/></g>
+</svg>
