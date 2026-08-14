@@ -10,6 +10,7 @@ Current status: **The Phase 1 Product Council planning package is complete as do
 
 | Document | Purpose | Current role |
 | --- | --- | --- |
+| [AI Agent Resource Index — 2026-08-14 15:10:39 IST](project/AI-AGENT-RESOURCE-INDEX-2026-08-14-15-10-39-IST.md) | Timestamped AI boot sequence, authority model, GitHub links, roadmap fields and views, milestone and 58-item task navigation, resource map, tooling, cautions, hashes, and complete tracked-file inventory. | Orientation snapshot only; current source documents and live GitHub evidence remain authoritative. |
 | [Product Council Decision Record](council/PHASE1-COUNCIL-DECISION-RECORD.md) | Reconciles Product, UX, Architecture, and Project decisions, including P0/R0–R10, evidence gates, and the shared-host baseline. | Current Phase 1 council authority beneath the global PRD and direct owner instructions. |
 | [Phase 1 Release Plan](project/PHASE1-RELEASE-PLAN.md) | Detailed 58-task schedule with milestones, dates, descriptions, requirements, PRD/PID links, design links, ownership, and status rules. | Project Manager-owned delivery plan. |
 | [Phase 1 Roadmap Manifest](project/PHASE1-ROADMAP-MANIFEST.json) | Machine-readable source for the Markdown plan, workbook, repository issues, and live GitHub Project. | Canonical task/status/date/link source. |
