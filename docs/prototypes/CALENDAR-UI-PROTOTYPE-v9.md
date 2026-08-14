@@ -1,8 +1,8 @@
 # Life in Days — First-use Readiness prototype v9
 
-Date: 2026-08-14  
-Branch: `prototype/calendar-ui-v9-first-use-readiness`  
-Baseline: frozen v8 implementation/evidence `47f5af9`; freeze record `fd910f5`  
+Date: 2026-08-14
+Branch: `prototype/calendar-ui-v9-first-use-readiness`
+Baseline: frozen v8 implementation/evidence `47f5af9`; freeze record `fd910f5`
 Status: independent QA passed; freeze-ready
 
 ## Stable feature
