@@ -253,7 +253,7 @@ Follow [`AGENTS.md`](../../AGENTS.md) exactly. The roadmap is a living control s
 6. both Excel release-plan copies; and
 7. the append-only running log.
 
-Do not hand-edit only a generated projection. Regenerate, run the GitHub dry-run first, review the exact public payload, and use the least expansive authorized synchronization mode. Never use plain `--apply` against the established baseline. Use `--project-only` for a genuinely Project-only delta or `--apply --close-done` only after independent evidence review when repository metadata/state must change. Reconcile again immediately and after two consecutive read-only snapshots show workflows have quiesced.
+Do not hand-edit only a generated projection. Regenerate, run the GitHub dry-run first, review the exact public payload, and use the least expansive authorized synchronization mode. Use `--project-only` for a genuinely Project-only value delta or `--issues-only` for a genuinely issue-body-only delta. The current tool intentionally cannot change issue state/status/labels/milestones or create/reconfigure Project items, fields, views, or workflows; those changes require a separately reviewed tool and authority. Reconcile again immediately and after two consecutive read-only snapshots show workflows have quiesced.
 
 For a genuinely Project-only field/view refresh after the dry-run, the exact command is:
 

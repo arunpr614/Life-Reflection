@@ -354,7 +354,7 @@ flowchart LR
 | --- | --- | --- |
 | [tools/generate_phase1_roadmap_manifest.mjs](../../tools/generate_phase1_roadmap_manifest.mjs) | Regenerates the canonical manifest and Markdown release plan | Change task identity, dates, releases, and mappings through this source; do not edit only a projection |
 | [tools/build_phase1_release_plan.mjs](../../tools/build_phase1_release_plan.mjs) | Builds the seven-sheet workbook | Canonical public output is outputs/phase1; ignored task-scoped duplicates are local only |
-| [tools/sync_phase1_github.mjs](../../tools/sync_phase1_github.mjs) | Dry-run by default | Apply/project-only/issues-only/close-done modes mutate GitHub and require explicit authority |
+| [tools/sync_phase1_github.mjs](../../tools/sync_phase1_github.mjs) | Dry-run by default | Apply/project-only/issues-only modes may update only existing bodies/field values and require explicit authority plus exact-main preflight |
 | [tools/build-wiki.mjs](../../tools/build-wiki.mjs) | Builds a full Wiki snapshot into an empty output directory | Does not publish by itself; page content is pinned to a Git commit |
 | [prototypes/calendar-ui/serve.mjs](../../prototypes/calendar-ui/serve.mjs) | Runs a dependency-free local static server | Prototype only; normally port 4173 |
 
@@ -364,7 +364,7 @@ Safe read-only planning preview:
 node tools/sync_phase1_github.mjs
 ```
 
-Do not add `--apply`, `--close-done`, `--project-only`, or `--issues-only` unless the requested GitHub mutation is explicitly authorized and a fresh preflight passes.
+Do not add `--apply`, `--project-only`, or `--issues-only` unless the requested GitHub mutation is explicitly authorized and a fresh exact-main preflight passes. State, status, metadata, definition, and view mutation flags are intentionally unsupported.
 
 ## 13. Historical and staleness cautions
 

@@ -1,6 +1,6 @@
 # Phase 1 GitHub Project V2 sync
 
-Status: current as of the 2026-08-14 P0 publication reconciliation; two quiescent read-only verifier snapshots returned zero mismatches
+Status: current control contract as of 2026-08-15; the 2026-08-14 publication reconciliation below remains historical evidence
 
 Target: <https://github.com/users/arunpr614/projects/1>
 
@@ -15,9 +15,9 @@ The P0 control package was merged through [PR #64](https://github.com/arunpr614/
 The live update was deliberately split into least-expansive stages:
 
 1. Retain sanitized rollback snapshots for all 58 issues, 12 milestones, Project items, fields, and complete view configurations.
-2. Run `--apply --project-only --skip-views` to create/populate the required task fields and reconcile all 58 issue-backed items without touching issue content or saved views.
+2. Run the then-supported `--apply --project-only --skip-views` bootstrap command to create/populate the required task fields and reconcile all 58 issue-backed items without touching issue content or saved views. That creation-capable mode is historical and is not present in the current tool.
 3. Apply **Phase 1 Status** and **Phase 1 Roadmap** separately, verifying between mutations. Both now use `repo:arunpr614/Life-Reflection is:issue label:phase1`; Status remains a board grouped by Status and Roadmap remains grouped by Milestone.
-4. Review an issue-only dry run, then run `--apply --issues-only` without `--close-done`. This updated the 58 existing issue bodies and changed only issue titles #22 and #24 from Timeline to Almanac.
+4. Review an issue-only dry run, then run the then-supported `--apply --issues-only` path without the optional close flag. This updated the 58 existing issue bodies and changed only issue titles #22 and #24 from Timeline to Almanac. The current tool no longer accepts any issue-state mutation flag.
 5. Run `--verify` twice with a 15-second quiescent interval.
 
 The final verified state is:
@@ -35,18 +35,18 @@ The first Status-view apply attempt failed before mutation because seven target 
 
 ## Decision
 
-Use the manifest-driven script to create or update the 58 repository issues, add every issue to Project #1, and set 17 Project fields. Keep dry-run as the default. Require an explicit `--apply` for mutations and use `--project-only` when the issues already exist. Every issue body and Project item projects the six task-bound P0 dossier artifacts; shared release/global documents remain inputs rather than task approval.
+Use the manifest-driven script only to reconcile the existing canonical 58 issues and 58 Project items. Dry-run remains the default. Every real mode first captures exact manifest/issue-map bytes and runs the local structural validator across that guarded snapshot; failure stops live modes before fetch or `gh`. Only a passing live `--apply` then fetches canonical origin and requires a clean non-detached branch tracking `origin/main` with exact `HEAD === origin/main`. It resolves all 58 issues/items, all 17 managed fields, and both saved views before the first mutation. Any source drift, missing identity, item, field, option, or view fails closed.
 
-The script creates or updates two saved views by exact name:
+The current apply boundary permits only mismatched issue-body and existing Project-field-value updates. Before the first mutation, before every issue or Project target mutation, and after automatic parity, it re-fetches canonical `origin/main` and requires the checkout, upstream, clean state, manifest bytes, and issue-map bytes to remain bound to the original verified source revision. Immediately before each issue write it also re-reads and compares the complete issue snapshot; immediately before each changed Project item it re-queries and compares all managed field values. Source or target drift aborts before that target is written. It creates no issue/item/field/view/workflow, changes no issue state/status/label/milestone, reconfigures no Project definition, and never rewrites the issue map. Every issue and item still projects the six task-bound P0 artifacts; shared release/global documents remain inputs rather than task approval.
 
-| View | Layout | API configuration |
+The script verifies, but does not create or update, two saved views by exact name, layout, and filter:
+
+| View | Layout | Verified API configuration |
 | --- | --- | --- |
-| Phase 1 Status | Board | GraphQL creates/updates layout, the exact Phase 1 issue filter, and all visible planning fields; Status columns remain a UI setting |
-| Phase 1 Roadmap | Roadmap | GraphQL creates/updates layout and the exact Phase 1 issue filter; date fields and Milestone grouping remain UI settings |
+| Phase 1 Status | Board | Exact Phase 1 issue filter only; visible fields and grouping remain UI-managed and are not verified by this tool |
+| Phase 1 Roadmap | Roadmap | Exact Phase 1 issue filter only; selected date fields and Milestone grouping remain UI-managed and are not verified by this tool |
 
-The Status board requests 18 visible fields: Status, Milestone, Start date, Target date, Priority, Owner role, PRD / PID, Design artifact, Architecture plan, QA plan, Delivery control, Council decision, Task dossier, Artifact readiness, Execution scope, Requirement IDs, Evidence, and Task summary. GraphQL's `ProjectV2ViewConfigurationInput` exposes `visibleFieldIds`, so those columns are synchronized on the board.
-
-GitHub's current GraphQL view inputs do not expose board grouping or the roadmap's grouping and selected date fields. The live UI configuration therefore keeps Status as the board columns and uses Milestone, Start date, and Target date in the roadmap.
+The established Status board was historically configured with 18 visible fields: Status, Milestone, Start date, Target date, Priority, Owner role, PRD / PID, Design artifact, Architecture plan, QA plan, Delivery control, Council decision, Task dossier, Artifact readiness, Execution scope, Requirement IDs, Evidence, and Task summary. The current verifier does not query or attest that visible-field configuration. It also does not attest board grouping, roadmap grouping, or selected roadmap date fields. Those UI-managed settings require a separate read-only UI review before any claim about them.
 
 ## Evidence boundary
 
@@ -101,7 +101,7 @@ gh project field-list 1 --owner arunpr614 --limit 100 --format json
 gh project item-list 1 --owner arunpr614 --limit 100 --format json
 ```
 
-The script uses paginated GraphQL queries for fields and views so it does not rely on the 100-record CLI examples.
+The script uses cursor-paginated GraphQL queries with `totalCount` reconciliation for Project items, fields, and views, so pull-request growth cannot hide items behind a fixed CLI limit and the tool does not rely on the 100-record CLI examples.
 
 ## Intended Project schema
 
@@ -119,19 +119,21 @@ The script uses paginated GraphQL queries for fields and views so it does not re
 | Council decision | Text | task-bound `task.taskCouncilUrl` |
 | Task dossier | Text | newline-separated URLs for all six task-bound artifacts |
 | Artifact readiness | Text | `task.artifactReadiness` |
-| Execution scope | Text | `task.executionScope` |
+| Execution scope | Text | two lines: derived `Execution allowed: No|Yes`, then canonical `Scope: ...` |
 | Requirement IDs | Text | comma-separated `task.requirementIds`, or `Planning-only` |
-| Evidence | Text | `task.acceptanceEvidence`, followed by the task's retrievable `task.evidenceReferenceUrls` when present |
+| Evidence | Text | exact ordered lines: `Control validation: Passed|Failed`, `Candidate revision`, `Dossier digest`, `Required evidence`, bounded `References: <count> linked in the issue/dossier`, and `Remaining limitation`; exact reference URLs remain in the issue/dossier and validation never substitutes for permission |
 | Owner role | Text | `task.ownerRole` |
-| Task summary | Text | `task.description` |
+| Task summary | Text | exact order: `Roadmap status` (`Planning Done — historical` for Done), task description, `Blockers` count plus deterministic first-eight code preview, and `Next action`; the linked issue/dossier retains the complete set |
 
-The longest current Requirement IDs value is 901 characters; other generated text values are shorter. The script does not truncate any field value.
+Every generated Text value is asserted at 1,000 characters or fewer before a dry-run or apply can proceed; the longest current Requirement IDs value is 901 characters. The script does not silently truncate a field value.
 
-When a required field is absent, the script creates it. A same-name field with a different data type is a hard failure. For Status and Priority, required options are added and canonical case/color/description is reconciled; unrelated pre-existing options are retained to avoid silently clearing values on unrelated Project items.
+When a required field, option, item, or view is absent or type/configuration drifted, current apply fails before mutation. Field/view/workflow creation or reconfiguration requires a separately reviewed `P0-OA-002`-compatible control change; it is not a recovery behavior of this sync.
 
 ## Exact item and field commands
 
-The current CLI equivalent for adding one of the 58 issues is:
+The creation commands below document the historical bootstrap API only. The current existing-only apply path never invokes item-add, field-create, view-create/update, label creation, milestone creation, or issue creation.
+
+The historical bootstrap CLI equivalent for adding one of the 58 issues was the following. It is not an authorized current sync operation:
 
 ```bash
 gh project item-add 1 \
@@ -140,7 +142,7 @@ gh project item-add 1 \
   --format json
 ```
 
-The script uses the documented GraphQL mutation so it can use the issue's node ID directly:
+The historical bootstrap implementation used the documented GraphQL mutation below so it could use the issue's node ID directly. The current script contains no item-add mutation:
 
 ```bash
 gh api graphql \
@@ -149,7 +151,7 @@ gh api graphql \
   -f contentId='ISSUE_NODE_ID'
 ```
 
-GitHub documents that adding content already present returns the existing Project item ID instead of making a duplicate. GitHub also requires adding an item and updating it to be separate API calls.
+At bootstrap time, GitHub documented that adding content already present returned the existing Project item ID instead of making a duplicate and required item-add and item-update to be separate calls. This is provenance, not current behavior claimed or invoked by the tool.
 
 CLI field creation examples:
 
@@ -168,13 +170,15 @@ gh project item-edit --project-id PROJECT_NODE_ID --id ITEM_NODE_ID --field-id S
 gh project item-edit --project-id PROJECT_NODE_ID --id ITEM_NODE_ID --field-id START_FIELD_NODE_ID --clear
 ```
 
-For efficiency, the script batches all 17 `updateProjectV2ItemFieldValue` or `clearProjectV2ItemFieldValue` operations for one item into one GraphQL mutation. It still performs the add mutation first, as required by GitHub.
+For efficiency, the current script batches only mismatched existing `updateProjectV2ItemFieldValue` or `clearProjectV2ItemFieldValue` operations for one already-resolved item. It performs no add mutation.
 
 ## Saved-view API
 
-`gh project` currently has no saved-view create/update subcommand. The script uses the `createProjectV2View` and `updateProjectV2View` mutations exposed by the live GraphQL schema.
+The mutation shapes below preserve historical bootstrap/rollback knowledge. Current apply verifies the two established views and refuses drift; it does not execute these mutations.
 
-Creation uses this shape; the Status board supplies all 18 field node IDs, including built-in Milestone, in `visibleFieldIds`, while the Roadmap omits `configuration`:
+At the historical bootstrap, `gh project` had no saved-view create/update subcommand, so the bootstrap used the then-observed `createProjectV2View` and `updateProjectV2View` mutations. Current apply rejects either operation.
+
+The historical creation used this shape; the Status board supplied all 18 field node IDs, including built-in Milestone, in `visibleFieldIds`, while the Roadmap omitted `configuration`:
 
 ```bash
 gh api graphql --input - <<'JSON'
@@ -213,7 +217,7 @@ gh api graphql --input - <<'JSON'
 JSON
 ```
 
-`CreateProjectV2ViewInput` does not contain `filter`, so the script immediately follows creation with an update. The same update runs when a matching view already exists:
+At that bootstrap snapshot, `CreateProjectV2ViewInput` did not contain `filter`, so creation was followed by an update. The historical update shape is retained below only as rollback/provenance knowledge:
 
 ```bash
 gh api graphql --input - <<'JSON'
@@ -234,12 +238,14 @@ gh api graphql --input - <<'JSON'
 JSON
 ```
 
-Idempotence is exact-name based:
+The historical bootstrap's retry behavior was exact-name based:
 
-- No match: create the view, then update its filter and configuration.
-- One match: update its name, layout, filter, and board-visible fields in place.
-- Multiple exact matches: stop without guessing which view to modify.
-- A failure after create but before update is safe to rerun; the next run finds and updates the new view.
+- No match meant create the view, then update its filter and configuration.
+- One match meant update its name, layout, filter, and board-visible fields in place.
+- Multiple exact matches stopped without guessing which view to modify.
+- A failure after create but before update could be rerun; the next run found and updated the new view.
+
+None of those creation/update branches exists in the current script. Any missing or drifted view now fails before mutation and requires a separately authorized control change.
 
 The live inputs expose no horizontal/vertical grouping, roadmap date-field selection, zoom, marker, or view-order properties. Those settings remain explicit UI completion steps; the script does not claim them as API-synchronized.
 
@@ -251,66 +257,51 @@ Safe local dry-run; no `gh` process is started and no files are written:
 node tools/sync_phase1_github.mjs
 ```
 
-The dry-run JSON includes every exact generated issue body and all 17 expected Project field values, so public wording, dossier URLs, hashes, owner actions, scope, and blockers can be reviewed before any mutation.
+Before constructing any real dry-run, verify, or apply projection, the script executes the structural P0 validator. It guards the captured manifest/issue-map bytes before and after validation and immediately before projection/output; drift raises `P0_CONTROL_SNAPSHOT_DRIFT`. The six-line `Evidence` value derives `Control validation: Passed|Failed` from that result; it never derives validation from readiness or execution permission. A failed dry-run still emits the complete reviewable 58-task fail-closed payload with `Control validation: Failed` and exits nonzero, while live verify/apply stops before fetch or `gh`. Missing, blank, malformed, or partial candidate, digest, authority, or reference values use the frozen `Not yet recorded` copy; complete valid values are preserved. The exact local sync oracle is `48/48`: 30 existing-only/mutation/source-main cases and 16 projection-contract cases, including ten fallback-normalization and two snapshot-binding cases.
 
-Direct read-only parity verification performs live GitHub reads but makes no mutation and writes no file:
+The dry-run JSON includes every exact generated issue body and all 17 expected Project field values, so public wording, dossier URLs, hashes, owner actions, scope, and blockers can be reviewed before any mutation. Apply records a canonical delta digest, rechecks exact-main source provenance and each exact target immediately before its bounded mutation, automatically runs full read-only parity after the last mutation, then re-fetches and rechecks the source revision once more; a moved source or nonzero post-apply mismatch is a hard failure.
+
+Direct read-only parity verification first passes the local structural/snapshot gate, then fetches origin and requires the same clean, non-detached, exact-`origin/main` provenance as apply. It binds its in-memory manifest and issue-map bytes to that verified Git revision, then performs live GitHub reads without mutation or file writes:
 
 ```bash
 node tools/sync_phase1_github.mjs --verify
 ```
 
-It compares all 58 canonical issues, the public issue map, repository title/body/labels/milestone/state, Project membership and all 17 managed field values, R10 date absence, and both saved-view names/layouts/filters. Pull-request items are counted separately and are not treated as delivery tasks. Any mismatch or ambiguous task identity is a hard failure.
+It reports the exact source revision and compares all 58 canonical issues, the public issue map, repository title/body/labels/milestone/state, Project membership and all 17 managed field values, R10 date absence, and both saved-view names/layouts/filters. It does not verify saved-view visible fields, grouping, or selected date fields. Pull-request items are counted separately and are not treated as delivery tasks. Any provenance failure, mismatch, or ambiguous task identity is a hard failure.
 
-Saved-view containment can be changed one view at a time, with an exact sanitized before/after record and verification between steps:
+After the reviewed source is merged, use a clean non-detached exact-main checkout. The apply command records the exact source revision and a digest of the complete preflighted delta, then changes only mismatched existing bodies/values:
 
 ```bash
-node tools/sync_phase1_github.mjs --views-only --view-status
-node tools/sync_phase1_github.mjs --apply --views-only --view-status
-node tools/sync_phase1_github.mjs --verify
-
-node tools/sync_phase1_github.mjs --views-only --view-roadmap
-node tools/sync_phase1_github.mjs --apply --views-only --view-roadmap
+git fetch origin main
+git switch --create codex/p0-exact-main-reconcile --track origin/main
+node tools/sync_phase1_github.mjs --apply
 node tools/sync_phase1_github.mjs --verify
 ```
 
-The first command in each pair is a local dry-run. Before either apply, retain the live view name, layout, filter, and visible-field configuration needed for rollback. A view filter reduces accidental visibility but does not contain workflow automation; workflow scope requires a separate readable configuration or owner attestation.
-
-After reviewing every manifest Done task's named evidence, approving GitHub mutations, and refreshing the `project` scope, synchronize repository issues and Project #1 while preserving the intended open/closed projection:
-
-```bash
-node tools/sync_phase1_github.mjs --apply --close-done
-```
-
-The repository pass preserves the current state of every existing managed issue. The optional `--close-done` second pass closes only manifest `Done` tasks and opens manifest non-Done tasks. It never uses an open-first transition, so reviewed Done issues are not transiently reopened.
-
-If all 58 issues already exist and only Project #1 should change:
+The branch name is not special; it must be non-detached, track `origin/main`, be clean, and have `HEAD === origin/main`. A local branch named `main` is not required. If only existing Project field values should change:
 
 ```bash
 node tools/sync_phase1_github.mjs --apply --project-only
 ```
 
-That project-only command is the least expansive recovery path when repository issues already exist. It idempotently refreshes the 58 Project item fields and creates or updates the two saved views without rewriting repository issues or milestones. The public issue map is rewritten only if its semantic task-to-issue mapping changes. This mode was used successfully to recover from the initial saved-view endpoint failure.
+That project-only command still performs the complete issue/item/field/view preflight, then skips issue-body writes. It does not create or update views, items, fields, issues, milestones, or the issue map.
 
-Other guarded modes:
+If only existing issue bodies should change:
 
 ```bash
-node tools/sync_phase1_github.mjs --apply --issues-only --close-done
-node tools/sync_phase1_github.mjs --apply --project-only --skip-views
-node tools/sync_phase1_github.mjs --apply --close-done
+node tools/sync_phase1_github.mjs --apply --issues-only
 ```
 
-`--close-done` is deliberately separate because Project Status and GitHub issue state are different mutations. Only use it when every current manifest `Done` task's named evidence has been reviewed. Prefer `--project-only` whenever issue and milestone metadata are already correct; when full sync is necessary, run it only with explicit authority, verify final issue state immediately, and verify again after two consecutive read-only snapshots show no further relevant issue or Project workflow changes.
+Legacy issue-state and view-mutation arguments are rejected as unsupported. Any issue state/status/label/milestone change or Project item/field/view/workflow creation/configuration requires a separately scoped, reviewed tool change and authority. After any apply, run two consecutive quiescent read-only verifier snapshots before calling the roadmap synchronized.
 
 ## Apply semantics and recovery
 
-- The operation is idempotent only after one unique managed issue is identified by all five signals: canonical title prefix, hidden task marker, `phase1` label, public issue-map number/URL, and manifest task ID. Missing, conflicting, or duplicate identity signals stop the run.
-- It is not atomic: a network or API failure can leave a prefix of tasks synchronized. Because the first repository pass preserves existing issue state, it cannot transiently reopen reviewed Done issues; still inspect and reconcile state before retrying or claiming success.
-- It does not delete issues, labels, milestones, Project items, Project fields, field options, or views.
-- It preserves unrelated Project single-select options and unrelated views.
-- It fails closed if the trigger-only R10 milestone acquires a due date. GitHub's milestone API rejects both `null` and an empty string as a clearing value, so clear that date in the GitHub UI before rerunning rather than silently retaining drift.
-- It is not transactional. A network/API failure can leave a prefix of tasks synchronized; rerun after resolving the error.
-- Review the dry-run first. After an apply, run `--verify`; then obtain two consecutive quiescent read-only snapshots before calling the roadmap synchronized.
-- If an incorrect field value is written, correct the manifest and rerun. Removing a mistakenly added Project item or view is a separate destructive operation and is outside this script.
+- Before mutation, all 58 managed issues must satisfy canonical title prefix, hidden task marker, `phase1` label, public issue-map number/URL/status/state, manifest ID, labels, milestone, and state. All 58 Project items, 17 existing fields/options, and two saved views must also resolve exactly.
+- It creates, deletes, or reconfigures nothing and never changes issue state/status/labels/milestones. Static drift is a blocker, not an implicit repair authorization.
+- It is not externally atomic: a network/API failure can leave a prefix of the preflighted body/value delta synchronized, and GitHub exposes no cross-issue/Project transaction or conditional Project-field version. Per-target source refetch/byte checks and target rechecks narrow but cannot eliminate the final check-to-write micro-race or a remote main change after the last fetch. The source revision, delta digest, automatic post-apply parity, and final source recheck make retry comparison auditable; inspect and verify before retrying or claiming success.
+- It fails closed if R10 acquires dates or if any established Project definition/view drifts.
+- Review the dry-run first. Apply itself requires a zero-mismatch post-apply parity read. Then run `--verify` twice as separate consecutive quiescent snapshots before calling the roadmap synchronized.
+- If an incorrect body/value is written, correct the source, merge normally, and rerun from exact main. Destructive removal or definition repair is outside this script.
 
 ## UI-only completion record
 

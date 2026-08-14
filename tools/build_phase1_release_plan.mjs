@@ -1,6 +1,8 @@
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { SpreadsheetFile, Workbook } from "@oai/artifact-tool";
+import { parseJsonWithoutDuplicateKeys } from "./P0-json-trust.mjs";
 
 const repoRoot = path.resolve(import.meta.dirname, "..");
 const threadId = process.argv[2] ?? "local";
@@ -14,7 +16,12 @@ const outputPath = path.join(outputDir, "P0-Life-in-Days-Phase1-Release-Plan.xls
 const publicOutputPath = path.join(publicOutputDir, "Life-in-Days-Phase1-Release-Plan.xlsx");
 const manifestPath = path.join(repoRoot, "docs/project/PHASE1-ROADMAP-MANIFEST.json");
 
-const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8"));
+const manifestBytes = await fs.readFile(manifestPath);
+const manifestSha256 = `sha256:${crypto.createHash("sha256").update(manifestBytes).digest("hex")}`;
+const manifest = parseJsonWithoutDuplicateKeys(
+  manifestBytes.toString("utf8"),
+  "docs/project/PHASE1-ROADMAP-MANIFEST.json",
+);
 const { releases, tasks, requirementMap } = manifest;
 
 if (tasks.length !== 58 || requirementMap.length !== 78 || releases.length !== 12) {
@@ -178,12 +185,28 @@ function dateColumns(range) {
   range.format.horizontalAlignment = "center";
 }
 
+function estimateWrappedLines(value, charactersPerLine) {
+  const text = String(value ?? "");
+  return text.split(/\r?\n/).reduce(
+    (lineCount, line) => lineCount + Math.max(1, Math.ceil(line.length / charactersPerLine)),
+    0,
+  );
+}
+
+function estimateRowHeight(values, charactersPerLine, { min = 40, max = 148 } = {}) {
+  const wrappedLines = Math.max(
+    1,
+    ...values.map((value, index) => estimateWrappedLines(value, charactersPerLine[index] ?? 40)),
+  );
+  return Math.min(max, Math.max(min, 8 + wrappedLines * 13));
+}
+
 // Executive Summary
 addTitle(
   summary,
   "U",
   "Life in Days — Phase 1 Release Plan",
-  `Review workbook generated from PHASE1-ROADMAP-MANIFEST.json on 2026-08-14. All ${tasks.length} task dossiers are currently Incomplete; ${manifest.summary.executionAllowedCount} are execution-authorized. Dates are estimates; evidence gates control delivery.`,
+  `Review workbook generated from PHASE1-ROADMAP-MANIFEST.json on 2026-08-15. All ${tasks.length} task dossiers are currently Incomplete; ${manifest.summary.executionAllowedCount} are execution-authorized. Dates are estimates; evidence gates control delivery.`,
 );
 summary.getRange("A5:B5").values = [["Plan metric", "Value"]];
 styleHeader(summary.getRange("A5:B5"));
@@ -473,7 +496,7 @@ addTitle(
 );
 requirementSheet.getRange("A5:F5").values = [["Requirement ID", "Primary milestone", "Roadmap task IDs", "Disposition", "Rationale", "Task count"]];
 styleHeader(requirementSheet.getRange("A5:F5"));
-requirementSheet.getRange("A6:F83").values = requirementMap.map((entry) => [
+const requirementRows = requirementMap.map((entry) => [
   entry.requirementId,
   entry.primaryMilestone,
   entry.roadmapTaskIds.length ? entry.roadmapTaskIds.join(", ") : "None — explicitly deferred",
@@ -481,6 +504,7 @@ requirementSheet.getRange("A6:F83").values = requirementMap.map((entry) => [
   entry.rationale,
   null,
 ]);
+requirementSheet.getRange("A6:F83").values = requirementRows;
 requirementSheet.getRange("F6:F83").formulas = requirementMap.map((entry, i) => [
   entry.roadmapTaskIds.length ? `=LEN(C${6 + i})-LEN(SUBSTITUTE(C${6 + i},\",\",\"\"))+1` : "=0",
 ]);
@@ -494,6 +518,12 @@ requirementSheet.getRange("D1:D83").format.columnWidth = 28;
 requirementSheet.getRange("E1:E83").format.columnWidth = 50;
 requirementSheet.getRange("F1:F83").format.columnWidth = 12;
 requirementSheet.getRange("A6:F83").format.rowHeight = 40;
+requirementRows.forEach((row, index) => {
+  requirementSheet.getRange(`A${6 + index}:F${6 + index}`).format.rowHeight = estimateRowHeight(
+    row.slice(0, 5),
+    [22, 22, 64, 34, 60],
+  );
+});
 requirementSheet.freezePanes.freezeRows(5);
 requirementSheet.freezePanes.freezeColumns(2);
 
@@ -561,13 +591,13 @@ riskSheet.freezePanes.freezeColumns(2);
 // Review Guide
 addTitle(
   guideSheet,
-  "H",
+  "C",
   "Workbook Review Guide and Evidence Boundary",
   "Use this workbook to review the plan; use the JSON manifest as the edit source. Reconcile any approved change to Markdown, GitHub issues, and the live Project.",
 );
 const guideRows = [
   ["Purpose", "Detailed reviewable Phase 1 release plan for a single-user private archive.", "Owner: Project Manager"],
-  ["Canonical source", "docs/project/PHASE1-ROADMAP-MANIFEST.json", "Do not use a workbook-only edit as a planning decision."],
+  ["Source manifest SHA-256", manifestSha256, "docs/project/PHASE1-ROADMAP-MANIFEST.json — do not use a workbook-only edit as a planning decision."],
   ["Governing product", "docs/product/PRODUCT-REQUIREMENTS.md", "78 stable requirement IDs."],
   ["Governing design", "docs/design/UX-SPECIFICATION.md", "Prototype v5 is interaction intent only."],
   ["Implementation plan", "docs/architecture/PHASE1-IMPLEMENTATION-PLAN.md", "Detailed technical sequence, architecture, security, recovery, and task contracts."],
@@ -649,22 +679,6 @@ await fs.writeFile(path.join(previewDir, "workbook-inspect.txt"), [
 const previewSpecs = [
   ["Executive Summary", "A1:U31", 1.0, "01-executive-summary.png"],
   ["Release Plan", "A1:L17", 0.9, "02-release-plan.png"],
-  ["Roadmap Tasks", "A1:M20", 0.65, "03a-roadmap-tasks-metadata-r01-r20.png"],
-  ["Roadmap Tasks", "A21:M35", 0.65, "03b-roadmap-tasks-metadata-r21-r35.png"],
-  ["Roadmap Tasks", "A36:M50", 0.65, "03c-roadmap-tasks-metadata-r36-r50.png"],
-  ["Roadmap Tasks", "A51:M63", 0.65, "03d-roadmap-tasks-metadata-r51-r63.png"],
-  ["Roadmap Tasks", "N1:AC20", 0.45, "03e-roadmap-tasks-details-r01-r20.png"],
-  ["Roadmap Tasks", "N21:AC35", 0.45, "03f-roadmap-tasks-details-r21-r35.png"],
-  ["Roadmap Tasks", "N36:AC50", 0.45, "03g-roadmap-tasks-details-r36-r50.png"],
-  ["Roadmap Tasks", "N51:AC63", 0.45, "03h-roadmap-tasks-details-r51-r63.png"],
-  ["Roadmap Timeline", `A1:${timelineEndColumn}20`, 0.5, "04a-roadmap-timeline-r01-r20.png"],
-  ["Roadmap Timeline", `A21:${timelineEndColumn}35`, 0.5, "04b-roadmap-timeline-r21-r35.png"],
-  ["Roadmap Timeline", `A36:${timelineEndColumn}50`, 0.5, "04c-roadmap-timeline-r36-r50.png"],
-  ["Roadmap Timeline", `A51:${timelineEndColumn}63`, 0.5, "04d-roadmap-timeline-r51-r63.png"],
-  ["Requirement Map", "A1:F25", 0.9, "05a-requirement-map-r01-r25.png"],
-  ["Requirement Map", "A26:F45", 0.9, "05b-requirement-map-r26-r45.png"],
-  ["Requirement Map", "A46:F65", 0.9, "05c-requirement-map-r46-r65.png"],
-  ["Requirement Map", "A66:F83", 0.9, "05d-requirement-map-r66-r83.png"],
   ["Risks & Gates", "A1:H33", 0.8, "06-risks-and-gates.png"],
   ["Review Guide", `A1:C${5 + guideRows.length}`, 0.8, "07-review-guide.png"],
 ];
@@ -672,6 +686,251 @@ for (const [sheetName, range, scale, fileName] of previewSpecs) {
   const preview = await workbook.render({ sheetName, range, scale, format: "png" });
   await fs.writeFile(path.join(previewDir, fileName), new Uint8Array(await preview.arrayBuffer()));
 }
+
+// Paginated source-sheet crops lose the title and header after their first
+// page. Build standalone review-only compositions for every paginated preview.
+// This workbook is never exported, so the deliverable remains exactly seven
+// canonical sheets and its data, tables, validations, and formulas are not
+// changed by the visual-review layout.
+const reviewWorkbook = Workbook.create();
+const metadataPreviewSpecs = [
+  [6, 20, "03a-roadmap-tasks-metadata-r01-r20.png"],
+  [21, 35, "03b-roadmap-tasks-metadata-r21-r35.png"],
+  [36, 50, "03c-roadmap-tasks-metadata-r36-r50.png"],
+  [51, 63, "03d-roadmap-tasks-metadata-r51-r63.png"],
+];
+for (const [sourceStartRow, sourceEndRow, fileName] of metadataPreviewSpecs) {
+  const reviewSheet = reviewWorkbook.worksheets.add(`Metadata ${sourceStartRow}-${sourceEndRow}`);
+  const segmentTasks = tasks.slice(sourceStartRow - 6, sourceEndRow - 5);
+  const segmentRows = taskRows.slice(sourceStartRow - 6, sourceEndRow - 5).map((row, index) => {
+    const start = toDate(segmentTasks[index].startDate);
+    const target = toDate(segmentTasks[index].targetDate);
+    const days = start && target ? Math.round((target.getTime() - start.getTime()) / 86_400_000) + 1 : null;
+    return [...row.slice(0, 12), days];
+  });
+  const dataEndRow = 5 + segmentRows.length;
+  addTitle(
+    reviewSheet,
+    "M",
+    `Roadmap Task Metadata — Source Rows ${sourceStartRow}–${sourceEndRow}`,
+    "Review-only composition. Source columns A–M remain unchanged in the exported Roadmap Tasks sheet.",
+  );
+  reviewSheet.getRange("A5:M5").values = [taskHeaders.slice(0, 13)];
+  styleHeader(reviewSheet.getRange("A5:M5"));
+  reviewSheet.getRange(`A6:M${dataEndRow}`).values = segmentRows;
+  styleBody(reviewSheet.getRange(`A6:M${dataEndRow}`));
+  dateColumns(reviewSheet.getRange(`K6:L${dataEndRow}`));
+  addStatusConditionalFormatting(reviewSheet.getRange(`C6:C${dataEndRow}`));
+  addReadinessConditionalFormatting(reviewSheet.getRange(`D6:D${dataEndRow}`));
+  addExecutionAllowedConditionalFormatting(reviewSheet.getRange(`E6:E${dataEndRow}`));
+  reviewSheet.getRange(`A1:A${dataEndRow}`).format.columnWidth = 16;
+  reviewSheet.getRange(`B1:B${dataEndRow}`).format.columnWidth = 34;
+  reviewSheet.getRange(`C1:C${dataEndRow}`).format.columnWidth = 14;
+  reviewSheet.getRange(`D1:D${dataEndRow}`).format.columnWidth = 17;
+  reviewSheet.getRange(`E1:E${dataEndRow}`).format.columnWidth = 14;
+  reviewSheet.getRange(`F1:F${dataEndRow}`).format.columnWidth = 38;
+  reviewSheet.getRange(`G1:G${dataEndRow}`).format.columnWidth = 11;
+  reviewSheet.getRange(`H1:H${dataEndRow}`).format.columnWidth = 19;
+  reviewSheet.getRange(`I1:I${dataEndRow}`).format.columnWidth = 28;
+  reviewSheet.getRange(`J1:J${dataEndRow}`).format.columnWidth = 11;
+  reviewSheet.getRange(`K1:L${dataEndRow}`).format.columnWidth = 13;
+  reviewSheet.getRange(`M1:M${dataEndRow}`).format.columnWidth = 8;
+  reviewSheet.getRange(`A6:M${dataEndRow}`).format.rowHeight = 90;
+  reviewSheet.showGridLines = false;
+  const preview = await reviewWorkbook.render({ sheetName: reviewSheet.name, range: `A1:M${dataEndRow}`, scale: 0.75, format: "png" });
+  await fs.writeFile(path.join(previewDir, fileName), new Uint8Array(await preview.arrayBuffer()));
+}
+
+// The task-detail half of the source sheet is too wide to review legibly as a
+// single 16-column crop. Repeat task identity and split N–AC into two stacked
+// blocks while preserving the exact source values.
+const taskDetailPreviewSpecs = [
+  [6, 20, "03e-roadmap-tasks-details-r01-r20.png"],
+  [21, 35, "03f-roadmap-tasks-details-r21-r35.png"],
+  [36, 50, "03g-roadmap-tasks-details-r36-r50.png"],
+  [51, 63, "03h-roadmap-tasks-details-r51-r63.png"],
+];
+for (const [sourceStartRow, sourceEndRow, fileName] of taskDetailPreviewSpecs) {
+  const reviewSheet = reviewWorkbook.worksheets.add(`Details ${sourceStartRow}-${sourceEndRow}`);
+  const segmentTasks = tasks.slice(sourceStartRow - 6, sourceEndRow - 5);
+  const segmentRows = taskRows.slice(sourceStartRow - 6, sourceEndRow - 5);
+  const firstBlockHeaders = ["Task ID", ...taskHeaders.slice(13, 22)];
+  const secondBlockHeaders = ["Task ID", ...taskHeaders.slice(22, 29)];
+  const firstBlockRows = segmentRows.map((row, index) => [segmentTasks[index].id, ...row.slice(13, 22)]);
+  const secondBlockRows = segmentRows.map((row, index) => [segmentTasks[index].id, ...row.slice(22, 29)]);
+  const firstHeaderRow = 6;
+  const firstDataStartRow = 7;
+  const firstDataEndRow = firstDataStartRow + firstBlockRows.length - 1;
+  const secondSectionRow = firstDataEndRow + 2;
+  const secondHeaderRow = secondSectionRow + 1;
+  const secondDataStartRow = secondHeaderRow + 1;
+  const secondDataEndRow = secondDataStartRow + secondBlockRows.length - 1;
+
+  addTitle(
+    reviewSheet,
+    "J",
+    `Roadmap Task Details — Source Rows ${sourceStartRow}–${sourceEndRow}`,
+    "Review-only composition. Stable task IDs repeat in both blocks; source columns N–AC remain unchanged in the exported Roadmap Tasks sheet.",
+  );
+  reviewSheet.getRange("A5:J5").merge();
+  reviewSheet.getRange("A5:J5").values = [["Dossier links and traceability — source columns N–V"]];
+  reviewSheet.getRange("A5:J5").format = { fill: colors.slate, font: { bold: true, color: colors.white, size: 11 }, verticalAlignment: "center" };
+  reviewSheet.getRange(`A${firstHeaderRow}:J${firstHeaderRow}`).values = [firstBlockHeaders];
+  styleHeader(reviewSheet.getRange(`A${firstHeaderRow}:J${firstHeaderRow}`));
+  reviewSheet.getRange(`A${firstDataStartRow}:J${firstDataEndRow}`).values = firstBlockRows;
+  styleBody(reviewSheet.getRange(`A${firstDataStartRow}:J${firstDataEndRow}`));
+
+  reviewSheet.getRange(`A${secondSectionRow}:J${secondSectionRow}`).merge();
+  reviewSheet.getRange(`A${secondSectionRow}:J${secondSectionRow}`).values = [["Delivery evidence and references — source columns W–AC"]];
+  reviewSheet.getRange(`A${secondSectionRow}:J${secondSectionRow}`).format = { fill: colors.slate, font: { bold: true, color: colors.white, size: 11 }, verticalAlignment: "center" };
+  reviewSheet.getRange(`A${secondHeaderRow}:H${secondHeaderRow}`).values = [secondBlockHeaders];
+  styleHeader(reviewSheet.getRange(`A${secondHeaderRow}:H${secondHeaderRow}`));
+  reviewSheet.getRange(`A${secondDataStartRow}:H${secondDataEndRow}`).values = secondBlockRows;
+  styleBody(reviewSheet.getRange(`A${secondDataStartRow}:H${secondDataEndRow}`));
+
+  reviewSheet.getRange(`A1:A${secondDataEndRow}`).format.columnWidth = 16;
+  reviewSheet.getRange(`B1:J${secondDataEndRow}`).format.columnWidth = 34;
+  firstBlockRows.forEach((row, index) => {
+    reviewSheet.getRange(`A${firstDataStartRow + index}:J${firstDataStartRow + index}`).format.rowHeight = estimateRowHeight(
+      row,
+      [18, 40, 34, 42, 42, 42, 42, 42, 42, 42],
+      // Requirement ID lists reach 901 characters in R8/R9. Preserve their
+      // complete wrapped text and cap only below Excel's 409.5-point limit.
+      { min: 58, max: 408 },
+    );
+  });
+  secondBlockRows.forEach((row, index) => {
+    reviewSheet.getRange(`A${secondDataStartRow + index}:H${secondDataStartRow + index}`).format.rowHeight = estimateRowHeight(
+      row,
+      [18, 42, 42, 46, 48, 48, 44, 36],
+      { min: 58, max: 126 },
+    );
+  });
+  reviewSheet.showGridLines = false;
+  reviewSheet.freezePanes.freezeRows(firstHeaderRow);
+  reviewSheet.freezePanes.freezeColumns(1);
+
+  const preview = await reviewWorkbook.render({
+    sheetName: reviewSheet.name,
+    range: `A1:J${secondDataEndRow}`,
+    scale: 1.0,
+    format: "png",
+  });
+  await fs.writeFile(path.join(previewDir, fileName), new Uint8Array(await preview.arrayBuffer()));
+}
+
+const timelinePreviewSpecs = [
+  [6, 20, "04a-roadmap-timeline-r01-r20.png"],
+  [21, 35, "04b-roadmap-timeline-r21-r35.png"],
+  [36, 50, "04c-roadmap-timeline-r36-r50.png"],
+  [51, 63, "04d-roadmap-timeline-r51-r63.png"],
+];
+for (const [sourceStartRow, sourceEndRow, fileName] of timelinePreviewSpecs) {
+  const reviewSheet = reviewWorkbook.worksheets.add(`Timeline ${sourceStartRow}-${sourceEndRow}`);
+  const segmentTasks = tasks.slice(sourceStartRow - 6, sourceEndRow - 5);
+  const timelineRows = segmentTasks.map((task) => {
+    const start = toDate(task.startDate);
+    const target = toDate(task.targetDate);
+    const bars = weeks.map((week) => {
+      if (!start || !target) return "";
+      const weekEnd = new Date(week);
+      weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+      return week <= target && weekEnd >= start ? "■" : "";
+    });
+    return [task.id, task.title, task.status, task.artifactReadiness, task.executionAllowed ? "Yes" : "No", task.milestone, start, target, ...bars];
+  });
+  const dataEndRow = 5 + timelineRows.length;
+  addTitle(
+    reviewSheet,
+    timelineEndColumn,
+    `Roadmap Timeline — Source Rows ${sourceStartRow}–${sourceEndRow}`,
+    "Review-only composition. Proposed weekly windows repeat with their source task IDs, statuses, readiness, permissions, and dates.",
+  );
+  reviewSheet.getRange(`A5:${timelineEndColumn}5`).values = [["ID", "Title", "Status", "Readiness", "Allowed", "Milestone", "Start", "Target", ...weeks]];
+  styleHeader(reviewSheet.getRange(`A5:${timelineEndColumn}5`));
+  reviewSheet.getRange(`A6:${timelineEndColumn}${dataEndRow}`).values = timelineRows;
+  styleBody(reviewSheet.getRange(`A6:H${dataEndRow}`));
+  dateColumns(reviewSheet.getRange(`G6:H${dataEndRow}`));
+  reviewSheet.getRange(`I5:${timelineEndColumn}5`).setNumberFormat("dd-mmm");
+  reviewSheet.getRange(`I6:${timelineEndColumn}${dataEndRow}`).format = {
+    horizontalAlignment: "center",
+    verticalAlignment: "center",
+    font: { color: colors.white, bold: true, size: 9 },
+    borders: { preset: "all", style: "thin", color: "#E2E8F0" },
+  };
+  const reviewGanttRange = reviewSheet.getRange(`I6:${timelineEndColumn}${dataEndRow}`);
+  reviewGanttRange.conditionalFormats.addCustom('=AND(I6="■",$C6="Backlog")', { fill: "#94A3B8", font: { color: "#94A3B8" } });
+  reviewGanttRange.conditionalFormats.addCustom('=AND(I6="■",$C6="Next")', { fill: colors.blue, font: { color: colors.blue } });
+  reviewGanttRange.conditionalFormats.addCustom('=AND(I6="■",$C6="In progress")', { fill: "#F59E0B", font: { color: "#F59E0B" } });
+  reviewGanttRange.conditionalFormats.addCustom('=AND(I6="■",$C6="Done")', { fill: "#22C55E", font: { color: "#22C55E" } });
+  addStatusConditionalFormatting(reviewSheet.getRange(`C6:C${dataEndRow}`));
+  addReadinessConditionalFormatting(reviewSheet.getRange(`D6:D${dataEndRow}`));
+  addExecutionAllowedConditionalFormatting(reviewSheet.getRange(`E6:E${dataEndRow}`));
+  reviewSheet.getRange(`A1:A${dataEndRow}`).format.columnWidth = 16;
+  reviewSheet.getRange(`B1:B${dataEndRow}`).format.columnWidth = 34;
+  reviewSheet.getRange(`C1:C${dataEndRow}`).format.columnWidth = 14;
+  reviewSheet.getRange(`D1:D${dataEndRow}`).format.columnWidth = 16;
+  reviewSheet.getRange(`E1:E${dataEndRow}`).format.columnWidth = 11;
+  reviewSheet.getRange(`F1:F${dataEndRow}`).format.columnWidth = 11;
+  reviewSheet.getRange(`G1:H${dataEndRow}`).format.columnWidth = 13;
+  reviewSheet.getRange(`I1:${timelineEndColumn}${dataEndRow}`).format.columnWidth = 9;
+  reviewSheet.getRange(`A6:H${dataEndRow}`).format.rowHeight = 28;
+  reviewSheet.showGridLines = false;
+  const preview = await reviewWorkbook.render({ sheetName: reviewSheet.name, range: `A1:${timelineEndColumn}${dataEndRow}`, scale: 0.55, format: "png" });
+  await fs.writeFile(path.join(previewDir, fileName), new Uint8Array(await preview.arrayBuffer()));
+}
+
+const requirementPreviewSpecs = [
+  [6, 25, "05a-requirement-map-r01-r25.png"],
+  [26, 45, "05b-requirement-map-r26-r45.png"],
+  [46, 65, "05c-requirement-map-r46-r65.png"],
+  [66, 83, "05d-requirement-map-r66-r83.png"],
+];
+for (const [sourceStartRow, sourceEndRow, fileName] of requirementPreviewSpecs) {
+  const reviewSheet = reviewWorkbook.worksheets.add(`Requirements ${sourceStartRow}-${sourceEndRow}`);
+  const segmentEntries = requirementMap.slice(sourceStartRow - 6, sourceEndRow - 5);
+  const segmentRows = segmentEntries.map((entry) => [
+    entry.requirementId,
+    entry.primaryMilestone,
+    entry.roadmapTaskIds.length ? entry.roadmapTaskIds.join(", ") : "None — explicitly deferred",
+    entry.disposition,
+    entry.rationale,
+    entry.roadmapTaskIds.length,
+  ]);
+  const dataEndRow = 5 + segmentRows.length;
+  addTitle(
+    reviewSheet,
+    "F",
+    `Requirement Traceability — Source Rows ${sourceStartRow}–${sourceEndRow}`,
+    "Review-only composition. All stable requirement IDs and their roadmap-task mappings remain unchanged in the exported Requirement Map sheet.",
+  );
+  reviewSheet.getRange("A5:F5").values = [["Requirement ID", "Primary milestone", "Roadmap task IDs", "Disposition", "Rationale", "Task count"]];
+  styleHeader(reviewSheet.getRange("A5:F5"));
+  reviewSheet.getRange(`A6:F${dataEndRow}`).values = segmentRows;
+  styleBody(reviewSheet.getRange(`A6:F${dataEndRow}`));
+  reviewSheet.getRange(`B6:B${dataEndRow}`).conditionalFormats.add("containsText", { text: "Deferred", format: { fill: colors.purpleLight, font: { color: colors.purple, bold: true } } });
+  reviewSheet.getRange(`A1:A${dataEndRow}`).format.columnWidth = 18;
+  reviewSheet.getRange(`B1:B${dataEndRow}`).format.columnWidth = 18;
+  reviewSheet.getRange(`C1:C${dataEndRow}`).format.columnWidth = 54;
+  reviewSheet.getRange(`D1:D${dataEndRow}`).format.columnWidth = 28;
+  reviewSheet.getRange(`E1:E${dataEndRow}`).format.columnWidth = 50;
+  reviewSheet.getRange(`F1:F${dataEndRow}`).format.columnWidth = 12;
+  segmentRows.forEach((row, index) => {
+    reviewSheet.getRange(`A${6 + index}:F${6 + index}`).format.rowHeight = estimateRowHeight(
+      row.slice(0, 5),
+      [22, 22, 64, 34, 60],
+    );
+  });
+  reviewSheet.showGridLines = false;
+  const preview = await reviewWorkbook.render({ sheetName: reviewSheet.name, range: `A1:F${dataEndRow}`, scale: 0.9, format: "png" });
+  await fs.writeFile(path.join(previewDir, fileName), new Uint8Array(await preview.arrayBuffer()));
+}
+
+const previewCount = previewSpecs.length
+  + metadataPreviewSpecs.length
+  + taskDetailPreviewSpecs.length
+  + timelinePreviewSpecs.length
+  + requirementPreviewSpecs.length;
 
 const output = await SpreadsheetFile.exportXlsx(workbook);
 await output.save(outputPath);
@@ -698,6 +957,6 @@ console.log(JSON.stringify({
   readyCount,
   executionAllowedCount,
   r10BlankDateTasks: r10Tasks.length,
-  previewCount: previewSpecs.length,
+  previewCount,
   formulaErrors: formulaErrors.length,
 }, null, 2));

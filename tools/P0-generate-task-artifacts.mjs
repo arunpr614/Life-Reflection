@@ -1,6 +1,37 @@
 import crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import {
+  ARTIFACT_KINDS,
+  COUNCIL_SEATS,
+  DESIGN_ACCESSIBILITY_DIMENSIONS,
+  DESIGN_STATE_DIMENSIONS,
+  READINESS_SCHEMA_VERSION,
+  SCOPE_ACTION_COMPATIBILITY,
+  TASK_FILE_DESCENDANT_DELTA_PATHS,
+  TASK_FILE_DIFF_EXCLUSIONS,
+  TASK_FILE_GIT_MODES,
+  TASK_FILE_PURPOSES,
+  evaluateReadiness,
+  executeRefreshTransaction,
+  parseArtifactControlMarkers,
+  planProtectedRefresh,
+} from "./P0-readiness-gates.mjs";
+import {
+  acceptanceScenarioIdsFor,
+  buildTaskReadinessInput,
+  executionScopeLabelFor,
+  ownerActionIdsFor,
+  requestedScopeFor,
+  validateReadinessState,
+} from "./P0-build-task-readiness-input.mjs";
+import {
+  deriveApprovalPublicationFacts,
+  deriveCandidatePublicationFacts,
+  emptyCandidatePublicationFacts,
+} from "./P0-verify-execution-start.mjs";
+import { assertDuplicateKeyRejection, parseJsonWithoutDuplicateKeys } from "./P0-json-trust.mjs";
 
 const repoRoot = path.resolve(import.meta.dirname, "..");
 const manifestPath = path.join(repoRoot, "docs/project/PHASE1-ROADMAP-MANIFEST.json");
@@ -8,7 +39,10 @@ const issueMapPath = path.join(repoRoot, "docs/project/PHASE1-GITHUB-ISSUES.json
 const outputRoot = path.join(repoRoot, "docs/work-items");
 const registerPath = path.join(repoRoot, "docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json");
 const readinessStatePath = path.join(repoRoot, "docs/project/P0-PHASE1-TASK-READINESS-STATE.json");
-const generatedAt = "2026-08-14";
+const reviewerRegistryPath = path.join(repoRoot, "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json");
+const approvalRegistryPath = path.join(repoRoot, "docs/council/execution/P0-EXECUTION-APPROVAL-REGISTRY.json");
+const ownerActionStatePath = path.join(repoRoot, "docs/council/execution/P0-OWNER-ACTION-STATE.json");
+const generatedAt = "2026-08-15";
 const repositoryUrl = "https://github.com/arunpr614/Life-Reflection";
 const projectUrl = "https://github.com/users/arunpr614/projects/1";
 const policyPath = "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md";
@@ -23,74 +57,47 @@ if (args.has("--help")) {
 }
 const refreshDrafts = args.has("--refresh-drafts");
 
-const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-const issueMap = JSON.parse(fs.readFileSync(issueMapPath, "utf8")).issues ?? {};
-const readinessState = JSON.parse(fs.readFileSync(readinessStatePath, "utf8"));
+const refreshLockPath = path.resolve(repoRoot, execFileSync("git", ["rev-parse", "--git-path", "P0-readiness-refresh.lock"], {
+  cwd: repoRoot,
+  encoding: "utf8",
+}).trim());
+let refreshLockOwned = false;
+try {
+  fs.mkdirSync(refreshLockPath);
+  refreshLockOwned = true;
+} catch (error) {
+  if (error?.code === "EEXIST") {
+    throw new Error("REFRESH_LOCKED: another generator or an uninspected interrupted run owns P0-readiness-refresh.lock");
+  }
+  throw error;
+}
+process.on("exit", () => {
+  if (!refreshLockOwned) return;
+  try { fs.rmdirSync(refreshLockPath); } catch { /* a retained lock is fail-closed on the next run */ }
+});
+
+const manifestContent = fs.readFileSync(manifestPath, "utf8");
+const issueMapContent = fs.readFileSync(issueMapPath, "utf8");
+const readinessStateContent = fs.readFileSync(readinessStatePath, "utf8");
+const reviewerRegistryContent = fs.readFileSync(reviewerRegistryPath, "utf8");
+const approvalRegistryContent = fs.readFileSync(approvalRegistryPath, "utf8");
+const ownerActionStateContent = fs.readFileSync(ownerActionStatePath, "utf8");
+assertDuplicateKeyRejection();
+const manifest = parseJsonWithoutDuplicateKeys(manifestContent, path.relative(repoRoot, manifestPath));
+const issueMap = parseJsonWithoutDuplicateKeys(issueMapContent, path.relative(repoRoot, issueMapPath)).issues ?? {};
+const readinessState = parseJsonWithoutDuplicateKeys(readinessStateContent, path.relative(repoRoot, readinessStatePath));
+const reviewerRegistry = parseJsonWithoutDuplicateKeys(reviewerRegistryContent, path.relative(repoRoot, reviewerRegistryPath));
+const approvalRegistry = parseJsonWithoutDuplicateKeys(approvalRegistryContent, path.relative(repoRoot, approvalRegistryPath));
+const ownerActionState = parseJsonWithoutDuplicateKeys(ownerActionStateContent, path.relative(repoRoot, ownerActionStatePath));
 if (manifest.tasks?.length !== 58 || Object.keys(issueMap).length !== 58) {
   throw new Error("Task artifacts require exactly 58 manifest tasks and 58 issue-map entries");
 }
 const taskIds = new Set(manifest.tasks.map((task) => task.id));
-const readinessOverrides = readinessState.taskOverrides ?? {};
-const unknownReadinessTaskIds = Object.keys(readinessOverrides).filter((taskId) => !taskIds.has(taskId));
-if (unknownReadinessTaskIds.length) {
-  throw new Error(`Readiness state contains unknown task IDs: ${unknownReadinessTaskIds.join(", ")}`);
-}
-const allowedOverrideKeys = new Set([
-  "artifactReadiness",
-  "executionDecision",
-  "executionAllowed",
-  "executionScope",
-  "dependenciesEntryEvidenceSatisfied",
-  "privateAuthorityState",
-  "ownerActions",
-  "ownerActionsSatisfied",
-  "openDecisions",
-  "artifactReviews",
-  "designCoverage",
-  "privateAuthorityEvidenceReference",
-  "council",
-]);
-const artifactReviewKinds = ["product", "architecture", "design", "qa", "delivery", "council"];
-const councilSeatKinds = ["product", "design", "architecture", "qa", "project"];
-const allowedArtifactReviewKeys = new Set([
-  "decision",
-  "reviewer",
-  "reviewedRevision",
-  "artifactSha256",
-  "dossierDigest",
-  "evidenceReference",
-  "notApplicableRationale",
-  "specialistConcurrence",
-]);
-const designStateDimensions = ["normal", "empty", "loading", "error", "interruption", "destructive"];
-const designAccessibilityDimensions = ["keyboard", "focus", "screenReader", "targetSize", "contrast", "zoom", "reducedMotion"];
-const allowedDesignCoverageKeys = new Set(["applicability", "journeyIds", "stateCoverage", "accessibilityCoverage", "notApplicableRationale"]);
-const allowedSeatVerdictKeys = new Set(["verdict", "reviewer", "reviewedRevision", "dossierDigest", "evidenceReference", "rationale"]);
-for (const [taskId, override] of Object.entries(readinessOverrides)) {
-  const unknownKeys = Object.keys(override).filter((key) => !allowedOverrideKeys.has(key));
-  if (unknownKeys.length) throw new Error(`${taskId}: unknown readiness override keys: ${unknownKeys.join(", ")}`);
-  const unknownCouncilKeys = Object.keys(override.council ?? {}).filter(
-    (key) => !["verdict", "reviewedRevision", "unresolvedBlockers", "seatVerdicts"].includes(key),
-  );
-  if (unknownCouncilKeys.length) throw new Error(`${taskId}: unknown council override keys: ${unknownCouncilKeys.join(", ")}`);
-  const unknownReviewKinds = Object.keys(override.artifactReviews ?? {}).filter((kind) => !artifactReviewKinds.includes(kind));
-  if (unknownReviewKinds.length) throw new Error(`${taskId}: unknown artifact-review kinds: ${unknownReviewKinds.join(", ")}`);
-  for (const [kind, review] of Object.entries(override.artifactReviews ?? {})) {
-    const unknownReviewKeys = Object.keys(review).filter((key) => !allowedArtifactReviewKeys.has(key));
-    if (unknownReviewKeys.length) throw new Error(`${taskId} ${kind}: unknown artifact-review keys: ${unknownReviewKeys.join(", ")}`);
-  }
-  const unknownCoverageKeys = Object.keys(override.designCoverage ?? {}).filter((key) => !allowedDesignCoverageKeys.has(key));
-  if (unknownCoverageKeys.length) throw new Error(`${taskId}: unknown design-coverage keys: ${unknownCoverageKeys.join(", ")}`);
-  const unknownStateDimensions = Object.keys(override.designCoverage?.stateCoverage ?? {}).filter((key) => !designStateDimensions.includes(key));
-  if (unknownStateDimensions.length) throw new Error(`${taskId}: unknown Design state dimensions: ${unknownStateDimensions.join(", ")}`);
-  const unknownAccessibilityDimensions = Object.keys(override.designCoverage?.accessibilityCoverage ?? {}).filter((key) => !designAccessibilityDimensions.includes(key));
-  if (unknownAccessibilityDimensions.length) throw new Error(`${taskId}: unknown Design accessibility dimensions: ${unknownAccessibilityDimensions.join(", ")}`);
-  const unknownSeats = Object.keys(override.council?.seatVerdicts ?? {}).filter((seat) => !councilSeatKinds.includes(seat));
-  if (unknownSeats.length) throw new Error(`${taskId}: unknown council seats: ${unknownSeats.join(", ")}`);
-  for (const [seat, verdict] of Object.entries(override.council?.seatVerdicts ?? {})) {
-    const unknownSeatKeys = Object.keys(verdict).filter((key) => !allowedSeatVerdictKeys.has(key));
-    if (unknownSeatKeys.length) throw new Error(`${taskId} ${seat}: unknown seat-verdict keys: ${unknownSeatKeys.join(", ")}`);
-  }
+validateReadinessState(readinessState, taskIds);
+if (readinessState.reviewerRegistryPath !== path.relative(repoRoot, reviewerRegistryPath)
+  || readinessState.approvalRegistryPath !== path.relative(repoRoot, approvalRegistryPath)
+  || readinessState.ownerActionStatePath !== path.relative(repoRoot, ownerActionStatePath)) {
+  throw new Error("Readiness-state registry paths do not match the canonical P0 control files");
 }
 
 const deferredIds = manifest.requirementMap
@@ -121,10 +128,12 @@ const artifactKinds = {
 const allowedArtifactStates = new Set(["missing", "draft", "in-review", "approved", "blocked", "not-applicable"]);
 
 function artifactStateFromContent(content, taskId, kind) {
-  const state = content.match(/^- \*\*Artifact state:\*\* `([^`]+)`$/m)?.[1];
-  if (!state) throw new Error(`${taskId} ${kind}: missing Artifact state marker`);
-  if (!allowedArtifactStates.has(state)) throw new Error(`${taskId} ${kind}: invalid Artifact state ${state}`);
-  return state;
+  const markers = parseArtifactControlMarkers(content, { taskId, artifactKind: kind });
+  if (!markers.valid) {
+    const codes = [...new Set(markers.errors.map((error) => error.code))].join(", ");
+    throw new Error(`${taskId} ${kind}: invalid artifact control markers (${codes})`);
+  }
+  return markers.artifactState;
 }
 
 function artifactPath(taskId, kind) {
@@ -132,30 +141,12 @@ function artifactPath(taskId, kind) {
 }
 
 function ownerActionsFor(task) {
-  const byMilestone = {
-    P0: task.id === "PC-001" ? ["P0-OA-001", "P0-OA-002"] : [],
-    R0: ["P0-OA-001", "R0-OA-001", "R0-OA-002"],
-    R1: ["R1-OA-001"],
-    R2: ["R2-OA-001", "R2-OA-002"],
-    R5: ["R5-OA-001"],
-    R6: ["R6-OA-001"],
-    R7: ["R7-OA-001"],
-    R9: ["R9-OA-001", "R9-OA-002", "R9-OA-003", "R9-OA-004"],
-    R10: ["R10-OA-001", "R10-OA-002"],
-  };
-  return byMilestone[task.milestone] ?? [];
+  return ownerActionIdsFor(task);
 }
 
 function executionScopeFor(task) {
-  if (task.status === "Done") return "planning-only-historical";
-  if (task.milestone === "P0") return "local-public-control-only";
-  if (task.milestone === "R0") return "local-synthetic-artifact-authoring-only";
-  if (["R1", "R2", "R3", "R4"].includes(task.milestone)) return "future-release-gated";
-  if (task.milestone === "R5") return "future-synthetic-contract-gated";
-  if (["R6", "R7"].includes(task.milestone)) return "future-evaluation-and-human-approval-gated";
-  if (task.milestone === "R8") return "future-integrated-evidence-gated";
-  if (task.milestone === "R9") return "future-human-launch-gated";
-  return "trigger-only-no-execution";
+  const override = readinessState.taskOverrides?.[task.id] ?? {};
+  return executionScopeLabelFor(task, requestedScopeFor(task, override));
 }
 
 function controlBlock(task, kind, state = "draft") {
@@ -508,15 +499,107 @@ Re-review all five seats after every required artifact is stable in one candidat
 `;
 }
 
-fs.mkdirSync(outputRoot, { recursive: true });
-const records = [];
+const fullRevision = /^[0-9a-f]{40}$/;
+const readFetchedMainRevision = () => {
+  try {
+    const revision = execFileSync("git", ["rev-parse", "--verify", "refs/remotes/origin/main^{commit}"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+    }).trim();
+    return fullRevision.test(revision) ? revision : null;
+  } catch {
+    return null;
+  }
+};
+const fetchedMainRevision = readFetchedMainRevision();
+
+async function candidatePublicationFacts(taskId, artifacts, scopeClass) {
+  const approval = approvalRegistry.taskApprovals?.[taskId] ?? {};
+  const candidate = approval.candidate ?? {};
+  const empty = emptyCandidatePublicationFacts(candidate);
+  if (!fetchedMainRevision || !fullRevision.test(candidate.revision ?? "")
+    || !fullRevision.test(candidate.baseRevision ?? "")) return empty;
+  const result = await deriveCandidatePublicationFacts({
+    repoRoot,
+    taskId,
+    candidate,
+    registeredArtifacts: artifacts,
+    publishedRef: fetchedMainRevision,
+    scopeClass,
+  });
+  if (result.ok !== true) return empty;
+  const { ok: _ok, code: _code, scope: _scope, ...facts } = result;
+  return facts;
+}
+
+function emptyApprovalPublication(taskId) {
+  return {
+    revision: null,
+    registryPath: path.relative(repoRoot, approvalRegistryPath),
+    registrySha256: null,
+    registryBytesVerified: false,
+    taskId,
+    publishedTaskApprovalSha256: null,
+    currentTaskApprovalSha256: null,
+    taskApprovalBytesVerified: false,
+    publishedReviewerRegistrySha256: null,
+    currentReviewerRegistrySha256: null,
+    reviewerRegistryBytesVerified: false,
+    publishedOwnerActionStateSha256: null,
+    currentOwnerActionStateSha256: null,
+    ownerActionStateBytesVerified: false,
+    publishedTaskContractSha256: null,
+    currentTaskContractSha256: null,
+    taskContractBytesVerified: false,
+    publishedOnFetchedMain: false,
+    candidateAncestorOfApproval: false,
+  };
+}
+
+async function approvalPublicationFacts(taskId, sourceInput) {
+  const approval = approvalRegistry.taskApprovals?.[taskId];
+  if (!approval?.approvalRecord || !fullRevision.test(sourceInput.candidate?.revision ?? "") || !fetchedMainRevision) {
+    return emptyApprovalPublication(taskId);
+  }
+  const result = await deriveApprovalPublicationFacts({
+    repoRoot,
+    taskId,
+    approvalRegistry,
+    candidateRevision: sourceInput.candidate.revision,
+    publishedRef: fetchedMainRevision,
+    reviewerRegistry,
+    ownerActionState,
+    ownerActionRequirements: sourceInput.ownerActionRequirements,
+  });
+  if (result.ok !== true) return emptyApprovalPublication(taskId);
+  const { ok: _ok, code: _code, scope: _scope, ...facts } = result;
+  return facts;
+}
+
+function protectionMetadata(taskId, kind, registry = approvalRegistry) {
+  const approval = registry.taskApprovals?.[taskId] ?? {};
+  const review = approval.artifactReviews?.[kind] ?? {};
+  const seatRecords = Object.values(approval.council?.seatVerdicts ?? {});
+  return {
+    artifactReviewDecision: review.decision ?? "hold",
+    candidateBinding: Boolean(approval.candidate?.revision || approval.candidate?.artifacts?.[kind]),
+    seatVerdicts: seatRecords.map((record) => record.verdict ?? "hold"),
+    attestationBindings: [review.attestationDigest, ...seatRecords.map((record) => record.attestationDigest)].filter(Boolean),
+    evidenceBindings: [review.evidenceReference, ...seatRecords.map((record) => record.evidenceReference)].filter(Boolean),
+  };
+}
+
+const plannedArtifactTargets = [];
+const intendedArtifactFiles = [];
+const artifactContentsByTask = new Map();
+const artifactIdentityByPath = new Map();
 const writeCounts = { created: 0, refreshedDrafts: 0, preserved: 0 };
 
 for (const task of manifest.tasks) {
   const ownerActions = ownerActionsFor(task);
   const executionScope = executionScopeFor(task);
-  const filePaths = Object.fromEntries(Object.keys(artifactKinds).map((kind) => [kind, artifactPath(task.id, kind)]));
-  const contents = {
+  const filePaths = Object.fromEntries(ARTIFACT_KINDS.map((kind) => [kind, artifactPath(task.id, kind)]));
+  const generatedContents = {
     product: productArtifact(task, filePaths.product, ownerActions),
     architecture: technicalArtifact(task, filePaths.architecture),
     design: designArtifact(task, filePaths.design),
@@ -524,172 +607,154 @@ for (const task of manifest.tasks) {
     delivery: deliveryArtifact(task, filePaths.delivery, ownerActions, executionScope),
     council: councilArtifact(task, filePaths.council, executionScope),
   };
-  const artifactRecords = {};
+  const finalContents = {};
   for (const [kind, filePath] of Object.entries(filePaths)) {
     const absolutePath = path.join(repoRoot, filePath);
-    fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
-    const generatedContent = contents[kind].endsWith("\n") ? contents[kind] : `${contents[kind]}\n`;
     const exists = fs.existsSync(absolutePath);
     const existingContent = exists ? fs.readFileSync(absolutePath, "utf8") : null;
     const existingState = exists ? artifactStateFromContent(existingContent, task.id, kind) : null;
-    const shouldRefresh = refreshDrafts && existingState === "draft";
-    if (!exists || shouldRefresh) {
-      fs.writeFileSync(absolutePath, generatedContent);
-      if (exists) writeCounts.refreshedDrafts += 1;
-      else writeCounts.created += 1;
-    } else {
-      writeCounts.preserved += 1;
-    }
-    const content = !exists || shouldRefresh ? generatedContent : existingContent;
-    const artifactState = artifactStateFromContent(content, task.id, kind);
-    artifactRecords[kind] = {
-      required: true,
+    const generatedContent = generatedContents[kind].endsWith("\n") ? generatedContents[kind] : `${generatedContents[kind]}\n`;
+    const shouldUseGenerated = !exists || (refreshDrafts && existingState === "draft");
+    const finalContent = shouldUseGenerated ? generatedContent : existingContent;
+    finalContents[kind] = finalContent;
+    const changed = existingContent !== finalContent;
+    if (!exists) writeCounts.created += 1;
+    else if (changed) writeCounts.refreshedDrafts += 1;
+    else writeCounts.preserved += 1;
+    plannedArtifactTargets.push({
       path: filePath,
-      url: `${repositoryUrl}/blob/main/${filePath}`,
-      state: artifactState,
-      sha256: sha256(content),
-    };
+      exists,
+      content: existingContent,
+      artifactState: existingState,
+      ...protectionMetadata(task.id, kind),
+    });
+    artifactIdentityByPath.set(filePath, { taskId: task.id, kind });
+    intendedArtifactFiles.push({ path: filePath, content: finalContent });
   }
-  const scenarioIds = [
-    ...["P-001", "P-002", "P-003"].map((suffix) => `${task.id}-${suffix}`),
-    ...["T-001", "T-002", "T-003"].map((suffix) => `${task.id}-${suffix}`),
-    ...["D-001", "D-002", "D-003"].map((suffix) => `${task.id}-${suffix}`),
-    ...["QA-001", "QA-002", "QA-003", "QA-004", "QA-005", "QA-006"].map((suffix) => `${task.id}-${suffix}`),
-  ];
-  const baseCouncil = {
-    decisionPath: filePaths.council,
-    decisionUrl: `${repositoryUrl}/blob/main/${filePaths.council}`,
-    verdict: task.status === "Done" ? "historical-non-authorizing" : "hold",
-    reviewedRevision: null,
-    unresolvedBlockers: [
-      "Required task-bound artifacts remain draft.",
-      "Five-seat task-level approval is not complete.",
-    ],
-    seatVerdicts: Object.fromEntries(councilSeatKinds.map((seat) => [seat, {
-      verdict: "hold",
-      reviewer: null,
-      reviewedRevision: null,
-      dossierDigest: null,
-      evidenceReference: null,
-      rationale: "Task-bound artifacts remain draft.",
-    }])),
-  };
-  const baseArtifactReviews = Object.fromEntries(artifactReviewKinds.map((kind) => [kind, {
-    decision: "hold",
-    reviewer: null,
-    reviewedRevision: null,
-    artifactSha256: null,
-    dossierDigest: null,
-    evidenceReference: null,
-    notApplicableRationale: null,
-    specialistConcurrence: false,
+  artifactContentsByTask.set(task.id, { filePaths, finalContents });
+}
+
+const records = [];
+for (const task of manifest.tasks) {
+  const { filePaths, finalContents } = artifactContentsByTask.get(task.id);
+  const sourceArtifacts = Object.fromEntries(ARTIFACT_KINDS.map((kind) => {
+    const content = finalContents[kind];
+    const markerResult = parseArtifactControlMarkers(content, { taskId: task.id, artifactKind: kind });
+    if (!markerResult.valid) {
+      const codes = [...new Set(markerResult.errors.map((error) => error.code))].join(", ");
+      throw new Error(`${task.id} ${kind}: invalid artifact control markers (${codes})`);
+    }
+    const contentState = markerResult.artifactState;
+    const digest = sha256(content);
+    const markersValid = markerResult.valid;
+    return [kind, {
+      required: true,
+      path: filePaths[kind],
+      url: `${repositoryUrl}/blob/main/${filePaths[kind]}`,
+      contentState,
+      sha256: digest,
+      observedSha256: digest,
+      markersValid,
+    }];
+  }));
+  const sourceInput = buildTaskReadinessInput({
+    task,
+    artifacts: sourceArtifacts,
+    readinessState,
+    reviewerRegistry,
+    approvalRegistry,
+    ownerActionState,
+    evaluationPhase: "approval",
+  });
+  const candidatePublication = await candidatePublicationFacts(
+    task.id,
+    sourceArtifacts,
+    sourceInput.requestedScope.scopeClass,
+  );
+  const approvalPublication = await approvalPublicationFacts(task.id, sourceInput);
+  const evaluation = evaluateReadiness(sourceInput, {
+    phase: "approval",
+    now: readinessState.asOf,
+    candidatePublication,
+    approvalPublication,
+  });
+  const requiredSafetyCodes = ["PUBLIC_SAFETY", "AUTHENTIC_MEDIA_EXCLUSION", "PRIVATE_NETWORK_EXCLUSION"];
+  const failedSafetyCodes = requiredSafetyCodes.filter((code) => (
+    evaluation.gateResults.find((gate) => gate.code === code)?.passed !== true
+  ));
+  if (failedSafetyCodes.length) {
+    throw new Error(`${task.id}: safety gate failed (${failedSafetyCodes.join(", ")}); no register or artifact bytes were written`);
+  }
+  const artifacts = Object.fromEntries(ARTIFACT_KINDS.map((kind) => [kind, {
+    required: true,
+    path: sourceArtifacts[kind].path,
+    url: sourceArtifacts[kind].url,
+    state: evaluation.normalizedEvidence.effectiveArtifactStates[kind],
+    sha256: sourceArtifacts[kind].sha256,
+    contentState: sourceArtifacts[kind].contentState,
   }]));
-  const baseDesignCoverage = {
-    applicability: "pending",
-    journeyIds: [],
-    stateCoverage: Object.fromEntries(designStateDimensions.map((dimension) => [dimension, []])),
-    accessibilityCoverage: Object.fromEntries(designAccessibilityDimensions.map((dimension) => [dimension, []])),
-    notApplicableRationale: null,
-  };
-  const baseRecord = {
+  const failedDependencyGates = evaluation.gateResults.filter((gate) => !gate.passed
+    && (gate.code === "DEPENDENCY_REQUIREMENTS" || gate.code.startsWith("DEPENDENCY_")));
+  const failedDueActionGates = evaluation.gateResults.filter((gate) => !gate.passed
+    && gate.code.startsWith("OWNER_ACTION_")
+    && !["OWNER_ACTION_REQUIREMENTS", "OWNER_ACTION_RECORD_SET"].includes(gate.code));
+  records.push({
     taskId: task.id,
     issueNumber: issueMap[task.id].number,
     issueUrl: issueMap[task.id].url,
-    artifactReadiness: "Incomplete",
-    executionDecision: task.status === "Done" ? "Historical non-authorizing" : "Hold",
-    executionAllowed: false,
-    executionScope,
-    artifacts: artifactRecords,
-    requirementIds: task.requirementIds,
-    acceptanceScenarioIds: scenarioIds,
-    dependenciesEntryEvidenceSatisfied: task.dependencies.length === 0,
-    privateAuthorityState: task.milestone === "R10"
-      ? "not-triggered"
-      : task.milestone === "P0"
-        ? "not-required-for-current-local-control-work"
-        : "pending-if-private-action-is-requested",
-    privateAuthorityEvidenceReference: null,
-    ownerActions,
-    ownerActionsSatisfied: true,
-    openDecisions: ["Five-seat task-level dossier approval pending."],
-    artifactReviews: baseArtifactReviews,
-    designCoverage: baseDesignCoverage,
-    council: baseCouncil,
-  };
-  const override = readinessOverrides[task.id] ?? {};
-  const artifactReviews = Object.fromEntries(artifactReviewKinds.map((kind) => [kind, {
-    ...baseArtifactReviews[kind],
-    ...(override.artifactReviews?.[kind] ?? {}),
-  }]));
-  const seatVerdicts = Object.fromEntries(councilSeatKinds.map((seat) => [seat, {
-    ...baseCouncil.seatVerdicts[seat],
-    ...(override.council?.seatVerdicts?.[seat] ?? {}),
-  }]));
-  for (const kind of artifactReviewKinds) {
-    const contentState = artifactRecords[kind].state;
-    const decision = artifactReviews[kind].decision;
-    artifactRecords[kind] = {
-      ...artifactRecords[kind],
-      contentState,
-      state: decision === "approved"
-        ? "approved"
-        : decision === "not-applicable"
-          ? "not-applicable"
-          : ["approved", "not-applicable"].includes(contentState)
-            ? "in-review"
-            : contentState,
-    };
-  }
-  const candidateRevision = override.council?.reviewedRevision ?? baseCouncil.reviewedRevision;
-  const candidateArtifacts = Object.fromEntries(artifactReviewKinds.map((kind) => [kind, {
-    path: artifactRecords[kind].path,
-    sha256: artifactRecords[kind].sha256,
-  }]));
-  const dossierDigest = candidateRevision
-    ? `sha256:${sha256(JSON.stringify({ taskId: task.id, revision: candidateRevision, artifacts: candidateArtifacts }))}`
-    : null;
-  records.push({
-    ...baseRecord,
-    ...override,
-    taskId: baseRecord.taskId,
-    issueNumber: baseRecord.issueNumber,
-    issueUrl: baseRecord.issueUrl,
-    artifacts: artifactRecords,
-    candidate: {
-      revision: candidateRevision,
-      dossierDigest,
-      artifacts: candidateArtifacts,
+    artifactReadiness: evaluation.artifactReadiness,
+    executionDecision: evaluation.executionDecision,
+    executionAllowed: evaluation.executionAllowed,
+    executionScope: executionScopeFor(task),
+    requestedScope: sourceInput.requestedScope,
+    artifacts,
+    artifactReviews: sourceInput.artifactReviews,
+    candidate: sourceInput.candidate,
+    candidatePublication,
+    approvalRecord: sourceInput.approvalRecord,
+    approvalPublication,
+    requirementIds: sourceInput.requirementIds,
+    acceptanceScenarioIds: sourceInput.acceptanceScenarioIds,
+    designCoverage: sourceInput.designCoverage,
+    dependencyControl: {
+      requirements: sourceInput.dependencyRequirements,
+      evidence: sourceInput.dependencyEvidence,
+      satisfied: failedDependencyGates.length === 0,
     },
-    artifactReviews,
-    designCoverage: {
-      ...baseDesignCoverage,
-      ...(override.designCoverage ?? {}),
-      stateCoverage: {
-        ...baseDesignCoverage.stateCoverage,
-        ...(override.designCoverage?.stateCoverage ?? {}),
-      },
-      accessibilityCoverage: {
-        ...baseDesignCoverage.accessibilityCoverage,
-        ...(override.designCoverage?.accessibilityCoverage ?? {}),
-      },
+    ownerActionControl: {
+      requirements: sourceInput.ownerActionRequirements,
+      records: sourceInput.ownerActions,
+      dueActionIds: evaluation.normalizedEvidence.dueOwnerActionIds,
+      allDueSatisfied: failedDueActionGates.length === 0,
     },
-    requirementIds: baseRecord.requirementIds,
-    acceptanceScenarioIds: baseRecord.acceptanceScenarioIds,
+    privateAuthority: sourceInput.privateAuthority,
+    privateAuthorityRequired: evaluation.normalizedEvidence.privateAuthorityRequired,
+    openDecisions: sourceInput.openDecisions,
+    specialistVetoes: sourceInput.specialistVetoes,
     council: {
-      ...baseCouncil,
-      ...(override.council ?? {}),
-      decisionPath: baseCouncil.decisionPath,
-      decisionUrl: baseCouncil.decisionUrl,
-      seatVerdicts,
+      ...sourceInput.council,
+      decisionPath: filePaths.council,
+      decisionUrl: `${repositoryUrl}/blob/main/${filePaths.council}`,
     },
+    effectiveArtifactStates: evaluation.normalizedEvidence.effectiveArtifactStates,
+    gateResults: evaluation.gateResults,
+    blockers: evaluation.blockers,
+    nextAction: evaluation.nextAction,
+    normalizedEvidence: evaluation.normalizedEvidence,
   });
 }
 
 const register = {
-  schemaVersion: "1.1.0",
+  schemaVersion: READINESS_SCHEMA_VERSION,
   generatedAt,
+  authenticMediaAccessed: false,
+  privateNetworkAccessed: false,
+  evaluationTimeBasis: "Deterministic planning projection at readinessState.asOf; actual execution start always re-evaluates with current time from a clean exact-origin/main checkout.",
   readinessStatePath: path.relative(repoRoot, readinessStatePath),
   readinessStateUrl: `${repositoryUrl}/blob/main/${path.relative(repoRoot, readinessStatePath)}`,
+  reviewerRegistryPath: path.relative(repoRoot, reviewerRegistryPath),
+  approvalRegistryPath: path.relative(repoRoot, approvalRegistryPath),
+  ownerActionStatePath: path.relative(repoRoot, ownerActionStatePath),
   policyPath,
   policyUrl: `${repositoryUrl}/blob/main/${policyPath}`,
   artifactStates: ["missing", "draft", "in-review", "approved", "blocked", "not-applicable"],
@@ -701,13 +766,20 @@ const register = {
     "historical-non-authorizing",
     "not-applicable",
   ],
-  startRule: "executionAllowed is true only after every required artifact, dependency, authority, owner-action and five-seat council gate passes for the exact reviewed revision and hashes.",
-  approvalModel: {
+  startRule: "executionAllowed is derived only after every required artifact, exact-candidate review, dependency, authority, owner-action, five-seat Council, approval-publication, and exact-main activation gate passes.",
+  sourceEvidenceModel: {
+    schemaVersion: READINESS_SCHEMA_VERSION,
     artifactReviewDecisions: ["hold", "approved", "not-applicable"],
     councilSeatVerdicts: ["hold", "approved", "not-applicable"],
-    designStateDimensions,
-    designAccessibilityDimensions,
-    privateAuthorityEvidenceReferencePattern: "^P0-AUTH-[A-Z0-9-]{4,}$",
+    designStateDimensions: DESIGN_STATE_DIMENSIONS,
+    designAccessibilityDimensions: DESIGN_ACCESSIBILITY_DIMENSIONS,
+    requestedScopeClasses: ["local-synthetic", "private-execution", "release"],
+    scopeActionCompatibility: SCOPE_ACTION_COMPATIBILITY,
+    taskFilePurposes: TASK_FILE_PURPOSES,
+    taskFileGitModes: TASK_FILE_GIT_MODES,
+    taskFileDiffExclusions: TASK_FILE_DIFF_EXCLUSIONS,
+    taskFileDescendantDeltaPaths: TASK_FILE_DESCENDANT_DELTA_PATHS,
+    derivedOverridesForbidden: true,
   },
   summary: {
     taskCount: records.length,
@@ -724,12 +796,168 @@ const register = {
   tasks: records,
 };
 
-fs.writeFileSync(registerPath, `${JSON.stringify(register, null, 2)}\n`);
+const registerRelativePath = path.relative(repoRoot, registerPath);
+const existingRegisterContent = fs.existsSync(registerPath) ? fs.readFileSync(registerPath, "utf8") : null;
+const intendedRegisterContent = `${JSON.stringify(register, null, 2)}\n`;
+const refreshTargets = [
+  ...plannedArtifactTargets,
+  {
+    path: registerRelativePath,
+    exists: existingRegisterContent !== null,
+    content: existingRegisterContent,
+    artifactState: "draft",
+    artifactReviewDecision: "hold",
+    candidateBinding: false,
+    seatVerdicts: [],
+    attestationBindings: [],
+    evidenceBindings: [],
+  },
+];
+const intendedFiles = [...intendedArtifactFiles, { path: registerRelativePath, content: intendedRegisterContent }];
+const fetchedMainGuardPath = "P0-git-ref-origin-main";
+const sourceGuardInputs = [
+  [manifestPath, manifestContent],
+  [issueMapPath, issueMapContent],
+  [readinessStatePath, readinessStateContent],
+  [reviewerRegistryPath, reviewerRegistryContent],
+  [approvalRegistryPath, approvalRegistryContent],
+  [ownerActionStatePath, ownerActionStateContent],
+].map(([absolutePath, content]) => ({
+  path: path.relative(repoRoot, absolutePath),
+  exists: true,
+  content,
+}));
+sourceGuardInputs.push({
+  path: fetchedMainGuardPath,
+  exists: fetchedMainRevision !== null,
+  content: fetchedMainRevision,
+});
+const refreshPlan = planProtectedRefresh(refreshTargets, intendedFiles, sourceGuardInputs);
+if (!refreshPlan.allowed) {
+  throw new Error(`Protected refresh denied: ${refreshPlan.blockers.map((blocker) => `${blocker.code}${blocker.path ? `:${blocker.path}` : ""}`).join(", ")}`);
+}
+const changedPaths = refreshPlan.changes.map((change) => change.path);
+if (changedPaths.some((filePath) => filePath !== registerRelativePath)
+  && changedPaths.at(-1) !== registerRelativePath) {
+  throw new Error("REFRESH_REGISTER_LAST: every artifact promotion must be followed by the generated register as the unique last promotion");
+}
+
+const gitStagePath = execFileSync("git", ["rev-parse", "--git-path", `P0-readiness-refresh-${process.pid}`], {
+  cwd: repoRoot,
+  encoding: "utf8",
+}).trim();
+const stagingRoot = path.resolve(repoRoot, gitStagePath);
+const stagingParent = path.dirname(stagingRoot);
+const staleStagingEntries = fs.existsSync(stagingParent)
+  ? fs.readdirSync(stagingParent, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name.startsWith("P0-readiness-refresh-"))
+    .map((entry) => entry.name)
+  : [];
+if (staleStagingEntries.length > 0) {
+  throw new Error(`REFRESH_STALE_STAGING: inspect and recover prior interrupted staging before retrying (${staleStagingEntries.join(", ")})`);
+}
+const stagedPath = (relativePath) => path.join(stagingRoot, relativePath);
+const recoveryJournalPath = path.join(stagingRoot, "P0-recovery-journal.json");
+const adapter = {
+  read: async (relativePath) => {
+    if (relativePath === fetchedMainGuardPath) return readFetchedMainRevision();
+    const absolutePath = path.join(repoRoot, relativePath);
+    return fs.existsSync(absolutePath) ? fs.readFileSync(absolutePath, "utf8") : null;
+  },
+  readProtection: async (relativePath) => {
+    const absolutePath = path.join(repoRoot, relativePath);
+    const exists = fs.existsSync(absolutePath);
+    if (relativePath === registerRelativePath) {
+      return {
+        exists,
+        artifactState: "draft",
+        artifactReviewDecision: "hold",
+        candidateBinding: false,
+        seatVerdicts: [],
+        attestationBindings: [],
+        evidenceBindings: [],
+      };
+    }
+    const identity = artifactIdentityByPath.get(relativePath);
+    if (!identity) throw new Error("REFRESH_PROTECTION_UNKNOWN_TARGET");
+    const currentRegistry = parseJsonWithoutDuplicateKeys(
+      fs.readFileSync(approvalRegistryPath, "utf8"),
+      path.relative(repoRoot, approvalRegistryPath),
+    );
+    const content = exists ? fs.readFileSync(absolutePath, "utf8") : null;
+    return {
+      exists,
+      artifactState: exists ? artifactStateFromContent(content, identity.taskId, identity.kind) : null,
+      ...protectionMetadata(identity.taskId, identity.kind, currentRegistry),
+    };
+  },
+  stage: async (relativePath, content) => {
+    const target = stagedPath(relativePath);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, content);
+  },
+  readStaged: async (relativePath) => fs.readFileSync(stagedPath(relativePath), "utf8"),
+  writeRecoveryJournal: async (journal) => {
+    fs.mkdirSync(stagingRoot, { recursive: true });
+    const temporaryPath = `${recoveryJournalPath}.tmp`;
+    fs.writeFileSync(temporaryPath, `${JSON.stringify(journal, null, 2)}\n`, { flag: "wx" });
+    fs.renameSync(temporaryPath, recoveryJournalPath);
+    return true;
+  },
+  readRecoveryJournal: async () => fs.existsSync(recoveryJournalPath)
+    ? parseJsonWithoutDuplicateKeys(fs.readFileSync(recoveryJournalPath, "utf8"), "P0 recovery journal")
+    : null,
+  clearRecoveryJournal: async () => {
+    if (fs.existsSync(recoveryJournalPath)) fs.unlinkSync(recoveryJournalPath);
+    return !fs.existsSync(recoveryJournalPath);
+  },
+  promote: async (relativePath) => {
+    const target = path.join(repoRoot, relativePath);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.renameSync(stagedPath(relativePath), target);
+  },
+  discard: async (relativePath) => {
+    const target = stagedPath(relativePath);
+    if (fs.existsSync(target)) fs.unlinkSync(target);
+  },
+  restore: async (relativePath, originalContent) => {
+    const target = path.join(repoRoot, relativePath);
+    if (originalContent === null) {
+      if (fs.existsSync(target)) fs.unlinkSync(target);
+      return;
+    }
+    const rollback = `${target}.P0-rollback-${process.pid}`;
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(rollback, originalContent);
+    fs.renameSync(rollback, target);
+  },
+};
+const transaction = await executeRefreshTransaction(refreshPlan, adapter);
+const retainStagingForRecovery = transaction.applied !== true && transaction.restored !== true;
+if (!retainStagingForRecovery) {
+  try {
+    fs.rmSync(stagingRoot, { recursive: true, force: true });
+  } catch {
+    // A stale marker is fail-closed on the next run; successful/restored output
+    // bytes remain authoritative even if the empty staging directory persists.
+  }
+}
+if (!transaction.applied) {
+  throw new Error(`Artifact refresh transaction failed: ${transaction.code}; restored=${transaction.restored}; stagingRetained=${retainStagingForRecovery}`);
+}
+
 console.log(JSON.stringify({
-  register: path.relative(repoRoot, registerPath),
+  register: registerRelativePath,
+  schemaVersion: register.schemaVersion,
   tasks: records.length,
-  artifacts: records.length * Object.keys(artifactKinds).length,
+  artifacts: records.length * ARTIFACT_KINDS.length,
   ready: register.summary.readyCount,
   executionAllowed: register.summary.executionAllowedCount,
+  transaction: {
+    code: transaction.code,
+    changedPaths: transaction.changedPaths?.length ?? 0,
+    sourceGuardsIntact: transaction.sourceGuardsIntact === true,
+    fingerprint: refreshPlan.fingerprint,
+  },
   writes: writeCounts,
 }, null, 2));

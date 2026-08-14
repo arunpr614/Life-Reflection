@@ -1,7 +1,7 @@
 # Life in Days — Phase 1 Release Plan
 
 - **Owner:** Project Manager, accountable to the Product Council
-- **Baseline date:** 2026-08-14
+- **Baseline date:** 2026-08-15
 - **Planning timezone:** `Asia/Kolkata`
 - **Source of truth:** [Phase 1 Roadmap Manifest](PHASE1-ROADMAP-MANIFEST.json)
 - **Detailed implementation:** [Phase 1 Implementation Plan](../architecture/PHASE1-IMPLEMENTATION-PLAN.md)
@@ -14,7 +14,7 @@ Deliver eleven gated releases after the P0 planning baseline. R0 admits syntheti
 
 The release plan contains exactly **58 task work packages**. The same manifest drives this document, the review workbook, repository issues, and the live GitHub Project. A task may move to `Done` only when its own named evidence exists. Completing a PRD or design task does not complete its feature release.
 
-Current execution uses a five-seat council and the directly activated Goal under these public-safe records: [contextDigest](../council/execution/P0-PHASE1-CONTEXT-DIGEST.md); [councilCharter](../council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md); [authorization](../council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md); [decisions](../council/execution/P0-PHASE1-EXECUTION-DECISIONS.md); [ownerActionLedger](../council/execution/P0-OWNER-ACTION-LEDGER.md); [qaCharter](../council/agents/P0-QA-LEAD.md); [p0Review](../council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md); [taskState](../project/P0-PHASE1-TASK-STATE.json); [taskReadinessState](../project/P0-PHASE1-TASK-READINESS-STATE.json); [taskDefinitionOfReady](../council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md); [taskArtifactRegister](../project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json). Routine R0–R8 decisions are council-delegated only when every named gate passes. Named account/MFA/secret, terms/spend/provider, authentic-content/UAT, recovery-key/ceremony, final R9, and irreversible R10 acts remain human-only. Deployment is **Unknown — private read authority pending**.
+Current execution uses a five-seat council and the directly activated Goal under these public-safe records: [contextDigest](../council/execution/P0-PHASE1-CONTEXT-DIGEST.md); [councilCharter](../council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md); [authorization](../council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md); [decisions](../council/execution/P0-PHASE1-EXECUTION-DECISIONS.md); [ownerActionLedger](../council/execution/P0-OWNER-ACTION-LEDGER.md); [qaCharter](../council/agents/P0-QA-LEAD.md); [p0Review](../council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md); [taskState](../project/P0-PHASE1-TASK-STATE.json); [taskReadinessState](../project/P0-PHASE1-TASK-READINESS-STATE.json); [taskDefinitionOfReady](../council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md); [taskArtifactRegister](../project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json); [reviewerRegistry](../council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json); [approvalRegistry](../council/execution/P0-EXECUTION-APPROVAL-REGISTRY.json); [ownerActionState](../council/execution/P0-OWNER-ACTION-STATE.json). Routine R0–R8 decisions are council-delegated only when every named gate passes. Named account/MFA/secret, terms/spend/provider, authentic-content/UAT, recovery-key/ceremony, final R9, and irreversible R10 acts remain human-only. Deployment is **Unknown — private read authority pending**.
 
 ## 2. Roadmap status contract
 

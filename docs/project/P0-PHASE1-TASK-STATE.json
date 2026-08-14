@@ -30,6 +30,7 @@
     "PC-001": [
       "docs/council/COUNCIL-REVIEW.md",
       "docs/council/PHASE1-COUNCIL-DECISION-RECORD.md",
+      "docs/council/execution/P0-EXECUTION-APPROVAL-REGISTRY.json",
       "docs/council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md",
       "docs/council/execution/releases/P0-PC-001-READINESS-HARDENING-PLANNING-REVIEW.md"
     ],

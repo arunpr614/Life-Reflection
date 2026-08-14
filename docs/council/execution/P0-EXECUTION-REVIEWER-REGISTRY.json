@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "1.0.0",
+  "asOf": "2026-08-15",
+  "evidenceBoundary": "Stable public-safe identities and one role per identity only. Agent roles cannot attest a non-delegable human act. The inactive owner placeholder becomes eligible only after explicit owner confirmation; this registry contains no credential, private account, target, topology, recovery value, authentic content, or raw evidence.",
+  "reviewers": [
+    {
+      "reviewerId": "codex-primary-integrator-01",
+      "role": "implementation",
+      "identityClass": "agent",
+      "active": true
+    },
+    {
+      "reviewerId": "codex-product-manager-01",
+      "role": "product",
+      "identityClass": "agent",
+      "active": true
+    },
+    {
+      "reviewerId": "codex-ui-ux-designer-01",
+      "role": "design",
+      "identityClass": "agent",
+      "active": true
+    },
+    {
+      "reviewerId": "codex-technical-architect-01",
+      "role": "architecture",
+      "identityClass": "agent",
+      "active": true
+    },
+    {
+      "reviewerId": "codex-independent-qa-01",
+      "role": "qa",
+      "identityClass": "agent",
+      "active": true
+    },
+    {
+      "reviewerId": "codex-project-manager-01",
+      "role": "project",
+      "identityClass": "agent",
+      "active": true
+    },
+    {
+      "reviewerId": "codex-evidence-producer-01",
+      "role": "evidence-producer",
+      "identityClass": "agent",
+      "active": true
+    },
+    {
+      "reviewerId": "lid-owner-authority-pending",
+      "role": "owner-authority",
+      "identityClass": "human",
+      "active": false
+    }
+  ]
+}
