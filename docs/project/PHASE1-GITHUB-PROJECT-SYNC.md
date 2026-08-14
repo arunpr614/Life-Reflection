@@ -1,6 +1,6 @@
 # Phase 1 GitHub Project V2 sync
 
-Status: implementation-ready, dry-run and sanitized live read-only preflight validated; no live GitHub changes performed by this spike
+Status: live sync, saved views, UI configuration, artifact regeneration, and read-only reconciliation verified on 2026-08-14
 
 Target: <https://github.com/users/arunpr614/projects/1>
 
@@ -12,28 +12,30 @@ Tool: [`sync_phase1_github.mjs`](../../tools/sync_phase1_github.mjs)
 
 Use the manifest-driven script to create or update the 58 repository issues, add every issue to Project #1, and set ten Project fields. Keep dry-run as the default. Require an explicit `--apply` for mutations and use `--project-only` when the issues already exist.
 
-The script also creates two saved views when their names do not already exist:
+The script creates or updates two saved views by exact name:
 
 | View | Layout | API configuration |
 | --- | --- | --- |
-| Phase 1 Status | Board | Repository filter, visible planning fields, columns grouped by Status |
-| Phase 1 Roadmap | Roadmap | Repository filter; group by Milestone when GitHub exposes a numeric Milestone field ID |
+| Phase 1 Status | Board | GraphQL creates/updates layout, issue-only repository filter, and all visible planning fields; Status columns remain a UI setting |
+| Phase 1 Roadmap | Roadmap | GraphQL creates/updates layout and issue-only repository filter; date fields and Milestone grouping remain UI settings |
 
-The Status board requests these visible fields: Status, Milestone, Start date, Target date, Priority, Owner role, PRD / PID, Design artifact, Requirement IDs, Evidence, and Task summary. The REST API states that `visible_fields` is not applicable to roadmap views, so those columns are configured on the board only.
+The Status board requests these visible fields: Status, Milestone, Start date, Target date, Priority, Owner role, PRD / PID, Design artifact, Requirement IDs, Evidence, and Task summary. GraphQL's `ProjectV2ViewConfigurationInput` exposes `visibleFieldIds`, so those columns are synchronized on the board.
 
-GitHub's current view APIs do not expose the roadmap's selected start and target date fields. After the sync, open **Phase 1 Roadmap** and select **Start date** and **Target date** in the view's date-field settings if GitHub did not select them automatically.
+GitHub's current GraphQL view inputs do not expose board grouping or the roadmap's grouping and selected date fields. The live UI configuration therefore keeps Status as the board columns and uses Milestone, Start date, and Target date in the roadmap.
 
 ## Evidence boundary
 
-Read-only discovery on 2026-08-14 established:
+Live apply and independent read-only reconciliation on 2026-08-14 established:
 
 - GitHub CLI 2.94.0 is installed and includes `gh project` field/item commands.
 - The credential initially lacked Project access; it was subsequently refreshed outside this spike and now has `project`. The smallest direct Project query succeeds.
-- Sanitized live metadata confirms Project #1 is linked to `arunpr614/Life-Reflection` and currently has 25 GraphQL-visible fields. All 11 fields needed by the board—including built-in Milestone—exist, have the expected types, and expose numeric IDs accepted by the versioned view API. Status has exactly Backlog, Next, In progress, and Done.
-- The Project currently has eight pre-existing draft items and three saved views (two roadmap and one table). Neither `Phase 1 Status` nor `Phase 1 Roadmap` exists. No draft title, body, field value, account ID, Project/item/field node ID, or other content was retained in this artifact.
+- Sanitized live metadata confirms Project #1 is linked to `arunpr614/Life-Reflection` and currently has 25 GraphQL-visible fields. All 11 fields needed by the board—including built-in Milestone—exist with the expected types and GraphQL node IDs. Status has exactly Backlog, Next, In progress, and Done.
+- The authorized apply created or synchronized 58 issue-backed Phase 1 items and 12 milestones; issue state is 45 open and 13 evidence-backed Done/closed. The eight pre-existing drafts and the planning pull request remain separate from the canonical task set.
+- Every task matches its issue title, body, labels, milestone, state, Project item, and all ten Project field values. That is 580 field-value checks with zero mismatches; Status is exactly 40 Backlog, 4 Next, 1 In progress, and 13 Done. R10 has no milestone due date or task dates.
+- **Phase 1 Status** and **Phase 1 Roadmap** exist with the issue-only `repo:arunpr614/Life-Reflection is:issue` filter, so each view matches exactly 58 tasks. The board is grouped by Status and exposes all requested fields. The roadmap is grouped by Milestone and visibly uses Start date and Target date; its zoom is Month and no optional marker is configured.
+- The first saved-view attempt exposed a live compatibility failure: the published user-owned `POST /users/{user_id}/projectsV2/{project_number}/views` route returned 404 with API version `2026-03-10`. The idempotent recovery used the live GraphQL view mutations and succeeded without deleting or duplicating existing content.
 - Live GraphQL schema introspection shows `createProjectV2View`, `updateProjectV2View`, and `deleteProjectV2View`. `CreateProjectV2ViewInput` accepts name, layout, project ID, and visible-field configuration. `UpdateProjectV2ViewInput` additionally accepts a filter. Neither input exposes grouping or roadmap date-field selection.
-- The versioned REST view-create endpoint accepts `table`, `board`, or `roadmap`, plus filter, visible fields, sorting, horizontal grouping, and board vertical grouping. It does not accept roadmap start/target field IDs.
-- No command in this spike refreshed authentication or mutated repository, Project, issue, field, view, or workflow state. Every live command issued here was a query or schema introspection.
+- The public issue map, Markdown plan, and both workbook copies were regenerated with the 58 live issue URLs. The map intentionally retains no private Project item, field, account, or view node IDs. This evidence validates planning synchronization only; it does not claim application implementation, Hetzner readiness, deployment, or release acceptance.
 
 ## Smallest authorization refresh
 
@@ -49,7 +51,7 @@ For the actual sync:
 gh auth refresh -h github.com -s project
 ```
 
-`project` is the smallest additional OAuth scope that covers both Project V2 queries and mutations; it subsumes the read-only Project access needed by the preflight. The existing repository authorization is still needed to create or update issues. The current user-owned Project view endpoint does not support fine-grained PATs, GitHub App user tokens, or GitHub App installation tokens, so this runbook assumes the GitHub CLI's user OAuth/classic token.
+`project` is the smallest additional OAuth scope that covers both Project V2 queries and mutations; it subsumes the read-only Project access needed by the preflight. The existing repository authorization is still needed to create or update issues. This runbook assumes the GitHub CLI's current authenticated user token.
 
 The current CLI credential now has `project`; the refresh commands above remain the minimum-scope recipe for another workstation or replacement credential.
 
@@ -138,39 +140,69 @@ For efficiency, the script batches all ten `updateProjectV2ItemFieldValue` or `c
 
 ## Saved-view API
 
-`gh project` currently has no saved-view create/update subcommand. The script uses the official REST endpoint with the required API version header. A board-create request has this shape:
+`gh project` currently has no saved-view create/update subcommand. The script uses the `createProjectV2View` and `updateProjectV2View` mutations exposed by the live GraphQL schema.
+
+Creation uses this shape; the Status board supplies all 11 field node IDs in `visibleFieldIds`, while the Roadmap omits `configuration`:
 
 ```bash
-gh api --method POST \
-  -H 'Accept: application/vnd.github+json' \
-  -H 'X-GitHub-Api-Version: 2026-03-10' \
-  'users/USER_DATABASE_ID/projectsV2/1/views' \
-  --input - <<'JSON'
+gh api graphql --input - <<'JSON'
 {
-  "name": "Phase 1 Status",
-  "layout": "board",
-  "filter": "repo:arunpr614/Life-Reflection",
-  "visible_fields": [
-    STATUS_FIELD_DATABASE_ID,
-    MILESTONE_FIELD_DATABASE_ID,
-    START_FIELD_DATABASE_ID,
-    TARGET_FIELD_DATABASE_ID,
-    PRIORITY_FIELD_DATABASE_ID,
-    OWNER_ROLE_FIELD_DATABASE_ID,
-    PRD_PID_FIELD_DATABASE_ID,
-    DESIGN_FIELD_DATABASE_ID,
-    REQUIREMENTS_FIELD_DATABASE_ID,
-    EVIDENCE_FIELD_DATABASE_ID,
-    SUMMARY_FIELD_DATABASE_ID
-  ],
-  "vertical_group_by": [STATUS_FIELD_DATABASE_ID]
+  "query": "mutation($input:CreateProjectV2ViewInput!){createProjectV2View(input:$input){projectV2View{id name layout}}}",
+  "variables": {
+    "input": {
+      "projectId": "PROJECT_NODE_ID",
+      "name": "Phase 1 Status",
+      "layout": "BOARD_LAYOUT",
+      "configuration": {
+        "visibleFieldIds": [
+          "STATUS_FIELD_NODE_ID",
+          "MILESTONE_FIELD_NODE_ID",
+          "START_FIELD_NODE_ID",
+          "TARGET_FIELD_NODE_ID",
+          "PRIORITY_FIELD_NODE_ID",
+          "OWNER_ROLE_FIELD_NODE_ID",
+          "PRD_PID_FIELD_NODE_ID",
+          "DESIGN_FIELD_NODE_ID",
+          "REQUIREMENTS_FIELD_NODE_ID",
+          "EVIDENCE_FIELD_NODE_ID",
+          "SUMMARY_FIELD_NODE_ID"
+        ]
+      }
+    }
+  }
 }
 JSON
 ```
 
-For a user-owned Project, this endpoint's path uses the user's numeric database ID. The script resolves it with `GET /users/arunpr614` and does not persist it.
+`CreateProjectV2ViewInput` does not contain `filter`, so the script immediately follows creation with an update. The same update runs when a matching view already exists:
 
-The view-create REST API is create-only at present. The script queries existing views with GraphQL and skips a view whose exact name already exists; it does not delete/recreate that view or assume its configuration. Correct a same-name misconfigured view in the UI, or explicitly delete/recreate it in a separately approved operation.
+```bash
+gh api graphql --input - <<'JSON'
+{
+  "query": "mutation($input:UpdateProjectV2ViewInput!){updateProjectV2View(input:$input){projectV2View{id name layout filter}}}",
+  "variables": {
+    "input": {
+      "viewId": "VIEW_NODE_ID",
+      "name": "Phase 1 Status",
+      "layout": "BOARD_LAYOUT",
+      "filter": "repo:arunpr614/Life-Reflection is:issue",
+      "configuration": {
+        "visibleFieldIds": ["STATUS_FIELD_NODE_ID", "OTHER_VISIBLE_FIELD_NODE_IDS"]
+      }
+    }
+  }
+}
+JSON
+```
+
+Idempotence is exact-name based:
+
+- No match: create the view, then update its filter and configuration.
+- One match: update its name, layout, filter, and board-visible fields in place.
+- Multiple exact matches: stop without guessing which view to modify.
+- A failure after create but before update is safe to rerun; the next run finds and updates the new view.
+
+The live inputs expose no horizontal/vertical grouping, roadmap date-field selection, zoom, marker, or view-order properties. Those settings remain explicit UI completion steps; the script does not claim them as API-synchronized.
 
 ## Running the tool
 
@@ -192,6 +224,8 @@ If all 58 issues already exist and only Project #1 should change:
 node tools/sync_phase1_github.mjs --apply --project-only
 ```
 
+That project-only command is the least expansive recovery path when repository issues already exist. It idempotently refreshes the 58 Project item fields, creates or updates the two saved views, and writes the issue map without rewriting repository issues or milestones. It was used successfully to recover from the initial saved-view endpoint failure.
+
 Other guarded modes:
 
 ```bash
@@ -207,24 +241,25 @@ node tools/sync_phase1_github.mjs --apply --close-done
 - The operation is idempotent at the stable task-ID level and is safe to rerun after a partial failure.
 - It does not delete issues, labels, milestones, Project items, Project fields, field options, or views.
 - It preserves unrelated Project single-select options and unrelated views.
+- It fails closed if the trigger-only R10 milestone acquires a due date. GitHub's milestone API rejects both `null` and an empty string as a clearing value, so clear that date in the GitHub UI before rerunning rather than silently retaining drift.
 - It is not transactional. A network/API failure can leave a prefix of tasks synchronized; rerun after resolving the error.
 - Review the dry-run first. After an apply, rerun read-only Project queries and compare all 58 item values to the manifest before calling the roadmap synchronized.
 - If an incorrect field value is written, correct the manifest and rerun. Removing a mistakenly added Project item or view is a separate destructive operation and is outside this script.
 
-## UI-only completion checklist
+## UI-only completion record
 
-1. Open **Phase 1 Roadmap**.
-2. In the view settings, confirm **Start date** is the start field and **Target date** is the target field.
-3. Choose the desired zoom level and date markers.
-4. Confirm **Phase 1 Status** uses Status as its board columns.
-5. Reorder or rename saved views if desired.
-6. Treat R10's blank dates as intentional; do not assign dates until its threshold trigger is approved.
+- [x] **Phase 1 Status** uses Status as its columns and shows Backlog, Next, In progress, and Done.
+- [x] **Phase 1 Roadmap** groups rows by Milestone.
+- [x] **Start date** and **Target date** drive the roadmap bars.
+- [x] Month zoom is retained; no optional date marker is required for this baseline.
+- [x] Both views use the issue-only repository filter and display exactly 58 matching items.
+- [x] R10 dates remain blank until its measured threshold trigger is approved.
 
 ## First-party sources
 
 - GitHub, [Using the API to manage Projects](https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/using-the-api-to-manage-projects?tool=cli)
 - GitHub, [OAuth scopes](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps)
-- GitHub, [REST API endpoints for Project views](https://docs.github.com/en/rest/projects/views?apiVersion=2026-03-10)
+- GitHub, [REST API endpoints for Project views](https://docs.github.com/en/rest/projects/views?apiVersion=2026-03-10) — published endpoint evaluated during the spike; the live user-owned POST returned 404, so the script does not use it
 - GitHub CLI, [`gh project`](https://cli.github.com/manual/gh_project)
 - GitHub CLI, [`gh project field-create`](https://cli.github.com/manual/gh_project_field-create)
 - GitHub CLI, [`gh project item-add`](https://cli.github.com/manual/gh_project_item-add)

@@ -165,13 +165,26 @@ const projectFieldSpecs = [
 const savedViewSpecs = [
   {
     name: "Phase 1 Status",
-    layout: "board",
-    purpose: "Board columns grouped by Status",
+    layout: "BOARD_LAYOUT",
+    purpose: "Board view with all Phase 1 planning fields; select Status columns in the UI",
+    visibleFieldNames: [
+      "Status",
+      "Milestone",
+      "Priority",
+      "Start date",
+      "Target date",
+      "Owner role",
+      "PRD / PID",
+      "Design artifact",
+      "Requirement IDs",
+      "Evidence",
+      "Task summary",
+    ],
   },
   {
     name: "Phase 1 Roadmap",
-    layout: "roadmap",
-    purpose: "Date view for Start date and Target date",
+    layout: "ROADMAP_LAYOUT",
+    purpose: "Roadmap view; select Start date, Target date, and Milestone grouping in the UI",
   },
 ];
 
@@ -327,8 +340,9 @@ const plan = {
     views: savedViewSpecs,
     applyBoundary: "addProjectV2ItemById runs before item field updates; existing items are returned rather than duplicated",
     uiOnlyAfterSync: [
+      "Open Phase 1 Status and select Status as the board's column field.",
       "Open Phase 1 Roadmap and select Start date and Target date as its date fields if GitHub does not auto-select them.",
-      "Choose roadmap zoom/markers and reorder saved views; current public APIs do not expose those settings.",
+      "Select Milestone as the roadmap grouping, then choose roadmap zoom/markers and reorder saved views; current GraphQL view inputs do not expose those settings.",
     ],
   },
   finalIssueStates: {
@@ -369,13 +383,19 @@ function syncRepository() {
   const existingMilestones = apiPaginated(`repos/${repo}/milestones?state=all&per_page=100`);
   const milestoneByTitle = Object.fromEntries(existingMilestones.map((milestone) => [milestone.title, milestone]));
   for (const release of manifest.releases) {
+    const existing = milestoneByTitle[release.id];
     const payload = {
       title: release.id,
       description: `${release.name}. ${release.outcome}\n\nProposed planning estimate; evidence gates control entry and exit.`,
-      due_on: release.targetDate ? `${release.targetDate}T12:00:00Z` : null,
       state: "open",
     };
-    const existing = milestoneByTitle[release.id];
+    if (release.targetDate) {
+      payload.due_on = `${release.targetDate}T12:00:00Z`;
+    } else if (existing?.due_on) {
+      // GitHub's milestone API rejects both null and an empty string as a
+      // clearing value. Stop rather than silently preserve a dated R10.
+      throw new Error(`${release.id}: expected an undated milestone; clear its due date in GitHub before rerunning`);
+    }
     const milestone = existing
       ? api("PATCH", `repos/${repo}/milestones/${existing.number}`, payload)
       : api("POST", `repos/${repo}/milestones`, payload);
@@ -696,66 +716,67 @@ function queryProjectViews(projectId) {
   return views;
 }
 
-function numericFieldId(fields, name) {
-  const id = fields[name]?.databaseId;
-  if (!Number.isInteger(id)) throw new Error(`Project field ${name} has no numeric ID for the view API`);
+function nodeFieldId(fields, name) {
+  const id = fields[name]?.id;
+  if (typeof id !== "string" || !id) throw new Error(`Project field ${name} has no node ID for the view API`);
   return id;
 }
 
 function createSavedViews(projectId) {
-  const existingNames = new Set(queryProjectViews(projectId).map((view) => view.name));
+  const existingViews = queryProjectViews(projectId);
   const viewFields = Object.fromEntries(queryProjectFields(projectId).map((field) => [field.name, field]));
-  const account = api("GET", `users/${projectOwner}`);
-  if (!Number.isInteger(account.id)) throw new Error("Could not resolve the Project owner's numeric user ID");
-  const endpoint = `users/${account.id}/projectsV2/${projectNumber}/views`;
-  const headers = [
-    "Accept: application/vnd.github+json",
-    "X-GitHub-Api-Version: 2026-03-10",
-  ];
-  const filter = `repo:${repo}`;
+  const filter = `repo:${repo} is:issue`;
   const created = [];
-  const existing = [];
+  const updated = [];
 
-  if (existingNames.has(savedViewSpecs[0].name)) {
-    existing.push(savedViewSpecs[0].name);
-  } else {
-    api("POST", endpoint, {
-      name: savedViewSpecs[0].name,
-      layout: "board",
-      filter,
-      visible_fields: [
-        "Status",
-        "Milestone",
-        "Priority",
-        "Start date",
-        "Target date",
-        "Owner role",
-        "PRD / PID",
-        "Design artifact",
-        "Requirement IDs",
-        "Evidence",
-        "Task summary",
-      ].map((name) => numericFieldId(viewFields, name)),
-      vertical_group_by: [numericFieldId(viewFields, "Status")],
-    }, { headers });
-    created.push(savedViewSpecs[0].name);
+  for (const spec of savedViewSpecs) {
+    const matches = existingViews.filter((view) => view.name === spec.name);
+    if (matches.length > 1) throw new Error(`Multiple Project views match ${spec.name}`);
+    const configuration = spec.visibleFieldNames
+      ? { visibleFieldIds: spec.visibleFieldNames.map((name) => nodeFieldId(viewFields, name)) }
+      : undefined;
+    let view = matches[0];
+
+    if (!view) {
+      const data = graphql(`
+        mutation CreatePhase1View($input: CreateProjectV2ViewInput!) {
+          createProjectV2View(input: $input) {
+            projectV2View { id name layout }
+          }
+        }
+      `, {
+        input: {
+          projectId,
+          name: spec.name,
+          layout: spec.layout,
+          ...(configuration ? { configuration } : {}),
+        },
+      });
+      view = data.createProjectV2View?.projectV2View;
+      if (!view?.id) throw new Error(`GitHub did not return the created Project view ${spec.name}`);
+      created.push(spec.name);
+    } else {
+      updated.push(spec.name);
+    }
+
+    graphql(`
+      mutation UpdatePhase1View($input: UpdateProjectV2ViewInput!) {
+        updateProjectV2View(input: $input) {
+          projectV2View { id name layout filter }
+        }
+      }
+    `, {
+      input: {
+        viewId: view.id,
+        name: spec.name,
+        layout: spec.layout,
+        filter,
+        ...(configuration ? { configuration } : {}),
+      },
+    });
   }
 
-  if (existingNames.has(savedViewSpecs[1].name)) {
-    existing.push(savedViewSpecs[1].name);
-  } else {
-    const milestone = viewFields.Milestone;
-    const payload = {
-      name: savedViewSpecs[1].name,
-      layout: "roadmap",
-      filter,
-    };
-    if (Number.isInteger(milestone?.databaseId)) payload.group_by = [milestone.databaseId];
-    api("POST", endpoint, payload, { headers });
-    created.push(savedViewSpecs[1].name);
-  }
-
-  return { created, existing };
+  return { created, updated };
 }
 
 function syncProject(issueById) {
@@ -771,7 +792,7 @@ function syncProject(issueById) {
     projectItemByTask[task.id] = itemId;
   }
 
-  const views = skipViews ? { created: [], existing: [] } : createSavedViews(project.id);
+  const views = skipViews ? { created: [], updated: [] } : createSavedViews(project.id);
   return { projectItemByTask, views };
 }
 
@@ -801,7 +822,6 @@ const issueMap = {
       url: issue.html_url,
       expectedStatus: task.status,
       expectedFinalState: task.status === "Done" ? "closed" : "open",
-      projectItemId: projectResult?.projectItemByTask[task.id] ?? null,
     }];
   })),
 };
@@ -823,7 +843,7 @@ console.log(JSON.stringify({
     : Object.keys(milestoneByTitle).filter((title) => manifest.releases.some((release) => release.id === title)).length,
   issues: Object.keys(issueById).filter((id) => manifest.tasks.some((task) => task.id === id)).length,
   projectItems: projectResult ? Object.keys(projectResult.projectItemByTask).length : 0,
-  views: projectResult?.views ?? { created: [], existing: [] },
+  views: projectResult?.views ?? { created: [], updated: [] },
   expectedFinalStates: plan.finalIssueStates,
   issueMap: path.relative(repoRoot, issueMapPath),
   uiOnlyRemaining: projectResult ? plan.projectSync.uiOnlyAfterSync : [],

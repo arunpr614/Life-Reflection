@@ -544,6 +544,8 @@ ${releaseRows}
 
 Every row carries the metadata required in GitHub: lane, milestone, dates, description, exact requirement IDs, PRD/PID link, and design-artifact link. Dependencies, acceptance evidence, architecture link, and rollback/restore impact are retained in the JSON manifest and issue body.
 
+Task dependency links are progressive handoffs unless a release entry gate explicitly says otherwise. Discovery, definition, design, and architecture work may overlap while inputs stabilize; a dependent task cannot close, admit authentic data, or pass a release gate until its prerequisite evidence exists. Milestone dependencies in Section 3 remain hard release-entry gates.
+
 | ID | Status | Milestone | Owner | Start | Target | Description | Requirement IDs | PRD/PID | Design artifacts |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 ${taskRows}

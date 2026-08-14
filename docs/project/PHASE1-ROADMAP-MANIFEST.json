@@ -168,8 +168,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "This planning artifact is complete; it does not claim feature implementation, deployment, production readiness, or release acceptance.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 2,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/2",
         "projectItemId": null
       }
     },
@@ -208,8 +208,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "This planning artifact is complete; it does not claim feature implementation, deployment, production readiness, or release acceptance.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 3,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/3",
         "projectItemId": null
       }
     },
@@ -258,8 +258,8 @@
       "rollbackRestoreImpact": "No personal-data mutation is authorized by this task; it must define or prove reversible deployment and recovery before dependent implementation.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 4,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/4",
         "projectItemId": null
       }
     },
@@ -308,8 +308,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "This planning artifact is complete; it does not claim feature implementation, deployment, production readiness, or release acceptance.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 5,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/5",
         "projectItemId": null
       }
     },
@@ -353,8 +353,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 6,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/6",
         "projectItemId": null
       }
     },
@@ -404,8 +404,8 @@
       "rollbackRestoreImpact": "No personal-data mutation is authorized by this task; it must define or prove reversible deployment and recovery before dependent implementation.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 7,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/7",
         "projectItemId": null
       }
     },
@@ -455,8 +455,8 @@
       "rollbackRestoreImpact": "Adds synthetic encrypted database/configuration and job state only; migration must be reversible and backup/restore coverage must pass before release acceptance.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 8,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/8",
         "projectItemId": null
       }
     },
@@ -505,8 +505,8 @@
       "rollbackRestoreImpact": "Validates rollback and restore for every persistent shape introduced by the milestone; acceptance never substitutes a successful backup upload for restore evidence.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 9,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/9",
         "projectItemId": null
       }
     },
@@ -557,8 +557,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "This planning artifact is complete; it does not claim feature implementation, deployment, production readiness, or release acceptance.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 10,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/10",
         "projectItemId": null
       }
     },
@@ -606,8 +606,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 11,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/11",
         "projectItemId": null
       }
     },
@@ -655,8 +655,8 @@
       "rollbackRestoreImpact": "No personal-data mutation is authorized by this task; it must define or prove reversible deployment and recovery before dependent implementation.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 12,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/12",
         "projectItemId": null
       }
     },
@@ -709,8 +709,8 @@
       "rollbackRestoreImpact": "Adds journal-day, source-file, checksum, and correction-ready records; migration must be reversible and backup/restore coverage must pass before release acceptance.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 13,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/13",
         "projectItemId": null
       }
     },
@@ -761,8 +761,8 @@
       "rollbackRestoreImpact": "Validates rollback and restore for every persistent shape introduced by the milestone; acceptance never substitutes a successful backup upload for restore evidence.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 14,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/14",
         "projectItemId": null
       }
     },
@@ -817,8 +817,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "This planning artifact is complete; it does not claim feature implementation, deployment, production readiness, or release acceptance.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 15,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/15",
         "projectItemId": null
       }
     },
@@ -867,8 +867,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 16,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/16",
         "projectItemId": null
       }
     },
@@ -924,8 +924,8 @@
       "rollbackRestoreImpact": "No personal-data mutation is authorized by this task; it must define or prove reversible deployment and recovery before dependent implementation.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 17,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/17",
         "projectItemId": null
       }
     },
@@ -977,8 +977,8 @@
       "rollbackRestoreImpact": "Adds encrypted media, derivative, gallery, duplicate-reference, and review-queue state; migration must be reversible and backup/restore coverage must pass before release acceptance.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 18,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/18",
         "projectItemId": null
       }
     },
@@ -1025,8 +1025,8 @@
       "rollbackRestoreImpact": "Adds encrypted media, derivative, gallery, duplicate-reference, and review-queue state; migration must be reversible and backup/restore coverage must pass before release acceptance.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 19,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/19",
         "projectItemId": null
       }
     },
@@ -1082,8 +1082,8 @@
       "rollbackRestoreImpact": "Validates rollback and restore for every persistent shape introduced by the milestone; acceptance never substitutes a successful backup upload for restore evidence.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 20,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/20",
         "projectItemId": null
       }
     },
@@ -1129,8 +1129,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "This planning artifact is complete; it does not claim feature implementation, deployment, production readiness, or release acceptance.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 21,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/21",
         "projectItemId": null
       }
     },
@@ -1174,8 +1174,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 22,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/22",
         "projectItemId": null
       }
     },
@@ -1222,8 +1222,8 @@
       "rollbackRestoreImpact": "No personal-data mutation is authorized by this task; it must define or prove reversible deployment and recovery before dependent implementation.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 23,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/23",
         "projectItemId": null
       }
     },
@@ -1271,8 +1271,8 @@
       "rollbackRestoreImpact": "Adds search index, date-review, and atomic redating state; migration must be reversible and backup/restore coverage must pass before release acceptance.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 24,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/24",
         "projectItemId": null
       }
     },
@@ -1318,8 +1318,8 @@
       "rollbackRestoreImpact": "Validates rollback and restore for every persistent shape introduced by the milestone; acceptance never substitutes a successful backup upload for restore evidence.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 25,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/25",
         "projectItemId": null
       }
     },
@@ -1366,8 +1366,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "This planning artifact is complete; it does not claim feature implementation, deployment, production readiness, or release acceptance.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 26,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/26",
         "projectItemId": null
       }
     },
@@ -1412,8 +1412,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 27,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/27",
         "projectItemId": null
       }
     },
@@ -1461,8 +1461,8 @@
       "rollbackRestoreImpact": "No personal-data mutation is authorized by this task; it must define or prove reversible deployment and recovery before dependent implementation.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 28,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/28",
         "projectItemId": null
       }
     },
@@ -1509,8 +1509,8 @@
       "rollbackRestoreImpact": "Adds revision, Correction, conflict, Trash, suppression, and export state; migration must be reversible and backup/restore coverage must pass before release acceptance.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 29,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/29",
         "projectItemId": null
       }
     },
@@ -1554,8 +1554,8 @@
       "rollbackRestoreImpact": "Adds revision, Correction, conflict, Trash, suppression, and export state; migration must be reversible and backup/restore coverage must pass before release acceptance.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 30,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/30",
         "projectItemId": null
       }
     },
@@ -1603,8 +1603,8 @@
       "rollbackRestoreImpact": "Validates rollback and restore for every persistent shape introduced by the milestone; acceptance never substitutes a successful backup upload for restore evidence.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 31,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/31",
         "projectItemId": null
       }
     },
@@ -1647,8 +1647,8 @@
       "rollbackRestoreImpact": "No personal-data mutation is authorized by this task; it must define or prove reversible deployment and recovery before dependent implementation.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 32,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/32",
         "projectItemId": null
       }
     },
@@ -1696,8 +1696,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "This planning artifact is complete; it does not claim feature implementation, deployment, production readiness, or release acceptance.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 33,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/33",
         "projectItemId": null
       }
     },
@@ -1743,8 +1743,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 34,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/34",
         "projectItemId": null
       }
     },
@@ -1794,8 +1794,8 @@
       "rollbackRestoreImpact": "No personal-data mutation is authorized by this task; it must define or prove reversible deployment and recovery before dependent implementation.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 35,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/35",
         "projectItemId": null
       }
     },
@@ -1845,8 +1845,8 @@
       "rollbackRestoreImpact": "Adds VoiceNotes identity, activation, revision, reconciliation, and suppression state; migration must be reversible and backup/restore coverage must pass before release acceptance.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 36,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/36",
         "projectItemId": null
       }
     },
@@ -1894,8 +1894,8 @@
       "rollbackRestoreImpact": "Validates rollback and restore for every persistent shape introduced by the milestone; acceptance never substitutes a successful backup upload for restore evidence.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 37,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/37",
         "projectItemId": null
       }
     },
@@ -1941,8 +1941,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 38,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/38",
         "projectItemId": null
       }
     },
@@ -1993,8 +1993,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "This planning artifact is complete; it does not claim feature implementation, deployment, production readiness, or release acceptance.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 39,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/39",
         "projectItemId": null
       }
     },
@@ -2042,8 +2042,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 40,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/40",
         "projectItemId": null
       }
     },
@@ -2096,8 +2096,8 @@
       "rollbackRestoreImpact": "No personal-data mutation is authorized by this task; it must define or prove reversible deployment and recovery before dependent implementation.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 41,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/41",
         "projectItemId": null
       }
     },
@@ -2150,8 +2150,8 @@
       "rollbackRestoreImpact": "Adds derived-text versions, protection, provenance, job, and usage-ledger state; migration must be reversible and backup/restore coverage must pass before release acceptance.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 42,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/42",
         "projectItemId": null
       }
     },
@@ -2202,8 +2202,8 @@
       "rollbackRestoreImpact": "Validates rollback and restore for every persistent shape introduced by the milestone; acceptance never substitutes a successful backup upload for restore evidence.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 43,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/43",
         "projectItemId": null
       }
     },
@@ -2249,8 +2249,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 44,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/44",
         "projectItemId": null
       }
     },
@@ -2305,8 +2305,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "This planning artifact is complete; it does not claim feature implementation, deployment, production readiness, or release acceptance.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 45,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/45",
         "projectItemId": null
       }
     },
@@ -2357,8 +2357,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 46,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/46",
         "projectItemId": null
       }
     },
@@ -2415,8 +2415,8 @@
       "rollbackRestoreImpact": "No personal-data mutation is authorized by this task; it must define or prove reversible deployment and recovery before dependent implementation.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 47,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/47",
         "projectItemId": null
       }
     },
@@ -2473,8 +2473,8 @@
       "rollbackRestoreImpact": "Adds artwork versions, job, provenance, suppression, and cover-selection state; migration must be reversible and backup/restore coverage must pass before release acceptance.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 48,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/48",
         "projectItemId": null
       }
     },
@@ -2529,8 +2529,8 @@
       "rollbackRestoreImpact": "Validates rollback and restore for every persistent shape introduced by the milestone; acceptance never substitutes a successful backup upload for restore evidence.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 49,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/49",
         "projectItemId": null
       }
     },
@@ -2573,8 +2573,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "This planning artifact is complete; it does not claim feature implementation, deployment, production readiness, or release acceptance.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 50,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/50",
         "projectItemId": null
       }
     },
@@ -2618,8 +2618,8 @@
       "rollbackRestoreImpact": "No personal-data mutation is authorized by this task; it must define or prove reversible deployment and recovery before dependent implementation.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 51,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/51",
         "projectItemId": null
       }
     },
@@ -2729,8 +2729,8 @@
       "rollbackRestoreImpact": "Validates rollback and restore for every persistent shape introduced by the milestone; acceptance never substitutes a successful backup upload for restore evidence.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 52,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/52",
         "projectItemId": null
       }
     },
@@ -2839,8 +2839,8 @@
       "rollbackRestoreImpact": "Validates rollback and restore for every persistent shape introduced by the milestone; acceptance never substitutes a successful backup upload for restore evidence.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 53,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/53",
         "projectItemId": null
       }
     },
@@ -2949,8 +2949,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "This planning artifact is complete; it does not claim feature implementation, deployment, production readiness, or release acceptance.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 54,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/54",
         "projectItemId": null
       }
     },
@@ -3060,8 +3060,8 @@
       "rollbackRestoreImpact": "Validates rollback and restore for every persistent shape introduced by the milestone; acceptance never substitutes a successful backup upload for restore evidence.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 55,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/55",
         "projectItemId": null
       }
     },
@@ -3170,8 +3170,8 @@
       "rollbackRestoreImpact": "Validates rollback and restore for every persistent shape introduced by the milestone; acceptance never substitutes a successful backup upload for restore evidence.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 56,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/56",
         "projectItemId": null
       }
     },
@@ -3215,8 +3215,8 @@
       "rollbackRestoreImpact": "Planning evidence only; no production data mutation. Any later implementation still needs its own migration, restore, and rollback proof.",
       "doneMeaning": "This planning artifact is complete; it does not claim feature implementation, deployment, production readiness, or release acceptance.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 57,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/57",
         "projectItemId": null
       }
     },
@@ -3261,8 +3261,8 @@
       "rollbackRestoreImpact": "No personal-data mutation is authorized by this task; it must define or prove reversible deployment and recovery before dependent implementation.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 58,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/58",
         "projectItemId": null
       }
     },
@@ -3306,8 +3306,8 @@
       "rollbackRestoreImpact": "Validates rollback and restore for every persistent shape introduced by the milestone; acceptance never substitutes a successful backup upload for restore evidence.",
       "doneMeaning": "Move to Done only when the named task evidence exists; prototype or document intent cannot prove implementation or release completion.",
       "github": {
-        "issueNumber": null,
-        "issueUrl": null,
+        "issueNumber": 59,
+        "issueUrl": "https://github.com/arunpr614/Life-Reflection/issues/59",
         "projectItemId": null
       }
     }
