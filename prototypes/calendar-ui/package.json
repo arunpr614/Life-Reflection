@@ -12,6 +12,7 @@
     "check:v5": "node --check app-v5.js && node --check serve.mjs",
     "check:v6": "node --check app-v6.js && node --check serve.mjs",
     "check:v7": "node --check app-v7.js && node --check serve.mjs",
-    "check:v8": "node --check app-v8.js && node --check serve.mjs"
+    "check:v8": "node --check app-v8.js && node --check serve.mjs",
+    "check:v9": "node --check app-v9.js && node --check serve.mjs"
   }
 }
