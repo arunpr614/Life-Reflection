@@ -497,12 +497,14 @@
       "evidenceReferencePaths": [
         "docs/council/COUNCIL-REVIEW.md",
         "docs/council/PHASE1-COUNCIL-DECISION-RECORD.md",
-        "docs/council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md"
+        "docs/council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md",
+        "docs/council/execution/releases/P0-PC-001-READINESS-HARDENING-PLANNING-REVIEW.md"
       ],
       "evidenceReferenceUrls": [
         "https://github.com/arunpr614/Life-Reflection/blob/main/docs/council/COUNCIL-REVIEW.md",
         "https://github.com/arunpr614/Life-Reflection/blob/main/docs/council/PHASE1-COUNCIL-DECISION-RECORD.md",
-        "https://github.com/arunpr614/Life-Reflection/blob/main/docs/council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md"
+        "https://github.com/arunpr614/Life-Reflection/blob/main/docs/council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md",
+        "https://github.com/arunpr614/Life-Reflection/blob/main/docs/council/execution/releases/P0-PC-001-READINESS-HARDENING-PLANNING-REVIEW.md"
       ],
       "evidenceState": "Linked",
       "taskDossier": {
@@ -518,49 +520,49 @@
             "required": true,
             "path": "docs/work-items/PC-001/P0-PC-001-PRD.md",
             "url": "https://github.com/arunpr614/Life-Reflection/blob/main/docs/work-items/PC-001/P0-PC-001-PRD.md",
-            "state": "draft",
-            "sha256": "730cf36213bf7f54c66dfca2248e3c4dcba6d2f3a49e6527e733ce6fa2958cdd",
-            "contentState": "draft"
+            "state": "in-review",
+            "sha256": "68ab74c94226a4ee650d1cb89929abe85941bdef3acabac50fa846e048f23f27",
+            "contentState": "in-review"
           },
           "architecture": {
             "required": true,
             "path": "docs/work-items/PC-001/P0-PC-001-TECHNICAL-PLAN.md",
             "url": "https://github.com/arunpr614/Life-Reflection/blob/main/docs/work-items/PC-001/P0-PC-001-TECHNICAL-PLAN.md",
-            "state": "draft",
-            "sha256": "5b17e4017b3fab7fdd1eabbf04ec27378731a13479a96d2f36c37b01c91c3411",
-            "contentState": "draft"
+            "state": "in-review",
+            "sha256": "43367fff28fa07042de795c6a90af7cbe4c9a3721d1e797c20fbbf257ffacfcf",
+            "contentState": "in-review"
           },
           "design": {
             "required": true,
             "path": "docs/work-items/PC-001/P0-PC-001-DESIGN-SPEC.md",
             "url": "https://github.com/arunpr614/Life-Reflection/blob/main/docs/work-items/PC-001/P0-PC-001-DESIGN-SPEC.md",
-            "state": "draft",
-            "sha256": "5fe815ff5bc15bf37ed927be58c361f96369df50b474b23fe570c3d64c2a3f2a",
-            "contentState": "draft"
+            "state": "in-review",
+            "sha256": "5f5343a528313f000b0b22ea9c02aa3d17e449b84ad7c5fed3e84999debb09e2",
+            "contentState": "in-review"
           },
           "qa": {
             "required": true,
             "path": "docs/work-items/PC-001/P0-PC-001-QA-PLAN.md",
             "url": "https://github.com/arunpr614/Life-Reflection/blob/main/docs/work-items/PC-001/P0-PC-001-QA-PLAN.md",
-            "state": "draft",
-            "sha256": "1aee690fcf17ce65bc4ad91bcd276c91bbc98dfdbd9c19e2fe2d2ce481d78493",
-            "contentState": "draft"
+            "state": "in-review",
+            "sha256": "c7a8f4c346e3715f8ea015fcb9f96a07b3327d68b38e7e9b18115e3c167e5bfb",
+            "contentState": "in-review"
           },
           "delivery": {
             "required": true,
             "path": "docs/work-items/PC-001/P0-PC-001-DELIVERY-CHECKLIST.md",
             "url": "https://github.com/arunpr614/Life-Reflection/blob/main/docs/work-items/PC-001/P0-PC-001-DELIVERY-CHECKLIST.md",
-            "state": "draft",
-            "sha256": "519e983065d1829b92ec01718e7ed3d151e4ee172f4dde7cd80792bf630b33a8",
-            "contentState": "draft"
+            "state": "in-review",
+            "sha256": "ddd11117218c3c65428e4743b62d7677c1f90d024b3b7817f5bbc6788f4c5b8d",
+            "contentState": "in-review"
           },
           "council": {
             "required": true,
             "path": "docs/work-items/PC-001/P0-PC-001-COUNCIL-READINESS.md",
             "url": "https://github.com/arunpr614/Life-Reflection/blob/main/docs/work-items/PC-001/P0-PC-001-COUNCIL-READINESS.md",
-            "state": "draft",
-            "sha256": "b2b9727f389accb6b6a6a2a34b270390beac896ef956d4a822bc1e651a91a13b",
-            "contentState": "draft"
+            "state": "in-review",
+            "sha256": "b01136fe1979d079157a8cedfbfcdb4d361a18016e9d7b2b9bbeedc1c726a1ff",
+            "contentState": "in-review"
           }
         },
         "requirementIds": [],
@@ -590,7 +592,8 @@
         ],
         "ownerActionsSatisfied": true,
         "openDecisions": [
-          "Five-seat task-level dossier approval pending."
+          "Exact-candidate five-seat planning approval and publication are pending.",
+          "Implementation fixture evidence has not yet been executed."
         ],
         "artifactReviews": {
           "product": {
@@ -655,24 +658,54 @@
           }
         },
         "designCoverage": {
-          "applicability": "pending",
-          "journeyIds": [],
+          "applicability": "applicable",
+          "journeyIds": [
+            "PC-001-D-001",
+            "PC-001-D-002",
+            "PC-001-D-003"
+          ],
           "stateCoverage": {
-            "normal": [],
-            "empty": [],
-            "loading": [],
-            "error": [],
-            "interruption": [],
-            "destructive": []
+            "normal": [
+              "PC-001-D-001"
+            ],
+            "empty": [
+              "PC-001-D-001"
+            ],
+            "loading": [
+              "PC-001-D-001"
+            ],
+            "error": [
+              "PC-001-D-003"
+            ],
+            "interruption": [
+              "PC-001-D-003"
+            ],
+            "destructive": [
+              "PC-001-D-003"
+            ]
           },
           "accessibilityCoverage": {
-            "keyboard": [],
-            "focus": [],
-            "screenReader": [],
-            "targetSize": [],
-            "contrast": [],
-            "zoom": [],
-            "reducedMotion": []
+            "keyboard": [
+              "PC-001-D-002"
+            ],
+            "focus": [
+              "PC-001-D-002"
+            ],
+            "screenReader": [
+              "PC-001-D-002"
+            ],
+            "targetSize": [
+              "PC-001-D-002"
+            ],
+            "contrast": [
+              "PC-001-D-002"
+            ],
+            "zoom": [
+              "PC-001-D-002"
+            ],
+            "reducedMotion": [
+              "PC-001-D-002"
+            ]
           },
           "notApplicableRationale": null
         },
@@ -682,8 +715,8 @@
           "verdict": "historical-non-authorizing",
           "reviewedRevision": null,
           "unresolvedBlockers": [
-            "Required task-bound artifacts remain draft.",
-            "Five-seat task-level approval is not complete."
+            "The six PC-001 artifacts are in review; exact-candidate five-seat planning approval and publication are incomplete.",
+            "The control-hardening implementation and executable fixture evidence do not yet exist."
           ],
           "seatVerdicts": {
             "product": {
@@ -692,7 +725,7 @@
               "reviewedRevision": null,
               "dossierDigest": null,
               "evidenceReference": null,
-              "rationale": "Task-bound artifacts remain draft."
+              "rationale": "Planning packet is in review; no permitting attestation is recorded in the central registry."
             },
             "design": {
               "verdict": "hold",
@@ -700,7 +733,7 @@
               "reviewedRevision": null,
               "dossierDigest": null,
               "evidenceReference": null,
-              "rationale": "Task-bound artifacts remain draft."
+              "rationale": "Proposed Design coverage is mapped; exact-candidate approval is pending."
             },
             "architecture": {
               "verdict": "hold",
@@ -708,7 +741,7 @@
               "reviewedRevision": null,
               "dossierDigest": null,
               "evidenceReference": null,
-              "rationale": "Task-bound artifacts remain draft."
+              "rationale": "Planning packet is in review; no permitting attestation is recorded in the central registry."
             },
             "qa": {
               "verdict": "hold",
@@ -716,7 +749,7 @@
               "reviewedRevision": null,
               "dossierDigest": null,
               "evidenceReference": null,
-              "rationale": "Task-bound artifacts remain draft."
+              "rationale": "Planning review is not executed implementation-test evidence."
             },
             "project": {
               "verdict": "hold",
@@ -724,7 +757,7 @@
               "reviewedRevision": null,
               "dossierDigest": null,
               "evidenceReference": null,
-              "rationale": "Task-bound artifacts remain draft."
+              "rationale": "Planning packet is in review; merge, sync, and parity evidence are pending."
             }
           }
         },
@@ -734,27 +767,27 @@
           "artifacts": {
             "product": {
               "path": "docs/work-items/PC-001/P0-PC-001-PRD.md",
-              "sha256": "730cf36213bf7f54c66dfca2248e3c4dcba6d2f3a49e6527e733ce6fa2958cdd"
+              "sha256": "68ab74c94226a4ee650d1cb89929abe85941bdef3acabac50fa846e048f23f27"
             },
             "architecture": {
               "path": "docs/work-items/PC-001/P0-PC-001-TECHNICAL-PLAN.md",
-              "sha256": "5b17e4017b3fab7fdd1eabbf04ec27378731a13479a96d2f36c37b01c91c3411"
+              "sha256": "43367fff28fa07042de795c6a90af7cbe4c9a3721d1e797c20fbbf257ffacfcf"
             },
             "design": {
               "path": "docs/work-items/PC-001/P0-PC-001-DESIGN-SPEC.md",
-              "sha256": "5fe815ff5bc15bf37ed927be58c361f96369df50b474b23fe570c3d64c2a3f2a"
+              "sha256": "5f5343a528313f000b0b22ea9c02aa3d17e449b84ad7c5fed3e84999debb09e2"
             },
             "qa": {
               "path": "docs/work-items/PC-001/P0-PC-001-QA-PLAN.md",
-              "sha256": "1aee690fcf17ce65bc4ad91bcd276c91bbc98dfdbd9c19e2fe2d2ce481d78493"
+              "sha256": "c7a8f4c346e3715f8ea015fcb9f96a07b3327d68b38e7e9b18115e3c167e5bfb"
             },
             "delivery": {
               "path": "docs/work-items/PC-001/P0-PC-001-DELIVERY-CHECKLIST.md",
-              "sha256": "519e983065d1829b92ec01718e7ed3d151e4ee172f4dde7cd80792bf630b33a8"
+              "sha256": "ddd11117218c3c65428e4743b62d7677c1f90d024b3b7817f5bbc6788f4c5b8d"
             },
             "council": {
               "path": "docs/work-items/PC-001/P0-PC-001-COUNCIL-READINESS.md",
-              "sha256": "b2b9727f389accb6b6a6a2a34b270390beac896ef956d4a822bc1e651a91a13b"
+              "sha256": "b01136fe1979d079157a8cedfbfcdb4d361a18016e9d7b2b9bbeedc1c726a1ff"
             }
           }
         }

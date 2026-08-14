@@ -20,6 +20,7 @@
 | `P0-ED-012` | After P0 passes, begin `UX-R0-001` with fictional fixtures and continue safe synthetic `SPK-R0-001` preparation; hold host-specific and implementation/release lanes. | Accepted | Next execution sequence |
 | `P0-ED-013` | Require a six-artifact, P0-prefixed, task-bound dossier and five-seat council readiness decision for each of the existing 58 issues before substantive execution; generation never equals approval. | Accepted; supersedes the scheduling portion of `P0-ED-012` until each named R0 task passes | All task entry and GitHub/Project projection |
 | `P0-ED-014` | Use Monthly Almanac as the sole user-facing chronological destination, keep the Calendar/Almanac switcher near Search, and show no Calendar source/AI overlay beyond accessible/selected-detail disclosure. | Accepted | `LID-REF-002`, `LID-AIA-005`, R1/R3/R8/R9 and UX |
+| `P0-ED-015` | Accept the six-artifact PC-001 readiness-hardening planning packet at `d44dbfbc8d040baddf46b7288476d4dc53c81e8c` / `sha256:32deebe971b1321a7ccd4203d4c861d93c4ec3d45ba3bf4c9fab2ea048b9eaed`; require its normal merge before any bounded local/public control-code edit. | Accepted planning scope; execution remains false | `PC-001`, readiness-control Gate A |
 
 ## Decision details
 
@@ -59,6 +60,10 @@ The view filter becomes `repo:arunpr614/Life-Reflection is:issue label:phase1`. 
 ### P0-ED-013 — Per-task Product Council gate
 
 Every canonical task uses the existing stable-ID issue and owns a task-specific Product PRD, Technical Plan, Design Spec, QA Plan, Delivery Checklist, and Council Readiness record under `docs/work-items/<TASK-ID>/`. The [P0 task Definition of Ready](P0-PHASE1-TASK-DEFINITION-OF-READY.md) and [task artifact register](../../project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json) govern the machine-checkable start rule. All 58 initial bundles are drafts, Incomplete/Hold, and `executionAllowed=false`; the council must review content and exact hashes at a committed revision before any one task can start.
+
+### P0-ED-015 — PC-001 hardening plan accepted before implementation
+
+All five seats independently matched the six artifact hashes and canonical dossier digest recorded in the [PC-001 planning review](releases/P0-PC-001-READINESS-HARDENING-PLANNING-REVIEW.md). R3 supersedes R2 because an isolated workbook build proved that semantically identical OOXML packages can have different internal relationship IDs; same-build published copies still require equal hashes, while independent builds require exhaustive semantic and render equivalence. The planning PR must merge with the R3-reviewed bytes unchanged. Only then may a separate branch begin the local/public hardening slice; the implementation candidate still requires executable fixtures, fresh Independent QA, five-seat review, normal merge, exact-main synchronization, workbook/Wiki reconciliation, and two quiescent parity snapshots. This bootstrap decision does not set `executionAllowed=true`, accept the currently held workbook, promote PC-001, authorize R0/private work, or create a 59th issue.
 
 ## Open decision frontier
 

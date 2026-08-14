@@ -1,54 +1,87 @@
-# PC-001 — task QA plan
+# PC-001 — readiness-control hardening QA plan
 
 - **Task ID:** `PC-001`
 - **Artifact kind:** `qa`
-- **Artifact state:** `draft`
-- **Roadmap status:** `Done`
+- **Artifact state:** `in-review`
+- **Roadmap status:** `Done` — historical planning only
 - **Milestone:** `P0`
 - **Execution allowed:** `false`
-- **Evidence boundary:** Creation of this draft does not approve implementation, deployment, testing, restore, release, or production use.
+- **Fixture class:** fictional/synthetic only
+- **Evidence boundary:** scenario design is not executed evidence. No R0, private-system, authentic-content, deployment, or release claim is permitted.
 
-## QA inputs
+## Inputs
 
-- [docs/product/PRODUCT-REQUIREMENTS.md](../../product/PRODUCT-REQUIREMENTS.md)
-- [docs/architecture/PHASE1-IMPLEMENTATION-PLAN.md](../../architecture/PHASE1-IMPLEMENTATION-PLAN.md)
-- [docs/council/UX-DESIGN-REVIEW.md](../../council/UX-DESIGN-REVIEW.md)
-- [docs/design/UX-SPECIFICATION.md](../../design/UX-SPECIFICATION.md)
-- [prototypes/calendar-ui/index-v5.html](../../../prototypes/calendar-ui/index-v5.html)
-- [docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md](../../council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md)
-- [docs/council/agents/P0-QA-LEAD.md](../../council/agents/P0-QA-LEAD.md)
-- [docs/council/execution/P0-OWNER-ACTION-LEDGER.md](../../council/execution/P0-OWNER-ACTION-LEDGER.md)
+- [Task product requirements](./P0-PC-001-PRD.md)
+- [Task technical plan](./P0-PC-001-TECHNICAL-PLAN.md)
+- [Task design specification](./P0-PC-001-DESIGN-SPEC.md)
+- [Task Definition of Ready](../../council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md)
+- [Independent QA charter](../../council/agents/P0-QA-LEAD.md)
 
 ## Test objective
 
-Independently determine whether **Integrated Council Planning Package** satisfies its exact requirements and bounded claim in the named environment, using fictional/synthetic fixtures unless a later explicit human gate authorizes otherwise.
+Prove that the first future execution-permitting decision can be reached only from complete, published, role-bound, scope-compatible evidence, and that every atomic missing or contradictory input independently fails closed. Preserve the current all-Hold baseline and public/privacy boundaries.
 
-## Scenario matrix
+## Required executable harness
 
-| Scenario | Required coverage | Current state |
+`tools/P0-test-execution-controls.mjs` must run as a P0-prefixed, dependency-light test entrypoint with real assertions and a nonzero exit on any failure. It must exercise the shared pure evaluator, protected-refresh planner/transaction, validator integration, and start preflight. Aggregate-only negative coverage is insufficient: each predicate has its own isolated mutation and stable expected gate code.
+
+## Positive paths
+
+| ID | Fixture | Expected result |
 | --- | --- | --- |
-| `PC-001-QA-001` | Happy path and exact task outcome: Reconcile Product, Design, Architecture, and Project Management decisions into one delivery baseline. | Draft |
-| `PC-001-QA-002` | Invalid, missing, duplicate, replayed, interrupted, timeout, stale, dependency-failure, and retry behavior | Draft |
-| `PC-001-QA-003` | Privacy/security/authorization, secret/log/cache/export/backup/evidence scans, and AI exclusions | Draft |
-| `PC-001-QA-004` | Schema, migration, compatibility, inventory, backup, separate-path restore, rollback/forward-fix | Draft |
-| `PC-001-QA-005` | Supported browsers, keyboard, focus, screen reader, contrast, 320 px, text/page zoom, landscape, themes, reduced motion | Draft |
-| `PC-001-QA-006` | Dependencies, co-resident/non-regression scope, performance/capacity bounds, observability and exact health states | Draft |
+| `PC-001-CTL-P01` | Six valid reviews, applicable Design coverage, five unique role-bound seats, independent QA, exact published candidate bytes, dependencies satisfied, no open decisions/blockers, due actions satisfied, and `ready-local-synthetic`. | Derives `Artifact readiness: Ready`, local-synthetic decision, `executionAllowed=true`, and zero failed gates. |
+| `PC-001-CTL-P02` | P01 plus fictional structured authority and per-action evidence binding task, private scope/action, verifier, current window, pass, candidate, and opaque reference. | Matching private verdict permits; no private target detail is present. |
 
-## Traceability and fixtures
+## One-gate-at-a-time negative matrix
 
-- **Requirement IDs:** Planning-only
-- **Dependencies:** `AUD-001`
-- **Fixture class:** fictional/synthetic; fingerprint and authentic-content exclusion required in executed evidence.
-- **Deferred negative scope:** `LID-UP-004`, `LID-DEF-001`, `LID-DEF-002`, `LID-DEF-003`, `LID-DEF-004`, `LID-DEF-005`, `LID-DEF-006` must remain absent.
+| ID | Independent mutations | Required oracle |
+| --- | --- | --- |
+| `PC-001-CTL-N01` | Missing artifact; wrong content/effective state; review Hold; hash, revision, dossier, or candidate-byte mismatch; unpublished candidate; invalid Architecture/Design N/A; missing specialist concurrence; supplied readiness/decision/permission. | Each mutation returns its named artifact/derivation gate, `executionAllowed=false`, and no trusted derived override. |
+| `PC-001-CTL-N02` | Remove each Design journey, each normal/empty/loading/error/interruption/destructive dimension, and each keyboard/focus/screen-reader/target-size/contrast/zoom/reduced-motion dimension separately. | Each required coverage mutation fails; Design N/A passes only with concrete rationale and Designer concurrence. |
+| `PC-001-CTL-N03` | Missing reviewer ID; unknown ID; wrong role; duplicate seat ID; unresolved or tampered attestation; revision/digest mismatch; QA equals implementer; QA equals evidence-producing test author; any specialist veto. | Each denies with its identity/independence/attestation gate. |
+| `PC-001-CTL-N04` | Candidate absent from fetched main; approval record unmerged; stale remote; dirty checkout; detached/wrong branch relationship; `HEAD != origin/main`; external sync source not exact clean main. | Structural candidate review and runtime activation are distinguished; no case activates or publishes permission. |
+| `PC-001-CTL-N05` | Missing dependency evidence; unknown/mismatched requirement or scenario; incompatible scope/verdict; open decision; unresolved blocker; due action pending/failed; specialist veto. | Each independently denies and names the corrective action. |
+| `PC-001-CTL-N06` | Private authority missing; regex-only; expired/not-yet-valid; failed; wrong task/scope/action/verifier/Owner Action/candidate; missing opaque custody reference; unmatched per-action record. | Every case denies private execution; local scope is unaffected only when no private action is requested. |
+| `PC-001-CTL-N07` | Non-draft marker; non-Hold artifact review; candidate binding; non-Hold seat; attestation/evidence binding; injected handled failure at every staged/promote boundary. | Refresh exits nonzero and all original artifact/register paths and hashes remain unchanged; no partial or temporary public output remains. |
 
-## Evidence bundle
+## Regression, parity, and safety matrix
 
-Executed evidence records task/release/requirement/scenario IDs, source SHA, artifact and dependency/SBOM digests, fixture fingerprint, environment class, sanitized configuration digest, exact commands/tool versions, expected/actual results and timestamps, defects/retests, schema/migration state, backup/restore/rollback result, reviewer identity/independence, opaque private evidence reference when authorized, remaining limitations, and exact permitted claim.
+| ID | Coverage | Required oracle |
+| --- | --- | --- |
+| `PC-001-CTL-R01` | Two isolated JSON/Markdown control generations; second run; changed cwd, locale, and wall clock; current 58 dossiers. | Byte-identical control outputs and zero second-run diff. For this planning phase, the exact live oracle is 58 Incomplete/0 Ready/0 allowed with `342 draft / 6 in-review / 0 approved / 0 blocked / 0 not-applicable`; statuses `40/4/1/13`, seven deferred IDs, deployment Unknown, and authentic-media access false. Each later phase records and reviews its expected representation before comparison; no test may silently reset all 348 artifacts to Draft. |
+| `PC-001-CTL-R02` | Register, manifest, issue bodies, the existing 17 managed Project values, two isolated seven-sheet workbook builds, two Wiki builds, Page Audit, and two live verify snapshots after final merge. | Exact source SHA, 58 issue links/tasks, R10 dates blank, and zero formula/layout error. Canonical and review workbook copies from one export have matching hashes; isolated exports have identical sheets, used ranges, cells, formulas, links, counts, and 20 rendered ranges even if internal OOXML relationship IDs differ. Wiki staging trees are byte-identical with zero live-only loss. Two quiescent issue/Project snapshots have zero mismatch. The Project assertion includes the frozen evidence-to-field mapping without adding or renaming a field. |
+| `PC-001-CTL-S01` | Inject credential, private key, private URL/host/account/topology, Project node ID, recovery value, raw response, authentic journal/photo, and photo-derived sentinels. | Every public generation/validation path rejects the sentinel. No image decode/render/OCR/thumbnail/screenshot, AI call, or private network access occurs. |
+
+## Task-level QA scenarios
+
+1. **`PC-001-QA-001` — Happy paths:** P01 and P02 pass with exact derived results.
+2. **`PC-001-QA-002` — Fail-closed behavior:** N01–N07 each reject every isolated mutation with stable gate code and no partial state.
+3. **`PC-001-QA-003` — Privacy/security/authorization:** identity, attestation, scope, authority, action, sensitive-sentinel, and authentic-media exclusions pass.
+4. **`PC-001-QA-004` — Compatibility/recovery:** schema version handling, deterministic regeneration, refresh rollback, and normal Git revert evidence preserve prior accepted state.
+5. **`PC-001-QA-005` — Operator accessibility:** exact labels, semantic Markdown/table structure, non-color cues, linear reading order, wrapping/zoom behavior, keyboard/focus, and full identifier retrieval are reviewed on rendered outputs where applicable.
+6. **`PC-001-QA-006` — Delivery parity:** R01/R02 prove status, requirements, issue, Project, workbook, Wiki, source, and deployment-state truth.
+
+## Required commands and evidence
+
+The implementation candidate must record exact Node and Git versions plus commands equivalent to:
+
+```sh
+node tools/P0-test-execution-controls.mjs
+node tools/P0-generate-task-artifacts.mjs
+node tools/generate_phase1_roadmap_manifest.mjs
+node tools/P0-validate-execution-controls.mjs
+node tools/sync_phase1_github.mjs
+git diff --check
+```
+
+Start verification is tested with fictional task inputs and run for a real task only after its merged approval record exists. GitHub/Project apply, workbook publication, and Wiki publication occur only after implementation review and merge under their existing dry-run-first contracts.
+
+Evidence records scenario ID, source revision, fixture fingerprint, expected/actual result, stable gate codes, artifact hashes, tool versions, reviewer ID/role/independence, timestamps, defects/retests, public-safety result, remaining limitations, and exact permitted claim.
 
 ## Independence and severity gate
 
-The executing QA reviewer must not be the candidate implementer. Any unresolved Sev-1/Sev-2, critical/high privacy or security finding, authentic-media violation, status/evidence mismatch, missing restore/rollback, optimistic Health behavior, missing authority, or specialist veto produces `Hold` or `Roll back`.
+The Independent QA reviewer must not implement the controls or author the evidence-producing test result it certifies. Any negative fixture permitting execution, unresolved Sev-1/Sev-2, critical/high privacy or security finding, identity/authority weakness, partial write, protected overwrite, nondeterminism, generated drift, parity mismatch, authentic-media interaction, private access, or specialist veto is release-blocking.
 
 ## Independent QA disposition
 
-**Draft / Hold.** QA is always required. Scenario design here is not executed evidence and cannot make the task Ready or Done.
+**In review / Hold.** The matrix is complete for exact-candidate Council review. Code may start only after five-seat approval of this planning packet; the exact implementation candidate requires a fresh independent rerun and Council decision.

@@ -30,7 +30,8 @@
     "PC-001": [
       "docs/council/COUNCIL-REVIEW.md",
       "docs/council/PHASE1-COUNCIL-DECISION-RECORD.md",
-      "docs/council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md"
+      "docs/council/execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md",
+      "docs/council/execution/releases/P0-PC-001-READINESS-HARDENING-PLANNING-REVIEW.md"
     ],
     "SPK-R0-001": [
       "docs/research/HETZNER-SHARED-HOST-DEPLOYMENT-SPIKE.md",
