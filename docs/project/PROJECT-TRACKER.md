@@ -3,7 +3,7 @@
 Updated: 2026-08-14
 Owner: Product Council, coordinated by the Project Manager
 Product owner and final decision-maker: Arun
-Current phase: P0 execution-control remediation; no substantive implementation task is authorized
+Current phase: P0 controls published and live planning surfaces reconciled; evidence publication and readiness-control hardening remain, and no substantive implementation task is authorized
 Current blocking gate: every task must pass the [P0 task Definition of Ready](../council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md). The P0 execution authorization supersedes the earlier universal G1 confirmation stop, but all 58 task dossiers remain Incomplete/Hold and private or owner-controlled acts retain their explicit gates.
 
 Operational status, issue identity, and schedule projections are governed by the generated [Phase 1 roadmap manifest](PHASE1-ROADMAP-MANIFEST.json), [task state ledger](P0-PHASE1-TASK-STATE.json), and [task artifact register](P0-PHASE1-TASK-ARTIFACT-REGISTER.json). The G1/GOV-008 dependency labels retained below are historical planning lineage, not current task-entry authority.
