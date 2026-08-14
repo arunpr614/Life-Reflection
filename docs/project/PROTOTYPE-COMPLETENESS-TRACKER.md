@@ -4,7 +4,7 @@
 - **Owner:** Project Manager agent
 - **Product owner:** Arun
 - **Baseline:** Prototype v5 at commit `00e5689`; feature audit at commit `f74455f`
-- **Current state:** v9 First-use Readiness has passed every mandatory gate against implementation/evidence commit `ae34415` and is freeze-ready; v10 Resilient Application Shell is released but remains `Queued` with all gates not started
+- **Current state:** v9 First-use Readiness is frozen at implementation/evidence commit `ae34415` with freeze record `5a12fb2`; v10 Resilient Application Shell is released but remains `Queued` with all gates not started
 - **Goal:** Close every prototype-representable gap in the [v5 feature audit](../audits/PROTOTYPE-V5-FEATURE-AUDIT.md) through immutable, consecutively numbered prototype versions, with Product, UX, council, implementation, and independent QA evidence for every version.
 
 This tracker governs the prototype-completeness loop only. It does not authorize or prove backend implementation, provider qualification, integration behavior, security controls, persistence, deployment, backup, restoration, or production readiness. The [PRD](../product/PRODUCT-REQUIREMENTS.md) and [UX specification](../design/UX-SPECIFICATION.md) remain authoritative for behavior. When this tracker differs from those sources or a direct decision from Arun, the higher-authority source wins and the discrepancy must be recorded in the iteration ledger.
@@ -494,3 +494,13 @@ Entries below are chronological evidence. **Never edit, reorder, or delete an ex
 - Freeze readiness: implementation/evidence commit `ae34415` binds the exact independently passed prototype bytes. The forthcoming freeze-record commit is not yet known and is not claimed here. That commit also normalizes trailing Markdown whitespace in the QA report and handoff; it does not change any of the five passed UI artifacts, so no second QA pass is implied.
 - After the freeze record is committed, no v9 prototype, Council, evidence, screenshot, guide, or design-QA artifact may be edited by a later package. Any v9 artifact correction requires a new append-only disposition and fresh independent QA.
 - Next version released from queue: v10 `PVA-005 Resilient Application Shell`. Its execution-register status remains `Queued`, and Product, Design, Council, Implementation, and QA gates all remain `—` because no v10 role has started.
+
+### 2026-08-14 — v9 — frozen
+
+- Immutable v9 implementation and evidence commit: `ae34415` (`prototype: add v9 first-use readiness`); freeze record: `5a12fb2` (`docs: freeze v9 prototype`).
+- The freeze binds the independently passed artifact identities: `index-v9.html` SHA-256 `96527f3e8e96e1bfdaa5a3e31cf6885a6b5505a108ca9c287e00d7b570719af9`; `app-v9.js` SHA-256 `9677a6023baf45e67a8580e46cec48261c4747d62d391969e3cf4877ce3875ee`; `styles-v9.css` SHA-256 `3f38acbe74ffdac691b5963a779b27d61f3f19e3f03775aabec626b74bb12869`; `styles-v9-almanac.css` SHA-256 `7ca0b5ad77cef1e08681479cd1d79d9dd1dafb70e520d1e0ee04d15860b38b8b`; `styles-v9-readiness.css` SHA-256 `e2c07c35b05307ff682ed0ecb21ceb4e33fcb8b5a45f2cd227b23d86584cd42e`.
+- All mandatory v9 gates remain **A** and package status remains **Complete**. Only audit gap 3's first-use portion is closed at frontend-prototype level; v10 retains the interruption/failure remainder.
+- No second QA pass is implied: freeze record `5a12fb2` records the existing pass and normalizes documentation whitespace without changing any of the five independently passed UI artifacts.
+- No v9 prototype, Council contract, evidence, screenshot, guide, or design-QA artifact may be edited by v10 or any later package. Any correction requires a new append-only disposition, a changed fingerprint, and fresh independent QA.
+- V10 `PVA-005 Resilient Application Shell` remains released from the queue but has not started: its execution-register status is `Queued`, and Product, Design, Council, Implementation, and QA gates all remain `—`.
+- This freeze is a fictional frontend-prototype disposition only. It does not prove integrations, persistence, AI providers, backup, restoration, recovery-key custody, encryption, authentication, deployment, accessibility conformance, operations, or production readiness.
