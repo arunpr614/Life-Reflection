@@ -56,7 +56,7 @@ Harden the existing 58-task control plane so one shared evaluator derives readin
 | `PC-001-CR-006` | Private authority and owner actions are structured and scope-specific. | Public-safe records bind task, requested scope/action, verifier identity/role, validity window, pass result, opaque custody reference, and the due Owner Action ID. Regex-only evidence never permits. |
 | `PC-001-CR-007` | Draft refresh is protected and mutation-safe. | All targets are preflighted before the first write; any marker, review, candidate, seat, or attestation protection refuses the entire refresh with original hashes unchanged. |
 | `PC-001-CR-008` | Human-facing evidence is unambiguous and accessible. | Roadmap status, artifact readiness, execution permission, blockers, next action, exact bindings, and validation outcome remain distinct in CLI, Markdown, issues, Project, workbook, and Wiki. |
-| `PC-001-CR-009` | Generation and projections remain deterministic and reconciled. | Two isolated generations are byte-identical; the 58-task baseline, seven deferred requirements, issue/Project/workbook/Wiki projections, and two quiescent parity snapshots have zero unexplained drift. |
+| `PC-001-CR-009` | Generation and projections remain deterministic or equivalently verified according to artifact type. | JSON/Markdown control generation and Wiki builds are byte-identical across isolated runs. Canonical and review workbooks from one build have matching hashes; isolated workbook builds have identical sheets, cells, formulas, links, counts, and renders even if the spreadsheet library emits different internal OOXML relationship IDs. The 58-task baseline, seven deferred requirements, issue/Project/workbook/Wiki projections, and two quiescent parity snapshots have zero unexplained semantic drift. |
 | `PC-001-CR-010` | Public controls remain private- and authentic-data blind. | Tests reject sensitive sentinels; no private connection or authentic-media processing occurs; deployment stays `Unknown — private read authority pending`. |
 
 ## Product acceptance scenarios
@@ -70,7 +70,7 @@ Harden the existing 58-task control plane so one shared evaluator derives readin
 - Zero editable derived authorization fields.
 - Two positive execution fixtures and at least one isolated negative fixture for every gate predicate.
 - Zero negative fixtures that permit execution; zero partial writes on a refused refresh.
-- Two deterministic isolated generations and two quiescent live verifier snapshots with zero mismatches.
+- Two byte-identical isolated control/Wiki generations; matching canonical/review workbook hashes from one build plus cross-build semantic/render equivalence; and two quiescent live verifier snapshots with zero mismatches.
 - 58 canonical tasks, 348 task artifacts, 71 active requirements, seven deferred requirements, and status distribution `40/4/1/13` preserved unless a separately approved product change alters them.
 
 ## Non-goals

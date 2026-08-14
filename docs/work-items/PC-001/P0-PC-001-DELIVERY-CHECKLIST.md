@@ -63,7 +63,7 @@ No readiness-control code edit begins before Gate A is merged and five-seat-appr
 | Issue #3 | Existing six links remain live; closed/Done historical | Exact merged evidence links/fields; no reopen churn |
 | Other 57 issues | No mutation unless generated payload changes | Synchronize only reviewed generated deltas |
 | Private Project | No workflow mutation | Existing 17 managed values only: Status plus historical label in Task summary; derived readiness in Artifact readiness; derived permission plus scope in Execution scope; blockers/next action in Task summary; candidate/digest/validation in Evidence; six links in dedicated fields/Task dossier. Views/containment unchanged. |
-| Workbook | Rebuild both copies if a projected value/hash changes | Seven sheets, 58 issue URLs, formulas/renders, R10 blanks verified |
+| Workbook | Rebuild both copies if a projected value changes | Canonical/review copies from one export have matching hashes; two isolated builds have equivalent seven sheets, used cells/formulas, 58 issue URLs, six task links, counts, R10 blanks, and 20 renders. Packaging-only OOXML relationship-ID differences are recorded, not mislabeled deterministic. |
 | Wiki | Publish only after merged material source change | Deterministic exact-main Page Audit; no live-only loss |
 | Running log | Append planning decision and exact branch/commit state | Append implementation, QA, merge, sync, Wiki, parity, and limitations |
 
@@ -76,7 +76,7 @@ No readiness-control code edit begins before Gate A is merged and five-seat-appr
 - [ ] Implementation fixture matrix passes both positive paths and one-gate negatives.
 - [ ] Derived readiness/permission, registry-backed identities, structured actions/authority, exact-main start, and protected refresh are independently verified.
 - [ ] Fresh QA and all affected seats approve the exact implementation candidate.
-- [ ] Register, manifest, release plan, issue payloads, Project fields, workbook, Wiki, and log reconcile from exact merged main.
+- [ ] Register, manifest, release plan, issue payloads, Project fields, workbook same-build hashes plus cross-build semantic/render equivalence, byte-deterministic Wiki, and log reconcile from exact merged main.
 - [ ] Two quiescent live verify snapshots have zero mismatch; deployment remains Unknown and authentic-media access remains false.
 
 ## Rollback and stop rules

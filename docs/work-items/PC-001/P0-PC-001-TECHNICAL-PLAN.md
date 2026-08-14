@@ -113,6 +113,13 @@ The sync dry-run and `PC-001-CTL-R02` compare all 17 values. This value-only cha
 
 The test harness injects failures at every handled write boundary and requires original artifact/register hashes and filenames to remain unchanged.
 
+## Determinism boundary
+
+- JSON and Markdown control outputs, sync payloads, and staged Wiki trees must be byte-identical across isolated runs with equivalent inputs.
+- The workbook builder must copy one exported workbook to the canonical and task-review paths; those two published files must have an identical SHA-256.
+- A second isolated workbook export is compared semantically and visually: exact sheet names/order, used ranges, every nonempty cell and formula, all 58 issue URLs and six task links, readiness counts, R10 blanks, formula errors, and all 20 rendered ranges. Different internal OOXML relationship IDs or ZIP packaging bytes are permitted only when those comparisons are identical and no public value changes.
+- A packaging-only difference is recorded, never called byte determinism, and never used to excuse a cell, formula, link, count, render, or layout difference.
+
 ## Verification matrix
 
 - `PC-001-CTL-P01`: valid local-synthetic permitting path.
@@ -124,8 +131,8 @@ The test harness injects failures at every handled write boundary and requires o
 - `PC-001-CTL-N05`: dependency, requirement/scenario, scope/verdict, decision, blocker, action, and veto gates.
 - `PC-001-CTL-N06`: missing, expired, failed, wrong-scope/action/verifier/custody private authority.
 - `PC-001-CTL-N07`: protected and injected-failure refresh with zero partial mutation.
-- `PC-001-CTL-R01`: deterministic generation and backwards-safe 58/348 all-Hold baseline.
-- `PC-001-CTL-R02`: post-merge issue, Project, workbook, Wiki, and two-snapshot parity.
+- `PC-001-CTL-R01`: byte-deterministic control generation and backwards-safe 58/348 all-Hold baseline.
+- `PC-001-CTL-R02`: post-merge issue, Project, workbook semantic/render equivalence and same-build copy hashes, byte-deterministic Wiki, and two-snapshot parity.
 - `PC-001-CTL-S01`: sensitive/public-safety and authentic-media exclusion sentinels.
 
 ## Implementation sequence

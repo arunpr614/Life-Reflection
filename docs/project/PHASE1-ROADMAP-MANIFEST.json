@@ -519,7 +519,7 @@
             "path": "docs/work-items/PC-001/P0-PC-001-PRD.md",
             "url": "https://github.com/arunpr614/Life-Reflection/blob/main/docs/work-items/PC-001/P0-PC-001-PRD.md",
             "state": "in-review",
-            "sha256": "477d5a18f5adb70598de876637d9fc2db1a8b07f68fefbdfc7ebe070aed8a8fb",
+            "sha256": "68ab74c94226a4ee650d1cb89929abe85941bdef3acabac50fa846e048f23f27",
             "contentState": "in-review"
           },
           "architecture": {
@@ -527,7 +527,7 @@
             "path": "docs/work-items/PC-001/P0-PC-001-TECHNICAL-PLAN.md",
             "url": "https://github.com/arunpr614/Life-Reflection/blob/main/docs/work-items/PC-001/P0-PC-001-TECHNICAL-PLAN.md",
             "state": "in-review",
-            "sha256": "8b4a7b5b505b87c79f4e3879d4ce5440fba3cb3ecb8d66f931dc21e6c0ea2395",
+            "sha256": "43367fff28fa07042de795c6a90af7cbe4c9a3721d1e797c20fbbf257ffacfcf",
             "contentState": "in-review"
           },
           "design": {
@@ -543,7 +543,7 @@
             "path": "docs/work-items/PC-001/P0-PC-001-QA-PLAN.md",
             "url": "https://github.com/arunpr614/Life-Reflection/blob/main/docs/work-items/PC-001/P0-PC-001-QA-PLAN.md",
             "state": "in-review",
-            "sha256": "c7b3feb76824d402f4ca61e37b5a9cc79eb41709247e0255584f5ed12d6059e9",
+            "sha256": "c7a8f4c346e3715f8ea015fcb9f96a07b3327d68b38e7e9b18115e3c167e5bfb",
             "contentState": "in-review"
           },
           "delivery": {
@@ -551,7 +551,7 @@
             "path": "docs/work-items/PC-001/P0-PC-001-DELIVERY-CHECKLIST.md",
             "url": "https://github.com/arunpr614/Life-Reflection/blob/main/docs/work-items/PC-001/P0-PC-001-DELIVERY-CHECKLIST.md",
             "state": "in-review",
-            "sha256": "7fe62448d5bafe5b7713bcf6c266ebfb0bdd10c44ba8dd20b503e02ecb0c3373",
+            "sha256": "ddd11117218c3c65428e4743b62d7677c1f90d024b3b7817f5bbc6788f4c5b8d",
             "contentState": "in-review"
           },
           "council": {
@@ -765,11 +765,11 @@
           "artifacts": {
             "product": {
               "path": "docs/work-items/PC-001/P0-PC-001-PRD.md",
-              "sha256": "477d5a18f5adb70598de876637d9fc2db1a8b07f68fefbdfc7ebe070aed8a8fb"
+              "sha256": "68ab74c94226a4ee650d1cb89929abe85941bdef3acabac50fa846e048f23f27"
             },
             "architecture": {
               "path": "docs/work-items/PC-001/P0-PC-001-TECHNICAL-PLAN.md",
-              "sha256": "8b4a7b5b505b87c79f4e3879d4ce5440fba3cb3ecb8d66f931dc21e6c0ea2395"
+              "sha256": "43367fff28fa07042de795c6a90af7cbe4c9a3721d1e797c20fbbf257ffacfcf"
             },
             "design": {
               "path": "docs/work-items/PC-001/P0-PC-001-DESIGN-SPEC.md",
@@ -777,11 +777,11 @@
             },
             "qa": {
               "path": "docs/work-items/PC-001/P0-PC-001-QA-PLAN.md",
-              "sha256": "c7b3feb76824d402f4ca61e37b5a9cc79eb41709247e0255584f5ed12d6059e9"
+              "sha256": "c7a8f4c346e3715f8ea015fcb9f96a07b3327d68b38e7e9b18115e3c167e5bfb"
             },
             "delivery": {
               "path": "docs/work-items/PC-001/P0-PC-001-DELIVERY-CHECKLIST.md",
-              "sha256": "7fe62448d5bafe5b7713bcf6c266ebfb0bdd10c44ba8dd20b503e02ecb0c3373"
+              "sha256": "ddd11117218c3c65428e4743b62d7677c1f90d024b3b7817f5bbc6788f4c5b8d"
             },
             "council": {
               "path": "docs/work-items/PC-001/P0-PC-001-COUNCIL-READINESS.md",
