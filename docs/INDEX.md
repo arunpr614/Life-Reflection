@@ -4,17 +4,37 @@ Updated: 2026-08-14
 
 This is the single navigation point for the Life in Days product, design, architecture, delivery, research, and governance documents.
 
-Current status: **G0 planning baseline complete. G1 is blocked on Arun's explicit confirmation of the proposed shared understanding.** No implementation, credential collection, paid evaluation, provider configuration, infrastructure mutation, deployment, recovery exercise, or production verification is implied by these documents.
+Current status: **The Phase 1 Product Council planning package is complete as documentation, with 58 work packages across P0 and R0–R10.** The R0 shared-host spike remains In progress because sanitized live-host evidence is still outstanding. Historical G0/G1 documents remain provenance; they do not supersede the direct Phase 1 instruction, governing PRD, or current council decision record. No implementation, credential collection, paid evaluation, provider configuration, infrastructure mutation, deployment, recovery exercise, or production verification is implied by these documents.
+
+## Phase 1 delivery baseline
+
+| Document | Purpose | Current role |
+| --- | --- | --- |
+| [Product Council Decision Record](council/PHASE1-COUNCIL-DECISION-RECORD.md) | Reconciles Product, UX, Architecture, and Project decisions, including P0/R0–R10, evidence gates, and the shared-host baseline. | Current Phase 1 council authority beneath the global PRD and direct owner instructions. |
+| [Phase 1 Release Plan](project/PHASE1-RELEASE-PLAN.md) | Detailed 58-task schedule with milestones, dates, descriptions, requirements, PRD/PID links, design links, ownership, and status rules. | Project Manager-owned delivery plan. |
+| [Phase 1 Roadmap Manifest](project/PHASE1-ROADMAP-MANIFEST.json) | Machine-readable source for the Markdown plan, workbook, repository issues, and live GitHub Project. | Canonical task/status/date/link source. |
+| [GitHub Project Sync Runbook](project/PHASE1-GITHUB-PROJECT-SYNC.md) | Dry-run-first repository issue and Project V2 synchronization contract, schema, commands, recovery, and UI-only completion steps. | Operational publication guide; live verification is recorded separately from planning claims. |
+| [Phase 1 Excel Release Plan](../outputs/phase1/Life-in-Days-Phase1-Release-Plan.xlsx) | Seven-sheet review workbook with summary charts, release plan, 58 tasks, weekly timeline, requirement map, and risks/gates. | Review artifact generated from the manifest. |
+| [Product Manager Review](council/PRODUCT-MANAGER-REVIEW.md) | Product framing, release decomposition, 78-requirement assignment, outcomes, risks, and task seed. | Specialist council recommendation reconciled by the decision record. |
+| [UX Design Review](council/UX-DESIGN-REVIEW.md) | v5 inspection, screenshots, design gaps, accessibility/privacy gates, and design traceability for all 58 tasks. | Specialist design evidence; prototype intent does not prove implementation. |
+| [Project Manager Review](council/PROJECT-MANAGER-REVIEW.md) | Critical path, lane policy, Definition of Ready/Done, RAID, cadence, and GitHub operating model. | Delivery-control baseline. |
+| [Phase 1 Implementation Plan](architecture/PHASE1-IMPLEMENTATION-PLAN.md) | Detailed architecture, domain, security, deployment, recovery, test, rollback, and work-package implementation guidance. | Technical planning authority; no deployed behavior implied. |
+| [Hetzner Shared-host Deployment Spike](research/HETZNER-SHARED-HOST-DEPLOYMENT-SPIKE.md) | First-party research, coexistence topology, SQLCipher/SQLite proof gates, PostgreSQL fallback, and live preflight plan. | Research/design complete; live capacity and coexistence proof remains outstanding. |
+| [GitHub Projects Roadmap Research](research/GITHUB-PROJECTS-ROADMAP-RESEARCH.md) | Deep current-capability research on Roadmap layouts, views, fields, automation, APIs, limits, and GitHub's public roadmap. | Historical research snapshot that informed the current Project model. |
+| [GitHub Roadmap Design Spike](spikes/LIFE-IN-DAYS-GITHUB-ROADMAP-DESIGN.md) | Reversible eight-item pilot design, field taxonomy, view recipes, evidence policy, and operating rules. | Historical pilot design; the 58-task manifest now governs execution. |
+| [Shared-host Runbook](architecture/HETZNER-SHARED-HOST-RUNBOOK.md) | Sanitized commands, stop conditions, deployment, backup/restore, observation, and rollback sequence. | Execution guide; not evidence that commands have run. |
+| [Release PRDs and conditional PID](product/releases/) | R0–R9 release-specific requirements plus date-free R10 transition definition. | Drafted planning artifacts; owner approval remains a future gate. |
+| [Life Reflection GitHub Project](https://github.com/users/arunpr614/projects/1) | Status and date visualization of all manifest work packages. | Live control surface; documents and issue evidence remain authoritative. |
 
 ## Start here
 
 | Document | Purpose | Current role |
 | --- | --- | --- |
-| [Proposed Shared Understanding](discovery/SHARED-UNDERSTANDING.md) | Concise statement of the product promise, MVP boundary, capture model, AI/privacy rules, recovery direction, and deferrals. | **Next owner action:** Arun's explicit confirmation closes G1. |
+| [Proposed Shared Understanding](discovery/SHARED-UNDERSTANDING.md) | Historical concise statement of the product promise, MVP boundary, capture model, AI/privacy rules, recovery direction, and deferrals. | Discovery provenance; the governing PRD and current Phase 1 decision record control the release plan. |
 | [Product Requirements Document](product/PRODUCT-REQUIREMENTS.md) | Complete product contract with 78 prioritized requirements, acceptance behavior, data handling, risks, and non-goals. | Council-approved G0 planning baseline. |
 | [UX Specification](design/UX-SPECIFICATION.md) | Information architecture, screens, flows, states, content language, responsive behavior, accessibility, and validation plan. | Council-approved G0 planning baseline; no usability testing claimed. |
-| [Project Tracker](project/PROJECT-TRACKER.md) | G0–G9 gates, 12 milestones, 23 epics, 211 executable tasks, dependencies, evidence, risks, decisions, and 24 backlog items. | Authoritative planning/status tracker. G1 is the current blocker. |
-| [Implementation Plan](architecture/IMPLEMENTATION-PLAN.md) | Proposed architecture, domain model, integrations, jobs, security, storage, backup, testing, deployment, rollback, and technical gates. | Council-approved planning recommendation; implementation is not authorized. |
+| [Project Tracker](project/PROJECT-TRACKER.md) | Historical G0–G9 gates, 12 milestones, 23 epics, 211 detailed tasks, dependencies, evidence, risks, decisions, and backlog. | Detailed historical task inventory; Phase 1 execution/status is governed by the 58-task manifest. |
+| [Implementation Plan](architecture/IMPLEMENTATION-PLAN.md) | Earlier proposed architecture, domain model, integrations, jobs, security, storage, backup, testing, deployment, rollback, and technical gates. | Preserved planning baseline; the Phase 1 implementation plan is current for delivery. |
 | [Requirements Traceability](project/REQUIREMENTS-TRACEABILITY.md) | Maps each of the 78 PRD requirements to UX coverage, tracker tasks, architecture sections, and planned evidence. | Planning coverage is complete; code and executed evidence remain future work. |
 | [Product Council Review](council/COUNCIL-REVIEW.md) | Records specialist reviews, resolved findings, validation results, approvals, and G0 disposition. | Evidence that the integrated planning baseline passed council review. |
 
@@ -24,6 +44,11 @@ Current status: **G0 planning baseline complete. G1 is blocked on Arun's explici
 | --- | --- |
 | [Product Council Charter](council/PRODUCT-COUNCIL.md) | Council mandate, membership, source precedence, decision rights, review workflow, G0–G9 gates, RACI, and change control. |
 | [Council Review](council/COUNCIL-REVIEW.md) | Final G0 review record and the material contradictions resolved during reconciliation. |
+| [Phase 1 Product Council Charter](council/PRODUCT-COUNCIL-CHARTER.md) | Current council membership, decision rights, evidence boundary, release gates, and four-lane roadmap contract. |
+| [Phase 1 Council Decision Record](council/PHASE1-COUNCIL-DECISION-RECORD.md) | Final reconciliation of the four specialist seats for P0 and R0–R10. |
+| [Product Manager Review](council/PRODUCT-MANAGER-REVIEW.md) | Product outcome, decomposition, requirement mapping, risks, and 58-task seed. |
+| [UX Design Review](council/UX-DESIGN-REVIEW.md) | v5 evidence, design gaps, screenshots, veto gates, and 58-task design traceability. |
+| [Project Manager Review](council/PROJECT-MANAGER-REVIEW.md) | Critical path, status policy, readiness/completion rules, RAID, and GitHub operating model. |
 | [Senior Product Manager Charter](council/agents/SENIOR-PRODUCT-MANAGER.md) | Product role mission, owned outputs, responsibilities, decision rights, review checklist, and guardrails. |
 | [UI/UX Design Lead Charter](council/agents/UI-UX-DESIGN-LEAD.md) | Design role mission, owned outputs, responsibilities, decision rights, review checklist, and guardrails. |
 | [Project Manager Charter](council/agents/PROJECT-MANAGER.md) | Delivery-governance role mission, owned outputs, responsibilities, decision rights, review checklist, and guardrails. |
@@ -35,8 +60,8 @@ Current status: **G0 planning baseline complete. G1 is blocked on Arun's explici
 | --- | --- | --- |
 | Product | [Product Requirements Document](product/PRODUCT-REQUIREMENTS.md) | Product scope, user stories, exact behavior, acceptance criteria, priorities, non-goals, data handling, and risks. |
 | Experience | [UX Specification](design/UX-SPECIFICATION.md) | Navigation, page anatomy, interaction rules, empty/error/conflict states, responsive design, accessibility, and content language. |
-| Architecture | [Implementation Plan](architecture/IMPLEMENTATION-PLAN.md) | Proposed technical shape, persistence, integrations, security/privacy enforcement, AI orchestration, storage, operations, tests, and phased implementation. |
-| Delivery | [Project Tracker](project/PROJECT-TRACKER.md) | Gates, milestones, epics, tasks, dependencies, statuses, evidence requirements, critical path, registers, and backlog. |
+| Architecture | [Phase 1 Implementation Plan](architecture/PHASE1-IMPLEMENTATION-PLAN.md) | Current technical shape, persistence, integrations, security/privacy enforcement, AI orchestration, shared-host deployment, storage, operations, tests, and rollback. |
+| Delivery | [Phase 1 Release Plan](project/PHASE1-RELEASE-PLAN.md) | P0/R0–R10 milestones, 58 work packages, dates, owners, dependencies, statuses, evidence requirements, and GitHub contract. |
 | Coverage | [Requirements Traceability](project/REQUIREMENTS-TRACEABILITY.md) | Requirement-by-requirement navigation across Product, UX, Architecture, Delivery, and planned verification. |
 
 ## Active design exploration
@@ -84,7 +109,7 @@ These documents preserve how the current planning baseline was reached. Later co
 | [Initial Brief](discovery/INITIAL-BRIEF.md) | Original product request and inspiration links. | Historical input; later decisions supersede conflicts. |
 | [Detailed Discovery Requirements](discovery/REQUIREMENTS.md) | The requirements interview record and decisions 1–65. | Canonical detailed discovery decisions beneath Arun's direct corrections. |
 | [Product and Integration Research](discovery/RESEARCH.md) | Research on inspiration products, VoiceNotes, Telegram, hosting, authentication, privacy, backup, and integrations. | Evidence base; distinguishes documented facts, observations, proposals, and unknowns. |
-| [Proposed Shared Understanding](discovery/SHARED-UNDERSTANDING.md) | Concise synthesis of the intended MVP. | Awaiting Arun's explicit G1 confirmation. |
+| [Proposed Shared Understanding](discovery/SHARED-UNDERSTANDING.md) | Concise synthesis of the intended MVP. | Historical discovery artifact; not the current Phase 1 execution blocker. |
 | [AI Text Model Evaluation](discovery/AI-TEXT-MODEL-EVALUATION.md) | Candidate comparison, privacy/cost analysis, synthetic test protocol, hard gates, and production contract for text AI. | Evaluation design only; no model is selected or qualified yet. |
 | [AI Artwork Model Evaluation](discovery/AI-ARTWORK-MODEL-EVALUATION.md) | Candidate comparison, blind visual evaluation, privacy/cost controls, hard gates, and artwork configuration contract. | Evaluation design only; no model is selected or qualified yet. |
 | [Media Storage Evaluation](discovery/MEDIA-STORAGE-EVALUATION.md) | Cost, privacy, operational, backup, and migration comparison for local disk, R2, B2, and Hetzner alternatives. | Planning recommendation; provisioning and migration remain gated. |
@@ -115,30 +140,33 @@ These documents preserve how the current planning baseline was reached. Later co
 3. [UX Specification](design/UX-SPECIFICATION.md)
 4. [Requirements Traceability](project/REQUIREMENTS-TRACEABILITY.md)
 
-### To prepare implementation after authorization
+### To prepare Phase 1 implementation after the named gates
 
-1. [Proposed Shared Understanding](discovery/SHARED-UNDERSTANDING.md) and the recorded G1 decision
-2. [Product Requirements Document](product/PRODUCT-REQUIREMENTS.md)
-3. [Implementation Plan](architecture/IMPLEMENTATION-PLAN.md)
-4. [Project Tracker](project/PROJECT-TRACKER.md)
-5. [Requirements Traceability](project/REQUIREMENTS-TRACEABILITY.md)
+1. [Product Requirements Document](product/PRODUCT-REQUIREMENTS.md)
+2. [Phase 1 Council Decision Record](council/PHASE1-COUNCIL-DECISION-RECORD.md)
+3. The applicable [release PRD/PID](product/releases/)
+4. [UX Design Review](council/UX-DESIGN-REVIEW.md) and release-specific design evidence
+5. [Phase 1 Implementation Plan](architecture/PHASE1-IMPLEMENTATION-PLAN.md)
+6. [Phase 1 Release Plan](project/PHASE1-RELEASE-PLAN.md) and [Roadmap Manifest](project/PHASE1-ROADMAP-MANIFEST.json)
+7. [Hetzner Shared-host Deployment Spike](research/HETZNER-SHARED-HOST-DEPLOYMENT-SPIKE.md) and [Runbook](architecture/HETZNER-SHARED-HOST-RUNBOOK.md) for R0
 
 ### To understand evidence and governance
 
-1. [Product Council Charter](council/PRODUCT-COUNCIL.md)
-2. [Council Review](council/COUNCIL-REVIEW.md)
-3. [Project Tracker](project/PROJECT-TRACKER.md)
-4. [Requirements Traceability](project/REQUIREMENTS-TRACEABILITY.md)
+1. [Phase 1 Product Council Charter](council/PRODUCT-COUNCIL-CHARTER.md)
+2. [Phase 1 Council Decision Record](council/PHASE1-COUNCIL-DECISION-RECORD.md)
+3. [Project Manager Review](council/PROJECT-MANAGER-REVIEW.md)
+4. [Phase 1 Release Plan](project/PHASE1-RELEASE-PLAN.md)
+5. [Requirements Traceability](project/REQUIREMENTS-TRACEABILITY.md)
 
 ## Source precedence
 
 When documents disagree, use this order:
 
 1. Arun's direct decisions and corrections.
-2. The [Proposed Shared Understanding](discovery/SHARED-UNDERSTANDING.md) after Arun explicitly confirms it.
-3. The [Detailed Discovery Requirements](discovery/REQUIREMENTS.md).
-4. The [Domain Language](../CONTEXT.md).
-5. Discovery research and evaluation evidence.
-6. The council-created PRD, UX specification, implementation plan, tracker, and traceability matrix.
+2. The [Product Requirements Document](product/PRODUCT-REQUIREMENTS.md) for product behavior and stable requirement IDs.
+3. The [UX Specification](design/UX-SPECIFICATION.md) for interaction behavior, subject to direct corrections and the PRD.
+4. The [Phase 1 Council Decision Record](council/PHASE1-COUNCIL-DECISION-RECORD.md) for release decomposition and planning decisions that do not alter the PRD.
+5. The applicable release PRD/PID, [Phase 1 Implementation Plan](architecture/PHASE1-IMPLEMENTATION-PLAN.md), and [Phase 1 Roadmap Manifest](project/PHASE1-ROADMAP-MANIFEST.json) within their disciplines.
+6. The [Detailed Discovery Requirements](discovery/REQUIREMENTS.md), [Domain Language](../CONTEXT.md), discovery research, and historical G0/G1 council artifacts as provenance.
 
-Do not silently resolve a remaining conflict by choosing the more convenient document. Record it through the [Project Tracker change-control process](project/PROJECT-TRACKER.md).
+Do not silently resolve a remaining conflict by choosing the more convenient document. Record it through the [Phase 1 Council Decision Record](council/PHASE1-COUNCIL-DECISION-RECORD.md) and affected manifest task.
