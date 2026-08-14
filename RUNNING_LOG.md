@@ -376,3 +376,23 @@ The only permitted closure is: **The resilient application shell is prototype-re
 ### Freeze record
 
 The immutable v10 implementation/evidence commit is `ffabe0d`; the documentation-only freeze record is `497c98d`. Neither freeze step changed the six independently passed UI hashes. V11 is released from the queue while all of its gates remain unstarted.
+
+---
+
+## 2026-08-14 — Timestamped Phase 1 AI agent resource index
+
+### Outcome
+
+Created `docs/project/AI-AGENT-RESOURCE-INDEX-2026-08-14-15-10-39-IST.md` as a comprehensive, timestamped orientation snapshot for future AI agents.
+
+### Coverage and verification
+
+- Added the authority order, privacy/evidence boundary, recommended boot sequence, GitHub repository and private-Project resources, Project field/view model, P0/R0–R10 milestones, and a complete 58-task navigation table.
+- Indexed all 255 publication-candidate resources exactly once: 90 Markdown and 165 non-Markdown files, including 117 images.
+- Reconciled all task rows to the canonical roadmap manifest and public issue map: 40 Backlog, 4 Next, 1 In progress, and 13 Done.
+- Resolved all 620 local links in the new index and all repository-wide relative Markdown links and anchors.
+- Added discovery links in `README.md` and `docs/INDEX.md`.
+
+### Evidence boundary
+
+The index is an orientation snapshot, not a product decision or implementation claim. Current source documents and live GitHub evidence remain authoritative, and status-sensitive facts must be refreshed after the filename timestamp.
