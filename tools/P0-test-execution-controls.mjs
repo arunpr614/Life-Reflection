@@ -52,6 +52,7 @@ import {
   evaluateStageExecutionGateB,
   evaluateTaskPreparationGateA,
   executeRefreshTransaction,
+  isDedicatedDeliveryTransitionScopeAction,
   isTaskMilestoneScopeActionCompatible,
   taskExecutionContractPairCount,
   parseArtifactControlMarkers,
@@ -1020,6 +1021,10 @@ assert.deepEqual(OWNER_ACTION_REQUIREMENT_CATALOG["R0-OA-001"].requiredForAction
   ["private-system-read", "private-system-mutation", "deployment"]);
 assert.deepEqual(OWNER_ACTION_REQUIREMENT_CATALOG["R0-OA-002"].requiredForActionClasses,
   ["provider-change", "spend-change"]);
+assert.ok(!OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-001"].requiredForScopeClasses
+  .includes(DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass));
+assert.deepEqual(OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-002"].requiredForActionClasses,
+  ["project-workflow-mutation", "project-non-delivery-item"]);
 
 const manifestForActionContract = parseJsonWithoutDuplicateKeys(
   fs.readFileSync(path.join(repoRoot, "docs/project/PHASE1-ROADMAP-MANIFEST.json"), "utf8"),
@@ -1127,15 +1132,15 @@ assert.deepEqual(deliveryTransitionSource.requestedScope, {
   scopeClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass,
   actionClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass,
 });
-assert.deepEqual(deliveryTransitionSource.ownerActionRequirements.map((entry) => entry.actionId), [
-  "P0-OA-001", "P0-OA-002", "R0-OA-001", "R0-OA-002",
-]);
-recordResult("PC-001-CTL-P05", "ephemeral task-bound transition stage reaches source assembly with the exact private pair and P0-OA-002", "pass");
+assert.deepEqual(deliveryTransitionSource.ownerActionRequirements, []);
+assert.deepEqual(deliveryTransitionSource.ownerActions, []);
+assert.equal(deliveryTransitionSource.privateAuthority, null);
+recordResult("PC-001-CTL-P05", "ephemeral task-bound transition stage reaches source assembly with the exact delivery-control pair and no owner-action leakage", "pass");
 assert.throws(() => requestedScopeFor(deliveryTransitionTask, {
   requestedScopeClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass,
   requestedActionClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass,
 }), /not permitted for milestone/);
-recordResult("PC-001-CTL-P05", "private project-workflow authority without a transition stage remains outside ordinary task execution", "pass");
+recordResult("PC-001-CTL-P05", "delivery-control authority without a transition stage remains outside ordinary task execution", "pass");
 assert.throws(() => requestedScopeFor(deliveryTransitionTask, {
   ...deliveryTransitionOverride,
   requestedStageId: "P0-STAGE-UX-R0-001-STATUS-DELIVERY-TRANSITION",
@@ -1151,6 +1156,16 @@ assert.throws(() => validateReadinessState({
   taskOverrides: { [deliveryTransitionTask.id]: deliveryTransitionOverride },
 }, new Set(manifestTaskIds)), /unknown source-evidence override keys: requestedStageId/);
 recordResult("PC-001-CTL-P05", "persisted readiness state still rejects the ephemeral transition-stage key", "pass");
+assert.throws(() => validateReadinessState({
+  schemaVersion: READINESS_SCHEMA_VERSION,
+  taskOverrides: {
+    [deliveryTransitionTask.id]: {
+      requestedScopeClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass,
+      requestedActionClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass,
+    },
+  },
+}, new Set(manifestTaskIds)), /cannot be persisted/);
+recordResult("PC-001-CTL-P05", "persisted readiness state rejects the delivery-control pair even without the ephemeral stage key", "pass");
 assert.deepEqual(requestedScopeFor(manifestForActionContract.tasks.find((task) => task.id === "PRD-R0-001")), {
   scopeClass: "local-synthetic",
   actionClass: "planning-control",
@@ -2737,62 +2752,39 @@ assertPreparationNegative("Gate A rejects historical PC-001", (source, context) 
   context.expectedTask.taskId = "PC-001";
 }, "PREP_SCOPE_TASK");
 
-function stageGateBFixture({ deliveryTransition = false } = {}) {
+function stageGateBFixture({ deliveryTransition = false, taskId = "SPK-R0-001", milestone = "R0" } = {}) {
   const taskInput = retargetTaskFixture(localFixture, {
-    taskId: "SPK-R0-001",
-    milestone: "R0",
+    taskId,
+    milestone,
     scopeClass: deliveryTransition ? DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass : "local-synthetic",
     actionClass: deliveryTransition ? DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass : "synthetic-foundation",
-    completeDueActions: deliveryTransition,
+    completeDueActions: false,
   });
   if (deliveryTransition) {
     const implementationEntry = taskInput.candidate.taskFiles.find((entry) => entry.purpose === "implementation");
     implementationEntry.path = DELIVERY_TRANSITION_GATE_B_CONTRACT.modulePath;
-    const workflowRequirement = OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-002"];
-    taskInput.ownerActionRequirements.push({
-      actionId: "P0-OA-002",
-      requiredForScopeClasses: [...workflowRequirement.requiredForScopeClasses],
-      requiredForActionClasses: [...workflowRequirement.requiredForActionClasses],
-      accountableHumanId: "fictional-owner-human",
-      accountableHumanRole: workflowRequirement.accountableHumanRole,
-    });
-    taskInput.ownerActions.push({
-      actionId: "P0-OA-002",
-      status: "complete",
-      requiredForScopeClasses: [...workflowRequirement.requiredForScopeClasses],
-      requiredForActionClasses: [...workflowRequirement.requiredForActionClasses],
-      accountableHumanId: "fictional-owner-human",
-      accountableHumanRole: workflowRequirement.accountableHumanRole,
-      ownerAttestationReference: "owner:P0-OA-002-FICTIONAL",
-      result: "pass",
-      verifierId: "reviewer-project",
-      verifierRole: "project",
-      verifiedAt: "2026-08-15T11:10:00.000Z",
-      evidenceReference: "action:P0-OA-002-FICTIONAL",
-      candidateRevision: null,
-      dossierDigest: null,
-    });
-    taskInput.ownerActionRequirements.sort((left, right) => left.actionId.localeCompare(right.actionId));
-    taskInput.ownerActions.sort((left, right) => left.actionId.localeCompare(right.actionId));
+    taskInput.ownerActionRequirements = [];
+    taskInput.ownerActions = [];
+    taskInput.privateAuthority = null;
     recomputeBindings(taskInput);
   }
   taskInput.requirementIds = ["LID-OPS-001"];
   taskInput.expectedRequirementIds = ["LID-OPS-001"];
-  taskInput.acceptanceScenarioIds = ["SPK-R0-001-QA-001"];
+  taskInput.acceptanceScenarioIds = [`${taskId}-QA-001`];
   taskInput.designCoverage = {
     applicability: "applicable",
-    journeyIds: ["SPK-R0-001-QA-001"],
-    stateCoverage: Object.fromEntries(DESIGN_STATE_DIMENSIONS.map((dimension) => [dimension, ["SPK-R0-001-QA-001"]])),
-    accessibilityCoverage: Object.fromEntries(DESIGN_ACCESSIBILITY_DIMENSIONS.map((dimension) => [dimension, ["SPK-R0-001-QA-001"]])),
+    journeyIds: [`${taskId}-QA-001`],
+    stateCoverage: Object.fromEntries(DESIGN_STATE_DIMENSIONS.map((dimension) => [dimension, [`${taskId}-QA-001`]])),
+    accessibilityCoverage: Object.fromEntries(DESIGN_ACCESSIBILITY_DIMENSIONS.map((dimension) => [dimension, [`${taskId}-QA-001`]])),
     notApplicableRationale: null,
   };
   recomputeBindings(taskInput);
   const stageId = deliveryTransition
-    ? "P0-STAGE-SPK-R0-001-STATUS-DELIVERY-TRANSITION"
-    : "P0-STAGE-SPK-R0-001-SYNTHETIC-001";
+    ? `P0-STAGE-${taskId}-STATUS-DELIVERY-TRANSITION`
+    : `P0-STAGE-${taskId}-SYNTHETIC-001`;
   const preparationReviewId = deliveryTransition
-    ? "P0-PREP-SPK-R0-001-STATUS-DELIVERY-TRANSITION"
-    : "P0-PREP-SPK-R0-001-SYNTHETIC-001";
+    ? `P0-PREP-${taskId}-STATUS-DELIVERY-TRANSITION`
+    : `P0-PREP-${taskId}-SYNTHETIC-001`;
   const proposalRevision = "d".repeat(40);
   const proposalBaseRevision = "e".repeat(40);
   const proposalDossierDigest = sha256("synthetic Gate A proposal dossier");
@@ -2863,8 +2855,8 @@ function stageGateBFixture({ deliveryTransition = false } = {}) {
     dossierDigest: taskInput.candidate.dossierDigest,
     predecessorReceiptSha256: null,
     idempotencyKey: deliveryTransition
-      ? "P0-IDEMP-SPK-R0-001-STATUS-DELIVERY-TRANSITION"
-      : "P0-IDEMP-SPK-R0-001-SYNTHETIC-001",
+      ? `P0-IDEMP-${taskId}-STATUS-DELIVERY-TRANSITION`
+      : `P0-IDEMP-${taskId}-SYNTHETIC-001`,
     stageDefinitionSha256: `sha256:${sha256("synthetic stage definition")}`,
     moduleId: deliveryTransition ? DELIVERY_TRANSITION_GATE_B_CONTRACT.moduleId : "spk.synthetic",
     moduleSha256: `sha256:${taskInput.candidate.taskFiles.find((entry) => entry.purpose === "implementation").sha256}`,
@@ -2884,7 +2876,7 @@ function stageGateBFixture({ deliveryTransition = false } = {}) {
     requirementEvidence: [{
       requirementId: "LID-OPS-001",
       stageId,
-      acceptanceScenarioIds: ["SPK-R0-001-QA-001"],
+      acceptanceScenarioIds: [`${taskId}-QA-001`],
       candidateRevision: taskInput.candidate.revision,
       environmentClass: deliveryTransition ? "sanitized-private" : "synthetic-local",
       fixtureClass: deliveryTransition ? "sanitized-metadata" : "synthetic",
@@ -3024,14 +3016,56 @@ const directTransitionEvaluation = evaluateReadiness(
 assert.equal(directTransitionEvaluation.executionAllowed, false, "ordinary task evaluation must not gain transition authority");
 assert.ok(failedCodes(directTransitionEvaluation).includes("TASK_SCOPE_ACTION_COMPATIBILITY"));
 assert.ok(!TASK_EXECUTION_CONTRACT["SPK-R0-001"].scopeActions["private-execution"].includes("project-workflow-mutation"));
+assert.ok(Object.values(TASK_EXECUTION_CONTRACT).every((contract) => (
+  contract.scopeActions[DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass] === undefined
+)), "delivery-control must remain absent from every ordinary task execution contract");
 const transitionStageResult = evaluateStageExecutionGateB(transitionStagePositive.source, transitionStagePositive.context);
 assert.equal(transitionStageResult.executionAllowed, true, failedCodes(transitionStageResult).join(", "));
 assert.equal(transitionStageResult.normalizedEvidence.scopeClass, DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass);
 assert.equal(transitionStageResult.normalizedEvidence.actionClass, DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass);
-recordResult("PC-001-CTL-P05", "dedicated transition Gate B permits only the closed private workflow branch while ordinary task execution stays denied", "pass", {
+assert.deepEqual(transitionStageResult.normalizedEvidence.dueOwnerActionIds, []);
+assert.equal(transitionStageResult.normalizedEvidence.privateAuthorityRequired, false);
+recordResult("PC-001-CTL-P05", "dedicated transition Gate B permits only the closed delivery-control branch while ordinary task execution stays denied", "pass", {
   decision: transitionStageResult.decision,
   sourceFingerprint: transitionStageResult.normalizedEvidence.sourceFingerprint,
 });
+
+for (const taskId of DELIVERY_TRANSITION_GATE_B_CONTRACT.taskIds) {
+  const milestone = manifestForActionContract.tasks.find((task) => task.id === taskId)?.milestone;
+  const fixture = stageGateBFixture({ deliveryTransition: true, taskId, milestone });
+  const actual = evaluateStageExecutionGateB(fixture.source, fixture.context);
+  assert.equal(actual.executionAllowed, true, `${taskId}: ${failedCodes(actual).join(", ")}`);
+  assert.deepEqual(actual.normalizedEvidence.dueOwnerActionIds, [], `${taskId}: owner action leaked`);
+  assert.equal(actual.normalizedEvidence.privateAuthorityRequired, false, `${taskId}: private authority leaked`);
+  recordResult("PC-001-CTL-P05", `dedicated delivery-transition Gate B permits bounded task ${taskId} without owner-action authority`, "pass", {
+    decision: actual.decision,
+    sourceFingerprint: actual.normalizedEvidence.sourceFingerprint,
+  });
+}
+const disallowedDeliveryTransitionTasks = [
+  { taskId: "AUD-001", milestone: "P0" },
+  { taskId: "PC-001", milestone: "P0" },
+  { taskId: "PRD-R0-001", milestone: "R0" },
+  { taskId: "PRD-R1-001", milestone: "R1" },
+  { taskId: "UNKNOWN-R0-001", milestone: null },
+];
+for (const { taskId, milestone } of disallowedDeliveryTransitionTasks) {
+  assert.equal(isDedicatedDeliveryTransitionScopeAction({
+    taskId,
+    stageId: `P0-STAGE-${taskId}-STATUS-DELIVERY-TRANSITION`,
+    scopeClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass,
+    actionClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass,
+  }), false, `${taskId}: disallowed task entered delivery-transition allowlist`);
+  if (milestone !== null) {
+    const fixture = stageGateBFixture({ deliveryTransition: true, taskId, milestone });
+    const actual = evaluateStageExecutionGateB(fixture.source, fixture.context);
+    assert.equal(actual.executionAllowed, false, `${taskId}: disallowed transition passed`);
+    assert.ok(failedCodes(actual).includes("STAGE_SCOPE_TASK"), `${taskId}: ${failedCodes(actual).join(", ")}`);
+  }
+  recordResult("PC-001-CTL-P05", `${taskId} cannot enter or borrow the five-task delivery-transition exception`, "pass", {
+    expectedCodes: milestone === null ? ["DELIVERY_TRANSITION_TASK_ALLOWLIST"] : ["STAGE_SCOPE_TASK"],
+  });
+}
 
 function assertTransitionStageNegative(name, mutate, expectedCode) {
   const fixture = stageGateBFixture({ deliveryTransition: true });
@@ -3058,16 +3092,34 @@ assertTransitionStageNegative("delivery-transition Gate B rejects an executable 
 assertTransitionStageNegative("private workflow authority without the transition suffix remains outside the ordinary task contract", (source) => {
   source.stage.stageId = "P0-STAGE-SPK-R0-001-STATUS-MUTATION";
 }, "STAGE_SCOPE_ACTION");
-assertTransitionStageNegative("delivery-transition Gate B rejects missing P0-OA-002 requirement coverage", (source) => {
-  source.taskInput.ownerActionRequirements = source.taskInput.ownerActionRequirements
-    .filter((entry) => entry.actionId !== "P0-OA-002");
+assertTransitionStageNegative("private workflow pair cannot masquerade behind the delivery-transition suffix", (source) => {
+  source.taskInput.requestedScope = {
+    scopeClass: "private-execution",
+    actionClass: "project-workflow-mutation",
+  };
+  source.stage.scopeClass = "private-execution";
+  source.stage.actionClass = "project-workflow-mutation";
+}, "STAGE_DELIVERY_TRANSITION_CONTRACT");
+assertTransitionStageNegative("delivery-transition Gate B rejects leaked P0-OA-001 requirements", (source) => {
+  const requirement = OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-001"];
+  source.taskInput.ownerActionRequirements.push({
+    actionId: "P0-OA-001",
+    requiredForScopeClasses: [...requirement.requiredForScopeClasses],
+    requiredForActionClasses: [...requirement.requiredForActionClasses],
+    accountableHumanId: null,
+    accountableHumanRole: requirement.accountableHumanRole,
+  });
 }, "OWNER_ACTION_REQUIREMENTS");
-assertTransitionStageNegative("delivery-transition Gate B rejects pending P0-OA-002 evidence", (source) => {
-  source.taskInput.ownerActions.find((entry) => entry.actionId === "P0-OA-002").status = "pending";
-}, "OWNER_ACTION_P0_OA_002");
-assertTransitionStageNegative("delivery-transition Gate B rejects mismatched P0-OA-002 action coverage", (source) => {
-  source.taskInput.ownerActions.find((entry) => entry.actionId === "P0-OA-002").requiredForActionClasses = ["project-non-delivery-item"];
-}, "OWNER_ACTION_P0_OA_002");
+assertTransitionStageNegative("delivery-transition Gate B rejects leaked P0-OA-002 requirements", (source) => {
+  const requirement = OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-002"];
+  source.taskInput.ownerActionRequirements.push({
+    actionId: "P0-OA-002",
+    requiredForScopeClasses: [...requirement.requiredForScopeClasses],
+    requiredForActionClasses: [...requirement.requiredForActionClasses],
+    accountableHumanId: null,
+    accountableHumanRole: requirement.accountableHumanRole,
+  });
+}, "OWNER_ACTION_REQUIREMENTS");
 
 const countsByScenario = Object.fromEntries(
   [...new Set(results.map((result) => result.id.split(".")[0]))]

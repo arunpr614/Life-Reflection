@@ -61,6 +61,9 @@ function createCandidateRepo() {
   fs.writeFileSync(path.join(repoRoot, "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json"),
     `${JSON.stringify({ schemaVersion: "1.0.0", reviewers: reviewerRecords }, null, 2)}\n`);
   const baseRevision = commitAll(repoRoot, "synthetic base");
+  fs.writeFileSync(path.join(repoRoot, "docs/council/execution/P0-SYNTHETIC-FREEZE.json"),
+    `${JSON.stringify({ schemaVersion: "1.0.0", frozen: true }, null, 2)}\n`);
+  const intermediateRevision = commitAll(repoRoot, "synthetic freeze evidence");
   const dossierPath = "docs/council/execution/releases/P0-SYNTHETIC-CANDIDATE.md";
   fs.writeFileSync(path.join(repoRoot, dossierPath), "# Synthetic candidate dossier\n");
   fs.writeFileSync(path.join(repoRoot, "tools/P0-synthetic.mjs"), "export const value = 2;\n");
@@ -69,7 +72,15 @@ function createCandidateRepo() {
   const reviewerRegistrySha256 = sha256(fs.readFileSync(
     path.join(repoRoot, "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json"),
   ));
-  return { repoRoot, baseRevision, candidateRevision, dossierPath, changedFiles, reviewerRegistrySha256 };
+  return {
+    repoRoot,
+    baseRevision,
+    intermediateRevision,
+    candidateRevision,
+    dossierPath,
+    changedFiles,
+    reviewerRegistrySha256,
+  };
 }
 
 function genesisFixture() {
@@ -224,6 +235,21 @@ function expectFinding(group, mutator, code) {
   const { genesis } = genesisFixture();
   const review = reviewFixture(candidate, genesis);
   expect("record", findingsFor(review, candidate, genesis).length === 0, "complete successor review passes");
+  expect("binding", review.candidate.baseRevision === candidate.baseRevision
+    && review.candidate.changedFiles.some((entry) => entry.path === "docs/council/execution/P0-SYNTHETIC-FREEZE.json"),
+  "multi-commit candidate binds the complete activation-base range");
+
+  const parentOnlyFiles = deriveSuccessorChangedFiles(
+    candidate.repoRoot, candidate.intermediateRevision, candidate.candidateRevision,
+  );
+  const parentOnlyReview = reviewFixture(candidate, genesis);
+  parentOnlyReview.candidate.changedFiles = parentOnlyFiles;
+  parentOnlyReview.candidate.changedFilesSha256 = computeSuccessorChangedFilesSha256(parentOnlyFiles);
+  resign(parentOnlyReview);
+  expect("binding", findingsFor(parentOnlyReview, candidate, genesis)
+    .includes("SUCCESSOR_CHANGED_FILES_BINDING_INVALID"),
+  "parent-only changed-file manifest cannot omit earlier Stage 0 commits");
+
   const reviewPath = `${SUCCESSOR_CONTROL_REVIEW_DIRECTORY}/P0-CONTROL-REVIEW-${review.reviewId}.json`;
   fs.mkdirSync(path.join(candidate.repoRoot, SUCCESSOR_CONTROL_REVIEW_DIRECTORY), { recursive: true });
   const raw = `${JSON.stringify(review, null, 2)}\n`;

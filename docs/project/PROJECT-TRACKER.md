@@ -1,9 +1,9 @@
 # Life in Days — project tracker
 
-Updated: 2026-08-15
+Updated: 2026-08-16
 Owner: Product Council, coordinated by the Project Manager
 Product owner and final decision-maker: Arun
-Current phase: the bounded P0/R0 Goal is active; Stage 0 is the local/public control-plane gate immediately preceding any R0 preparation wave, and no R0 implementation or private/live action is authorized
+Current phase: the bounded P0/R0 Goal is active; Stage 0 is the local/public control-plane gate immediately preceding any R0 preparation wave, and no R0 implementation or private/live action is authorized. Current release-execution authority is R0-only: all R1-R10 tasks and artifacts are frozen and out of scope, and broader execution requires a new direct Product Owner activation.
 Current blocking gate: Stage 0 acceptance derives from its exact-candidate review, normal merge, append-only successor-review publication, deterministic reconciliation, and durable PR closure evidence. Until that complete chain passes, R0 preparation remains held. Current structured truth is exactly 58 Incomplete; 45 Hold + 13 Historical non-authorizing; 0 Ready; 0 execution-allowed. Private or owner-controlled acts retain their explicit gates.
 
 Operational status, issue identity, and schedule projections are governed by the generated [Phase 1 roadmap manifest](PHASE1-ROADMAP-MANIFEST.json), [task state ledger](P0-PHASE1-TASK-STATE.json), and [task artifact register](P0-PHASE1-TASK-ARTIFACT-REGISTER.json). The G1/GOV-008 dependency labels retained below are historical planning lineage, not current task-entry authority.

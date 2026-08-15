@@ -32,10 +32,16 @@
       "sha256": "675e90ac2660b820a6466f2dcf3f33f0797080a41824677cd1a46e2638c48b00"
     },
     {
+      "path": "tools/P0-bounded-authority.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "f01bc8c7de9aacc0852216d88041a8982f2ad41d38b6ce9f5e5b084cf1023932"
+    },
+    {
       "path": "tools/P0-build-task-readiness-input.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "4aee6bdf2c1292fcf179e6482cef1292b0314ad0b1a3703f290c69f355eab815"
+      "sha256": "c299bb46e46f0424b60d560302381f85e24a80c527ccbb129659f5e3513f86ff"
     },
     {
       "path": "tools/P0-content-safety.mjs",
@@ -53,7 +59,7 @@
       "path": "tools/P0-delivery-transition.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "d32344268c529716e6707282a5d00d99797a503dc9d37afdcddbf7b15365384d"
+      "sha256": "d722d7793646af7541cf2424dda4d6b44d24a537770e75e62d5759da015b494e"
     },
     {
       "path": "tools/P0-exact-main.mjs",
@@ -65,7 +71,7 @@
       "path": "tools/P0-generate-task-artifacts.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "0f7d23f3bfb5935a3ad14d1391b08b37407788825a7c09ba8714fdd0c240ebd6"
+      "sha256": "03bde157ef957d3281556def3ff82f6e06fc9a6abccb6eaa41653ba112ed454a"
     },
     {
       "path": "tools/P0-github-projection-model.mjs",
@@ -83,7 +89,7 @@
       "path": "tools/P0-readiness-gates.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "c63bc4aab205560997269c116f1db5a4e373bf5a16bb01fa38115a9ea676969d"
+      "sha256": "ee56270564ed29a0e4fe95460cee9f2ec1839e86a48900b2af9ab6b1ec5f02e5"
     },
     {
       "path": "tools/P0-running-log-trust.mjs",
@@ -95,19 +101,19 @@
       "path": "tools/P0-stage-runner.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "50b63a2da3e8983a38bbba8911ebd86672e247b2498648353644243080350061"
+      "sha256": "eeaa43da23027bf854a21b9b125a0af4d8b9ee1f469f5d1464c62ae5f88bf77f"
     },
     {
       "path": "tools/P0-stage0-ci.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "fbf9ab1c6842b7aa09c42183873d78c7a0ac12e5d6f6dbafaa0aacc472042155"
+      "sha256": "2bbb52f2190f791d7f4b6fbde17a84ffb5ddc447ba235d043b9affb78abbe83c"
     },
     {
       "path": "tools/P0-staged-actions.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "f3ac9625ea2a470183d062fc71919576deed6a5799073f4c8d800e805c9eae63"
+      "sha256": "9fd58d2d82809066e0233fcffc7fca57a5ff4ad86441df81e7ce7a1a92312061"
     },
     {
       "path": "tools/P0-successor-control-review.mjs",
@@ -125,13 +131,13 @@
       "path": "tools/P0-test-delivery-transition.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "d2b53d2457a5b3fcacab2037c715cd2a3bc24f6a12f362e153dee8b31ec36530"
+      "sha256": "cd46846f88a139babcd57facfab2b792a105b963aeb303576ae0c6a7925bb5ad"
     },
     {
       "path": "tools/P0-test-execution-controls.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "7693136135ba060225096946a3e2b65e911268944ca82e357756af98d400d1a6"
+      "sha256": "0451e6f0e5887d82db5e74e6f63027d86fe1862f70befb519daf1ca6e5028a38"
     },
     {
       "path": "tools/P0-test-r1-r10-freeze.mjs",
@@ -149,19 +155,19 @@
       "path": "tools/P0-test-stage-runner.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "b87cf9aaef4658c7d098630d2a5bf5d9f200933c2b8e2e68a992c0968aaf340a"
+      "sha256": "5302411e230bb100b3b65d0619b8d32e27861b681988263b7d18ce97ff534c2a"
     },
     {
       "path": "tools/P0-test-staged-actions.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "dda1dbab0ec1a21034f8bb29737c9029e32383109880955e557240dfea1c74f6"
+      "sha256": "7bb4f591acc636b2029e2e6d34635fe776bb1be287776869d63c3534c08a6224"
     },
     {
       "path": "tools/P0-test-successor-control-review.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "bf2438cf8950a627ff72da4b010296fd0e4702c535d2ded2b56d902d66238e20"
+      "sha256": "40a4822469096482cf4677f73dd4f7decaa53ea591210f19841011e7124742e3"
     },
     {
       "path": "tools/P0-test-wiki-trust.mjs",
@@ -173,13 +179,13 @@
       "path": "tools/P0-validate-execution-controls.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "3e08e1ed6497926f8bfc2249023239c67a4a4d45b1f39ec06c224ed877f780d2"
+      "sha256": "33b397c3355cd33fb9361975cfa785feaacd1d7def18ff3b1ea32590693fd4ee"
     },
     {
       "path": "tools/P0-verify-execution-start.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "c62b2eb8d36713b47736ed5046f4b72e8bba1f9f691834f2391b5b80f7132c9c"
+      "sha256": "92563ee7af576d5bab2797632f3a30be2c6074e76c0bd667fec03915c4198444"
     },
     {
       "path": "tools/P0-verify-generated-tracking.mjs",
@@ -209,13 +215,13 @@
       "path": "tools/build_phase1_release_plan.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "fed74b0f96a753f14ad4ef78854b06c3ab085a90fcfdcffde6bb1fbd727fce35"
+      "sha256": "8d9714960c2f528a3e7c760d9511c1b74622483bdb4dbeb61b3bfed77bd64b8d"
     },
     {
       "path": "tools/generate_phase1_roadmap_manifest.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "665a807aa8c9f57e0abe5dff709e1da48c80b00994f9900addf7d0c160205358"
+      "sha256": "26792e09192825251bd81c35b24ea141b6c3d4c53383dcf9a2b3bda1112706c0"
     },
     {
       "path": "tools/sync_phase1_github.mjs",

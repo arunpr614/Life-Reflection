@@ -64,6 +64,15 @@ const deliveryTransitionDefinition = Object.freeze({
   argumentSetId: "transition.v1",
 });
 expectCode(validateStagedActionDefinition(deliveryTransitionDefinition), "STAGE_DEFINITION_VALID");
+assert.deepEqual(DELIVERY_TRANSITION_GATE_B_CONTRACT.taskIds, P0_R0_SUBSTANTIVE_TASK_IDS); cases += 1;
+for (const taskId of DELIVERY_TRANSITION_GATE_B_CONTRACT.taskIds) {
+  expectCode(validateStagedActionDefinition({
+    ...deliveryTransitionDefinition,
+    taskId,
+    stageId: `P0-STAGE-${taskId}-STATUS-DELIVERY-TRANSITION`,
+    idempotencyKey: `P0-IDEMP-${taskId}-STATUS-DELIVERY-TRANSITION-001`,
+  }), "STAGE_DEFINITION_VALID");
+}
 expectCode(validateStagedActionDefinition({
   ...deliveryTransitionDefinition,
   scopeClass: "local-synthetic",
@@ -77,6 +86,39 @@ expectCode(validateStagedActionDefinition({
   ...deliveryTransitionDefinition,
   stageId: "P0-STAGE-UX-R0-001-STATUS-DELIVERY-TRANSITION",
 }), "STAGE_SCOPE_ACTION_NOT_OWNED");
+expectCode(validateStagedActionDefinition({
+  ...deliveryTransitionDefinition,
+  moduleId: "spk.synthetic",
+}), "STAGE_DELIVERY_TRANSITION_CONTRACT_INVALID");
+expectCode(validateStagedActionDefinition({
+  ...base,
+  moduleId: DELIVERY_TRANSITION_GATE_B_CONTRACT.moduleId,
+}), "STAGE_DELIVERY_TRANSITION_CONTRACT_INVALID");
+expectCode(validateStagedActionDefinition({
+  ...deliveryTransitionDefinition,
+  scopeClass: "private-execution",
+  actionClass: "project-workflow-mutation",
+}), "STAGE_SCOPE_ACTION_NOT_OWNED");
+expectCode(validateStagedActionDefinition({
+  ...deliveryTransitionDefinition,
+  taskId: "PRD-R1-001",
+  stageId: "P0-STAGE-PRD-R1-001-STATUS-DELIVERY-TRANSITION",
+  idempotencyKey: "P0-IDEMP-PRD-R1-001-STATUS-DELIVERY-TRANSITION-001",
+}), "STAGE_TASK_NOT_ALLOWLISTED");
+for (const taskId of P0_R0_SCOPE_TASK_IDS.filter((candidate) => !P0_R0_SUBSTANTIVE_TASK_IDS.includes(candidate))) {
+  expectCode(validateStagedActionDefinition({
+    ...deliveryTransitionDefinition,
+    taskId,
+    stageId: `P0-STAGE-${taskId}-STATUS-DELIVERY-TRANSITION`,
+    idempotencyKey: `P0-IDEMP-${taskId}-STATUS-DELIVERY-TRANSITION-001`,
+  }), "STAGE_TASK_NOT_ALLOWLISTED");
+}
+expectCode(validateStagedActionDefinition({
+  ...deliveryTransitionDefinition,
+  taskId: "UNKNOWN-R0-001",
+  stageId: "P0-STAGE-UNKNOWN-R0-001-STATUS-DELIVERY-TRANSITION",
+  idempotencyKey: "P0-IDEMP-UNKNOWN-R0-001-STATUS-DELIVERY-TRANSITION-001",
+}), "STAGE_TASK_NOT_ALLOWLISTED");
 
 for (const [change, code] of [
   [{ taskId: "AUD-001" }, "STAGE_TASK_NOT_ALLOWLISTED"],
@@ -499,6 +541,17 @@ expectCode(validateStageRuntimeLifecycle({
   moduleBindings: deliveryTransitionModuleBindings,
   outcomeVerificationModuleIds: [DELIVERY_TRANSITION_GATE_B_CONTRACT.moduleId],
 }), "STAGE_RUNTIME_LIFECYCLE_VALID");
+for (const taskId of ["AUD-001", "PC-001", "PRD-R0-001"]) {
+  const preparationReview = structuredClone(deliveryTransitionRegistry.preparationReview);
+  preparationReview.taskId = taskId;
+  preparationReview.stageId = `P0-STAGE-${taskId}-STATUS-DELIVERY-TRANSITION`;
+  preparationReview.preparationReviewId = `P0-PREP-${taskId}-STATUS-DELIVERY-TRANSITION`;
+  resealPreparationReview(preparationReview);
+  expectCode(validateStageApprovalRegistry({
+    ...registryFixture.empty,
+    preparationReviews: [preparationReview],
+  }), "PREPARATION_REVIEW_RECORD_INVALID");
+}
 const genericPairTransitionRegistry = structuredClone(deliveryTransitionRegistry.registry);
 genericPairTransitionRegistry.preparationReviews[0].scopeClass = "local-synthetic";
 genericPairTransitionRegistry.preparationReviews[0].actionClass = "synthetic-foundation";

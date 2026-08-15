@@ -1,6 +1,7 @@
 # Life in Days — Phase 1 Product Council Decision Record
 
 - **Decision date:** 2026-08-14
+- **Current authority overlay:** [P0-ED-016 — bounded R0 authority](execution/P0-PHASE1-EXECUTION-DECISIONS.md#p0-ed-016--bounded-r0-authority), 2026-08-16
 - **Status:** Accepted as the planning baseline; not an implementation, deployment, or production approval
 - **Council:** Product Manager, UI/UX Designer, Technical Architect, Project Manager
 - **Authoritative task source:** [Phase 1 Roadmap Manifest](../project/PHASE1-ROADMAP-MANIFEST.json)
@@ -125,11 +126,11 @@ Task status, dates, and links are regenerated from the canonical manifest and sy
 
 ## Final planning conclusion
 
-The council accepts the package as a coherent plan for frequent, meaningful, owner-verifiable delivery on the existing-host constraint. Execution begins with the remaining R0 evidence gates. This planning decision does not claim those gates have passed and does not authorize authentic memories before R0 acceptance.
+The council accepts the package as a coherent plan for frequent, meaningful, owner-verifiable delivery on the existing-host constraint. Under the current bounded Goal, execution authority reaches R0 only and begins no further than the remaining R0 evidence gates. This planning decision does not claim those gates have passed and does not authorize authentic memories before R0 acceptance. R1-R10 remains frozen and requires a new direct Product Owner activation before execution.
 
-## 2026-08-14 execution-authorization addendum
+## 2026-08-14 historical execution-authorization addendum
 
-The directly activated Phase 1 Goal is now the highest current execution authority. It preserves this planning decision and its evidence boundaries while superseding historical universal G1/“implementation not authorized” stops. The [P0 execution authorization](execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md) delegates routine R0–R8 decisions to a persistent five-seat execution council when every named gate passes and preserves all named human-only acts.
+The then-directly activated Phase 1 Goal was the highest execution authority at the time. It preserved this planning decision and its evidence boundaries while superseding historical universal G1/“implementation not authorized” stops. The [P0 execution authorization](execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md) delegated routine R0–R8 decisions to a persistent five-seat execution council when every named gate passed and preserved all named human-only acts. This paragraph is retained as historical authority provenance; [P0-ED-016](execution/P0-PHASE1-EXECUTION-DECISIONS.md#p0-ed-016--bounded-r0-authority) and the 2026-08-16 bounded-authority addendum below control current scope.
 
 The independent QA seat, current RACI, veto rules, Owner Action Ledger, and decisions are recorded in:
 
@@ -140,3 +141,7 @@ The independent QA seat, current RACI, veto rules, Owner Action Ledger, and deci
 - [P0 execution-control review](execution/releases/P0-P0-EXECUTION-CONTROL-REVIEW.md)
 
 This addendum also records two source corrections before delivery reliance: R4 uses exactly keep the Correction, display newest upstream revision, or create a new Correction based on both; System Health derives the six PRD evidence states and maps them to explicit UX labels. Deployment remains **Unknown — private read authority pending**.
+
+## 2026-08-16 bounded-authority addendum
+
+The directly activated bounded P0/R0 Gold Goal, as recorded by [P0-ED-016](execution/P0-PHASE1-EXECUTION-DECISIONS.md#p0-ed-016--bounded-r0-authority), is the highest current execution authority. It preserves the complete P0/R0–R10 release sequence, requirements, and evidence gates as the planning baseline but limits release-execution authority to the R0 envelope, subject to the exact stage controls. At present, only the local/public Stage 0 control repair is authorized; no R0 implementation, private-system action, deployment, authentic-content admission, acceptance, release, or production work is authorized. All 50 R1-R10 tasks and their 300 task artifacts are frozen and out of scope. Historical broader Goals and delegations do not authorize those releases; any broader execution requires a new direct Product Owner activation.

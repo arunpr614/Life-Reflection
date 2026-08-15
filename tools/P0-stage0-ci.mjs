@@ -24,6 +24,7 @@ const MODULE_REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url
 
 export const CONTROL_TOOL_PATHS = Object.freeze([
   "tools/P0-append-only-trust.mjs",
+  "tools/P0-bounded-authority.mjs",
   "tools/P0-build-task-readiness-input.mjs",
   "tools/P0-content-safety.mjs",
   "tools/P0-control-review-trust.mjs",
@@ -67,7 +68,10 @@ export const CONTROL_INTEGRITY_PATHS = Object.freeze([
 ].sort());
 
 const TEST_COMMANDS = Object.freeze([
-  ["readiness", "node", ["tools/P0-test-execution-controls.mjs"], { passed: 375, failed: 0 }],
+  ["bounded_authority_fixtures", "node", ["tools/P0-bounded-authority.mjs", "--self-test"], {
+    ok: true, code: "P0_BOUNDED_AUTHORITY_SELF_TEST_OK", cases: 15, sourceCount: 17,
+  }],
+  ["readiness", "node", ["tools/P0-test-execution-controls.mjs"], { passed: 386, failed: 0 }],
   ["historical_control_review", "node", ["tools/P0-test-control-review-trust.mjs"], { assertions: 35, failed: 0 }],
   ["successor_control_review_fixtures", "node", ["tools/P0-test-successor-control-review.mjs"], { failed: 0 }],
   ["running_log_fixtures", "node", ["tools/P0-test-running-log-trust.mjs"], { failed: 0 }],
@@ -76,13 +80,13 @@ const TEST_COMMANDS = Object.freeze([
   }],
   ["wiki_fixtures", "node", ["tools/P0-test-wiki-trust.mjs"], { ok: true, cases: 30, helpWrites: 0 }],
   ["staged_action_fixtures", "node", ["tools/P0-test-staged-actions.mjs"], {
-    ok: true, code: "SELF_TEST_OK", cases: 83, productionActions: 0,
+    ok: true, code: "SELF_TEST_OK", cases: 100, productionActions: 0,
   }],
   ["stage_runner_fixtures", "node", ["tools/P0-test-stage-runner.mjs"], {
-    ok: true, code: "SELF_TEST_OK", cases: 39, productionModules: 0,
+    ok: true, code: "SELF_TEST_OK", cases: 78, productionModules: 0,
   }],
   ["delivery_transition_fixtures", "node", ["tools/P0-test-delivery-transition.mjs"], {
-    ok: true, code: "SELF_TEST_OK", cases: 58, applyEnabled: false,
+    ok: true, code: "SELF_TEST_OK", cases: 78, applyEnabled: false,
   }],
   ["execution_start_fixtures", "node", ["tools/P0-verify-execution-start.mjs", "--self-test"], {
     ok: true, code: "SELF_TEST_OK", cases: 65,
@@ -96,6 +100,9 @@ const TEST_COMMANDS = Object.freeze([
 ]);
 
 const TRUST_COMMANDS = Object.freeze([
+  ["bounded_authority", "node", ["tools/P0-bounded-authority.mjs"], {
+    passed: true, findingCount: 0, sourceCount: 17, decisionId: "P0-ED-016",
+  }],
   ["successor_control_review", "node", ["tools/P0-successor-control-review.mjs"], {
     passed: true,
     findingCount: 0,

@@ -219,7 +219,7 @@ addTitle(
   summary,
   "U",
   "Life in Days — Phase 1 Release Plan",
-  `Review workbook generated from PHASE1-ROADMAP-MANIFEST.json on 2026-08-15. Current readiness: ${currentReadinessTruth}. Dates are estimates; evidence gates control delivery.`,
+  `Review workbook generated from PHASE1-ROADMAP-MANIFEST.json on 2026-08-16. Current readiness: ${currentReadinessTruth}. Dates are estimates; evidence gates control delivery.`,
 );
 summary.getRange("A5:B5").values = [["Plan metric", "Value"]];
 styleHeader(summary.getRange("A5:B5"));

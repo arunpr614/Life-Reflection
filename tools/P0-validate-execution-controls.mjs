@@ -5,6 +5,7 @@ import path from "node:path";
 import {
   ARTIFACT_KINDS,
   COUNCIL_SEATS,
+  DELIVERY_TRANSITION_GATE_B_CONTRACT,
   DESIGN_ACCESSIBILITY_DIMENSIONS,
   DESIGN_STATE_DIMENSIONS,
   LOCAL_SYNTHETIC_CONTENT_POLICY,
@@ -15,6 +16,7 @@ import {
   STAGE_APPROVAL_REGISTRY_PATH,
   STAGE_EXECUTION_SCHEMA_VERSION,
   STAGE_LIFECYCLE_STATES,
+  TASK_EXECUTION_CONTRACT,
   TERMINAL_STAGE_STATES,
   TASK_FILE_DESCENDANT_DELTA_PATHS,
   TASK_FILE_DIFF_EXCLUSIONS,
@@ -28,6 +30,7 @@ import {
   parseArtifactControlMarkers,
   validateTaskFilesManifest,
 } from "./P0-readiness-gates.mjs";
+import { loadBoundedAuthoritySources } from "./P0-bounded-authority.mjs";
 import {
   OWNER_ACTION_REQUIREMENT_CATALOG,
   acceptanceScenarioIdsFor,
@@ -88,6 +91,21 @@ const failures = [];
 const check = (condition, message) => {
   if (!condition) failures.push(message);
 };
+let boundedAuthority;
+try {
+  boundedAuthority = loadBoundedAuthoritySources(repoRoot);
+} catch {
+  boundedAuthority = { ok: false, findings: ["BOUNDED_AUTHORITY_HELPER_FAILED"] };
+}
+const boundedAuthorityFindings = Array.isArray(boundedAuthority.findings)
+  ? boundedAuthority.findings
+  : ["BOUNDED_AUTHORITY_FINDINGS_MISSING"];
+for (const finding of boundedAuthorityFindings) {
+  check(false, `GOV-AUTH-SCOPE: ${finding}`);
+}
+if (boundedAuthority.ok !== true && boundedAuthorityFindings.length === 0) {
+  check(false, "GOV-AUTH-SCOPE: BOUNDED_AUTHORITY_VALIDATION_FAILED");
+}
 check(assertDuplicateKeyRejection(), "GOV-JSON-001: duplicate-key JSON rejection self-test failed");
 const sameSet = (left, right) => left.size === right.size && [...left].every((value) => right.has(value));
 const hasExactKeys = (value, expected) => value !== null
@@ -294,6 +312,29 @@ const expectedP0R0SubstantiveTaskIds = ["SPK-R0-001", "UX-R0-001", "ARCH-R0-001"
 const expectedP0R0HistoricalTaskIds = ["AUD-001", "PC-001", "PRD-R0-001"];
 check(jsonEqual(P0_R0_SCOPE_TASK_IDS, expectedP0R0ScopeTaskIds), "GOV-STAGE-001: bounded P0/R0 scope task IDs drifted");
 check(jsonEqual(P0_R0_SUBSTANTIVE_TASK_IDS, expectedP0R0SubstantiveTaskIds), "GOV-STAGE-002: substantive R0 stage task IDs drifted");
+check(jsonEqual(DELIVERY_TRANSITION_GATE_B_CONTRACT.taskIds, expectedP0R0SubstantiveTaskIds),
+  "GOV-STAGE-017: delivery-transition task allowlist is not the exact five substantive R0 tasks");
+check(DELIVERY_TRANSITION_GATE_B_CONTRACT.stageIdSuffix === "-DELIVERY-TRANSITION"
+  && DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass === "delivery-control"
+  && DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass === "delivery-status-transition"
+  && DELIVERY_TRANSITION_GATE_B_CONTRACT.moduleId === "p0.delivery-transition"
+  && DELIVERY_TRANSITION_GATE_B_CONTRACT.modulePath === "tools/P0-delivery-transition.mjs",
+"GOV-STAGE-018: delivery-transition Gate-B contract drifted");
+check(jsonEqual(SCOPE_ACTION_COMPATIBILITY[DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass], [
+  DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass,
+]), "GOV-STAGE-019: delivery-control scope is not closed to one status-transition action");
+check(Object.values(TASK_EXECUTION_CONTRACT).every((contract) => (
+  contract.scopeActions[DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass] === undefined
+)), "GOV-STAGE-020: ordinary task execution contract borrowed delivery-transition authority");
+check(!OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-001"].requiredForScopeClasses
+  .includes(DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass)
+  && !OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-002"].requiredForScopeClasses
+    .includes(DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass),
+"GOV-STAGE-021: delivery transition incorrectly requires P0-OA-001 or P0-OA-002");
+check(jsonEqual(OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-002"].requiredForScopeClasses, ["private-execution"])
+  && jsonEqual(OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-002"].requiredForActionClasses, [
+    "project-workflow-mutation", "project-non-delivery-item",
+  ]), "GOV-STAGE-022: P0-OA-002 no longer remains exclusive to private workflow/non-delivery mutations");
 check(jsonEqual(STAGE_LIFECYCLE_STATES, [
   "declared", "ready", "running", "verification-pending", "recovery-required", "rolling-back",
   "verified-complete", "verified-rolled-back", "cancelled-before-mutation", "blocked-no-mutation", "expired-before-mutation",
@@ -449,7 +490,7 @@ check(jsonEqual(artifactRegister.sourceEvidenceModel, {
   councilSeatVerdicts: ["hold", "approved", "not-applicable"],
   designStateDimensions,
   designAccessibilityDimensions,
-  requestedScopeClasses: ["local-synthetic", "private-execution", "release"],
+  requestedScopeClasses: ["local-synthetic", "delivery-control", "private-execution", "release"],
   scopeActionCompatibility: SCOPE_ACTION_COMPATIBILITY,
   taskFilePurposes: TASK_FILE_PURPOSES,
   taskFileGitModes: TASK_FILE_GIT_MODES,

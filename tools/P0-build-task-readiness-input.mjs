@@ -1,6 +1,7 @@
 import {
   ARTIFACT_KINDS,
   COUNCIL_SEATS,
+  DELIVERY_TRANSITION_GATE_B_CONTRACT,
   DESIGN_ACCESSIBILITY_DIMENSIONS,
   DESIGN_STATE_DIMENSIONS,
   OWNER_ACTION_REQUIREMENT_CATALOG,
@@ -158,6 +159,10 @@ export function validateReadinessState(readinessState, taskIds) {
     if (derived.length) throw new Error(`${taskId}: derived readiness overrides are forbidden: ${derived.join(", ")}`);
     const unknown = Object.keys(override).filter((key) => !ALLOWED_OVERRIDE_KEYS.has(key));
     if (unknown.length) throw new Error(`${taskId}: unknown source-evidence override keys: ${unknown.join(", ")}`);
+    if (override.requestedScopeClass === DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass
+      || override.requestedActionClass === DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass) {
+      throw new Error(`${taskId}: delivery-transition scope/action is ephemeral Gate-B stage authority and cannot be persisted`);
+    }
     if (override.requestedScopeClass !== undefined && override.requestedActionClass !== undefined
       && !SCOPE_ACTION_COMPATIBILITY[override.requestedScopeClass]?.includes(override.requestedActionClass)) {
       throw new Error(`${taskId}: incompatible requested scope/action pair ${override.requestedScopeClass}/${override.requestedActionClass}`);
@@ -333,12 +338,8 @@ export function buildTaskReadinessInput({
       ...clone(approval?.council?.seatVerdicts ?? {}),
     },
   };
-  const actionIds = ownerActionIdsFor(task);
-  if (isRequestedDedicatedDeliveryTransition(task, override, requestedScope)
-    && !actionIds.includes("P0-OA-002")) {
-    actionIds.push("P0-OA-002");
-    actionIds.sort();
-  }
+  const dedicatedDeliveryTransition = isRequestedDedicatedDeliveryTransition(task, override, requestedScope);
+  const actionIds = dedicatedDeliveryTransition ? [] : ownerActionIdsFor(task);
   const actionRecords = actionIds.map((actionId) => ownerActionState?.actions?.[actionId]).filter(Boolean).map(clone);
   const actionRecordById = new Map(actionRecords.map((record) => [record.actionId, record]));
   const approvalRecord = clone(approval?.approvalRecord ?? null);

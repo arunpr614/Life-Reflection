@@ -8,6 +8,7 @@ import { inflateRawSync } from "node:zlib";
 import {
   APPROVAL_REGISTRY_PATH,
   ARTIFACT_KINDS,
+  DELIVERY_TRANSITION_GATE_B_CONTRACT,
   READINESS_SCHEMA_VERSION,
   SCOPE_ACTION_COMPATIBILITY,
   STAGE_EXECUTION_SCHEMA_VERSION,
@@ -135,8 +136,8 @@ const messages = Object.freeze({
     "Use the exact approved scope and action or obtain a fresh candidate approval.",
   ],
   TASK_EXECUTION_CALLBACK_REQUIRED: [
-    "Standalone authorization tokens are not issued by this verifier.",
-    "Invoke the verifier through the bounded execution callback wrapper.",
+    "Standalone authorization tokens and legacy task-wide callbacks are not issued by this verifier.",
+    "Use executeStageFromExactMain only with its exact code-owned reviewed callback, or use the serializable stage runner.",
   ],
   TASK_BOUNDED_ACTION_FAILED: [
     "The bounded action did not complete successfully.",
@@ -152,11 +153,11 @@ const messages = Object.freeze({
   ],
   TASK_PRODUCTION_OPTIONS_INVALID: [
     "The production execution request contains unsupported or injectable options.",
-    "Use the closed serializable stage runner; arbitrary in-process callbacks are not accepted.",
+    "Use one closed staged runner; arbitrary or module-mismatched in-process callbacks are not accepted.",
   ],
   TASK_SERIALIZABLE_RUNNER_REQUIRED: [
-    "Direct in-process task execution is disabled.",
-    "Invoke the closed serializable stage runner with one reviewed stage identity.",
+    "Legacy task-wide in-process execution is disabled.",
+    "Use executeStageFromExactMain for one code-owned reviewed short callback, or the serializable stage runner for long or process work.",
   ],
   APPROVAL_PUBLICATION_INPUT_INVALID: [
     "Approval publication input is missing or malformed.",
@@ -1898,14 +1899,15 @@ async function verifyStageGateBAtExactMainCore(request, options = {}) {
   });
 }
 
-/** Closed read-only Gate B authorization used only by the serializable stage runner. */
+/** Closed read-only Gate B authorization shared by both reviewed staged runners. */
 export async function verifyStageGateBAtExactMain(request = {}) {
   return verifyStageGateBAtExactMainCore(request);
 }
 
 /**
- * Retained diagnostic surface. Direct in-process execution is intentionally
- * disabled; only the serializable stage runner may start reviewed work.
+ * Retained diagnostic surface. This legacy task-wide function stays disabled;
+ * reviewed work may start only through executeStageFromExactMain's bounded
+ * in-process lane or the serializable stage runner.
  */
 export async function executeTaskFromExactMain(request = {}) {
   if (!hasExactKeys(request, ["taskId", "scopeClass", "actionClass"])) {
@@ -2596,12 +2598,12 @@ async function selfTest() {
   const deliveryTransitionOverrideProbe = stageReadinessOverride({
     taskId: deliveryTransitionTaskId,
     stageId: deliveryTransitionStageId,
-    scopeClass: "private-execution",
-    actionClass: "project-workflow-mutation",
+    scopeClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass,
+    actionClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass,
   });
   if (deliveryTransitionOverrideProbe.requestedStageId !== deliveryTransitionStageId
-    || deliveryTransitionOverrideProbe.requestedScopeClass !== "private-execution"
-    || deliveryTransitionOverrideProbe.requestedActionClass !== "project-workflow-mutation") {
+    || deliveryTransitionOverrideProbe.requestedScopeClass !== DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass
+    || deliveryTransitionOverrideProbe.requestedActionClass !== DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass) {
     throw new Error("Gate B delivery-transition readiness seam self-test failed");
   }
   const rejectedStageRegistryContinuity = await verifyStageGateBAtExactMainCore(stageRequest, {

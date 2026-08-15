@@ -13,12 +13,10 @@ import { parseJsonWithoutDuplicateKeys } from "./P0-json-trust.mjs";
 import {
   buildProjectionSnapshot,
   buildProjectionTransitionObservation,
-  buildTransitionTarget,
-  HISTORICAL_NON_TRANSITION_TASK_IDS,
   issueStateFor,
-  P0_R0_SUBSTANTIVE_TASK_IDS,
   snapshotMatches,
   statusLabelFor,
+  transitionEdgeAllowed,
 } from "./P0-github-projection-model.mjs";
 import { DELIVERY_TRANSITION_GATE_B_CONTRACT } from "./P0-readiness-gates.mjs";
 import { FROZEN_SNAPSHOT_SHA256 } from "./P0-verify-r1-r10-freeze.mjs";
@@ -206,6 +204,26 @@ function targetProjectionInput(input, target) {
   };
 }
 
+function buildOrdinaryDeliveryTransitionTarget({ taskId, fromStatus, toStatus } = {}) {
+  if (!DELIVERY_TRANSITION_GATE_B_CONTRACT.taskIds.includes(taskId)) {
+    return Object.freeze({ ok: false, code: "TRANSITION_TASK_NOT_ALLOWLISTED" });
+  }
+  if (!transitionEdgeAllowed(fromStatus, toStatus)) {
+    return Object.freeze({ ok: false, code: "TRANSITION_EDGE_INVALID" });
+  }
+  return Object.freeze({
+    ok: true,
+    code: "TRANSITION_TARGET_VALID",
+    target: Object.freeze({
+      taskId,
+      projectStatus: toStatus,
+      issueState: issueStateFor(toStatus),
+      removeStatusLabel: statusLabelFor(fromStatus),
+      addStatusLabel: statusLabelFor(toStatus),
+    }),
+  });
+}
+
 /** Build a deterministic, sanitized, mutation-free delivery transition plan. */
 export function createDeliveryTransitionDryRun(input) {
   if (!hasExactKeys(input, INPUT_KEYS)
@@ -218,10 +236,7 @@ export function createDeliveryTransitionDryRun(input) {
     || input.liveProjection?.sourceRevision !== input.sourceRevision) {
     return result(false, "TRANSITION_INPUT_SHAPE_INVALID");
   }
-  if (HISTORICAL_NON_TRANSITION_TASK_IDS.includes(input.taskId)) {
-    return result(false, "TRANSITION_HISTORICAL_TASK_LOCKED", { taskId: input.taskId });
-  }
-  if (!P0_R0_SUBSTANTIVE_TASK_IDS.includes(input.taskId)) {
+  if (!DELIVERY_TRANSITION_GATE_B_CONTRACT.taskIds.includes(input.taskId)) {
     return result(false, "TRANSITION_TASK_NOT_ALLOWLISTED", { taskId: input.taskId });
   }
   const preimage = buildProjectionSnapshot(input.liveProjection);
@@ -229,7 +244,7 @@ export function createDeliveryTransitionDryRun(input) {
   if (input.sourceTaskStatus !== preimage.snapshot.taskStatus) {
     return result(false, "TRANSITION_SOURCE_PREIMAGE_MISMATCH", { taskId: input.taskId });
   }
-  const targetResult = buildTransitionTarget({
+  const targetResult = buildOrdinaryDeliveryTransitionTarget({
     taskId: input.taskId,
     fromStatus: preimage.snapshot.taskStatus,
     toStatus: input.targetStatus,
@@ -313,7 +328,7 @@ function planIsStructurallyBound(planEnvelope) {
   if (!(hasExactKeys(plan, PLAN_KEYS)
     && plan.schemaVersion === DELIVERY_TRANSITION_SCHEMA_VERSION
     && plan.mode === "reviewed-dry-run"
-    && P0_R0_SUBSTANTIVE_TASK_IDS.includes(plan.taskId)
+    && DELIVERY_TRANSITION_GATE_B_CONTRACT.taskIds.includes(plan.taskId)
     && FULL_REVISION.test(plan.sourceRevision ?? "")
     && plan.freezeSnapshotSha256 === FROZEN_SNAPSHOT_SHA256
     && isDedicatedDeliveryTransitionStage(plan.stageId, plan.taskId)
@@ -341,7 +356,7 @@ function planIsStructurallyBound(planEnvelope) {
     && plan.verification?.quiescentSnapshots === 2
     && plan.verification?.quiescenceIntervalMs === QUIESCENCE_INTERVAL_MS)) return false;
 
-  const targetResult = buildTransitionTarget({
+  const targetResult = buildOrdinaryDeliveryTransitionTarget({
     taskId: plan.taskId,
     fromStatus: plan.fromStatus,
     toStatus: plan.toStatus,
@@ -427,19 +442,18 @@ async function syncDirectory(directory) {
   }
 }
 
-async function ensureDurableDirectory(directory) {
+const DURABLE_DIRECTORY_OPERATIONS = Object.freeze({ lstat, mkdir, syncDirectory });
+
+async function ensureDurableDirectoryWithOperations(directory, operations) {
   const resolved = path.resolve(directory);
   const parent = path.dirname(resolved);
-  if (resolved === parent) return;
   try {
-    await mkdir(resolved, { mode: 0o700 });
-    await syncDirectory(parent);
+    await operations.mkdir(resolved, { mode: 0o700 });
   } catch (error) {
     if (error?.code === "ENOENT") {
-      await ensureDurableDirectory(parent);
+      await ensureDurableDirectoryWithOperations(parent, operations);
       try {
-        await mkdir(resolved, { mode: 0o700 });
-        await syncDirectory(parent);
+        await operations.mkdir(resolved, { mode: 0o700 });
       } catch (retryError) {
         if (retryError?.code !== "EEXIST") throw retryError;
       }
@@ -447,10 +461,16 @@ async function ensureDurableDirectory(directory) {
       throw error;
     }
   }
-  const metadata = await lstat(resolved);
+  const metadata = await operations.lstat(resolved);
   if (!metadata.isDirectory() || metadata.isSymbolicLink()) {
     throw new Error("durable path is not a plain directory");
   }
+  await operations.syncDirectory(parent);
+  await operations.syncDirectory(resolved);
+}
+
+async function ensureDurableDirectory(directory) {
+  await ensureDurableDirectoryWithOperations(directory, DURABLE_DIRECTORY_OPERATIONS);
 }
 
 async function readTaskLock(sagaRoot, taskId) {
@@ -527,7 +547,7 @@ function sagaEventShapeValid(event) {
     || event.schemaVersion !== DELIVERY_TRANSITION_SCHEMA_VERSION
     || !SHA256_DIGEST.test(event.planDigest ?? "")
     || !Number.isFinite(Date.parse(event.occurredAt ?? ""))
-    || !P0_R0_SUBSTANTIVE_TASK_IDS.includes(event.taskId)
+    || !DELIVERY_TRANSITION_GATE_B_CONTRACT.taskIds.includes(event.taskId)
     || !(event.previousEventSha256 === null || SHA256_DIGEST.test(event.previousEventSha256 ?? ""))
     || !SHA256_DIGEST.test(event.eventSha256 ?? "")) return false;
   if (["operation-intent", "operation-complete", "rollback-intent", "rollback-complete"].includes(event.state)) {
@@ -995,8 +1015,8 @@ async function selfTest() {
       code: "STAGE_GATE_B_READY",
       taskId: "UX-R0-001",
       stageId: "P0-STAGE-UX-R0-001-DELIVERY-TRANSITION",
-      scopeClass: "private-execution",
-      actionClass: "project-workflow-mutation",
+      scopeClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass,
+      actionClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass,
       sourceRevision: revision,
       candidateRevision: "c".repeat(40),
       dossierDigest: "d".repeat(64),
@@ -1034,6 +1054,43 @@ async function selfTest() {
     let cases = 0;
     let sagaIndex = 0;
     const nextSagaRoot = () => path.join(root, `saga-${++sagaIndex}`);
+    const observedDirectory = path.join(root, "concurrent-observed-directory");
+    const observedParent = path.dirname(observedDirectory);
+    const durabilityTrace = [];
+    let observedDirectoryExists = false;
+    const observingOperations = (caller) => ({
+      mkdir: async (candidate) => {
+        if (candidate !== observedDirectory) throw new Error("unexpected durable directory candidate");
+        if (!observedDirectoryExists) {
+          observedDirectoryExists = true;
+          durabilityTrace.push(`${caller}:mkdir-created`);
+          return;
+        }
+        durabilityTrace.push(`${caller}:mkdir-eexist`);
+        const error = new Error("synthetic concurrent observer");
+        error.code = "EEXIST";
+        throw error;
+      },
+      lstat: async (candidate) => {
+        durabilityTrace.push(`${caller}:lstat-${candidate === observedDirectory ? "directory" : "unexpected"}`);
+        return { isDirectory: () => true, isSymbolicLink: () => false };
+      },
+      syncDirectory: async (candidate) => {
+        durabilityTrace.push(`${caller}:sync-${candidate === observedParent ? "parent" : "directory"}`);
+      },
+    });
+    await Promise.all([
+      ensureDurableDirectoryWithOperations(observedDirectory, observingOperations("creator")),
+      ensureDurableDirectoryWithOperations(observedDirectory, observingOperations("observer")),
+    ]);
+    const traceFor = (caller) => durabilityTrace.filter((entry) => entry.startsWith(`${caller}:`));
+    if (traceFor("creator").join(",")
+        !== "creator:mkdir-created,creator:lstat-directory,creator:sync-parent,creator:sync-directory"
+      || traceFor("observer").join(",")
+        !== "observer:mkdir-eexist,observer:lstat-directory,observer:sync-parent,observer:sync-directory") {
+      throw new Error("concurrent EEXIST durable-directory observer case failed");
+    }
+    cases += 1;
     const plan = createDeliveryTransitionDryRun(input);
     if (!plan.ok || !planIsStructurallyBound(plan)) throw new Error("positive dry-run case failed");
     cases += 1;
@@ -1456,16 +1513,60 @@ async function selfTest() {
     cases += 1;
     reset();
 
-    for (const taskId of ["AUD-001", "PC-001", "PRD-R0-001", "PRD-R1-001", "REL-R10-001"]) {
+    const ordinaryEdges = [
+      ["Backlog", "Next", "execute", "Ready to execute — Gate B"],
+      ["Next", "In progress", "execute", "Ready to execute — Gate B"],
+      ["In progress", "Done", "accept", "Ready to accept — Gate B"],
+    ];
+    for (const taskId of DELIVERY_TRANSITION_GATE_B_CONTRACT.taskIds) {
+      for (const [fromStatus, toStatus, gateKind, gateDecision] of ordinaryEdges) {
+        const liveProjection = {
+          ...input.liveProjection,
+          taskId,
+          taskStatus: fromStatus,
+          issue: {
+            ...input.liveProjection.issue,
+            state: issueStateFor(fromStatus),
+            labels: input.liveProjection.issue.labels
+              .filter((label) => !label.startsWith("status:"))
+              .concat(statusLabelFor(fromStatus)),
+          },
+          projectItem: { ...input.liveProjection.projectItem, status: fromStatus },
+        };
+        const edgePreimage = buildProjectionSnapshot(liveProjection);
+        const allowed = createDeliveryTransitionDryRun({
+          ...input,
+          taskId,
+          sourceTaskStatus: fromStatus,
+          targetStatus: toStatus,
+          authorization: {
+            ...input.authorization,
+            taskId,
+            stageId: `P0-STAGE-${taskId}-STATUS-DELIVERY-TRANSITION`,
+            preparationReviewId: `P0-PREP-${taskId}-STATUS-DELIVERY-TRANSITION`,
+            idempotencyKey: `P0-IDEMP-${taskId}-STATUS-DELIVERY-TRANSITION-001`,
+            gateKind,
+            gateDecision,
+          },
+          rollback: { ...input.rollback, preChangeSnapshotDigest: edgePreimage.snapshotDigest },
+          liveProjection,
+        });
+        if (!allowed.ok || !planIsStructurallyBound(allowed)) {
+          throw new Error(`ordinary delivery edge case failed: ${taskId}:${fromStatus}:${toStatus}:${allowed.code}`);
+        }
+        cases += 1;
+      }
+    }
+    for (const taskId of [
+      "AUD-001", "PC-001", "PRD-R0-001", "PRD-R1-001", "REL-R10-001", "UNKNOWN-R0-001",
+    ]) {
       const denied = createDeliveryTransitionDryRun({
         ...input,
         taskId,
         authorization: { ...input.authorization, taskId, stageId: `P0-STAGE-${taskId}-DELIVERY-TRANSITION` },
         liveProjection: { ...input.liveProjection, taskId },
       });
-      if (!["TRANSITION_HISTORICAL_TASK_LOCKED", "TRANSITION_TASK_NOT_ALLOWLISTED"].includes(denied.code)) {
-        throw new Error("task allowlist case failed");
-      }
+      if (denied.code !== "TRANSITION_TASK_NOT_ALLOWLISTED") throw new Error("task allowlist case failed");
       cases += 1;
     }
     for (const mutation of [
@@ -1482,6 +1583,8 @@ async function selfTest() {
       { moduleId: null },
       { moduleSha256: null },
       { scopeClass: "local-synthetic", actionClass: "synthetic-foundation" },
+      { scopeClass: "private-execution", actionClass: "project-workflow-mutation" },
+      { scopeClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass, actionClass: "project-workflow-mutation" },
       { moduleId: "ux.delivery-transition" },
     ]) {
       const denied = createDeliveryTransitionDryRun({ ...input, authorization: { ...input.authorization, ...mutation } });
@@ -1497,10 +1600,9 @@ async function selfTest() {
     await mkdir(symlinkTarget, { mode: 0o700 });
     await symlink(symlinkTarget, symlinkRoot);
     const symlinkDenied = await applyPlanCore(plan, adapter, { sagaRoot: symlinkRoot });
-    if (disabled.code !== "TRANSITION_APPLY_DISABLED_STAGE0"
-      || symlinkDenied.code !== "TRANSITION_TASK_LOCK_INVALID") {
-      throw new Error("Stage 0 apply-disable/plain-directory case failed");
-    }
+    if (disabled.code !== "TRANSITION_APPLY_DISABLED_STAGE0") throw new Error("Stage 0 apply-disable case failed");
+    cases += 1;
+    if (symlinkDenied.code !== "TRANSITION_TASK_LOCK_INVALID") throw new Error("plain-directory case failed");
     cases += 1;
 
     const badLabelInput = structuredClone(input);

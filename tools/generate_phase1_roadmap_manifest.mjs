@@ -4,7 +4,7 @@ import { parseJsonWithoutDuplicateKeys } from "./P0-json-trust.mjs";
 
 const repoRoot = path.resolve(import.meta.dirname, "..");
 const repoUrl = "https://github.com/arunpr614/Life-Reflection";
-const generatedAt = "2026-08-15";
+const generatedAt = "2026-08-16";
 const executionGovernance = {
   contextDigest: "docs/council/execution/P0-PHASE1-CONTEXT-DIGEST.md",
   councilCharter: "docs/council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md",
@@ -613,7 +613,7 @@ Deliver eleven gated releases after the P0 planning baseline. R0 admits syntheti
 
 The release plan contains exactly **${tasks.length} task work packages**. The same manifest drives this document, the review workbook, repository issues, and the live GitHub Project. A task may move to \`Done\` only when its own named evidence exists. Completing a PRD or design task does not complete its feature release.
 
-Current execution uses a five-seat council and the directly activated Goal under these public-safe records: ${Object.entries(executionGovernance).map(([key, filePath]) => mdLink(key, filePath)).join("; ")}. Routine R0–R8 decisions are council-delegated only when every named gate passes. Named account/MFA/secret, terms/spend/provider, authentic-content/UAT, recovery-key/ceremony, final R9, and irreversible R10 acts remain human-only. Deployment is **Unknown — private read authority pending**.
+Current release-execution authority is limited to R0 under the active bounded P0/R0 Gold Goal and these public-safe records: ${Object.entries(executionGovernance).map(([key, filePath]) => mdLink(key, filePath)).join("; ")}. At present, only the local/public Stage 0 control repair is authorized; no R0 implementation, private-system action, deployment, acceptance, release, or production work is authorized. The five-seat council may later decide only eligible R0 work after every named stage gate passes. All R1-R10 tasks and artifacts are frozen and out of scope; broader execution requires a new direct Product Owner activation. Named account/MFA/secret, terms/spend/provider, authentic-content/UAT, and recovery-key/ceremony acts remain human-only. Deployment is **Unknown — private read authority pending**.
 
 ## 2. Roadmap status contract
 
@@ -659,7 +659,7 @@ ${requirementRows}
 5. The Independent QA Lead owns test strategy, evidence integrity, defect severity, privacy/security/browser/accessibility validation and release vetoes, and cannot certify a candidate it implemented.
 6. Engineering and independent QA attach implementation and executed evidence to the applicable existing task before a delivery task moves to Done.
 7. The Project Manager owns dependency/status truth and keeps GitHub, Project, workbook, Wiki, and running log reconciled.
-8. Routine R0–R8 promotion uses council delegation only after all gates pass; specifically named human acts remain separate gates.
+8. Within the active bounded Goal, only routine R0 promotion may use council delegation after all gates pass. R1-R10 remains frozen until a new direct Product Owner activation, and specifically named human acts remain separate gates.
 9. Any entry-gate failure moves the affected item to Backlog or keeps it In progress; dates move before privacy, recovery, accessibility, or non-regression gates are weakened.
 10. Every release that adds a persistent data shape must restore that shape and prove rollback independently before its release-acceptance item closes.
 11. R10 remains undated in the workbook and GitHub Project until the measured trigger is approved.

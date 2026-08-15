@@ -17,6 +17,7 @@ import {
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { types as utilTypes } from "node:util";
 import {
   canonicalJson,
   hasExactKeys,
@@ -37,6 +38,31 @@ import {
   verifyStageTerminalHistoryAtExactMain,
 } from "./P0-verify-execution-start.mjs";
 
+// Callback code runs in-process, so deadline and restoration logic must not
+// look up mutable globals after the reviewed function starts.
+const PRIMORDIAL_DATE = Date;
+const PRIMORDIAL_DATE_NOW = Date.now.bind(Date);
+const PRIMORDIAL_DATE_PARSE = Date.parse.bind(Date);
+const PRIMORDIAL_DATE_GET_TIME = Date.prototype.getTime.call.bind(Date.prototype.getTime);
+const PRIMORDIAL_DATE_TO_ISO_STRING = Date.prototype.toISOString.call.bind(Date.prototype.toISOString);
+const PRIMORDIAL_HRTIME_BIGINT = process.hrtime.bigint.bind(process.hrtime);
+const PRIMORDIAL_SET_TIMEOUT = globalThis.setTimeout.bind(globalThis);
+const PRIMORDIAL_CLEAR_TIMEOUT = globalThis.clearTimeout.bind(globalThis);
+const PRIMORDIAL_QUEUE_MICROTASK = globalThis.queueMicrotask.bind(globalThis);
+const PRIMORDIAL_OBJECT_DEFINE_PROPERTY = Object.defineProperty.bind(Object);
+const PRIMORDIAL_OBJECT_GET_OWN_PROPERTY_DESCRIPTOR = Object.getOwnPropertyDescriptor.bind(Object);
+const PRIMORDIAL_OBJECT_GET_OWN_PROPERTY_DESCRIPTORS = Object.getOwnPropertyDescriptors.bind(Object);
+const PRIMORDIAL_OBJECT_GET_PROTOTYPE_OF = Object.getPrototypeOf.bind(Object);
+const PRIMORDIAL_OBJECT_GET_OWN_PROPERTY_SYMBOLS = Object.getOwnPropertySymbols.bind(Object);
+const PRIMORDIAL_OBJECT_FREEZE = Object.freeze.bind(Object);
+const PRIMORDIAL_REFLECT_DELETE_PROPERTY = Reflect.deleteProperty.bind(Reflect);
+const PRIMORDIAL_BUFFER_FROM = Buffer.from.bind(Buffer);
+const PRIMORDIAL_BUFFER_IS_BUFFER = Buffer.isBuffer.bind(Buffer);
+const PRIMORDIAL_ARRAY_BUFFER_IS_VIEW = ArrayBuffer.isView.bind(ArrayBuffer);
+const PRIMORDIAL_STDOUT = process.stdout;
+const PRIMORDIAL_STDERR = process.stderr;
+const primordialClock = () => new PRIMORDIAL_DATE(PRIMORDIAL_DATE_NOW());
+
 const DEFAULT_REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PRODUCTION_REQUEST_KEYS = Object.freeze([
   "taskId",
@@ -46,6 +72,10 @@ const PRODUCTION_REQUEST_KEYS = Object.freeze([
   "predecessorReceiptSha256",
   "idempotencyKey",
 ]);
+const CALLBACK_PRODUCTION_REQUEST_KEYS = Object.freeze([
+  ...PRODUCTION_REQUEST_KEYS,
+  "execute",
+]);
 const MODULE_ENTRY_KEYS = Object.freeze([
   "moduleId",
   "moduleRelativePath",
@@ -53,6 +83,16 @@ const MODULE_ENTRY_KEYS = Object.freeze([
   "gitMode",
   "argumentSets",
 ]);
+const CALLBACK_ALLOWLIST_ENTRY_KEYS = Object.freeze([
+  "moduleId",
+  "moduleRelativePath",
+  "moduleSha256",
+  "gitMode",
+  "execute",
+  "capabilityProfile",
+  "capabilityReviewSha256",
+]);
+const CALLBACK_CAPABILITY_PROFILE = "trusted-public-synthetic-no-native-io-v1";
 const MODULE_ID = /^[a-z][a-z0-9.-]{2,63}$/;
 const RELATIVE_MODULE_PATH = /^tools\/[A-Za-z0-9._/-]+\.mjs$/;
 const RECEIPT_DIGEST = /^sha256:[0-9a-f]{64}$/;
@@ -76,6 +116,11 @@ const TERMINAL_HISTORY_KEYS = Object.freeze([
 ]);
 const CHILD_RESULT_KEYS = Object.freeze([
   "schemaVersion", "outcome", "taskId", "stageId", "idempotencyKey", "sourceRevision",
+  "stageBindingDigest", "evidenceDigest",
+]);
+const CALLBACK_COMPLETION_KEYS = Object.freeze([
+  "schemaVersion", "outcome", "taskId", "scopeClass", "actionClass", "stageId",
+  "predecessorReceiptSha256", "idempotencyKey", "sourceRevision", "candidateRevision",
   "stageBindingDigest", "evidenceDigest",
 ]);
 const OUTCOME_VERIFICATION_KEYS = Object.freeze([
@@ -102,10 +147,13 @@ const TRUSTED_LAUNCHER_BYTES = Buffer.from([
   "await import('./executor.mjs');",
   "",
 ].join("\n"), "utf8");
+const MAX_CALLBACK_DEADLINE_MS = 5 * 60 * 1_000;
+const EMPTY_EVIDENCE_SHA256 = `sha256:${crypto.createHash("sha256").update(Buffer.alloc(0)).digest("hex")}`;
 
 // Stage 0 intentionally has no executable production modules or argument sets.
 // Later task candidates must add exact reviewed entries; callers can never add one.
 const PRODUCTION_MODULE_ALLOWLIST = Object.freeze({});
+const PRODUCTION_CALLBACK_ALLOWLIST = Object.freeze({});
 const PRODUCTION_OUTCOME_VERIFICATION_ALLOWLIST = Object.freeze({});
 export const PRODUCTION_MODULE_METADATA = Object.freeze(Object.values(PRODUCTION_MODULE_ALLOWLIST).map((entry) => Object.freeze({
   moduleId: entry.moduleId,
@@ -220,7 +268,7 @@ function validateAuthorization(authorization, request, definition) {
     || typeof authorization.rollbackSnapshotReference !== "string"
     || !/^[a-z][a-z0-9-]*:[A-Za-z0-9._/-]{4,160}$/.test(authorization.rollbackSnapshotReference)
     || !publicTextBytesAreSafe(authorization.rollbackSnapshotReference)
-    || !Number.isFinite(Date.parse(authorization.deadlineAt ?? ""))) return false;
+    || !Number.isFinite(PRIMORDIAL_DATE_PARSE(authorization.deadlineAt ?? ""))) return false;
   return definition.taskId === authorization.taskId
     && definition.stageId === authorization.stageId
     && definition.scopeClass === authorization.scopeClass
@@ -248,13 +296,37 @@ function bindingRequest(definition) {
 }
 
 function delay(milliseconds) {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+  return new Promise((resolve) => PRIMORDIAL_SET_TIMEOUT(resolve, milliseconds));
 }
 
 async function syncDirectory(directory) {
   const handle = await open(directory, "r");
   try {
     await handle.sync();
+  } finally {
+    await handle.close();
+  }
+}
+
+async function syncRegularFile(filePath) {
+  const before = await lstat(filePath);
+  if (!before.isFile() || before.isSymbolicLink()) {
+    throw new Error("journal tail is not a regular file");
+  }
+  const handle = await open(filePath, "r");
+  try {
+    const opened = await handle.stat();
+    const current = await lstat(filePath);
+    if (!current.isFile()
+      || current.isSymbolicLink()
+      || opened.dev !== current.dev
+      || opened.ino !== current.ino
+      || before.dev !== current.dev
+      || before.ino !== current.ino) {
+      throw new Error("journal tail identity changed before fsync");
+    }
+    await handle.sync();
+    return Object.freeze({ dev: current.dev, ino: current.ino });
   } finally {
     await handle.close();
   }
@@ -297,6 +369,215 @@ function validateProductionRequest(request) {
     return result(false, "STAGE_REQUEST_SHAPE_INVALID");
   }
   return result(true, "STAGE_REQUEST_VALID", { taskId: request.taskId, stageId: request.stageId });
+}
+
+function captureCallbackProductionRequest(request) {
+  try {
+    if (request === null
+      || typeof request !== "object"
+      || Array.isArray(request)
+      || utilTypes.isProxy(request)
+      || PRIMORDIAL_OBJECT_GET_PROTOTYPE_OF(request) !== Object.prototype
+      || PRIMORDIAL_OBJECT_GET_OWN_PROPERTY_SYMBOLS(request).length !== 0) {
+      return null;
+    }
+    const descriptors = PRIMORDIAL_OBJECT_GET_OWN_PROPERTY_DESCRIPTORS(request);
+    if (Object.keys(descriptors).sort().join("\0") !== [...CALLBACK_PRODUCTION_REQUEST_KEYS].sort().join("\0")
+      || !Object.values(descriptors).every((descriptor) => Object.hasOwn(descriptor, "value")
+        && descriptor.get === undefined
+        && descriptor.set === undefined
+        && descriptor.enumerable === true)
+      || typeof descriptors.execute.value !== "function") {
+      return null;
+    }
+    const identity = PRIMORDIAL_OBJECT_FREEZE(Object.fromEntries(
+      PRODUCTION_REQUEST_KEYS.map((key) => [key, descriptors[key].value]),
+    ));
+    const validation = validateProductionRequest(identity);
+    return validation.ok
+      ? PRIMORDIAL_OBJECT_FREEZE({ identity, execute: descriptors.execute.value })
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function reviewedCallbackMatches(entry, moduleEntry, execute) {
+  try {
+    if (entry === null
+      || typeof entry !== "object"
+      || Array.isArray(entry)
+      || utilTypes.isProxy(entry)
+      || PRIMORDIAL_OBJECT_GET_PROTOTYPE_OF(entry) !== Object.prototype
+      || PRIMORDIAL_OBJECT_GET_OWN_PROPERTY_SYMBOLS(entry).length !== 0) return false;
+    const descriptors = PRIMORDIAL_OBJECT_GET_OWN_PROPERTY_DESCRIPTORS(entry);
+    return Object.keys(descriptors).sort().join("\0") === [...CALLBACK_ALLOWLIST_ENTRY_KEYS].sort().join("\0")
+      && Object.values(descriptors).every((descriptor) => Object.hasOwn(descriptor, "value")
+        && descriptor.get === undefined
+        && descriptor.set === undefined
+        && descriptor.enumerable === true)
+      && descriptors.execute.value === execute
+      && descriptors.moduleId.value === moduleEntry.moduleId
+      && descriptors.moduleRelativePath.value === moduleEntry.moduleRelativePath
+      && descriptors.moduleSha256.value === moduleEntry.moduleSha256
+      && descriptors.gitMode.value === moduleEntry.gitMode
+      && descriptors.capabilityProfile.value === CALLBACK_CAPABILITY_PROFILE
+      && RECEIPT_DIGEST.test(descriptors.capabilityReviewSha256.value ?? "");
+  } catch {
+    return false;
+  }
+}
+
+function validateCallbackCompletion(value, expected) {
+  if (!hasExactKeys(value, CALLBACK_COMPLETION_KEYS)
+    || value.schemaVersion !== "1.0.0"
+    || value.outcome !== "succeeded"
+    || value.taskId !== expected.taskId
+    || value.scopeClass !== expected.scopeClass
+    || value.actionClass !== expected.actionClass
+    || value.stageId !== expected.stageId
+    || value.predecessorReceiptSha256 !== expected.predecessorReceiptSha256
+    || value.idempotencyKey !== expected.idempotencyKey
+    || value.sourceRevision !== expected.sourceRevision
+    || value.candidateRevision !== expected.candidateRevision
+    || value.stageBindingDigest !== expected.stageBindingDigest
+    || !RECEIPT_DIGEST.test(value.evidenceDigest ?? "")) return null;
+  try {
+    const bytes = Buffer.from(canonicalJson(value), "utf8");
+    if (bytes.length === 0 || bytes.length > MAX_CHILD_RESULT_BYTES || !publicTextBytesAreSafe(bytes)) return null;
+    return Object.freeze({ value: Object.freeze({ ...value }), digest: sha256(bytes) });
+  } catch {
+    return null;
+  }
+}
+
+function frozenCallbackContext({ definition, authorization, deadlineAt }) {
+  const signalController = new AbortController();
+  // Freeze the complete caller-owned context and every ordinary data value.
+  // AbortSignal is the intentional native exception: its reference is frozen
+  // into the context while its internal aborted/reason state must remain able
+  // to change when the runner requests cancellation.
+  return Object.freeze({
+    controller: signalController,
+    value: Object.freeze({
+      taskId: definition.taskId,
+      scopeClass: definition.scopeClass,
+      actionClass: definition.actionClass,
+      stageId: definition.stageId,
+      predecessorReceiptSha256: definition.predecessor?.receiptDigest ?? null,
+      idempotencyKey: definition.idempotencyKey,
+      revision: authorization.sourceRevision,
+      candidateRevision: authorization.candidateRevision,
+      deadlineAt: PRIMORDIAL_DATE_TO_ISO_STRING(new PRIMORDIAL_DATE(deadlineAt)),
+      signal: signalController.signal,
+    }),
+  });
+}
+
+function installCallbackStreamCapture() {
+  const install = (stream, channel) => {
+    const originalDescriptor = PRIMORDIAL_OBJECT_GET_OWN_PROPERTY_DESCRIPTOR(stream, "write");
+    const hash = crypto.createHash("sha256");
+    const updateHash = hash.update.bind(hash);
+    const digestHash = hash.digest.bind(hash);
+    let writeCount = 0;
+    let byteCount = 0;
+    const interceptedWrite = function interceptedCallbackStreamWrite(chunk, encoding, callback) {
+      let completion = callback;
+      let selectedEncoding = encoding;
+      if (typeof encoding === "function") {
+        completion = encoding;
+        selectedEncoding = undefined;
+      }
+      let bytes;
+      try {
+        if (typeof chunk === "string") {
+          bytes = PRIMORDIAL_BUFFER_FROM(chunk, typeof selectedEncoding === "string" ? selectedEncoding : "utf8");
+        } else if (PRIMORDIAL_BUFFER_IS_BUFFER(chunk)) {
+          bytes = chunk;
+        } else if (PRIMORDIAL_ARRAY_BUFFER_IS_VIEW(chunk)) {
+          bytes = PRIMORDIAL_BUFFER_FROM(chunk.buffer, chunk.byteOffset, chunk.byteLength);
+        } else {
+          bytes = PRIMORDIAL_BUFFER_FROM("P0_CALLBACK_INVALID_STREAM_CHUNK", "utf8");
+        }
+      } catch {
+        bytes = PRIMORDIAL_BUFFER_FROM("P0_CALLBACK_INVALID_STREAM_ENCODING", "utf8");
+      }
+      writeCount += 1;
+      byteCount += bytes.length;
+      // Preserve a non-empty digest even for an attempted zero-byte write.
+      updateHash(bytes.length === 0 ? PRIMORDIAL_BUFFER_FROM([0]) : bytes);
+      if (typeof completion === "function") PRIMORDIAL_QUEUE_MICROTASK(() => completion());
+      return true;
+    };
+    PRIMORDIAL_OBJECT_DEFINE_PROPERTY(stream, "write", {
+      configurable: true,
+      enumerable: originalDescriptor?.enumerable ?? false,
+      value: interceptedWrite,
+      writable: true,
+    });
+    return {
+      channel,
+      stream,
+      originalDescriptor,
+      interceptedWrite,
+      writeCount: () => writeCount,
+      byteCount: () => byteCount,
+      digest: () => `sha256:${digestHash("hex")}`,
+    };
+  };
+
+  const captures = [];
+  try {
+    captures.push(install(PRIMORDIAL_STDOUT, "stdout"));
+    captures.push(install(PRIMORDIAL_STDERR, "stderr"));
+  } catch (error) {
+    for (const capture of captures) {
+      try {
+        if (capture.originalDescriptor === undefined) {
+          PRIMORDIAL_REFLECT_DELETE_PROPERTY(capture.stream, "write");
+        } else {
+          PRIMORDIAL_OBJECT_DEFINE_PROPERTY(capture.stream, "write", capture.originalDescriptor);
+        }
+      } catch {
+        // The caller treats installation failure as fail-closed before action.
+      }
+    }
+    throw error;
+  }
+  let finished = false;
+  return () => {
+    if (finished) throw new Error("callback stream capture already finished");
+    finished = true;
+    let tampered = false;
+    let restored = true;
+    for (const capture of captures) {
+      try {
+        const current = PRIMORDIAL_OBJECT_GET_OWN_PROPERTY_DESCRIPTOR(capture.stream, "write");
+        if (current?.value !== capture.interceptedWrite) tampered = true;
+        if (capture.originalDescriptor === undefined) {
+          if (!PRIMORDIAL_REFLECT_DELETE_PROPERTY(capture.stream, "write")) restored = false;
+        } else {
+          PRIMORDIAL_OBJECT_DEFINE_PROPERTY(capture.stream, "write", capture.originalDescriptor);
+        }
+      } catch {
+        restored = false;
+      }
+    }
+    const stdout = captures[0];
+    const stderr = captures[1];
+    return PRIMORDIAL_OBJECT_FREEZE({
+      stdoutSha256: stdout.digest(),
+      stderrSha256: stderr.digest(),
+      stdoutWriteCount: stdout.writeCount(),
+      stderrWriteCount: stderr.writeCount(),
+      stdoutByteCount: stdout.byteCount(),
+      stderrByteCount: stderr.byteCount(),
+      rawStreamAttempted: stdout.writeCount() + stderr.writeCount() > 0,
+      streamBindingTampered: tampered,
+      streamsRestored: restored,
+    });
+  };
 }
 
 function validateModuleEntry(entry, definition) {
@@ -410,6 +691,38 @@ async function readEvents(eventDir) {
     previousEventSha256 = eventSha256;
   }
   return events;
+}
+
+async function proveReadableEventTailDurable({
+  eventDir,
+  events,
+  syncEventFile,
+  syncEventDirectory,
+}) {
+  const lastObserved = events.at(-1);
+  if (!lastObserved) throw new Error("post-action journal tail missing");
+  const eventNames = (await readdir(eventDir)).filter((name) => EVENT_FILE.test(name)).sort();
+  const tailName = eventNames.at(-1);
+  const expectedTailName = `${String(events.length).padStart(4, "0")}-${lastObserved.state}.json`;
+  if (eventNames.length !== events.length || tailName !== expectedTailName) {
+    throw new Error("post-action journal tail identity not proven");
+  }
+  const tailPath = path.join(eventDir, tailName);
+  const syncedTailIdentity = await syncEventFile(tailPath);
+  const revalidatedEvents = await readEvents(eventDir);
+  const revalidatedLast = revalidatedEvents.at(-1);
+  const tailAfterRead = await lstat(tailPath);
+  if (revalidatedEvents.length !== events.length
+    || revalidatedLast?.eventSha256 !== lastObserved.eventSha256
+    || revalidatedLast?.state !== lastObserved.state
+    || !tailAfterRead.isFile()
+    || tailAfterRead.isSymbolicLink()
+    || tailAfterRead.dev !== syncedTailIdentity?.dev
+    || tailAfterRead.ino !== syncedTailIdentity?.ino) {
+    throw new Error("post-action journal durability not proven");
+  }
+  await syncEventDirectory(eventDir);
+  return revalidatedLast;
 }
 
 function terminalEvent(events) {
@@ -1263,6 +1576,635 @@ async function executeResolvedStage({
   }
 }
 
+async function executeResolvedCallbackStage({
+  definition,
+  moduleEntry,
+  execute,
+  repoRoot,
+  runtimeRoot,
+  authorize = verifyStageGateBAtExactMain,
+  verifyOutcome = verifyReviewedStageOutcome,
+  clock = primordialClock,
+  quiescenceIntervalMs = QUIESCENCE_INTERVAL_MS,
+  appendJournalEvent = appendEvent,
+  syncEventFile = syncRegularFile,
+  syncEventDirectory = syncDirectory,
+  installStreamCapture = installCallbackStreamCapture,
+}) {
+  const definitionValidation = validateStagedActionDefinition(definition);
+  if (!definitionValidation.ok) return result(false, definitionValidation.code);
+  if (typeof execute !== "function") return result(false, "STAGE_CALLBACK_REQUIRED");
+  const request = bindingRequest(definition);
+  let authorization;
+  try {
+    authorization = await authorize(request);
+  } catch {
+    authorization = null;
+  }
+  if (!validateAuthorization(authorization, request, definition)) {
+    return result(false, "STAGE_GATE_B_DENIED", { taskId: definition.taskId, stageId: definition.stageId });
+  }
+  const reviewedModule = await resolveReviewedModule({ repoRoot, definition, moduleEntry });
+  if (!reviewedModule || reviewedModule.moduleSha256 !== authorization.moduleSha256) {
+    return result(false, "STAGE_MODULE_NOT_ALLOWLISTED", { taskId: definition.taskId, stageId: definition.stageId });
+  }
+  if (!await predecessorReceiptExists(runtimeRoot, definition)) {
+    return result(false, "STAGE_PREDECESSOR_RECEIPT_MISSING", {
+      taskId: definition.taskId,
+      stageId: definition.stageId,
+    });
+  }
+
+  const runtimeKey = safeRuntimeSegment(`${definition.taskId}\0${definition.stageId}\0${definition.idempotencyKey}`);
+  const stageRoot = path.join(runtimeRoot, runtimeKey);
+  const eventDir = path.join(stageRoot, "events");
+  const rawDir = path.join(stageRoot, "raw-evidence");
+  const lockDir = path.join(runtimeRoot, "locks");
+  const lockPath = path.join(lockDir, `${runtimeKey}.lock`);
+  const callbackLockPath = path.join(lockDir, "in-process-callback-global.lock");
+  await ensureDurableDirectory(runtimeRoot);
+  await ensureDurableDirectory(stageRoot);
+  await ensureDurableDirectory(eventDir);
+  await ensureDurableDirectory(rawDir);
+  await ensureDurableDirectory(lockDir);
+
+  const expectedLock = {
+    schemaVersion: definition.schemaVersion,
+    runtimeKey,
+    taskId: definition.taskId,
+    stageId: definition.stageId,
+    sourceRevision: authorization.sourceRevision,
+    stageBindingDigest: definitionValidation.stageBindingDigest,
+    eventDir,
+  };
+  const lockHandle = await acquireOwnedLock(lockPath, expectedLock);
+  if (!lockHandle) {
+    return result(false, "STAGE_LOCK_UNAVAILABLE", { taskId: definition.taskId, stageId: definition.stageId });
+  }
+  await syncDirectory(lockDir);
+
+  let ownerNonce = null;
+  let retainLock = false;
+  let callbackLockHandle = null;
+  let callbackLockOwnerNonce = null;
+  let retainCallbackLock = false;
+  let finishStreamCapture = null;
+  let actionStartDurable = false;
+  let durableRecoveryOrTerminal = false;
+  let provenEventCount = 0;
+  let latestEvidence = {
+    moduleSha256: reviewedModule.moduleSha256,
+    childResultSha256: null,
+    evidenceDigest: null,
+    stdoutSha256: null,
+    stderrSha256: null,
+  };
+  let latestVerification = {};
+  try {
+    const supervisorStartIdentity = processStartIdentity(process.pid);
+    if (supervisorStartIdentity === null) {
+      return result(false, "STAGE_SUPERVISOR_IDENTITY_UNAVAILABLE", {
+        taskId: definition.taskId,
+        stageId: definition.stageId,
+      });
+    }
+    ownerNonce = crypto.randomBytes(32).toString("hex");
+    const lockRecord = {
+      schemaVersion: definition.schemaVersion,
+      runtimeKey,
+      taskId: definition.taskId,
+      stageId: definition.stageId,
+      sourceRevision: authorization.sourceRevision,
+      stageBindingDigest: definitionValidation.stageBindingDigest,
+      ownerNonce,
+      supervisorPid: process.pid,
+      supervisorStartIdentity,
+      childPid: null,
+      childStartIdentity: null,
+      childProcessGroupId: null,
+      pendingReceiptSha256: null,
+      heartbeatAt: PRIMORDIAL_DATE_TO_ISO_STRING(clock()),
+    };
+    const persistLockRecord = async () => {
+      lockRecord.heartbeatAt = PRIMORDIAL_DATE_TO_ISO_STRING(clock());
+      const bytes = Buffer.from(`${canonicalJson(lockRecord)}\n`, "utf8");
+      await lockHandle.truncate(0);
+      await lockHandle.write(bytes, 0, bytes.length, 0);
+      await lockHandle.sync();
+    };
+    await persistLockRecord();
+
+    const existingEvents = await readEvents(eventDir);
+    const existingTerminal = terminalEvent(existingEvents);
+    if (existingTerminal) {
+      const receiptValidation = validateHistoricalStageReceipt(
+        existingTerminal.receipt,
+        historicalBindingFromAuthorization(authorization),
+      );
+      if (!receiptValidation.ok) {
+        return result(false, "STAGE_RECEIPT_INVALID", { taskId: definition.taskId, stageId: definition.stageId });
+      }
+      return terminalPublicResult(existingTerminal.receipt);
+    }
+    if (existingEvents.length > 0) {
+      const recoveredReceipt = closedReceipt({
+        definition,
+        authorization,
+        state: "recovery-required",
+        attempt: 1,
+      });
+      await appendJournalEvent(eventDir, existingEvents.length + 1, {
+        schemaVersion: definition.schemaVersion,
+        state: "recovery-required",
+        occurredAt: PRIMORDIAL_DATE_TO_ISO_STRING(clock()),
+        receipt: recoveredReceipt,
+      });
+      durableRecoveryOrTerminal = true;
+      return publicOperatorResult({
+        ok: false,
+        code: "STAGE_RECOVERY_REQUIRED",
+        definition,
+        authorization,
+        state: "recovery-required",
+        receiptDigest: sha256(canonicalJson(recoveredReceipt)),
+        attempt: 1,
+        authorityStatus: "not-rechecked",
+        mutationStatement: "Mutation may have occurred",
+        immediateVerification: "not-run",
+        quiescentVerification: "not-run",
+        consequence: "Stage state requires reviewed recovery before replay.",
+        nextAction: "Perform reviewed recovery or rollback.",
+      });
+    }
+
+    let lockedAuthorization;
+    try {
+      lockedAuthorization = await authorize(request);
+    } catch {
+      lockedAuthorization = null;
+    }
+    const lockedNow = clock();
+    const lockedNowMs = PRIMORDIAL_DATE_GET_TIME(lockedNow);
+    if (!validateAuthorization(lockedAuthorization, request, definition)
+      || !sameAuthorization(authorization, lockedAuthorization)
+      || PRIMORDIAL_DATE_PARSE(authorization.deadlineAt) <= lockedNowMs
+      || PRIMORDIAL_DATE_PARSE(lockedAuthorization.deadlineAt) <= lockedNowMs
+      || !await predecessorReceiptExists(runtimeRoot, definition)) {
+      return result(false, "STAGE_GATE_B_DENIED", { taskId: definition.taskId, stageId: definition.stageId });
+    }
+
+    callbackLockHandle = await acquireOwnedLock(callbackLockPath, {});
+    if (!callbackLockHandle) {
+      return result(false, "STAGE_CALLBACK_LOCK_UNAVAILABLE", {
+        taskId: definition.taskId,
+        stageId: definition.stageId,
+      });
+    }
+    await syncDirectory(lockDir);
+    callbackLockOwnerNonce = crypto.randomBytes(32).toString("hex");
+    const callbackLockRecord = {
+      schemaVersion: definition.schemaVersion,
+      runtimeKey: "in-process-callback-global",
+      taskId: definition.taskId,
+      stageId: definition.stageId,
+      sourceRevision: authorization.sourceRevision,
+      stageBindingDigest: definitionValidation.stageBindingDigest,
+      ownerNonce: callbackLockOwnerNonce,
+      supervisorPid: process.pid,
+      supervisorStartIdentity,
+      childPid: null,
+      childStartIdentity: null,
+      childProcessGroupId: null,
+      pendingReceiptSha256: null,
+      heartbeatAt: PRIMORDIAL_DATE_TO_ISO_STRING(clock()),
+    };
+    const callbackLockBytes = PRIMORDIAL_BUFFER_FROM(`${canonicalJson(callbackLockRecord)}\n`, "utf8");
+    await callbackLockHandle.write(callbackLockBytes, 0, callbackLockBytes.length, 0);
+    await callbackLockHandle.sync();
+    finishStreamCapture = installStreamCapture();
+
+    await appendJournalEvent(eventDir, 1, {
+      schemaVersion: definition.schemaVersion,
+      state: "running",
+      occurredAt: PRIMORDIAL_DATE_TO_ISO_STRING(clock()),
+      processGroupId: null,
+      actionKind: "in-process-reviewed-callback",
+      actionStartAuthorized: true,
+      sourceRevision: authorization.sourceRevision,
+      stageBindingDigest: definitionValidation.stageBindingDigest,
+      executorSha256: reviewedModule.moduleSha256,
+    });
+    provenEventCount = 1;
+    actionStartDurable = true;
+
+    // Durable running is only an intent marker. Fetch and evaluate Gate B once
+    // more after every lock/fsync/journal delay, then take the actual action
+    // start time. No await or caller-controlled operation occurs between this
+    // boundary and invocation of the exact reviewed function.
+    const predecessorStillCurrent = await predecessorReceiptExists(runtimeRoot, definition);
+    let invocationAuthorization;
+    try {
+      invocationAuthorization = await authorize(request);
+    } catch {
+      invocationAuthorization = null;
+    }
+    const callbackStart = clock();
+    const callbackStartMs = PRIMORDIAL_DATE_GET_TIME(callbackStart);
+    const authorityDeadlines = [
+      PRIMORDIAL_DATE_PARSE(authorization.deadlineAt),
+      PRIMORDIAL_DATE_PARSE(lockedAuthorization.deadlineAt),
+      PRIMORDIAL_DATE_PARSE(invocationAuthorization?.deadlineAt ?? ""),
+    ];
+    const authorityExpired = authorityDeadlines.some((value) => Number.isFinite(value) && value <= callbackStartMs);
+    const invocationAuthorizationValid = predecessorStillCurrent
+      && validateAuthorization(invocationAuthorization, request, definition)
+      && sameAuthorization(authorization, invocationAuthorization)
+      && authorityDeadlines.every((value) => Number.isFinite(value) && value > callbackStartMs);
+    const deadlineAt = invocationAuthorizationValid
+      ? Math.min(
+        callbackStartMs + Math.min(definition.deadlineMs, MAX_CALLBACK_DEADLINE_MS),
+        ...authorityDeadlines,
+      )
+      : Number.NaN;
+    if (!invocationAuthorizationValid || !Number.isFinite(deadlineAt) || deadlineAt <= callbackStartMs) {
+      const terminalState = authorityExpired ? "expired-before-mutation" : "blocked-no-mutation";
+      const terminalReceipt = closedReceipt({
+        definition,
+        authorization,
+        state: terminalState,
+        attempt: 1,
+        evidence: { moduleSha256: reviewedModule.moduleSha256 },
+      });
+      const terminalValidation = validateStageReceipt(terminalReceipt, definition, authorization);
+      if (!terminalValidation.ok) throw new Error(terminalValidation.code);
+      await appendJournalEvent(eventDir, 2, {
+        schemaVersion: definition.schemaVersion,
+        state: terminalState,
+        occurredAt: PRIMORDIAL_DATE_TO_ISO_STRING(callbackStart),
+        receipt: terminalReceipt,
+      });
+      provenEventCount = 2;
+      durableRecoveryOrTerminal = true;
+      return result(false, authorityExpired ? "STAGE_EXPIRED_BEFORE_MUTATION" : "STAGE_BLOCKED_NO_MUTATION", {
+        taskId: definition.taskId,
+        stageId: definition.stageId,
+        state: terminalState,
+        receiptDigest: sha256(canonicalJson(terminalReceipt)),
+      });
+    }
+
+    const callbackContext = frozenCallbackContext({ definition, authorization, deadlineAt });
+    const callbackStartedAt = PRIMORDIAL_HRTIME_BIGINT();
+    const callbackDeadlineNanoseconds = BigInt(Math.max(1, deadlineAt - callbackStartMs)) * 1_000_000n;
+    let deadlineReached = false;
+    let deadlineHandle;
+    const deadlinePromise = new Promise((resolve) => {
+      deadlineHandle = PRIMORDIAL_SET_TIMEOUT(() => {
+        deadlineReached = true;
+        callbackContext.controller.abort("callback-deadline-exceeded");
+        resolve(PRIMORDIAL_OBJECT_FREEZE({ status: "deadline", value: null }));
+      }, Math.max(1, deadlineAt - callbackStartMs));
+    });
+    let actionValue;
+    let actionThrew = false;
+    try {
+      actionValue = execute(callbackContext.value);
+    } catch {
+      actionThrew = true;
+    }
+    const actionPromise = actionThrew
+      ? Promise.resolve(PRIMORDIAL_OBJECT_FREEZE({ status: "rejected", value: null }))
+      : Promise.resolve(actionValue).then(
+        (value) => PRIMORDIAL_OBJECT_FREEZE({ status: "fulfilled", value }),
+        () => PRIMORDIAL_OBJECT_FREEZE({ status: "rejected", value: null }),
+      );
+    let firstOutcome;
+    let settledOutcome;
+    let callbackDeadlineExceeded;
+    let streamObservation;
+    try {
+      firstOutcome = await Promise.race([actionPromise, deadlinePromise]);
+      PRIMORDIAL_CLEAR_TIMEOUT(deadlineHandle);
+      const callbackElapsedNanoseconds = PRIMORDIAL_HRTIME_BIGINT() - callbackStartedAt;
+      callbackDeadlineExceeded = deadlineReached
+        || firstOutcome.status === "deadline"
+        || callbackElapsedNanoseconds >= callbackDeadlineNanoseconds
+        || PRIMORDIAL_DATE_GET_TIME(clock()) >= deadlineAt;
+      if (callbackDeadlineExceeded && !callbackContext.value.signal.aborted) {
+        callbackContext.controller.abort("callback-deadline-exceeded");
+      }
+      // An in-process callback cannot be terminated safely. If the deadline
+      // wins, await the original Promise while retaining both locks and stream
+      // interception. Non-settlement therefore remains durably fail-stuck.
+      settledOutcome = firstOutcome.status === "deadline" ? await actionPromise : firstOutcome;
+    } finally {
+      if (deadlineHandle !== undefined) PRIMORDIAL_CLEAR_TIMEOUT(deadlineHandle);
+      if (finishStreamCapture !== null) {
+        const finish = finishStreamCapture;
+        finishStreamCapture = null;
+        try {
+          streamObservation = finish();
+          if (streamObservation.streamsRestored !== true) retainCallbackLock = true;
+        } catch (error) {
+          retainCallbackLock = true;
+          throw error;
+        }
+      }
+      if (callbackLockHandle !== null && callbackLockOwnerNonce !== null) {
+        if (!retainCallbackLock
+          && !await releaseOwnedLock(callbackLockHandle, callbackLockPath, callbackLockOwnerNonce)) {
+          retainCallbackLock = true;
+        }
+        await callbackLockHandle.close().catch(() => {});
+        callbackLockHandle = null;
+      }
+    }
+    const callbackCompletion = settledOutcome.status === "fulfilled"
+      ? validateCallbackCompletion(settledOutcome.value, {
+        ...request,
+        sourceRevision: authorization.sourceRevision,
+        candidateRevision: authorization.candidateRevision,
+        stageBindingDigest: definitionValidation.stageBindingDigest,
+      })
+      : null;
+    latestEvidence = {
+      moduleSha256: reviewedModule.moduleSha256,
+      childResultSha256: callbackCompletion?.digest ?? null,
+      evidenceDigest: callbackCompletion?.value.evidenceDigest ?? null,
+      stdoutSha256: streamObservation?.stdoutSha256 ?? null,
+      stderrSha256: streamObservation?.stderrSha256 ?? null,
+    };
+    const appendRecovery = async ({ code, sequence, evidenceValue = latestEvidence, verification = {} }) => {
+      const receipt = closedReceipt({
+        definition,
+        authorization,
+        state: "recovery-required",
+        attempt: 1,
+        evidence: { ...evidenceValue, ...verification },
+      });
+      await appendJournalEvent(eventDir, sequence, {
+        schemaVersion: definition.schemaVersion,
+        state: "recovery-required",
+        occurredAt: PRIMORDIAL_DATE_TO_ISO_STRING(clock()),
+        receipt,
+      });
+      provenEventCount = sequence;
+      durableRecoveryOrTerminal = true;
+      return publicOperatorResult({
+        ok: false,
+        code,
+        definition,
+        authorization,
+        state: "recovery-required",
+        receiptDigest: sha256(canonicalJson(receipt)),
+        attempt: 1,
+        authorityStatus: "not-rechecked",
+        mutationStatement: "Mutation may have occurred",
+        immediateVerification: verification.immediateVerificationResult === "pass" ? "pass" : "not-run",
+        quiescentVerification: verification.quiescent1VerificationResult === "pass"
+          && verification.quiescent2VerificationResult === "pass" ? "pass" : "not-run",
+        consequence: "Stage state requires reviewed recovery before replay.",
+        nextAction: "Perform reviewed recovery or rollback.",
+      });
+    };
+    if (streamObservation === undefined
+      || streamObservation.streamsRestored !== true
+      || retainCallbackLock) {
+      callbackContext.controller.abort("callback-stream-containment-failed");
+      return await appendRecovery({ code: "STAGE_CALLBACK_CONTAINMENT_FAILED", sequence: 2 });
+    }
+    if (streamObservation.rawStreamAttempted || streamObservation.streamBindingTampered) {
+      callbackContext.controller.abort("callback-raw-stream-rejected");
+      return await appendRecovery({ code: "STAGE_CALLBACK_RAW_STREAM_REJECTED", sequence: 2 });
+    }
+    if (callbackDeadlineExceeded) {
+      return await appendRecovery({ code: "STAGE_CALLBACK_DEADLINE_EXCEEDED", sequence: 2 });
+    }
+    if (settledOutcome.status !== "fulfilled") {
+      callbackContext.controller.abort("callback-failed");
+      return await appendRecovery({ code: "STAGE_CALLBACK_FAILED", sequence: 2 });
+    }
+    if (callbackCompletion === null) {
+      callbackContext.controller.abort("callback-receipt-rejected");
+      return await appendRecovery({ code: "STAGE_CALLBACK_RECEIPT_REJECTED", sequence: 2 });
+    }
+
+    const authorizationStillValid = async () => {
+      const nowMs = PRIMORDIAL_DATE_GET_TIME(clock());
+      if (nowMs >= deadlineAt) return false;
+      let refreshed;
+      try {
+        refreshed = await authorize(request);
+      } catch {
+        return false;
+      }
+      return validateAuthorization(refreshed, request, definition)
+        && sameAuthorization(authorization, refreshed)
+        && PRIMORDIAL_DATE_PARSE(refreshed.deadlineAt) > nowMs;
+    };
+    if (!await authorizationStillValid()) {
+      callbackContext.controller.abort("callback-authority-invalidated");
+      return await appendRecovery({ code: "STAGE_POST_ACTION_VERIFICATION_INVALID", sequence: 2 });
+    }
+
+    const pendingReceipt = closedReceipt({
+      definition,
+      authorization,
+      state: "verification-pending",
+      attempt: 1,
+      evidence: latestEvidence,
+    });
+    const pendingReceiptSha256 = sha256(canonicalJson(pendingReceipt));
+    await appendJournalEvent(eventDir, 2, {
+      schemaVersion: definition.schemaVersion,
+      state: "verification-pending",
+      occurredAt: PRIMORDIAL_DATE_TO_ISO_STRING(clock()),
+      receipt: pendingReceipt,
+    });
+    provenEventCount = 2;
+    lockRecord.pendingReceiptSha256 = pendingReceiptSha256;
+    await persistLockRecord();
+
+    const verificationDigests = {
+      immediateVerificationSha256: null,
+      immediateVerificationResult: null,
+      quiescent1VerificationSha256: null,
+      quiescent1VerificationResult: null,
+      quiescent2VerificationSha256: null,
+      quiescent2VerificationResult: null,
+    };
+    const verifyBoundary = async (boundary, receiptKey) => {
+      if (!await authorizationStillValid()) return false;
+      let supplied;
+      try {
+        supplied = await verifyOutcome(PRIMORDIAL_OBJECT_FREEZE({
+          schemaVersion: definition.schemaVersion,
+          boundary,
+          moduleId: definition.moduleId,
+          taskId: definition.taskId,
+          stageId: definition.stageId,
+          sourceRevision: authorization.sourceRevision,
+          stageBindingDigest: definitionValidation.stageBindingDigest,
+          moduleSha256: latestEvidence.moduleSha256,
+          childResultSha256: latestEvidence.childResultSha256,
+          evidenceDigest: latestEvidence.evidenceDigest,
+        }));
+      } catch {
+        return false;
+      }
+      const verified = validateOutcomeVerification(supplied, {
+        boundary,
+        taskId: definition.taskId,
+        stageId: definition.stageId,
+        sourceRevision: authorization.sourceRevision,
+        stageBindingDigest: definitionValidation.stageBindingDigest,
+        moduleSha256: latestEvidence.moduleSha256,
+        childResultSha256: latestEvidence.childResultSha256,
+        evidenceDigest: latestEvidence.evidenceDigest,
+      });
+      if (verified === null || !await authorizationStillValid()) return false;
+      verificationDigests[receiptKey] = verified.digest;
+      verificationDigests[receiptKey.replace("Sha256", "Result")] = verified.value.outcome;
+      return true;
+    };
+    let postActionAuthorized = await verifyBoundary("immediate", "immediateVerificationSha256");
+    if (postActionAuthorized) {
+      await delay(quiescenceIntervalMs);
+      postActionAuthorized = await verifyBoundary("quiescent-1", "quiescent1VerificationSha256");
+    }
+    if (postActionAuthorized) {
+      await delay(quiescenceIntervalMs);
+      postActionAuthorized = await verifyBoundary("quiescent-2", "quiescent2VerificationSha256");
+    }
+    // This is intentionally a separate fresh exact-main/Gate B evaluation at
+    // the final success boundary rather than relying on the verifier's check.
+    if (postActionAuthorized) postActionAuthorized = await authorizationStillValid();
+    if (!postActionAuthorized) {
+      callbackContext.controller.abort("callback-authority-invalidated");
+      latestVerification = verificationDigests;
+      return await appendRecovery({
+        code: "STAGE_POST_ACTION_VERIFICATION_INVALID",
+        sequence: 3,
+        verification: verificationDigests,
+      });
+    }
+
+    const completedReceipt = closedReceipt({
+      definition,
+      authorization,
+      state: "verified-complete",
+      attempt: 1,
+      evidence: { ...latestEvidence, ...verificationDigests },
+    });
+    const completedValidation = validateStageReceipt(completedReceipt, definition, authorization);
+    if (!completedValidation.ok) throw new Error(completedValidation.code);
+    await appendJournalEvent(eventDir, 3, {
+      schemaVersion: definition.schemaVersion,
+      state: "verified-complete",
+      occurredAt: PRIMORDIAL_DATE_TO_ISO_STRING(clock()),
+      receipt: completedReceipt,
+      pendingReceiptSha256,
+    });
+    provenEventCount = 3;
+    durableRecoveryOrTerminal = true;
+    return publicOperatorResult({
+      ok: true,
+      code: "STAGE_SUCCEEDED",
+      definition,
+      authorization,
+      state: "verified-complete",
+      receiptDigest: sha256(canonicalJson(completedReceipt)),
+      attempt: 1,
+      authorityStatus: "current",
+      mutationStatement: "Mutation verified complete",
+      immediateVerification: "pass",
+      quiescentVerification: "pass",
+      consequence: "Stage effect is verified; task delivery status is unchanged.",
+      nextAction: "Run a separately reviewed delivery transition.",
+    });
+  } catch {
+    if (actionStartDurable && !durableRecoveryOrTerminal) {
+      try {
+        const events = await readEvents(eventDir);
+        if (events.length < provenEventCount || events.length > provenEventCount + 1) {
+          throw new Error("post-action journal event count is not provable");
+        }
+        let provenTail = events.at(-1);
+        if (events.length === provenEventCount + 1) {
+          // Any newly readable tail—not only a recovery/terminal tail—must be
+          // independently proven before a later recovery event may depend on it.
+          provenTail = await proveReadableEventTailDurable({
+            eventDir,
+            events,
+            syncEventFile,
+            syncEventDirectory,
+          });
+          provenEventCount = events.length;
+        }
+        const alreadyWritten = provenTail?.state === "recovery-required"
+          || TERMINAL_STAGE_STATES.includes(provenTail?.state);
+        if (!alreadyWritten) {
+          const recoveryReceipt = closedReceipt({
+            definition,
+            authorization,
+            state: "recovery-required",
+            attempt: 1,
+            evidence: { ...latestEvidence, ...latestVerification },
+          });
+          await appendJournalEvent(eventDir, events.length + 1, {
+            schemaVersion: definition.schemaVersion,
+            state: "recovery-required",
+            occurredAt: PRIMORDIAL_DATE_TO_ISO_STRING(clock()),
+            receipt: recoveryReceipt,
+          });
+          provenEventCount = events.length + 1;
+        }
+        durableRecoveryOrTerminal = true;
+      } catch {
+        // A possible effect without a durable recovery/terminal event must not
+        // release the stage lock. Reviewed recovery owns this fail-stuck state.
+        retainLock = true;
+      }
+      return result(false, "STAGE_RECOVERY_REQUIRED", {
+        taskId: definition.taskId,
+        stageId: definition.stageId,
+      });
+    }
+    return result(false, "STAGE_RUNNER_FAILED", { taskId: definition.taskId, stageId: definition.stageId });
+  } finally {
+    if (finishStreamCapture !== null) {
+      try {
+        const finish = finishStreamCapture;
+        finishStreamCapture = null;
+        const finalObservation = finish();
+        if (finalObservation.streamsRestored !== true) {
+          retainCallbackLock = true;
+          if (actionStartDurable && !durableRecoveryOrTerminal) retainLock = true;
+        }
+      } catch {
+        retainCallbackLock = true;
+        if (actionStartDurable && !durableRecoveryOrTerminal) retainLock = true;
+      }
+    }
+    if (callbackLockHandle !== null) {
+      if (!retainCallbackLock && callbackLockOwnerNonce !== null) {
+        if (!await releaseOwnedLock(callbackLockHandle, callbackLockPath, callbackLockOwnerNonce)) {
+          retainCallbackLock = true;
+        }
+      } else if (!retainCallbackLock && callbackLockOwnerNonce === null) {
+        if (!await releaseOwnedEmptyLock(callbackLockHandle, callbackLockPath)) retainCallbackLock = true;
+      }
+      await callbackLockHandle.close().catch(() => {});
+    }
+    if (!retainLock && ownerNonce !== null) {
+      if (!await releaseOwnedLock(lockHandle, lockPath, ownerNonce)) retainLock = true;
+    } else if (!retainLock && ownerNonce === null) {
+      if (!await releaseOwnedEmptyLock(lockHandle, lockPath)) retainLock = true;
+    }
+    await lockHandle.close().catch(() => {});
+  }
+}
+
 async function defaultRuntimeRoot(repoRoot) {
   const { spawnSync } = await import("node:child_process");
   const resultValue = spawnSync("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], {
@@ -1277,9 +2219,57 @@ async function defaultRuntimeRoot(repoRoot) {
 }
 
 /**
- * Production surface. The caller supplies only the immutable stage identity and
- * binding. Module, arguments, cwd, environment, output custody, process model,
- * clock, Git facts, evaluator, and execution callback are not injectable.
+ * Bounded in-process production surface. The caller must supply the exact
+ * code-owned reviewed function for the complete short action; an arbitrary or
+ * module-mismatched closure is rejected. Git facts, Gate B evaluation,
+ * immutable stage resolution, module/evidence bindings, clock, deadline, lock,
+ * journal, receipt, and verification policy remain internal and non-injectable.
+ */
+export async function executeStageFromExactMain(request = {}) {
+  // Capture exact own data-descriptor values synchronously. The caller may
+  // mutate its object as soon as this async function first yields; no property
+  // on `request` is read again after this point.
+  const capturedRequest = captureCallbackProductionRequest(request);
+  if (capturedRequest === null) return result(false, "STAGE_CALLBACK_REQUEST_SHAPE_INVALID");
+  const { identity, execute } = capturedRequest;
+  const repoRoot = DEFAULT_REPO_ROOT;
+  const runtimeRoot = await defaultRuntimeRoot(repoRoot);
+  const reconciled = await reconcileTerminalStage({ request: identity, runtimeRoot });
+  if (reconciled !== null) return reconciled;
+  const definition = resolveProductionStagedAction(identity);
+  if (!definition
+    || definition.scopeClass !== identity.scopeClass
+    || definition.actionClass !== identity.actionClass
+    || (definition.predecessor?.receiptDigest ?? null) !== identity.predecessorReceiptSha256) {
+    return result(false, "STAGE_ACTION_NOT_REVIEWED", { taskId: identity.taskId, stageId: identity.stageId });
+  }
+  const moduleEntry = PRODUCTION_MODULE_ALLOWLIST[definition.moduleId];
+  if (!moduleEntry) {
+    return result(false, "STAGE_MODULE_NOT_ALLOWLISTED", { taskId: identity.taskId, stageId: identity.stageId });
+  }
+  const callbackEntry = PRODUCTION_CALLBACK_ALLOWLIST[definition.moduleId];
+  if (!reviewedCallbackMatches(callbackEntry, moduleEntry, execute)) {
+    return result(false, "STAGE_CALLBACK_NOT_ALLOWLISTED", {
+      taskId: identity.taskId,
+      stageId: identity.stageId,
+    });
+  }
+  return executeResolvedCallbackStage({
+    definition,
+    moduleEntry,
+    execute,
+    repoRoot,
+    runtimeRoot,
+    authorize: verifyStageGateBAtExactMain,
+    verifyOutcome: verifyReviewedStageOutcome,
+  });
+}
+
+/**
+ * Serializable production surface. The caller supplies only the immutable
+ * stage identity and binding. Module, arguments, cwd, environment, output
+ * custody, process model, clock, Git facts, evaluator, and callback are not
+ * injectable.
  */
 export async function runSerializableStageFromExactMain(request = {}) {
   const requestValidation = validateProductionRequest(request);
@@ -1460,6 +2450,53 @@ async function selfTest() {
         })),
         quiescenceIntervalMs: overrides.quiescenceIntervalMs ?? 5,
         clock: overrides.clock ?? (() => new Date()),
+      });
+    };
+    const callbackCompletionFor = (definition, context, overrides = {}) => ({
+      schemaVersion: definition.schemaVersion,
+      outcome: "succeeded",
+      taskId: context.taskId,
+      scopeClass: context.scopeClass,
+      actionClass: context.actionClass,
+      stageId: context.stageId,
+      predecessorReceiptSha256: context.predecessorReceiptSha256,
+      idempotencyKey: context.idempotencyKey,
+      sourceRevision: context.revision,
+      candidateRevision: context.candidateRevision,
+      stageBindingDigest: stageBindingDigest(definition),
+      evidenceDigest: `sha256:${"9".repeat(64)}`,
+      ...overrides,
+    });
+    const executeCallbackFixture = async (definition, moduleEntry, execute, overrides = {}) => {
+      const authorization = overrides.authorization ?? authorizationFor(definition, {
+        moduleSha256: moduleEntry.moduleSha256,
+      });
+      return executeResolvedCallbackStage({
+        definition,
+        moduleEntry,
+        execute,
+        repoRoot,
+        runtimeRoot: overrides.runtimeRoot ?? runtimeRoot,
+        authorize: overrides.authorize ?? (async () => authorization),
+        verifyOutcome: overrides.verifyOutcome ?? (async (request) => ({
+          schemaVersion: request.schemaVersion,
+          outcome: "pass",
+          boundary: request.boundary,
+          taskId: request.taskId,
+          stageId: request.stageId,
+          sourceRevision: request.sourceRevision,
+          stageBindingDigest: request.stageBindingDigest,
+          moduleSha256: request.moduleSha256,
+          childResultSha256: request.childResultSha256,
+          evidenceDigest: request.evidenceDigest,
+          observationDigest: sha256(`synthetic callback observation:${request.boundary}`),
+        })),
+        quiescenceIntervalMs: overrides.quiescenceIntervalMs ?? 5,
+        clock: overrides.clock ?? primordialClock,
+        appendJournalEvent: overrides.appendJournalEvent ?? appendEvent,
+        syncEventFile: overrides.syncEventFile ?? syncRegularFile,
+        syncEventDirectory: overrides.syncEventDirectory ?? syncDirectory,
+        installStreamCapture: overrides.installStreamCapture ?? installCallbackStreamCapture,
       });
     };
 
@@ -1910,6 +2947,1022 @@ async function selfTest() {
     await writeFile(path.join(hangEventDir, hangEventNames.at(-1)), "{}\n", { mode: 0o600 });
     const tamperedJournal = await executeFixture(hangDefinition, hangEntry);
     if (tamperedJournal.code !== "STAGE_RUNNER_FAILED") throw new Error("receipt journal tamper case failed");
+    cases += 1;
+
+    const productionCallbackRequest = {
+      ...bindingRequest(definition),
+      execute: async () => {
+        throw new Error("Stage 0 must not invoke an unreviewed callback");
+      },
+    };
+    const absentCallbackStage = await executeStageFromExactMain(productionCallbackRequest);
+    if (absentCallbackStage.code !== "STAGE_ACTION_NOT_REVIEWED") {
+      throw new Error("callback production stage-absence case failed");
+    }
+    cases += 1;
+
+    for (const invalidCallbackRequest of [
+      { ...productionCallbackRequest, trust: true },
+      { ...bindingRequest(definition) },
+      { ...productionCallbackRequest, execute: "not-a-function" },
+    ]) {
+      const rejected = await executeStageFromExactMain(invalidCallbackRequest);
+      if (rejected.code !== "STAGE_CALLBACK_REQUEST_SHAPE_INVALID") {
+        throw new Error("callback exact production schema case failed");
+      }
+    }
+    cases += 1;
+
+    const capturedExecute = productionCallbackRequest.execute;
+    const mutableCallbackRequest = { ...productionCallbackRequest };
+    const synchronouslyCaptured = captureCallbackProductionRequest(mutableCallbackRequest);
+    mutableCallbackRequest.taskId = "REL-R0-001";
+    mutableCallbackRequest.stageId = "P0-STAGE-REL-R0-001-MUTATED-AFTER-CAPTURE";
+    mutableCallbackRequest.execute = async () => null;
+    if (synchronouslyCaptured?.identity.taskId !== definition.taskId
+      || synchronouslyCaptured?.identity.stageId !== definition.stageId
+      || synchronouslyCaptured?.execute !== capturedExecute) {
+      throw new Error("callback synchronous descriptor capture case failed");
+    }
+    cases += 1;
+
+    const callbackModuleName = "P0-runner-callback-binding-fixture.mjs";
+    await writeModule(callbackModuleName, "export const reviewedCallbackBinding = true;\n");
+    const callbackEntryFor = (callbackDefinition) => entryFor(callbackDefinition, callbackModuleName);
+    const callbackSuccessDefinition = definitionFor({
+      suffix: "CALLBACK-SUCCESS",
+      moduleId: "eng.callback-success",
+      argumentSetId: "callback-success.v1",
+    });
+    const callbackSuccessEntry = await callbackEntryFor(callbackSuccessDefinition);
+    const reviewedCallbackIdentity = async () => null;
+    const wrongCallbackIdentity = async () => null;
+    const reviewedCallbackEntry = Object.freeze({
+      moduleId: callbackSuccessEntry.moduleId,
+      moduleRelativePath: callbackSuccessEntry.moduleRelativePath,
+      moduleSha256: callbackSuccessEntry.moduleSha256,
+      gitMode: callbackSuccessEntry.gitMode,
+      execute: reviewedCallbackIdentity,
+      capabilityProfile: CALLBACK_CAPABILITY_PROFILE,
+      capabilityReviewSha256: `sha256:${"6".repeat(64)}`,
+    });
+    if (!reviewedCallbackMatches(reviewedCallbackEntry, callbackSuccessEntry, reviewedCallbackIdentity)
+      || reviewedCallbackMatches(reviewedCallbackEntry, callbackSuccessEntry, wrongCallbackIdentity)
+      || reviewedCallbackMatches(
+        { ...reviewedCallbackEntry, capabilityProfile: "native-io-permitted" },
+        callbackSuccessEntry,
+        reviewedCallbackIdentity,
+      )
+      || reviewedCallbackMatches(
+        { ...reviewedCallbackEntry, capabilityReviewSha256: "unbound-review" },
+        callbackSuccessEntry,
+        reviewedCallbackIdentity,
+      )
+      || Object.keys(PRODUCTION_CALLBACK_ALLOWLIST).length !== 0) {
+      throw new Error("callback code-owned function identity case failed");
+    }
+    cases += 1;
+    const callbackSuccessAuthorization = authorizationFor(callbackSuccessDefinition, {
+      moduleSha256: callbackSuccessEntry.moduleSha256,
+    });
+    let callbackContextObserved = null;
+    let callbackRunningObserved = false;
+    let callbackExecutions = 0;
+    const callbackSucceeded = await executeCallbackFixture(
+      callbackSuccessDefinition,
+      callbackSuccessEntry,
+      async (context) => {
+        callbackExecutions += 1;
+        callbackContextObserved = context;
+        const runtimeKeyValue = safeRuntimeSegment(`${context.taskId}\0${context.stageId}\0${context.idempotencyKey}`);
+        const events = await readEvents(path.join(runtimeRoot, runtimeKeyValue, "events"));
+        callbackRunningObserved = events.length === 1 && events[0].state === "running";
+        return callbackCompletionFor(callbackSuccessDefinition, context);
+      },
+      { authorization: callbackSuccessAuthorization },
+    );
+    const callbackContextKeys = [
+      "actionClass", "candidateRevision", "deadlineAt", "idempotencyKey", "predecessorReceiptSha256",
+      "revision", "scopeClass", "signal", "stageId", "taskId",
+    ];
+    if (callbackSucceeded.code !== "STAGE_SUCCEEDED"
+      || callbackExecutions !== 1
+      || !callbackRunningObserved
+      || !Object.isFrozen(callbackContextObserved)
+      || Object.keys(callbackContextObserved).sort().join("\0") !== callbackContextKeys.join("\0")
+      || callbackContextObserved.taskId !== callbackSuccessDefinition.taskId
+      || callbackContextObserved.scopeClass !== callbackSuccessDefinition.scopeClass
+      || callbackContextObserved.actionClass !== callbackSuccessDefinition.actionClass
+      || callbackContextObserved.stageId !== callbackSuccessDefinition.stageId
+      || callbackContextObserved.predecessorReceiptSha256 !== null
+      || callbackContextObserved.idempotencyKey !== callbackSuccessDefinition.idempotencyKey
+      || callbackContextObserved.revision !== callbackSuccessAuthorization.sourceRevision
+      || callbackContextObserved.candidateRevision !== callbackSuccessAuthorization.candidateRevision
+      || Date.parse(callbackContextObserved.deadlineAt) - Date.now() > MAX_CALLBACK_DEADLINE_MS) {
+      throw new Error("bounded frozen callback context/running-before-action case failed");
+    }
+    cases += 1;
+
+    const callbackSuccessKey = safeRuntimeSegment(`${callbackSuccessDefinition.taskId}\0${callbackSuccessDefinition.stageId}\0${callbackSuccessDefinition.idempotencyKey}`);
+    const callbackSuccessEvents = await readEvents(path.join(runtimeRoot, callbackSuccessKey, "events"));
+    const callbackTerminalReceipt = callbackSuccessEvents.at(-1)?.receipt;
+    if (callbackSuccessEvents.map((event) => event.state).join(",") !== "running,verification-pending,verified-complete"
+      || callbackTerminalReceipt.preparationReviewSha256 !== callbackSuccessAuthorization.preparationReviewSha256
+      || callbackTerminalReceipt.stageBindingDigest !== callbackSuccessAuthorization.stageDefinitionSha256
+      || callbackTerminalReceipt.moduleSha256 !== callbackSuccessAuthorization.moduleSha256
+      || callbackTerminalReceipt.registrySha256 !== callbackSuccessAuthorization.registrySha256
+      || callbackTerminalReceipt.predecessorReceiptSha256 !== null
+      || callbackTerminalReceipt.childResultSha256 === null
+      || callbackTerminalReceipt.stdoutSha256 !== EMPTY_EVIDENCE_SHA256
+      || callbackTerminalReceipt.stderrSha256 !== EMPTY_EVIDENCE_SHA256) {
+      throw new Error("callback durable receipt binding case failed");
+    }
+    cases += 1;
+
+    const callbackReplay = await executeCallbackFixture(
+      callbackSuccessDefinition,
+      callbackSuccessEntry,
+      async () => {
+        callbackExecutions += 1;
+        return null;
+      },
+      { authorization: callbackSuccessAuthorization },
+    );
+    if (callbackReplay.code !== "STAGE_ALREADY_SUCCEEDED"
+      || callbackReplay.receiptDigest !== callbackSucceeded.receiptDigest
+      || callbackExecutions !== 1) {
+      throw new Error("callback replay/no-second-execution case failed");
+    }
+    cases += 1;
+
+    const callbackIdentityMutations = [
+      ["taskId", "REL-R0-001"],
+      ["scopeClass", "private-execution"],
+      ["actionClass", "deployment"],
+      ["stageId", "P0-STAGE-ENG-R0-001-WRONG-STAGE"],
+      ["predecessorReceiptSha256", `sha256:${"7".repeat(64)}`],
+      ["idempotencyKey", "P0-IDEMP-ENG-R0-001-WRONG-CALLBACK-001"],
+    ];
+    for (const [index, [key, value]] of callbackIdentityMutations.entries()) {
+      const mismatchDefinition = definitionFor({
+        suffix: `CALLBACK-IDENTITY-${index + 1}`,
+        moduleId: `eng.callback-identity-${index + 1}`,
+        argumentSetId: `callback-identity-${index + 1}.v1`,
+      });
+      const mismatchEntry = await callbackEntryFor(mismatchDefinition);
+      const mismatch = await executeCallbackFixture(mismatchDefinition, mismatchEntry, async (context) => (
+        callbackCompletionFor(mismatchDefinition, context, { [key]: value })
+      ));
+      if (mismatch.code !== "STAGE_CALLBACK_RECEIPT_REJECTED") {
+        throw new Error(`callback completion identity mismatch case failed: ${key}`);
+      }
+      cases += 1;
+    }
+
+    const callbackThrowDefinition = definitionFor({
+      suffix: "CALLBACK-THROW",
+      moduleId: "eng.callback-throw",
+      argumentSetId: "callback-throw.v1",
+    });
+    const callbackThrowEntry = await callbackEntryFor(callbackThrowDefinition);
+    const callbackThrew = await executeCallbackFixture(callbackThrowDefinition, callbackThrowEntry, async () => {
+      throw new Error("synthetic callback failure detail must not escape");
+    });
+    if (callbackThrew.code !== "STAGE_CALLBACK_FAILED"
+      || JSON.stringify(callbackThrew).includes("synthetic callback failure detail")) {
+      throw new Error("callback throw sanitization case failed");
+    }
+    cases += 1;
+
+    const callbackEarlyDefinition = definitionFor({
+      suffix: "CALLBACK-EARLY-RETURN",
+      moduleId: "eng.callback-early",
+      argumentSetId: "callback-early.v1",
+    });
+    const callbackEarlyEntry = await callbackEntryFor(callbackEarlyDefinition);
+    const callbackEarly = await executeCallbackFixture(callbackEarlyDefinition, callbackEarlyEntry, async () => undefined);
+    if (callbackEarly.code !== "STAGE_CALLBACK_RECEIPT_REJECTED") {
+      throw new Error("callback early-return rejection case failed");
+    }
+    cases += 1;
+
+    const callbackOutputDefinition = definitionFor({
+      suffix: "CALLBACK-RAW-OUTPUT",
+      moduleId: "eng.callback-output",
+      argumentSetId: "callback-output.v1",
+    });
+    const callbackOutputEntry = await callbackEntryFor(callbackOutputDefinition);
+    const callbackRawCanary = "synthetic-private-callback-output-canary";
+    const callbackOutput = await executeCallbackFixture(callbackOutputDefinition, callbackOutputEntry, async (context) => ({
+      ...callbackCompletionFor(callbackOutputDefinition, context),
+      output: callbackRawCanary,
+    }));
+    if (callbackOutput.code !== "STAGE_CALLBACK_RECEIPT_REJECTED"
+      || JSON.stringify(callbackOutput).includes(callbackRawCanary)) {
+      throw new Error("callback raw-output rejection case failed");
+    }
+    cases += 1;
+
+    const callbackStreamDefinition = definitionFor({
+      suffix: "CALLBACK-RAW-STREAM",
+      moduleId: "eng.callback-stream",
+      argumentSetId: "callback-stream.v1",
+    });
+    const callbackStreamEntry = await callbackEntryFor(callbackStreamDefinition);
+    const callbackStreamCanary = "synthetic-callback-stream-canary";
+    const originalStdoutWrite = process.stdout.write;
+    const originalStderrWrite = process.stderr.write;
+    const callbackStreamResult = await executeCallbackFixture(
+      callbackStreamDefinition,
+      callbackStreamEntry,
+      async (context) => {
+        console.log(callbackStreamCanary);
+        process.stderr.write(callbackStreamCanary);
+        return callbackCompletionFor(callbackStreamDefinition, context);
+      },
+    );
+    const callbackStreamKey = safeRuntimeSegment(`${callbackStreamDefinition.taskId}\0${callbackStreamDefinition.stageId}\0${callbackStreamDefinition.idempotencyKey}`);
+    const callbackStreamRoot = path.join(runtimeRoot, callbackStreamKey);
+    const callbackStreamEvents = await readEvents(path.join(callbackStreamRoot, "events"));
+    const callbackStreamReceipt = callbackStreamEvents.at(-1)?.receipt;
+    if (callbackStreamResult.code !== "STAGE_CALLBACK_RAW_STREAM_REJECTED"
+      || JSON.stringify(callbackStreamResult).includes(callbackStreamCanary)
+      || process.stdout.write !== originalStdoutWrite
+      || process.stderr.write !== originalStderrWrite
+      || callbackStreamEvents.map((event) => event.state).join(",") !== "running,recovery-required"
+      || callbackStreamReceipt?.stdoutSha256 === null
+      || callbackStreamReceipt?.stderrSha256 === null
+      || callbackStreamReceipt?.stdoutSha256 === EMPTY_EVIDENCE_SHA256
+      || callbackStreamReceipt?.stderrSha256 === EMPTY_EVIDENCE_SHA256
+      || (await readdir(path.join(callbackStreamRoot, "raw-evidence"))).length !== 0) {
+      throw new Error("callback raw-stream containment case failed");
+    }
+    cases += 1;
+
+    const callbackInitialGateDefinition = definitionFor({
+      suffix: "CALLBACK-INITIAL-GATE-DRIFT",
+      moduleId: "eng.callback-initial-gate",
+      argumentSetId: "callback-initial-gate.v1",
+    });
+    const callbackInitialGateEntry = await callbackEntryFor(callbackInitialGateDefinition);
+    let callbackInitialGateRan = false;
+    const callbackInitialGate = await executeCallbackFixture(
+      callbackInitialGateDefinition,
+      callbackInitialGateEntry,
+      async () => {
+        callbackInitialGateRan = true;
+        return null;
+      },
+      {
+        authorization: authorizationFor(callbackInitialGateDefinition, {
+          moduleSha256: callbackInitialGateEntry.moduleSha256,
+          taskId: "REL-R0-001",
+        }),
+      },
+    );
+    if (callbackInitialGate.code !== "STAGE_GATE_B_DENIED" || callbackInitialGateRan) {
+      throw new Error("callback initial Gate B identity case failed");
+    }
+    cases += 1;
+
+    const callbackModuleDriftDefinition = definitionFor({
+      suffix: "CALLBACK-MODULE-DRIFT",
+      moduleId: "eng.callback-module-drift",
+      argumentSetId: "callback-module-drift.v1",
+    });
+    const callbackModuleDriftEntry = await callbackEntryFor(callbackModuleDriftDefinition);
+    let callbackModuleDriftRan = false;
+    const callbackModuleDrift = await executeCallbackFixture(
+      callbackModuleDriftDefinition,
+      { ...callbackModuleDriftEntry, moduleSha256: `sha256:${"0".repeat(64)}` },
+      async () => {
+        callbackModuleDriftRan = true;
+        return null;
+      },
+      {
+        authorization: authorizationFor(callbackModuleDriftDefinition, {
+          moduleSha256: `sha256:${"0".repeat(64)}`,
+        }),
+      },
+    );
+    if (callbackModuleDrift.code !== "STAGE_MODULE_NOT_ALLOWLISTED" || callbackModuleDriftRan) {
+      throw new Error("callback reviewed-module binding case failed");
+    }
+    cases += 1;
+
+    const callbackLockedGateDefinition = definitionFor({
+      suffix: "CALLBACK-LOCKED-GATE-DRIFT",
+      moduleId: "eng.callback-locked-gate",
+      argumentSetId: "callback-locked-gate.v1",
+    });
+    const callbackLockedGateEntry = await callbackEntryFor(callbackLockedGateDefinition);
+    const callbackLockedAuthorization = authorizationFor(callbackLockedGateDefinition, {
+      moduleSha256: callbackLockedGateEntry.moduleSha256,
+    });
+    let callbackLockedCalls = 0;
+    let callbackLockedGateRan = false;
+    const callbackLockedGate = await executeCallbackFixture(
+      callbackLockedGateDefinition,
+      callbackLockedGateEntry,
+      async () => {
+        callbackLockedGateRan = true;
+        return null;
+      },
+      {
+        authorize: async () => {
+          callbackLockedCalls += 1;
+          return callbackLockedCalls === 1
+            ? callbackLockedAuthorization
+            : { ...callbackLockedAuthorization, stageApprovalSha256: "0".repeat(64) };
+        },
+      },
+    );
+    if (callbackLockedGate.code !== "STAGE_GATE_B_DENIED" || callbackLockedGateRan) {
+      throw new Error("callback under-lock Gate B recheck case failed");
+    }
+    cases += 1;
+
+    const callbackSourceDriftDefinition = definitionFor({
+      suffix: "CALLBACK-SOURCE-DRIFT",
+      moduleId: "eng.callback-source-drift",
+      argumentSetId: "callback-source-drift.v1",
+    });
+    const callbackSourceDriftEntry = await callbackEntryFor(callbackSourceDriftDefinition);
+    const callbackSourceAuthorization = authorizationFor(callbackSourceDriftDefinition, {
+      moduleSha256: callbackSourceDriftEntry.moduleSha256,
+    });
+    let callbackSourceCalls = 0;
+    let sourceDriftSignal = null;
+    const callbackSourceDrift = await executeCallbackFixture(
+      callbackSourceDriftDefinition,
+      callbackSourceDriftEntry,
+      async (context) => {
+        sourceDriftSignal = context.signal;
+        return callbackCompletionFor(callbackSourceDriftDefinition, context);
+      },
+      {
+        authorize: async () => {
+          callbackSourceCalls += 1;
+          return callbackSourceCalls <= 3
+            ? callbackSourceAuthorization
+            : { ...callbackSourceAuthorization, sourceRevision: "2".repeat(40) };
+        },
+      },
+    );
+    if (callbackSourceDrift.code !== "STAGE_POST_ACTION_VERIFICATION_INVALID"
+      || sourceDriftSignal?.aborted !== true
+      || sourceDriftSignal?.reason !== "callback-authority-invalidated") {
+      throw new Error("callback post-settlement source movement case failed");
+    }
+    cases += 1;
+
+    const callbackFinalGateDefinition = definitionFor({
+      suffix: "CALLBACK-FINAL-GATE-DRIFT",
+      moduleId: "eng.callback-final-gate",
+      argumentSetId: "callback-final-gate.v1",
+    });
+    const callbackFinalGateEntry = await callbackEntryFor(callbackFinalGateDefinition);
+    const callbackFinalAuthorization = authorizationFor(callbackFinalGateDefinition, {
+      moduleSha256: callbackFinalGateEntry.moduleSha256,
+    });
+    let callbackFinalGateCalls = 0;
+    const callbackFinalGate = await executeCallbackFixture(
+      callbackFinalGateDefinition,
+      callbackFinalGateEntry,
+      async (context) => callbackCompletionFor(callbackFinalGateDefinition, context),
+      {
+        authorize: async () => {
+          callbackFinalGateCalls += 1;
+          return callbackFinalGateCalls < 11
+            ? callbackFinalAuthorization
+            : { ...callbackFinalAuthorization, registrySha256: "0".repeat(64) };
+        },
+      },
+    );
+    const callbackFinalKey = safeRuntimeSegment(`${callbackFinalGateDefinition.taskId}\0${callbackFinalGateDefinition.stageId}\0${callbackFinalGateDefinition.idempotencyKey}`);
+    const callbackFinalEvents = await readEvents(path.join(runtimeRoot, callbackFinalKey, "events"));
+    if (callbackFinalGate.code !== "STAGE_POST_ACTION_VERIFICATION_INVALID"
+      || callbackFinalGateCalls !== 11
+      || callbackFinalEvents.some((event) => event.state === "verified-complete")) {
+      throw new Error("callback final pre-terminal Gate B recheck case failed");
+    }
+    cases += 1;
+
+    const callbackVerifierDefinition = definitionFor({
+      suffix: "CALLBACK-VERIFIER-REJECTS",
+      moduleId: "eng.callback-verifier",
+      argumentSetId: "callback-verifier.v1",
+    });
+    const callbackVerifierEntry = await callbackEntryFor(callbackVerifierDefinition);
+    const callbackVerifier = await executeCallbackFixture(
+      callbackVerifierDefinition,
+      callbackVerifierEntry,
+      async (context) => callbackCompletionFor(callbackVerifierDefinition, context),
+      { verifyOutcome: async () => null },
+    );
+    if (callbackVerifier.code !== "STAGE_POST_ACTION_VERIFICATION_INVALID") {
+      throw new Error("callback outcome-verifier rejection case failed");
+    }
+    cases += 1;
+
+    const callbackPrestartExpiryDefinition = definitionFor({
+      suffix: "CALLBACK-PRESTART-AUTHORITY-EXPIRY",
+      moduleId: "eng.callback-prestart-expiry",
+      argumentSetId: "callback-prestart-expiry.v1",
+    });
+    const callbackPrestartExpiryEntry = await callbackEntryFor(callbackPrestartExpiryDefinition);
+    const callbackPrestartExpiryAuthorization = authorizationFor(callbackPrestartExpiryDefinition, {
+      moduleSha256: callbackPrestartExpiryEntry.moduleSha256,
+      deadlineAt: new Date(Date.now() + 1_000).toISOString(),
+    });
+    let callbackPrestartExpiryExecutions = 0;
+    let callbackPrestartExpiryAuthorizationCalls = 0;
+    const delayedRunningAppend = async (directory, sequence, event) => {
+      if (sequence === 1) await delay(1_200);
+      return appendEvent(directory, sequence, event);
+    };
+    const callbackPrestartExpiry = await executeCallbackFixture(
+      callbackPrestartExpiryDefinition,
+      callbackPrestartExpiryEntry,
+      async () => {
+        callbackPrestartExpiryExecutions += 1;
+        return null;
+      },
+      {
+        authorization: callbackPrestartExpiryAuthorization,
+        authorize: async () => {
+          callbackPrestartExpiryAuthorizationCalls += 1;
+          return callbackPrestartExpiryAuthorization;
+        },
+        appendJournalEvent: delayedRunningAppend,
+      },
+    );
+    const callbackPrestartExpiryKey = safeRuntimeSegment(`${callbackPrestartExpiryDefinition.taskId}\0${callbackPrestartExpiryDefinition.stageId}\0${callbackPrestartExpiryDefinition.idempotencyKey}`);
+    const callbackPrestartExpiryEvents = await readEvents(path.join(runtimeRoot, callbackPrestartExpiryKey, "events"));
+    if (callbackPrestartExpiry.code !== "STAGE_EXPIRED_BEFORE_MUTATION"
+      || callbackPrestartExpiry.state !== "expired-before-mutation"
+      || callbackPrestartExpiryExecutions !== 0
+      || callbackPrestartExpiryAuthorizationCalls !== 3
+      || callbackPrestartExpiryEvents.map((event) => event.state).join(",") !== "running,expired-before-mutation"
+      || callbackPrestartExpiryEvents.at(-1)?.receipt?.childResultSha256 !== null) {
+      throw new Error("callback post-running pre-invocation authority expiry case failed");
+    }
+    cases += 1;
+
+    const callbackDeadlineDefinition = definitionFor({
+      suffix: "CALLBACK-DEADLINE",
+      moduleId: "eng.callback-deadline",
+      argumentSetId: "callback-deadline.v1",
+      deadlineMs: 1_000,
+    });
+    const callbackDeadlineEntry = await callbackEntryFor(callbackDeadlineDefinition);
+    const callbackDeadlineAuthorization = authorizationFor(callbackDeadlineDefinition, {
+      moduleSha256: callbackDeadlineEntry.moduleSha256,
+      deadlineAt: new Date(Date.now() + 150).toISOString(),
+    });
+    let callbackDeadlineSignal = null;
+    let callbackDeadlineSettled = false;
+    const callbackDeadline = await executeCallbackFixture(
+      callbackDeadlineDefinition,
+      callbackDeadlineEntry,
+      async (context) => new Promise((resolve) => {
+        callbackDeadlineSignal = context.signal;
+        context.signal.addEventListener("abort", () => {
+          setTimeout(() => {
+            callbackDeadlineSettled = true;
+            resolve(callbackCompletionFor(callbackDeadlineDefinition, context));
+          }, 15);
+        }, { once: true });
+      }),
+      { authorization: callbackDeadlineAuthorization },
+    );
+    if (callbackDeadline.code !== "STAGE_CALLBACK_DEADLINE_EXCEEDED"
+      || callbackDeadlineSignal?.aborted !== true
+      || callbackDeadlineSignal?.reason !== "callback-deadline-exceeded"
+      || !callbackDeadlineSettled) {
+      throw new Error("callback deadline/abort/settlement case failed");
+    }
+    cases += 1;
+
+    const callbackPrimordialDefinition = definitionFor({
+      suffix: "CALLBACK-PRIMORDIAL-DEADLINE",
+      moduleId: "eng.callback-primordial",
+      argumentSetId: "callback-primordial.v1",
+      deadlineMs: 1_000,
+    });
+    const callbackPrimordialEntry = await callbackEntryFor(callbackPrimordialDefinition);
+    const callbackPrimordialAuthorization = authorizationFor(callbackPrimordialDefinition, {
+      moduleSha256: callbackPrimordialEntry.moduleSha256,
+      deadlineAt: new Date(Date.now() + 150).toISOString(),
+    });
+    const originalDateNow = Date.now;
+    const originalDateParse = Date.parse;
+    const originalDateGetTime = Date.prototype.getTime;
+    const originalDateToISOString = Date.prototype.toISOString;
+    const originalHrtimeBigint = process.hrtime.bigint;
+    const originalGlobalSetTimeout = globalThis.setTimeout;
+    const originalGlobalClearTimeout = globalThis.clearTimeout;
+    const restoreTimeGlobals = () => {
+      Date.now = originalDateNow;
+      Date.parse = originalDateParse;
+      Date.prototype.getTime = originalDateGetTime;
+      Date.prototype.toISOString = originalDateToISOString;
+      process.hrtime.bigint = originalHrtimeBigint;
+      globalThis.setTimeout = originalGlobalSetTimeout;
+      globalThis.clearTimeout = originalGlobalClearTimeout;
+    };
+    let callbackPrimordialSignal = null;
+    const callbackPrimordial = await executeCallbackFixture(
+      callbackPrimordialDefinition,
+      callbackPrimordialEntry,
+      async (context) => new Promise((resolve, reject) => {
+        callbackPrimordialSignal = context.signal;
+        try {
+          Date.now = () => 0;
+          Date.parse = () => Number.POSITIVE_INFINITY;
+          Date.prototype.getTime = () => 0;
+          Date.prototype.toISOString = () => "1970-01-01T00:00:00.000Z";
+          process.hrtime.bigint = () => 0n;
+          globalThis.setTimeout = () => ({ synthetic: true });
+          globalThis.clearTimeout = () => {};
+          originalGlobalSetTimeout(() => {
+            restoreTimeGlobals();
+            resolve(callbackCompletionFor(callbackPrimordialDefinition, context));
+          }, 180);
+        } catch (error) {
+          restoreTimeGlobals();
+          reject(error);
+        }
+      }),
+      { authorization: callbackPrimordialAuthorization },
+    );
+    restoreTimeGlobals();
+    if (callbackPrimordial.code !== "STAGE_CALLBACK_DEADLINE_EXCEEDED"
+      || callbackPrimordialSignal?.aborted !== true
+      || callbackPrimordialSignal?.reason !== "callback-deadline-exceeded") {
+      throw new Error("callback primordial deadline containment case failed");
+    }
+    cases += 1;
+
+    const callbackFailStuckDefinition = definitionFor({
+      suffix: "CALLBACK-FAIL-STUCK",
+      moduleId: "eng.callback-fail-stuck",
+      argumentSetId: "callback-fail-stuck.v1",
+      deadlineMs: 1_000,
+    });
+    const callbackFailStuckEntry = await callbackEntryFor(callbackFailStuckDefinition);
+    const callbackFailStuckAuthorization = authorizationFor(callbackFailStuckDefinition, {
+      moduleSha256: callbackFailStuckEntry.moduleSha256,
+      deadlineAt: new Date(Date.now() + 150).toISOString(),
+    });
+    let settleIgnoredAbort;
+    let ignoredAbortContext;
+    const ignoredAbortPromise = executeCallbackFixture(
+      callbackFailStuckDefinition,
+      callbackFailStuckEntry,
+      async (context) => new Promise((resolve) => {
+        ignoredAbortContext = context;
+        settleIgnoredAbort = () => resolve(callbackCompletionFor(callbackFailStuckDefinition, context));
+      }),
+      { authorization: callbackFailStuckAuthorization },
+    );
+    while (typeof settleIgnoredAbort !== "function") await delay(1);
+    await delay(170);
+    const blockedWhileUnsettled = await executeCallbackFixture(
+      callbackFailStuckDefinition,
+      callbackFailStuckEntry,
+      async () => null,
+      { authorization: callbackFailStuckAuthorization },
+    );
+    if (blockedWhileUnsettled.code !== "STAGE_LOCK_UNAVAILABLE"
+      || ignoredAbortContext.signal.aborted !== true) {
+      throw new Error("callback ignored-abort lock retention case failed");
+    }
+    settleIgnoredAbort();
+    const ignoredAbortResult = await ignoredAbortPromise;
+    if (ignoredAbortResult.code !== "STAGE_CALLBACK_DEADLINE_EXCEEDED") {
+      throw new Error("callback ignored-abort settlement case failed");
+    }
+    cases += 1;
+
+    const callbackConcurrencyDefinition = definitionFor({
+      suffix: "CALLBACK-CONCURRENT-LOCK",
+      moduleId: "eng.callback-concurrent",
+      argumentSetId: "callback-concurrent.v1",
+    });
+    const callbackConcurrencyEntry = await callbackEntryFor(callbackConcurrencyDefinition);
+    let releaseConcurrentCallback;
+    let concurrentContext;
+    const concurrentFirst = executeCallbackFixture(
+      callbackConcurrencyDefinition,
+      callbackConcurrencyEntry,
+      async (context) => new Promise((resolve) => {
+        concurrentContext = context;
+        releaseConcurrentCallback = () => resolve(callbackCompletionFor(callbackConcurrencyDefinition, context));
+      }),
+    );
+    while (typeof releaseConcurrentCallback !== "function") await delay(1);
+    const concurrentSecond = await executeCallbackFixture(
+      callbackConcurrencyDefinition,
+      callbackConcurrencyEntry,
+      async () => null,
+    );
+    releaseConcurrentCallback();
+    const concurrentFirstResult = await concurrentFirst;
+    if (concurrentSecond.code !== "STAGE_LOCK_UNAVAILABLE"
+      || concurrentFirstResult.code !== "STAGE_SUCCEEDED"
+      || concurrentContext.signal.aborted) {
+      throw new Error("callback unique-owner lock case failed");
+    }
+    cases += 1;
+
+    const callbackGlobalLockDefinitionA = definitionFor({
+      suffix: "CALLBACK-GLOBAL-LOCK-A",
+      moduleId: "eng.callback-global-a",
+      argumentSetId: "callback-global-a.v1",
+    });
+    const callbackGlobalLockDefinitionB = definitionFor({
+      suffix: "CALLBACK-GLOBAL-LOCK-B",
+      moduleId: "eng.callback-global-b",
+      argumentSetId: "callback-global-b.v1",
+    });
+    const callbackGlobalLockEntryA = await callbackEntryFor(callbackGlobalLockDefinitionA);
+    const callbackGlobalLockEntryB = await callbackEntryFor(callbackGlobalLockDefinitionB);
+    let releaseGlobalCallback;
+    let globalCallbackBExecutions = 0;
+    const globalCallbackA = executeCallbackFixture(
+      callbackGlobalLockDefinitionA,
+      callbackGlobalLockEntryA,
+      async (context) => new Promise((resolve) => {
+        releaseGlobalCallback = () => resolve(callbackCompletionFor(callbackGlobalLockDefinitionA, context));
+      }),
+    );
+    while (typeof releaseGlobalCallback !== "function") await delay(1);
+    const globalCallbackB = await executeCallbackFixture(
+      callbackGlobalLockDefinitionB,
+      callbackGlobalLockEntryB,
+      async (context) => {
+        globalCallbackBExecutions += 1;
+        return callbackCompletionFor(callbackGlobalLockDefinitionB, context);
+      },
+    );
+    releaseGlobalCallback();
+    const globalCallbackAResult = await globalCallbackA;
+    if (globalCallbackB.code !== "STAGE_CALLBACK_LOCK_UNAVAILABLE"
+      || globalCallbackBExecutions !== 0
+      || globalCallbackAResult.code !== "STAGE_SUCCEEDED") {
+      throw new Error("callback global stream-interception lock case failed");
+    }
+    cases += 1;
+
+    const callbackPredecessorDefinition = definitionFor({
+      suffix: "CALLBACK-MISSING-PREDECESSOR",
+      moduleId: "eng.callback-predecessor",
+      argumentSetId: "callback-predecessor.v1",
+      predecessor: {
+        stageId: callbackSuccessDefinition.stageId,
+        receiptDigest: `sha256:${"8".repeat(64)}`,
+      },
+    });
+    const callbackPredecessorEntry = await callbackEntryFor(callbackPredecessorDefinition);
+    const callbackPredecessorRuntimeRoot = path.join(root, "callback-predecessor-runtime");
+    let callbackPredecessorRan = false;
+    const callbackPredecessor = await executeCallbackFixture(
+      callbackPredecessorDefinition,
+      callbackPredecessorEntry,
+      async () => {
+        callbackPredecessorRan = true;
+        return null;
+      },
+      { runtimeRoot: callbackPredecessorRuntimeRoot },
+    );
+    if (callbackPredecessor.code !== "STAGE_PREDECESSOR_RECEIPT_MISSING" || callbackPredecessorRan) {
+      throw new Error("callback predecessor receipt case failed");
+    }
+    cases += 1;
+
+    const callbackJournalDefinition = definitionFor({
+      suffix: "CALLBACK-JOURNAL-FAIL-STUCK",
+      moduleId: "eng.callback-journal-fail-stuck",
+      argumentSetId: "callback-journal-fail-stuck.v1",
+    });
+    const callbackJournalEntry = await callbackEntryFor(callbackJournalDefinition);
+    const callbackJournalRuntimeRoot = path.join(root, "callback-journal-fail-stuck-runtime");
+    let callbackJournalExecutions = 0;
+    let callbackJournalAppends = 0;
+    const appendRunningThenFail = async (directory, sequence, event) => {
+      callbackJournalAppends += 1;
+      if (sequence === 1) return appendEvent(directory, sequence, event);
+      throw new Error("synthetic post-action journal failure");
+    };
+    const callbackJournalFailure = await executeCallbackFixture(
+      callbackJournalDefinition,
+      callbackJournalEntry,
+      async (context) => {
+        callbackJournalExecutions += 1;
+        return callbackCompletionFor(callbackJournalDefinition, context);
+      },
+      {
+        runtimeRoot: callbackJournalRuntimeRoot,
+        appendJournalEvent: appendRunningThenFail,
+      },
+    );
+    const callbackJournalKey = safeRuntimeSegment(`${callbackJournalDefinition.taskId}\0${callbackJournalDefinition.stageId}\0${callbackJournalDefinition.idempotencyKey}`);
+    const callbackJournalLockPath = path.join(callbackJournalRuntimeRoot, "locks", `${callbackJournalKey}.lock`);
+    const callbackJournalEvents = await readEvents(path.join(callbackJournalRuntimeRoot, callbackJournalKey, "events"));
+    let callbackJournalLockRetained = true;
+    try {
+      await access(callbackJournalLockPath, fsConstants.F_OK);
+    } catch {
+      callbackJournalLockRetained = false;
+    }
+    if (callbackJournalFailure.code !== "STAGE_RECOVERY_REQUIRED"
+      || callbackJournalExecutions !== 1
+      || callbackJournalAppends !== 3
+      || callbackJournalEvents.length !== 1
+      || callbackJournalEvents[0].state !== "running"
+      || callbackJournalEvents[0].actionStartAuthorized !== true
+      || !callbackJournalLockRetained) {
+      throw new Error("callback post-action journal fail-stuck case failed");
+    }
+    cases += 1;
+
+    const callbackJournalReplay = await executeCallbackFixture(
+      callbackJournalDefinition,
+      callbackJournalEntry,
+      async () => {
+        callbackJournalExecutions += 1;
+        return null;
+      },
+      { runtimeRoot: callbackJournalRuntimeRoot },
+    );
+    if (callbackJournalReplay.code !== "STAGE_LOCK_UNAVAILABLE" || callbackJournalExecutions !== 1) {
+      throw new Error("callback fail-stuck replay lock case failed");
+    }
+    cases += 1;
+
+    const callbackJournalDurabilityDefinition = definitionFor({
+      suffix: "CALLBACK-JOURNAL-DIRSYNC-FAIL-STUCK",
+      moduleId: "eng.callback-journal-dirsync-fail-stuck",
+      argumentSetId: "callback-journal-dirsync-fail-stuck.v1",
+    });
+    const callbackJournalDurabilityEntry = await callbackEntryFor(callbackJournalDurabilityDefinition);
+    const callbackJournalDurabilityRuntimeRoot = path.join(root, "callback-journal-dirsync-fail-stuck-runtime");
+    let callbackJournalDurabilityExecutions = 0;
+    let callbackJournalDurabilitySyncAttempts = 0;
+    const appendRecoveryThenReportFailure = async (directory, sequence, event) => {
+      const eventPath = await appendEvent(directory, sequence, event);
+      if (sequence === 2 && event.state === "recovery-required") {
+        throw new Error("synthetic final event-directory fsync uncertainty");
+      }
+      return eventPath;
+    };
+    const callbackJournalDurabilityFailure = await executeCallbackFixture(
+      callbackJournalDurabilityDefinition,
+      callbackJournalDurabilityEntry,
+      async () => {
+        callbackJournalDurabilityExecutions += 1;
+        return undefined;
+      },
+      {
+        runtimeRoot: callbackJournalDurabilityRuntimeRoot,
+        appendJournalEvent: appendRecoveryThenReportFailure,
+        syncEventDirectory: async () => {
+          callbackJournalDurabilitySyncAttempts += 1;
+          throw new Error("synthetic event-directory fsync failure");
+        },
+      },
+    );
+    const callbackJournalDurabilityKey = safeRuntimeSegment(`${callbackJournalDurabilityDefinition.taskId}\0${callbackJournalDurabilityDefinition.stageId}\0${callbackJournalDurabilityDefinition.idempotencyKey}`);
+    const callbackJournalDurabilityLockPath = path.join(
+      callbackJournalDurabilityRuntimeRoot,
+      "locks",
+      `${callbackJournalDurabilityKey}.lock`,
+    );
+    const callbackJournalDurabilityEvents = await readEvents(path.join(
+      callbackJournalDurabilityRuntimeRoot,
+      callbackJournalDurabilityKey,
+      "events",
+    ));
+    let callbackJournalDurabilityLockRetained = true;
+    try {
+      await access(callbackJournalDurabilityLockPath, fsConstants.F_OK);
+    } catch {
+      callbackJournalDurabilityLockRetained = false;
+    }
+    if (callbackJournalDurabilityFailure.code !== "STAGE_RECOVERY_REQUIRED"
+      || callbackJournalDurabilityExecutions !== 1
+      || callbackJournalDurabilitySyncAttempts !== 1
+      || callbackJournalDurabilityEvents.map((event) => event.state).join(",") !== "running,recovery-required"
+      || !callbackJournalDurabilityLockRetained) {
+      throw new Error("callback written-but-unproven journal durability case failed");
+    }
+    cases += 1;
+
+    const callbackJournalDurabilityReplay = await executeCallbackFixture(
+      callbackJournalDurabilityDefinition,
+      callbackJournalDurabilityEntry,
+      async () => {
+        callbackJournalDurabilityExecutions += 1;
+        return null;
+      },
+      { runtimeRoot: callbackJournalDurabilityRuntimeRoot },
+    );
+    if (callbackJournalDurabilityReplay.code !== "STAGE_LOCK_UNAVAILABLE"
+      || callbackJournalDurabilityExecutions !== 1) {
+      throw new Error("callback unproven-durability replay lock case failed");
+    }
+    cases += 1;
+
+    const callbackJournalFileSyncDefinition = definitionFor({
+      suffix: "CALLBACK-JOURNAL-FILESYNC-FAIL-STUCK",
+      moduleId: "eng.callback-journal-filesync-fail-stuck",
+      argumentSetId: "callback-journal-filesync-fail-stuck.v1",
+    });
+    const callbackJournalFileSyncEntry = await callbackEntryFor(callbackJournalFileSyncDefinition);
+    const callbackJournalFileSyncRuntimeRoot = path.join(root, "callback-journal-filesync-fail-stuck-runtime");
+    let callbackJournalFileSyncExecutions = 0;
+    let callbackJournalFileSyncAttempts = 0;
+    let callbackJournalFileSyncDirectoryAttempts = 0;
+    const appendCompleteRecoveryThenThrow = async (directory, sequence, event) => {
+      const eventPath = await appendEvent(directory, sequence, event);
+      if (sequence === 2 && event.state === "recovery-required") {
+        throw new Error("synthetic complete write with uncertain file fsync");
+      }
+      return eventPath;
+    };
+    const callbackJournalFileSyncFailure = await executeCallbackFixture(
+      callbackJournalFileSyncDefinition,
+      callbackJournalFileSyncEntry,
+      async () => {
+        callbackJournalFileSyncExecutions += 1;
+        return undefined;
+      },
+      {
+        runtimeRoot: callbackJournalFileSyncRuntimeRoot,
+        appendJournalEvent: appendCompleteRecoveryThenThrow,
+        syncEventFile: async () => {
+          callbackJournalFileSyncAttempts += 1;
+          throw new Error("synthetic journal tail file fsync failure");
+        },
+        syncEventDirectory: async (directory) => {
+          callbackJournalFileSyncDirectoryAttempts += 1;
+          return syncDirectory(directory);
+        },
+      },
+    );
+    const callbackJournalFileSyncKey = safeRuntimeSegment(`${callbackJournalFileSyncDefinition.taskId}\0${callbackJournalFileSyncDefinition.stageId}\0${callbackJournalFileSyncDefinition.idempotencyKey}`);
+    const callbackJournalFileSyncLockPath = path.join(
+      callbackJournalFileSyncRuntimeRoot,
+      "locks",
+      `${callbackJournalFileSyncKey}.lock`,
+    );
+    const callbackJournalFileSyncEvents = await readEvents(path.join(
+      callbackJournalFileSyncRuntimeRoot,
+      callbackJournalFileSyncKey,
+      "events",
+    ));
+    let callbackJournalFileSyncLockRetained = true;
+    try {
+      await access(callbackJournalFileSyncLockPath, fsConstants.F_OK);
+    } catch {
+      callbackJournalFileSyncLockRetained = false;
+    }
+    if (callbackJournalFileSyncFailure.code !== "STAGE_RECOVERY_REQUIRED"
+      || callbackJournalFileSyncExecutions !== 1
+      || callbackJournalFileSyncAttempts !== 1
+      || callbackJournalFileSyncDirectoryAttempts !== 0
+      || callbackJournalFileSyncEvents.map((event) => event.state).join(",") !== "running,recovery-required"
+      || !callbackJournalFileSyncLockRetained) {
+      throw new Error("callback readable-but-file-fsync-unproven journal case failed");
+    }
+    cases += 1;
+
+    const callbackJournalFileSyncReplay = await executeCallbackFixture(
+      callbackJournalFileSyncDefinition,
+      callbackJournalFileSyncEntry,
+      async () => {
+        callbackJournalFileSyncExecutions += 1;
+        return null;
+      },
+      { runtimeRoot: callbackJournalFileSyncRuntimeRoot },
+    );
+    if (callbackJournalFileSyncReplay.code !== "STAGE_LOCK_UNAVAILABLE"
+      || callbackJournalFileSyncExecutions !== 1) {
+      throw new Error("callback file-fsync-unproven replay lock case failed");
+    }
+    cases += 1;
+
+    const callbackPendingFileSyncDefinition = definitionFor({
+      suffix: "CALLBACK-PENDING-FILESYNC-FAIL-STUCK",
+      moduleId: "eng.callback-pending-filesync-fail-stuck",
+      argumentSetId: "callback-pending-filesync-fail-stuck.v1",
+    });
+    const callbackPendingFileSyncEntry = await callbackEntryFor(callbackPendingFileSyncDefinition);
+    const callbackPendingFileSyncRuntimeRoot = path.join(root, "callback-pending-filesync-fail-stuck-runtime");
+    let callbackPendingFileSyncExecutions = 0;
+    let callbackPendingFileSyncAttempts = 0;
+    let callbackPendingRecoveryAppendAttempts = 0;
+    const appendPendingThenThrow = async (directory, sequence, event) => {
+      if (event.state === "recovery-required") callbackPendingRecoveryAppendAttempts += 1;
+      const eventPath = await appendEvent(directory, sequence, event);
+      if (sequence === 2 && event.state === "verification-pending") {
+        throw new Error("synthetic readable verification-pending file fsync uncertainty");
+      }
+      return eventPath;
+    };
+    const callbackPendingFileSyncFailure = await executeCallbackFixture(
+      callbackPendingFileSyncDefinition,
+      callbackPendingFileSyncEntry,
+      async (context) => {
+        callbackPendingFileSyncExecutions += 1;
+        return callbackCompletionFor(callbackPendingFileSyncDefinition, context);
+      },
+      {
+        runtimeRoot: callbackPendingFileSyncRuntimeRoot,
+        appendJournalEvent: appendPendingThenThrow,
+        syncEventFile: async () => {
+          callbackPendingFileSyncAttempts += 1;
+          throw new Error("synthetic verification-pending tail file fsync failure");
+        },
+      },
+    );
+    const callbackPendingFileSyncKey = safeRuntimeSegment(`${callbackPendingFileSyncDefinition.taskId}\0${callbackPendingFileSyncDefinition.stageId}\0${callbackPendingFileSyncDefinition.idempotencyKey}`);
+    const callbackPendingFileSyncLockPath = path.join(
+      callbackPendingFileSyncRuntimeRoot,
+      "locks",
+      `${callbackPendingFileSyncKey}.lock`,
+    );
+    const callbackPendingFileSyncEvents = await readEvents(path.join(
+      callbackPendingFileSyncRuntimeRoot,
+      callbackPendingFileSyncKey,
+      "events",
+    ));
+    let callbackPendingFileSyncLockRetained = true;
+    try {
+      await access(callbackPendingFileSyncLockPath, fsConstants.F_OK);
+    } catch {
+      callbackPendingFileSyncLockRetained = false;
+    }
+    if (callbackPendingFileSyncFailure.code !== "STAGE_RECOVERY_REQUIRED"
+      || callbackPendingFileSyncExecutions !== 1
+      || callbackPendingFileSyncAttempts !== 1
+      || callbackPendingRecoveryAppendAttempts !== 0
+      || callbackPendingFileSyncEvents.map((event) => event.state).join(",") !== "running,verification-pending"
+      || !callbackPendingFileSyncLockRetained) {
+      throw new Error("callback verification-pending predecessor durability case failed");
+    }
+    cases += 1;
+
+    const callbackPendingFileSyncReplay = await executeCallbackFixture(
+      callbackPendingFileSyncDefinition,
+      callbackPendingFileSyncEntry,
+      async () => {
+        callbackPendingFileSyncExecutions += 1;
+        return null;
+      },
+      { runtimeRoot: callbackPendingFileSyncRuntimeRoot },
+    );
+    if (callbackPendingFileSyncReplay.code !== "STAGE_LOCK_UNAVAILABLE"
+      || callbackPendingFileSyncExecutions !== 1) {
+      throw new Error("callback verification-pending predecessor replay lock case failed");
+    }
+    cases += 1;
+
+    const callbackInterruptedDefinition = definitionFor({
+      suffix: "CALLBACK-INTERRUPTED",
+      moduleId: "eng.callback-interrupted",
+      argumentSetId: "callback-interrupted.v1",
+    });
+    const callbackInterruptedEntry = await callbackEntryFor(callbackInterruptedDefinition);
+    const callbackInterruptedAuthorization = authorizationFor(callbackInterruptedDefinition, {
+      moduleSha256: callbackInterruptedEntry.moduleSha256,
+    });
+    const callbackInterruptedKey = safeRuntimeSegment(`${callbackInterruptedDefinition.taskId}\0${callbackInterruptedDefinition.stageId}\0${callbackInterruptedDefinition.idempotencyKey}`);
+    const callbackInterruptedEvents = path.join(runtimeRoot, callbackInterruptedKey, "events");
+    await mkdir(callbackInterruptedEvents, { recursive: true });
+    await appendEvent(callbackInterruptedEvents, 1, {
+      schemaVersion: callbackInterruptedDefinition.schemaVersion,
+      state: "running",
+      occurredAt: new Date().toISOString(),
+      processGroupId: null,
+      sourceRevision: callbackInterruptedAuthorization.sourceRevision,
+      stageBindingDigest: stageBindingDigest(callbackInterruptedDefinition),
+      executorSha256: callbackInterruptedEntry.moduleSha256,
+    });
+    let callbackInterruptedRan = false;
+    const callbackInterrupted = await executeCallbackFixture(
+      callbackInterruptedDefinition,
+      callbackInterruptedEntry,
+      async () => {
+        callbackInterruptedRan = true;
+        return null;
+      },
+      { authorization: callbackInterruptedAuthorization },
+    );
+    if (callbackInterrupted.code !== "STAGE_RECOVERY_REQUIRED" || callbackInterruptedRan) {
+      throw new Error("callback interrupted-journal recovery case failed");
+    }
     cases += 1;
 
     return { ok: true, code: "SELF_TEST_OK", cases, productionModules: 0 };

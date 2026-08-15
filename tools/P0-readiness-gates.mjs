@@ -39,9 +39,10 @@ export const TASK_PREPARATION_SCHEMA_VERSION = "1.0.0";
 export const STAGE_EXECUTION_SCHEMA_VERSION = "1.0.0";
 export const STAGE_APPROVAL_REGISTRY_PATH = "docs/council/execution/P0-R0-STAGE-APPROVAL-REGISTRY.json";
 export const DELIVERY_TRANSITION_GATE_B_CONTRACT = Object.freeze({
+  taskIds: P0_R0_SUBSTANTIVE_TASK_IDS,
   stageIdSuffix: "-DELIVERY-TRANSITION",
-  scopeClass: "private-execution",
-  actionClass: "project-workflow-mutation",
+  scopeClass: "delivery-control",
+  actionClass: "delivery-status-transition",
   moduleId: "p0.delivery-transition",
   modulePath: "tools/P0-delivery-transition.mjs",
 });
@@ -141,6 +142,9 @@ export const SCOPE_ACTION_COMPATIBILITY = Object.freeze({
     "planning-control",
     "readiness-control-hardening",
     "synthetic-foundation",
+  ]),
+  "delivery-control": Object.freeze([
+    "delivery-status-transition",
   ]),
   "private-execution": Object.freeze([
     "private-system-read",
@@ -409,13 +413,17 @@ export function isTaskMilestoneScopeActionCompatible({ taskId, milestone, scopeC
   return asArray(taskContract.scopeActions[scopeClass]).includes(actionClass);
 }
 
+export function isDeliveryTransitionScopeAction({ scopeClass, actionClass }) {
+  return scopeClass === DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass
+    && actionClass === DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass;
+}
+
 export function isDedicatedDeliveryTransitionScopeAction({ taskId, stageId, scopeClass, actionClass }) {
-  return P0_R0_SUBSTANTIVE_TASK_IDS.includes(taskId)
+  return DELIVERY_TRANSITION_GATE_B_CONTRACT.taskIds.includes(taskId)
     && typeof stageId === "string"
     && stageId.startsWith(`P0-STAGE-${taskId}-`)
     && stageId.endsWith(DELIVERY_TRANSITION_GATE_B_CONTRACT.stageIdSuffix)
-    && scopeClass === DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass
-    && actionClass === DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass;
+    && isDeliveryTransitionScopeAction({ scopeClass, actionClass });
 }
 
 export const OWNER_ACTION_IDS_BY_MILESTONE = Object.freeze({
@@ -1263,6 +1271,12 @@ export function evaluateTaskPreparationGateA(input, context = {}) {
   const publication = asObject(context.candidatePublication);
   const expectedTask = asObject(context.expectedTask);
   const requestedScope = asObject(source.requestedScope);
+  const dedicatedDeliveryTransition = isDedicatedDeliveryTransitionScopeAction({
+    taskId,
+    stageId: source.stageId,
+    scopeClass: requestedScope.scopeClass,
+    actionClass: requestedScope.actionClass,
+  });
   const artifacts = asObject(candidate.artifacts);
   const reviews = asObject(source.artifactReviews);
   const council = asObject(source.council);
@@ -1284,8 +1298,8 @@ export function evaluateTaskPreparationGateA(input, context = {}) {
       "candidate", "dependencyIds", "dependencyEvidence", "acceptanceScenarioIds", "proposalAuthorIds",
       "artifactReviews", "council", "reviewerRegistry", "openDecisions", "specialistVetoes", "safety",
     ]), "the Gate A proposal has an unknown or incomplete schema", "rebuild the exact preparation proposal schema");
-  addGate("PREP_SCOPE_TASK", P0_R0_SUBSTANTIVE_TASK_IDS.includes(taskId),
-    "Gate A names a historical, unknown, or out-of-scope task", "select one of the five substantive R0 tasks");
+  addGate("PREP_SCOPE_TASK", P0_R0_SUBSTANTIVE_TASK_IDS.includes(taskId) && (!isDeliveryTransitionStage || dedicatedDeliveryTransition),
+    "Gate A names a historical, unknown, or out-of-scope task", "select one of the five substantive R0 tasks and bind the exact delivery-transition pair when using its suffix");
   addGate("PREP_STAGE_ID", STAGE_ID.test(source.stageId ?? "") && source.stageId.includes(taskId),
     "the immutable task-bound stage ID is missing or malformed", "use a P0-STAGE-* ID containing the exact task ID");
   addGate("PREP_REVIEW_ID", PREPARATION_REVIEW_ID.test(source.preparationReviewId ?? ""),
@@ -1308,7 +1322,7 @@ export function evaluateTaskPreparationGateA(input, context = {}) {
           milestone: source.milestone,
           scopeClass: requestedScope.scopeClass,
           actionClass: requestedScope.actionClass,
-        })), "the intended later stage scope/action is neither task-owned nor the closed delivery-transition pair", "select one exact task pair or the dedicated private delivery-transition contract");
+    })), "the intended later stage scope/action is neither task-owned nor the closed delivery-transition pair", "select one exact task pair or the dedicated delivery-control contract");
   addGate("PREP_LOCAL_ONLY", source.safety?.authenticMediaAccessed === false
     && source.safety?.privateNetworkAccessed === false
     && source.safety?.externalMutationPerformed === false,
@@ -1482,6 +1496,19 @@ export function evaluateStageExecutionGateB(input, context = {}) {
   const taskId = isNonemptyString(taskInput.taskId) ? taskInput.taskId : "UNKNOWN-TASK";
   const isDeliveryTransitionStage = typeof stage.stageId === "string"
     && stage.stageId.endsWith(DELIVERY_TRANSITION_GATE_B_CONTRACT.stageIdSuffix);
+  const requestedScope = asObject(taskInput.requestedScope);
+  const dedicatedDeliveryTransition = isDedicatedDeliveryTransitionScopeAction({
+    taskId,
+    stageId: stage.stageId,
+    scopeClass: requestedScope.scopeClass,
+    actionClass: requestedScope.actionClass,
+  });
+  const stageDedicatedDeliveryTransition = isDedicatedDeliveryTransitionScopeAction({
+    taskId,
+    stageId: stage.stageId,
+    scopeClass: stage.scopeClass,
+    actionClass: stage.actionClass,
+  });
   const taskOptions = asObject(context.taskEvaluationOptions);
   const baseEvaluation = evaluateReadiness(taskInput, {
     ...taskOptions,
@@ -1498,14 +1525,13 @@ export function evaluateStageExecutionGateB(input, context = {}) {
     || code.startsWith("APPROVAL_PUBLICATION_")
     || code === "ACTIVATION_APPROVAL_REACHABLE";
   const gates = baseEvaluation.gateResults.filter((gate) => !legacyAuthorizationGate(gate.code)
-    && !(isDeliveryTransitionStage && gate.code === "TASK_SCOPE_ACTION_COMPATIBILITY")).map((gate) => ({
+    && !(dedicatedDeliveryTransition && gate.code === "TASK_SCOPE_ACTION_COMPATIBILITY")).map((gate) => ({
     code: gate.code,
     passed: gate.passed,
     reason: gate.reason.replace(new RegExp(`^${taskId}: `), "").replace(/; action: .+\.$/, ""),
     correctiveAction: gate.reason.match(/; action: (.+)\.$/)?.[1] ?? "repair the failed task authorization gate",
   }));
   const addGate = (code, passed, reason, correctiveAction) => gates.push({ code, passed: passed === true, reason, correctiveAction });
-  const requestedScope = asObject(taskInput.requestedScope);
   const candidate = asObject(taskInput.candidate);
   const requirementIds = asArray(taskInput.requirementIds);
   const requirementEvidence = asArray(stage.requirementEvidence);
@@ -1554,8 +1580,9 @@ export function evaluateStageExecutionGateB(input, context = {}) {
       "privateAuthority", "reviewerRegistrySha256", "ownerActionStateSha256", "requirementEvidence",
       "independentQa", "rollback", "stageCouncil",
     ]), "the Gate B stage envelope has an unknown or incomplete schema", "rebuild the exact stage authorization record");
-  addGate("STAGE_SCOPE_TASK", P0_R0_SUBSTANTIVE_TASK_IDS.includes(taskId) && stage.taskId === taskId,
-    "the stage names a historical, unknown, or out-of-scope task", "select one of the five substantive R0 tasks");
+  addGate("STAGE_SCOPE_TASK", P0_R0_SUBSTANTIVE_TASK_IDS.includes(taskId)
+    && stage.taskId === taskId,
+  "the stage names a historical, unknown, or out-of-scope task", "select one of the five substantive R0 tasks");
   addGate("STAGE_ID", STAGE_ID.test(stage.stageId ?? "") && stage.stageId.includes(taskId),
     "the immutable task-bound stage ID is missing or malformed", "use a P0-STAGE-* ID containing the exact task ID");
   addGate("STAGE_GATE_KIND", ["execute", "accept"].includes(stage.gateKind),
@@ -1574,21 +1601,20 @@ export function evaluateStageExecutionGateB(input, context = {}) {
       milestone: taskInput.milestone,
       scopeClass: stage.scopeClass,
       actionClass: stage.actionClass,
-    })), "the stage scope/action differs from the exact task candidate or closed delivery-transition contract", "bind one task-owned pair or the dedicated private delivery-transition pair");
-  addGate("STAGE_DELIVERY_TRANSITION_CONTRACT", !isDeliveryTransitionStage
-    || (isDedicatedDeliveryTransitionScopeAction({
-      taskId,
-      stageId: stage.stageId,
-      scopeClass: stage.scopeClass,
-      actionClass: stage.actionClass,
-    })
-      && stage.moduleId === DELIVERY_TRANSITION_GATE_B_CONTRACT.moduleId
-      && asArray(candidate.taskFiles).some((entry) => entry?.path === DELIVERY_TRANSITION_GATE_B_CONTRACT.modulePath
-        && entry?.purpose === "implementation"
-        && entry.gitMode === "100644"
-        && entry.gitType === "blob"
-        && `sha256:${entry.sha256}` === stage.moduleSha256)),
-  "the delivery-transition stage is not bound to the exact private workflow scope, action, and code-owned module", "bind the dedicated delivery-transition contract without widening the ordinary task contract");
+    })), "the stage scope/action differs from the exact task candidate or closed delivery-transition contract", "bind one task-owned pair or the dedicated delivery-control pair");
+  const usesDeliveryTransitionModule = stage.moduleId === DELIVERY_TRANSITION_GATE_B_CONTRACT.moduleId;
+  addGate("STAGE_DELIVERY_TRANSITION_CONTRACT",
+    stageDedicatedDeliveryTransition === dedicatedDeliveryTransition
+      && isDeliveryTransitionStage === stageDedicatedDeliveryTransition
+      && usesDeliveryTransitionModule === stageDedicatedDeliveryTransition
+      && (!stageDedicatedDeliveryTransition || asArray(candidate.taskFiles).some((entry) => (
+        entry?.path === DELIVERY_TRANSITION_GATE_B_CONTRACT.modulePath
+          && entry?.purpose === "implementation"
+          && entry.gitMode === "100644"
+          && entry.gitType === "blob"
+          && `sha256:${entry.sha256}` === stage.moduleSha256
+      ))),
+  "the delivery-transition suffix, scope/action pair, and code-owned module are not bound as one closed contract", "bind delivery-control/delivery-status-transition only to the exact delivery-transition suffix and p0.delivery-transition module");
   addGate("STAGE_CANDIDATE", stage.candidateRevision === candidate.revision
     && stage.dossierDigest === candidate.dossierDigest
     && canonicalJson(stage.candidate) === canonicalJson(candidate)
@@ -1804,6 +1830,8 @@ export function evaluateStageExecutionGateB(input, context = {}) {
       dossierDigest: stage.dossierDigest ?? null,
       predecessorReceiptSha256: stage.predecessorReceiptSha256 ?? null,
       idempotencyKey: stage.idempotencyKey ?? null,
+      dueOwnerActionIds: asArray(baseEvaluation.normalizedEvidence?.dueOwnerActionIds),
+      privateAuthorityRequired: baseEvaluation.normalizedEvidence?.privateAuthorityRequired === true,
       taskEvaluationFingerprint: baseEvaluation.normalizedEvidence?.sourceFingerprint ?? null,
       sourceFingerprint: `sha256:${sha256(canonicalJson(source))}`,
     },
@@ -2222,6 +2250,12 @@ export function evaluateReadiness(input, options = {}) {
     requirements: actionRequirements,
     records: actionRecords,
   });
+  const dedicatedDeliveryTransition = isDedicatedDeliveryTransitionScopeAction({
+    taskId,
+    stageId: options.deliveryTransitionStageId,
+    scopeClass: requestedScope.scopeClass,
+    actionClass: requestedScope.actionClass,
+  });
   const expectedVerdict = expectedScopeVerdict(requestedScope.scopeClass);
   const executionContractPairCount = taskExecutionContractPairCount(taskId);
   addGate("TASK_APPROVAL_ACTION_CARDINALITY",
@@ -2234,8 +2268,9 @@ export function evaluateReadiness(input, options = {}) {
   "the exact task contract contains zero or multiple execution-bearing scope/action pairs", "obtain a Council-approved task split or adopt a future reviewed staged-approval schema before task approval");
   addGate("HISTORICAL_TASK_NON_AUTHORIZING", !isHistoricalNonAuthorizingTaskId(taskId),
     "this Done record is historical planning or control-review evidence and can never authorize execution", "create and approve a distinct non-historical execution task instead of attaching a later taskApproval");
-  addGate("REQUESTED_SCOPE", Boolean(expectedVerdict) && isNonemptyString(requestedScope.actionClass),
-    "the requested scope or action class is missing or unsupported", "select a named local-synthetic, private-execution, or release scope and action");
+  addGate("REQUESTED_SCOPE", (Boolean(expectedVerdict) || dedicatedDeliveryTransition)
+    && isNonemptyString(requestedScope.actionClass),
+  "the requested scope or action class is missing or unsupported", "select a named ordinary task pair or the exact stage-bound delivery-control pair");
   addGate("SCOPE_ACTION_COMPATIBILITY",
     asArray(SCOPE_ACTION_COMPATIBILITY[requestedScope.scopeClass]).includes(requestedScope.actionClass),
   "the requested action class is not permitted for the requested scope", "select the immutable scope/action pair required by the canonical task contract");
@@ -2369,19 +2404,12 @@ export function evaluateReadiness(input, options = {}) {
   }
 
   const actionRequirementIds = actionRequirements.map((entry) => entry?.actionId);
-  const expectedActionIds = canonicalOwnerActionIdsForTask({
-    taskId,
-    milestone: source.milestone,
-  });
-  if (isDedicatedDeliveryTransitionScopeAction({
-    taskId,
-    stageId: options.deliveryTransitionStageId,
-    scopeClass: requestedScope.scopeClass,
-    actionClass: requestedScope.actionClass,
-  }) && !expectedActionIds.includes("P0-OA-002")) {
-    expectedActionIds.push("P0-OA-002");
-    expectedActionIds.sort();
-  }
+  const expectedActionIds = dedicatedDeliveryTransition
+    ? []
+    : canonicalOwnerActionIdsForTask({
+        taskId,
+        milestone: source.milestone,
+      });
   const canonicalActionRequirements = expectedActionIds.map((actionId) => ({
     actionId,
     ...OWNER_ACTION_REQUIREMENT_CATALOG[actionId],
@@ -2402,6 +2430,7 @@ export function evaluateReadiness(input, options = {}) {
       && entry?.accountableHumanRole === OWNER_ACTION_REQUIREMENT_CATALOG[entry.actionId]?.accountableHumanRole),
   "owner-action requirements are malformed, non-canonical, incomplete, or duplicated", "rebuild the exact task-and-milestone owner-action requirements from the immutable catalog");
   addGate("OWNER_ACTION_SCOPE_COVERAGE", requestedScope.scopeClass === "local-synthetic"
+    || dedicatedDeliveryTransition
     || dueActionIds.includes("P0-OA-001"),
   "the requested private or release scope-and-action pair lacks the global P0-OA-001 gate", "map P0-OA-001 to every canonical private and release action before evaluating it");
   addGate("OWNER_ACTION_RECORD_SET", Array.isArray(source.ownerActions)

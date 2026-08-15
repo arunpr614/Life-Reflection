@@ -42,7 +42,7 @@ const readinessStatePath = path.join(repoRoot, "docs/project/P0-PHASE1-TASK-READ
 const reviewerRegistryPath = path.join(repoRoot, "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json");
 const approvalRegistryPath = path.join(repoRoot, "docs/council/execution/P0-EXECUTION-APPROVAL-REGISTRY.json");
 const ownerActionStatePath = path.join(repoRoot, "docs/council/execution/P0-OWNER-ACTION-STATE.json");
-const generatedAt = "2026-08-15";
+const generatedAt = "2026-08-16";
 const repositoryUrl = "https://github.com/arunpr614/Life-Reflection";
 const projectUrl = "https://github.com/users/arunpr614/projects/1";
 const policyPath = "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md";
@@ -773,7 +773,7 @@ const register = {
     councilSeatVerdicts: ["hold", "approved", "not-applicable"],
     designStateDimensions: DESIGN_STATE_DIMENSIONS,
     designAccessibilityDimensions: DESIGN_ACCESSIBILITY_DIMENSIONS,
-    requestedScopeClasses: ["local-synthetic", "private-execution", "release"],
+    requestedScopeClasses: ["local-synthetic", "delivery-control", "private-execution", "release"],
     scopeActionCompatibility: SCOPE_ACTION_COMPATIBILITY,
     taskFilePurposes: TASK_FILE_PURPOSES,
     taskFileGitModes: TASK_FILE_GIT_MODES,

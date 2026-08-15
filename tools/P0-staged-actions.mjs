@@ -210,6 +210,16 @@ function pairIsOwned(taskId, stageId, scopeClass, actionClass) {
     && contract.scopeActions?.[scopeClass]?.includes(actionClass) === true;
 }
 
+function stageTaskIsAllowlisted(taskId, stageId, scopeClass, actionClass) {
+  return TASK_SET.has(taskId)
+    || isDedicatedDeliveryTransitionScopeAction({ taskId, stageId, scopeClass, actionClass });
+}
+
+function deliveryTransitionModuleIsBound({ taskId, stageId, scopeClass, actionClass, moduleId }) {
+  const dedicated = isDedicatedDeliveryTransitionScopeAction({ taskId, stageId, scopeClass, actionClass });
+  return (moduleId === DELIVERY_TRANSITION_GATE_B_CONTRACT.moduleId) === dedicated;
+}
+
 function sameStrings(left, right) {
   return Array.isArray(left)
     && Array.isArray(right)
@@ -239,7 +249,7 @@ function seatSetValid(seats, seatKeys) {
 function validatePreparationReviewRecord(record) {
   const candidate = record?.proposalCandidate;
   if (!hasExactKeys(record, PREPARATION_REVIEW_RECORD_KEYS)
-    || !TASK_SET.has(record.taskId)
+    || !stageTaskIsAllowlisted(record.taskId, record.stageId, record.scopeClass, record.actionClass)
     || !PREPARATION_REVIEW_ID.test(record.preparationReviewId ?? "")
     || !STAGE_ID.test(record.stageId ?? "")
     || !record.stageId.startsWith(`P0-STAGE-${record.taskId}-`)
@@ -302,7 +312,7 @@ function validateStageApprovalRecord(record) {
   const candidate = record?.candidate;
   const stageCouncil = record?.stageCouncil;
   if (!hasExactKeys(record, STAGE_APPROVAL_RECORD_KEYS)
-    || !TASK_SET.has(record.taskId)
+    || !stageTaskIsAllowlisted(record.taskId, record.stageId, record.scopeClass, record.actionClass)
     || !STAGE_ID.test(record.stageId ?? "")
     || !record.stageId.startsWith(`P0-STAGE-${record.taskId}-`)
     || !PREPARATION_REVIEW_ID.test(record.preparationReviewId ?? "")
@@ -317,6 +327,7 @@ function validateStageApprovalRecord(record) {
     || !IDEMPOTENCY_KEY.test(record.idempotencyKey ?? "")
     || !SHA256_DIGEST.test(record.stageDefinitionSha256 ?? "")
     || !CLOSED_IDENTIFIER.test(record.moduleId ?? "")
+    || !deliveryTransitionModuleIsBound(record)
     || !SHA256_DIGEST.test(record.moduleSha256 ?? "")
     || !Array.isArray(record.requirementEvidence)
     || !hasExactKeys(candidate, STAGE_CANDIDATE_KEYS)
@@ -903,7 +914,12 @@ export function stageBindingDigest(definition) {
 export function validateStagedActionDefinition(definition) {
   if (!hasExactKeys(definition, DEFINITION_KEYS)) return fail("STAGE_DEFINITION_SHAPE_INVALID");
   if (definition.schemaVersion !== STAGED_ACTION_SCHEMA_VERSION) return fail("STAGE_SCHEMA_VERSION_INVALID");
-  if (!TASK_SET.has(definition.taskId)) return fail("STAGE_TASK_NOT_ALLOWLISTED");
+  if (!stageTaskIsAllowlisted(
+    definition.taskId,
+    definition.stageId,
+    definition.scopeClass,
+    definition.actionClass,
+  )) return fail("STAGE_TASK_NOT_ALLOWLISTED");
   if (!pairIsOwned(definition.taskId, definition.stageId, definition.scopeClass, definition.actionClass)) {
     return fail("STAGE_SCOPE_ACTION_NOT_OWNED");
   }
@@ -914,6 +930,9 @@ export function validateStagedActionDefinition(definition) {
   if (!IDEMPOTENCY_KEY.test(definition.idempotencyKey)) return fail("STAGE_IDEMPOTENCY_KEY_INVALID");
   if (!CLOSED_IDENTIFIER.test(definition.moduleId) || !CLOSED_IDENTIFIER.test(definition.argumentSetId)) {
     return fail("STAGE_RUNNER_BINDING_INVALID");
+  }
+  if (!deliveryTransitionModuleIsBound(definition)) {
+    return fail("STAGE_DELIVERY_TRANSITION_CONTRACT_INVALID");
   }
   if (!Number.isSafeInteger(definition.deadlineMs)
     || definition.deadlineMs < MIN_STAGE_DEADLINE_MS
@@ -956,7 +975,7 @@ export function validateGateAPreparationDecision(decision) {
 function validateReceiptEnvelope(receipt) {
   if (!hasExactKeys(receipt, RECEIPT_KEYS)) return fail("STAGE_RECEIPT_SHAPE_INVALID");
   if (receipt.schemaVersion !== STAGED_ACTION_SCHEMA_VERSION
-    || !TASK_SET.has(receipt.taskId)
+    || !stageTaskIsAllowlisted(receipt.taskId, receipt.stageId, receipt.scopeClass, receipt.actionClass)
     || !STAGE_ID.test(receipt.stageId ?? "")
     || !receipt.stageId.startsWith(`P0-STAGE-${receipt.taskId}-`)
     || !IDEMPOTENCY_KEY.test(receipt.idempotencyKey ?? "")

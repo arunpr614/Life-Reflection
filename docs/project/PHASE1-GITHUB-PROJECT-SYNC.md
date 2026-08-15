@@ -1,6 +1,6 @@
 # Phase 1 GitHub Project V2 sync
 
-Status: current control contract as of 2026-08-15; the 2026-08-14 publication reconciliation below remains historical evidence
+Status: current R0-only control contract as of 2026-08-16; all R1-R10 tasks/artifacts are frozen and out of scope until a new direct Product Owner activation; the 2026-08-14 publication reconciliation below remains historical evidence
 
 Target: <https://github.com/users/arunpr614/projects/1>
 
