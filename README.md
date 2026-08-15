@@ -20,7 +20,7 @@ Life in Days is a proposed private, single-user visual memory archive that bring
 | Area | Status |
 | --- | --- |
 | Phase 1 Product Council package | Complete as a planning artifact; 58 work packages across P0 and R0–R10 |
-| P0 execution authority | Activated under a five-seat execution council; local/public/synthetic work only until each named gate passes |
+| Historical broad P0 authority | Previously activated under a five-seat council, but superseded for the next run by the bounded P0/R0 Gold Goal; its publication bootstrap grants no Stage 0 or execution authority until the clean exact-main gate passes |
 | Per-task Product Council gate | 58 six-artifact P0 dossier bundles generated as drafts; 58 Incomplete/Hold, 0 Ready, and 0 with `executionAllowed=true` |
 | PC-001 readiness controls | Gate A and exact-candidate five-seat Gate B review merged through PRs #66/#67; local/public controls and issue/Project/Wiki reconciliation are published, while all 58 tasks remain Hold |
 | Release PRDs/PID | Council-reviewed planning baselines; task-specific approval and executed evidence remain separate |
@@ -37,7 +37,8 @@ The prototypes use browser-memory-only behavior and simulated states. They do no
 | --- | --- |
 | AI-agent operating contract | [Living Phase 1 roadmap and Excel instructions](AGENTS.md) |
 | AI-agent orientation | [Phase 1 AI Agent Resource Index — 2026-08-14 15:10:39 IST](docs/project/AI-AGENT-RESOURCE-INDEX-2026-08-14-15-10-39-IST.md) |
-| Autonomous execution goal | [Codex Goal prompt — Phase 1 P0 requirements to private production](docs/project/CODEX-GOAL-PROMPT-P0-TO-PRODUCTION.md) |
+| Historical broad execution goal | [Codex Goal prompt — Phase 1 P0 requirements to private production](docs/project/CODEX-GOAL-PROMPT-P0-TO-PRODUCTION.md) |
+| Current bounded Goal artifact | [P0 Codex Gold Goal — complete P0 and R0 only, then stop](docs/project/P0-CODEX-GOLD-GOAL-PROMPT-P0-R0-ONLY-2026-08-15.md) |
 | Complete navigation | [Document index](docs/INDEX.md) |
 | Phase 1 council decision | [Product Council Decision Record](docs/council/PHASE1-COUNCIL-DECISION-RECORD.md) |
 | Current execution authority | [P0 Execution Authorization](docs/council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md) |
