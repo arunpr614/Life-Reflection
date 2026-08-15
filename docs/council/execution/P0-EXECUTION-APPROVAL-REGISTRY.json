@@ -4,6 +4,375 @@
   "evidenceBoundary": "This registry has two disjoint append-only sections. controlReviews records only the allowlisted, non-authorizing PC-001 exact-candidate control implementation review; it can approve normal merge/reconciliation but can never make a task Ready or executionAllowed. Its candidate must be the sole child of the exact accepted Gate A merge, remain an ancestor, and contain no review record. Repository-wide history derives the first later canonical publication and rejects deletion, rewrite, or any current or historical PC-001 taskApproval even when the current controlReviews section is empty. One canonical reviewContextSha256 binds every non-seat field, and each of five role-bound seats binds that context with its own attestationDigest. Candidate and first-publication raw manifest, reviewer-registry, workbook, and complete task-file snapshots; current-HEAD and worktree bindings for the exact 14 stable workflow/tool controls; an exact closed 13-path mutable snapshot partition covering the reviewer registry, owner-action state, task-readiness state, task-state, and nine governed Markdown documents; the registry-only first-publication delta; contributor roles from the bound historical reviewer registry; exact verification counts; and the closed permitted claim are independently validated. Later unrelated descendant paths, mutable roadmap/workbook projections, evidence, and the exact 13 mutable snapshots do not rewrite this historical review. taskApprovals records at most one execution-permitting task-candidate review per task. Planning approval, generation, roadmap status, CI, issue closure, or a controlReview does not create a task approval. Each taskApproval binds an earlier single-parent candidate, its complete non-excluded Git diff by raw-byte SHA-256, purpose, mode and type, its six artifacts and task contract, and the five context-bound seats. It never embeds the commit that contains the record itself and may not be replaced after first publication. Only the closed publication/projection path set may differ at a descendant, and a later generated projection plus guarded exact-main callback is still required before execution.",
   "reviewerRegistryPath": "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json",
   "ownerActionStatePath": "docs/council/execution/P0-OWNER-ACTION-STATE.json",
-  "controlReviews": {},
+  "controlReviews": {
+    "PC-001": {
+      "reviewId": "P0-PC-001-GATE-B-CONTROL-IMPLEMENTATION-REVIEW",
+      "taskId": "PC-001",
+      "reviewType": "non-authorizing-control-implementation",
+      "reviewDate": "2026-08-15",
+      "requestedScopeClass": "local-synthetic",
+      "requestedActionClass": "readiness-control-hardening",
+      "candidate": {
+        "baseRevision": "2fc31ec905f4c664b86bebdc511a87390a24a4e9",
+        "revision": "946a36e2e68796f4c7a0cd2156103fbd1416302d",
+        "dossierDigest": "sha256:1facc3894f745ab695d52d61fb034f6c7c42ae82cc810d0778095d4e28787dd6",
+        "taskContractSha256": "e53cc0fec7340946991c0e5e765b56bf548e74ac49bf80a76579ea25c6647730",
+        "artifacts": {
+          "product": {
+            "path": "docs/work-items/PC-001/P0-PC-001-PRD.md",
+            "sha256": "c5875459e2f48dd0b46d2e4ab34040d58f14206a34e6667f3b65a83c7d6e0634"
+          },
+          "architecture": {
+            "path": "docs/work-items/PC-001/P0-PC-001-TECHNICAL-PLAN.md",
+            "sha256": "25a5d9f77517cf9b52b1a0faec80ffb98877783e29600123a81e5d3f10b7160e"
+          },
+          "design": {
+            "path": "docs/work-items/PC-001/P0-PC-001-DESIGN-SPEC.md",
+            "sha256": "2d6ab1ee715040ec21c8b78e122367cfcef05cb9c4adc25cf242cd238d223117"
+          },
+          "qa": {
+            "path": "docs/work-items/PC-001/P0-PC-001-QA-PLAN.md",
+            "sha256": "3fb706af3487ce7c2c694f5b962b8539107cc896fe99e20ea54678a49deb741f"
+          },
+          "delivery": {
+            "path": "docs/work-items/PC-001/P0-PC-001-DELIVERY-CHECKLIST.md",
+            "sha256": "d5d84588d4085dc8394bf782c1516401aac66848642e318f2b160ac58d5b0f75"
+          },
+          "council": {
+            "path": "docs/work-items/PC-001/P0-PC-001-COUNCIL-READINESS.md",
+            "sha256": "18015f9098a24eaaf51a3ad205cd735939a24e4b07b24d90ad32c16ab62a3f9b"
+          }
+        },
+        "taskFiles": [
+          {
+            "path": ".github/workflows/prototype-syntax.yml",
+            "sha256": "f8bcc4134dac52b970845bfa4166a59192b773bd1882d02dbc36d4d7af902b81",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "AGENTS.md",
+            "sha256": "105b027ecfd2003c63a697d7b665c0490f53f11b98e730b8bbdf751b630f7fdf",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "README.md",
+            "sha256": "4338efc6752b1759a029ebd4b45668f4f54d8055a1e5515fe6e8e680ab609c9f",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/INDEX.md",
+            "sha256": "038a1f51ba4e3d78488ebbf5e5708df5d53092949a3aca9900e2cd4f02d064be",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json",
+            "sha256": "71c3eaf517da4bec7048fa53617410160032def15ded247bdfbfd11dcb83a30e",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/council/execution/P0-OWNER-ACTION-STATE.json",
+            "sha256": "87383eda6cc76711c20e06230a0917a21df0c7e3e1213011fe26935069217001",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/council/execution/P0-PHASE1-EXECUTION-DECISIONS.md",
+            "sha256": "3117e55db72449fe37c8337bf744ba33a40d82a80e126f25a37429ef24288ba3",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
+            "sha256": "f5097998e8b3e34c69315c60e38c30ba70eadacb222ba8e2717946552f813808",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/project/AI-AGENT-RESOURCE-INDEX-2026-08-14-15-10-39-IST.md",
+            "sha256": "c60dc199850404be5cb9122a4f33d473b3ddb70238dabc42cf2de6d267cf8adf",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/project/CODEX-GOAL-PROMPT-P0-TO-PRODUCTION.md",
+            "sha256": "1ead7d9bd71b710a96cf5d7b9bdc5b4ffb7ce4fdd6e440f81d38a8118780e62b",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/project/P0-PHASE1-TASK-READINESS-STATE.json",
+            "sha256": "8f3a705e7c9d8b778fe6ed828f09067170cac64c209f40d0dbd99d17acdd5f85",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/project/P0-PHASE1-TASK-STATE.json",
+            "sha256": "78c8f2d8c7f16b076e1d79da28a98e86533f8d93c68d0346ccc8faca6c64b1e3",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/project/PHASE1-GITHUB-PROJECT-SYNC.md",
+            "sha256": "2aa4a71c4e0610ca926a6cfd919b6d333898c3a205ac9deca133961f0f0c31f0",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/project/PROJECT-TRACKER.md",
+            "sha256": "4a234036d1aa50272a4b71e71e033724d6663b7744a150104f798c0a66b2ce9b",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/work-items/PC-001/P0-PC-001-COUNCIL-READINESS.md",
+            "sha256": "18015f9098a24eaaf51a3ad205cd735939a24e4b07b24d90ad32c16ab62a3f9b",
+            "purpose": "artifact:council",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/work-items/PC-001/P0-PC-001-DELIVERY-CHECKLIST.md",
+            "sha256": "d5d84588d4085dc8394bf782c1516401aac66848642e318f2b160ac58d5b0f75",
+            "purpose": "artifact:delivery",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/work-items/PC-001/P0-PC-001-DESIGN-SPEC.md",
+            "sha256": "2d6ab1ee715040ec21c8b78e122367cfcef05cb9c4adc25cf242cd238d223117",
+            "purpose": "artifact:design",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/work-items/PC-001/P0-PC-001-PRD.md",
+            "sha256": "c5875459e2f48dd0b46d2e4ab34040d58f14206a34e6667f3b65a83c7d6e0634",
+            "purpose": "artifact:product",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/work-items/PC-001/P0-PC-001-QA-PLAN.md",
+            "sha256": "3fb706af3487ce7c2c694f5b962b8539107cc896fe99e20ea54678a49deb741f",
+            "purpose": "artifact:qa",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "docs/work-items/PC-001/P0-PC-001-TECHNICAL-PLAN.md",
+            "sha256": "25a5d9f77517cf9b52b1a0faec80ffb98877783e29600123a81e5d3f10b7160e",
+            "purpose": "artifact:architecture",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "outputs/P0-pc001-control-hardening-candidate-r14/P0-Life-in-Days-Phase1-Release-Plan.xlsx",
+            "sha256": "d8b21f955366a516bca0b0961b941b3f76c84b5aa2e9406e3740005ca7547994",
+            "purpose": "evidence",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "tools/P0-build-task-readiness-input.mjs",
+            "sha256": "c9f5bbe89d083d2a1ec41e3552f762c6c2bee7a7abd7cb0d230e9415e4f4e87a",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "tools/P0-control-review-trust.mjs",
+            "sha256": "5ed8bd3b535f98dfdc5f841387e8d72c5c32de1808b544156d058882851b1d78",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "tools/P0-generate-task-artifacts.mjs",
+            "sha256": "0f7d23f3bfb5935a3ad14d1391b08b37407788825a7c09ba8714fdd0c240ebd6",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "tools/P0-json-trust.mjs",
+            "sha256": "db2548b8c01c4919074fed9e5bef5d018c2e3abf571fb095e0c6c5ff328c9dde",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "tools/P0-readiness-gates.mjs",
+            "sha256": "fb865a6f5ca198220bb016ce7c920809ba7d3e5b2c0cdc7fd18c6562b636da3d",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "tools/P0-test-control-review-trust.mjs",
+            "sha256": "6c53b03a6e3f09da65203953ef9d4dfaa0ab9d149dd6f0a39f2f2a524abcd165",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "tools/P0-test-execution-controls.mjs",
+            "sha256": "fce1a187fa528ea94dcdccaa6db6a9faccc4a24e3e694a25616c923f26ea7fd3",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "tools/P0-validate-execution-controls.mjs",
+            "sha256": "efbd365391f265c160515dd2a3352adcb66fb21f23dc54e2c35a3a0929eaf6b6",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "tools/P0-verify-execution-start.mjs",
+            "sha256": "e363c40875812ef98bda91767b7d3a3af79a2a0572e57fc775985ace33c28237",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "tools/P0-verify-generated-tracking.mjs",
+            "sha256": "e641d58d9dd8eb9558ca08dd808115a2a1165e081a3db49553ff96dec841c605",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "tools/build_phase1_release_plan.mjs",
+            "sha256": "7157af109412469cb2a61d79060521ba0ab14b94f248e57db4f81f9238bc29ed",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "tools/generate_phase1_roadmap_manifest.mjs",
+            "sha256": "af4aaaa96b0b33e322e642e9cc2913b43296a9e4498226768947b94d7d25855a",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          },
+          {
+            "path": "tools/sync_phase1_github.mjs",
+            "sha256": "e0420494c29ff3e9ac5ffae551bbc6c4aa89c18aad9c0895f49c48226cbf1fbe",
+            "purpose": "implementation",
+            "gitMode": "100644",
+            "gitType": "blob"
+          }
+        ],
+        "taskFilesSha256": "3272111f05758075cb5de0f42d05b94498d0c4eeca6f044e2d083fa7d2dcc448",
+        "implementerIds": [
+          "codex-primary-integrator-01"
+        ],
+        "evidenceProducerIds": [
+          "codex-evidence-producer-01"
+        ]
+      },
+      "verification": {
+        "nodeVersion": "v22.22.3",
+        "gitVersion": "git version 2.50.1 (Apple Git-155)",
+        "readinessAssertions": 341,
+        "startVerifierCases": 62,
+        "syncSelfTestCases": 48,
+        "controlReviewTrustAssertions": 35,
+        "generatedPathCount": 352,
+        "validatorPassed": true,
+        "generatorChangedPaths": 0,
+        "dryRunDeterministic": true,
+        "workbookSha256": "d8b21f955366a516bca0b0961b941b3f76c84b5aa2e9406e3740005ca7547994",
+        "manifestSha256": "65060d958a3ac35e312112b180ffc2b7543f63dd02e1d346574c6804f0b64942",
+        "reviewerRegistrySha256": "71c3eaf517da4bec7048fa53617410160032def15ded247bdfbfd11dcb83a30e",
+        "workbookDisposition": "go-artifact-only",
+        "authenticMediaAccessed": false,
+        "privateNetworkAccessed": false,
+        "deploymentState": "Unknown — private read authority pending"
+      },
+      "reviewContextSha256": "8efcd458442920dc0a9f050c691d677ec2c811e502dfb9555ae0c6c393a198b8",
+      "seatAttestations": {
+        "product": {
+          "reviewerId": "codex-product-manager-01",
+          "reviewerRole": "product",
+          "verdict": "approve-implementation-candidate",
+          "reviewedRevision": "946a36e2e68796f4c7a0cd2156103fbd1416302d",
+          "dossierDigest": "sha256:1facc3894f745ab695d52d61fb034f6c7c42ae82cc810d0778095d4e28787dd6",
+          "reviewContextSha256": "8efcd458442920dc0a9f050c691d677ec2c811e502dfb9555ae0c6c393a198b8",
+          "evidenceReference": "gateb-product:P0-PC-001/946a36e-product-r2",
+          "rationale": "Product requirements, metrics, non-goals, and acceptance evidence are coherent with the exact 58-task all-Hold projection; the corrected candidate/context authorize only normal merge and local/public control reconciliation.",
+          "attestationDigest": "3af1e2922ffa38941441b8220f703c9a499d4b031ee4e85ce441f61d16f767f7"
+        },
+        "design": {
+          "reviewerId": "codex-ui-ux-designer-01",
+          "reviewerRole": "design",
+          "verdict": "approve-implementation-candidate",
+          "reviewedRevision": "946a36e2e68796f4c7a0cd2156103fbd1416302d",
+          "dossierDigest": "sha256:1facc3894f745ab695d52d61fb034f6c7c42ae82cc810d0778095d4e28787dd6",
+          "reviewContextSha256": "8efcd458442920dc0a9f050c691d677ec2c811e502dfb9555ae0c6c393a198b8",
+          "evidenceReference": "gateb-design:pc001-946a36e-r2-workbook20",
+          "rationale": "Exact candidate keeps historical status, artifact readiness, execution permission, validation, blockers, and next action separately labeled across issue, Project, CLI, and workbook evidence; all 20 paginated synthetic workbook renders preserve text and non-color cues, wrapping, identifiers, six dossier links, and R10 blanks, with no private or authentic media. Approval is limited to normal merge and local/public control reconciliation; execution remains false.",
+          "attestationDigest": "60a2176788db4d13002d9c0c1ec1a50d0b38746f62180b0a2b50c15545944141"
+        },
+        "architecture": {
+          "reviewerId": "codex-technical-architect-01",
+          "reviewerRole": "architecture",
+          "verdict": "approve-implementation-candidate",
+          "reviewedRevision": "946a36e2e68796f4c7a0cd2156103fbd1416302d",
+          "dossierDigest": "sha256:1facc3894f745ab695d52d61fb034f6c7c42ae82cc810d0778095d4e28787dd6",
+          "reviewContextSha256": "8efcd458442920dc0a9f050c691d677ec2c811e502dfb9555ae0c6c393a198b8",
+          "evidenceReference": "review:architecture-gate-b-946a36e-r2",
+          "rationale": "Exact-candidate review confirms fail-closed scope/action and owner gates, immutable registry history, the 14/13 partition, guarded runtime completion, protected refresh, bounded sync, public-safe workbook controls, and CI. Approval is limited to normal merge and local/public reconciliation.",
+          "attestationDigest": "aab18ea659f5733444e141f02f9df4e1083026274c19048f49f34ef3b7259c13"
+        },
+        "qa": {
+          "reviewerId": "codex-independent-qa-01",
+          "reviewerRole": "qa",
+          "verdict": "approve-implementation-candidate",
+          "reviewedRevision": "946a36e2e68796f4c7a0cd2156103fbd1416302d",
+          "dossierDigest": "sha256:1facc3894f745ab695d52d61fb034f6c7c42ae82cc810d0778095d4e28787dd6",
+          "reviewContextSha256": "8efcd458442920dc0a9f050c691d677ec2c811e502dfb9555ae0c6c393a198b8",
+          "evidenceReference": "qa:P0-PC-001-GATE-B-946a36e-r2-independent-matrix",
+          "rationale": "Independent read-only review recomputed corrected r2 bindings and passed 341/35/62/48 controls, 352 tracking, all-Hold validation, deterministic generation and dry-runs, and the safe 20-render r14 workbook; approval is limited to normal merge and local/public control reconciliation.",
+          "attestationDigest": "f7babc523664e8581ded84731a5932fc12f77a736915c7ca0a65892aa83247eb"
+        },
+        "project": {
+          "reviewerId": "codex-project-manager-01",
+          "reviewerRole": "project",
+          "verdict": "approve-implementation-candidate",
+          "reviewedRevision": "946a36e2e68796f4c7a0cd2156103fbd1416302d",
+          "dossierDigest": "sha256:1facc3894f745ab695d52d61fb034f6c7c42ae82cc810d0778095d4e28787dd6",
+          "reviewContextSha256": "8efcd458442920dc0a9f050c691d677ec2c811e502dfb9555ae0c6c393a198b8",
+          "evidenceReference": "gateb-project:946a36e-r2-pm-audit-20260815",
+          "rationale": "Project delivery controls preserve issue #3 as the sole 58-task tracker, enforce candidate to registry-only publication to normal merge and reconciliation, and keep every task on Hold without status, Project-workflow, private, authentic-content, deployment, release, or production authority.",
+          "attestationDigest": "7620319d3156d3e4ed904224b1606c90c9ba3e4ef3f6e0ed5910da1c69728813"
+        }
+      },
+      "unresolvedVetoes": [],
+      "disposition": "accepted-local-public-control-implementation",
+      "executionAllowed": false,
+      "permittedClaim": "Accepted only for normal merge and local/public control reconciliation; this record authorizes no task execution, R0 work, private access, authentic content, deployment, release, or production use."
+    }
+  },
   "taskApprovals": {}
 }
