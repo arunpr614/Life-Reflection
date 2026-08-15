@@ -891,3 +891,38 @@ No Product Owner input is required for the local/public Stage 0 repair. No priva
 - **Workbook/Wiki:** workbook baseline is structurally green; live Wiki is known-stale dated provenance and current-source generation is blocked until the named repairs land.
 - **Blockers:** no blocker to preparing the Stage 0 candidate. Product and Design exact-candidate Holds, the incomplete new test matrix, and the broken Wiki build remain mandatory gates before freeze or merge.
 - **Self-critique:** the preliminary private freeze capture was intentionally broader than the committed compact artifact, and the committed artifact still needs an independent verifier before it can be trusted as a durable guard. The Project UI has not yet received its required authenticated visual audit, and no legacy passing suite should be cited as proof of the new Stage 0 design.
+
+---
+
+## 2026-08-15 15:37 IST — Stage 0 draft PR opened; immutable-candidate intent recorded
+
+**Entry author:** AI agent (Codex) · **Triggered by:** completion of independent review for the activation freeze and startup continuation entry.
+
+### Planned mutation and expected outcome
+
+Draft [PR #70](https://github.com/arunpr614/Life-Reflection/pull/70) is the single atomic Stage 0 implementation candidate and the durable post-merge evidence channel. Its baseline head `2dce300376165b78787e232a73713d228f2722fe` contains only the append-only continuation entry and the frozen-50 snapshot. It is explicitly **not mergeable yet**.
+
+Subsequent commits in that draft will implement the exact Council-bound public/local control repair: frozen-scope verification; Task Preparation Gate A; bounded execute Gate B plus post-receipt acceptance; append-only successor reviews and log descendants; staged actions; a fictional-only serializable runner; a separate one-task delivery-transition mechanism; Wiki/help/link safety; factual repairs; deterministic projections; fail-fast exact-head CI; and the named positive/adversarial matrices. The expected Stage 0 outcome is only a trustworthy control plane for later gated R0 work. No task transition, product behavior, private action, deployment, restore, rollback, release, or acceptance occurs in this PR.
+
+### Baseline evidence and review
+
+- Exact two-path baseline commit parent is merged Goal source `2dc4d05cdeca8cb9aeacf393076f6c6f946ff62b`; the pushed branch SHA and draft PR head match exactly.
+- The frozen-50 payload digest is `sha256:0f1e213e666309a2338a965434b4644c17bb37c6285d7e799278ab033c7257b1`; its digest framing excludes only its digest field, recursively sorts object keys, preserves arrays, and hashes minified UTF-8 JSON without a trailing newline.
+- Two independent cold-readers approved the corrected two-file baseline: exact 50-task/300-artifact/source joins, public safety, zero permission, exact running-log prefix, four genuine aggregate exceptions, and clean diff checks.
+- Repository CI has started on the draft baseline; one current-head run completed successfully and one was still running at this entry. This records no candidate-CI conclusion because the Stage 0 implementation does not yet exist.
+
+### Evidence channel, freeze rule, and rollback
+
+Before candidate freeze, this log will not receive another source append. Every byte change resets exact-candidate review. Five fresh registry-bound seats, independent QA, adversarial review, and exact-head CI must bind the final dossier and head. After normal merge, sanitized GitHub/Project/Wiki/workbook/verifier outcomes belong in PR #70 comments/check summaries, not a source-only evidence commit. A later add-only successor-review publication will record the exact PR #70 implementation approval without modifying the historical PC-001 record or creating a task approval.
+
+Any frozen-50 delta, unexpected task/path, stale source, skipped or stale CI, Council veto, workbook error, Wiki collision/fragment failure, automation side effect, or rollback/recovery defect holds the PR. Before merge the safe rollback is to preserve or close the draft; after merge only a normally reviewed revert or forward fix is permitted.
+
+### State snapshot
+
+- **Changed files in this append:** `RUNNING_LOG.md` only; prior bytes remain an exact prefix.
+- **Current truth:** 58 Incomplete; 45 Hold plus 13 Historical non-authorizing; zero Ready; zero execution-allowed; 342 Draft artifacts plus six PC-001 In review.
+- **Frozen scope:** all 50 R1-R10 tasks and 300 artifacts remain unchanged and non-authorizing.
+- **Runtime/deployment:** no R0 action or application implementation occurred; deployment remains **Unknown — private read authority pending**.
+- **Council:** preparation may continue under binding amendments; Product and Design exact-candidate Holds remain until the completed immutable candidate proves them.
+- **Next action:** implement the deterministic freeze verifier and public activation-context artifact, then build the Stage 0 controls from pure trust primitives upward before changing shared projections.
+- **Self-critique:** opening the draft establishes a review channel but does not make the snapshot self-validating or the control plane trustworthy. The current workflow is still the legacy workflow, the Wiki builder remains broken, and no new Stage 0 assertion has passed yet.
