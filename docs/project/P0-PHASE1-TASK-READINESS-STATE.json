@@ -17,14 +17,8 @@
       ],
       "dependencyEvidence": [],
       "privateAuthority": null,
-      "openDecisions": [
-        "The exact implementation candidate has not yet completed independent QA and five-seat Product Council review.",
-        "The reviewed Gate B candidate and its later non-self-referential review record have not yet merged."
-      ],
-      "unresolvedBlockers": [
-        "Precommit fail-open findings are still being remediated and re-tested.",
-        "Fresh exact-candidate Product, Design, Architecture, QA, and Project dispositions are pending."
-      ],
+      "openDecisions": [],
+      "unresolvedBlockers": [],
       "designCoverage": {
         "applicability": "applicable",
         "journeyIds": [

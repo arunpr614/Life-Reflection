@@ -5,8 +5,15 @@ import path from "node:path";
 import {
   CANONICAL_ORIGIN_URL,
   verifyExactMainPreflight,
-} from "./P0-verify-execution-start.mjs";
+} from "./P0-exact-main.mjs";
+import { issueStateFor, statusLabelFor } from "./P0-github-projection-model.mjs";
 import { assertDuplicateKeyRejection, parseJsonWithoutDuplicateKeys } from "./P0-json-trust.mjs";
+import {
+  loadCommittedFreezeSnapshot,
+  loadSourceFromWorkingTree,
+  verifyFrozenScope,
+  verifySanitizedIssueProjectAdapter,
+} from "./P0-verify-r1-r10-freeze.mjs";
 
 const repoRoot = path.resolve(import.meta.dirname, "..");
 const repo = "arunpr614/Life-Reflection";
@@ -63,6 +70,7 @@ const issueMap = existingIssueMapDocument?.issues ?? {};
 const args = new Set(process.argv.slice(2));
 const supportedArgs = new Set([
   "--apply",
+  "--freeze-adapter",
   "--help",
   "--issues-only",
   "--project-only",
@@ -73,6 +81,7 @@ const unknownArgs = [...args].filter((arg) => !supportedArgs.has(arg));
 if (unknownArgs.length) throw new Error(`Unknown argument(s): ${unknownArgs.join(", ")}`);
 
 const apply = args.has("--apply");
+const freezeAdapter = args.has("--freeze-adapter");
 const issuesOnly = args.has("--issues-only");
 const projectOnly = args.has("--project-only");
 const selfTest = args.has("--self-test");
@@ -85,6 +94,7 @@ Dry-run is the default and makes no GitHub or local-file changes.
 
 Options:
   --apply          From clean exact origin/main, apply only preflighted body/field deltas to existing issues/items.
+  --freeze-adapter Emit the sanitized exact-50 local projection used by the freeze gate; no network or writes.
   --project-only   Require the 58 issues to exist; update only Project V2.
   --issues-only    Update only existing issue bodies; static metadata must already match.
   --self-test      Exercise the mutation allowlist without network access.
@@ -100,6 +110,7 @@ if (verify && (projectOnly || issuesOnly)) {
   throw new Error("--verify cannot be combined with mutation-selection options");
 }
 if (selfTest && args.size !== 1) throw new Error("--self-test cannot be combined with another option");
+if (freezeAdapter && args.size !== 1) throw new Error("--freeze-adapter cannot be combined with another option");
 
 function runStructuralValidation(snapshotGuard) {
   snapshotGuard("pre-structural-validation");
@@ -450,10 +461,6 @@ const savedViewSpecs = [
     purpose: "Roadmap view; select Start date, Target date, and Milestone grouping in the UI",
   },
 ];
-
-function statusLabel(status) {
-  return `status:${slug(status)}`;
-}
 
 function priorityLabel(priority) {
   return `priority:${priority.toLowerCase()}`;
@@ -815,6 +822,129 @@ function projectValues(task) {
   };
 }
 
+const frozenTaskIdPattern = /^.+-R(?:[1-9]|10)-\d{3}$/;
+
+function freezeMilestone(task) {
+  const release = manifest.releases.find((candidate) => candidate.id === task.milestone);
+  if (!release) throw new Error(`${task.id}: release milestone is missing from the manifest`);
+  return {
+    title: release.id,
+    dueOn: release.targetDate ? `${release.targetDate}T00:00:00Z` : null,
+    description: `${release.name}. ${release.outcome}\n\nProposed planning estimate; evidence gates control entry and exit.`,
+  };
+}
+
+function lowerInitial(value) {
+  return `${value.slice(0, 1).toLowerCase()}${value.slice(1)}`;
+}
+
+function expectedTaskLabels(task) {
+  return sortedStrings([
+    "phase1",
+    "roadmap",
+    statusLabelFor(task.status),
+    priorityLabel(task.priority),
+    typeLabel(task.taskType),
+  ]);
+}
+
+function deriveSanitizedFreezeAdapter({ issueNumbers, issueById = null, itemByTask = null }) {
+  if (!issueNumbers || typeof issueNumbers !== "object") {
+    throw new Error("P0_R1_R10_FREEZE_FAILED: exact issue-number projection is required");
+  }
+  const frozenTasks = manifest.tasks.filter((task) => frozenTaskIdPattern.test(task.id));
+  if (frozenTasks.length !== 50) {
+    throw new Error(`P0_R1_R10_FREEZE_FAILED: expected 50 frozen manifest tasks; found ${frozenTasks.length}`);
+  }
+  return {
+    repository: repo,
+    projectNumber,
+    tasks: frozenTasks.map((task) => {
+      const liveIssue = issueById?.[task.id] ?? null;
+      const liveItem = itemByTask?.[task.id] ?? null;
+      if ((issueById && !liveIssue) || (itemByTask && !liveItem)) {
+        throw new Error(`P0_R1_R10_FREEZE_FAILED: live adapter is missing ${task.id}`);
+      }
+      const number = liveIssue?.number ?? issueNumbers[task.id];
+      const url = liveIssue?.html_url ?? issueMap[task.id]?.url ?? null;
+      if (!Number.isInteger(number) || typeof url !== "string") {
+        throw new Error(`P0_R1_R10_FREEZE_FAILED: ${task.id} lacks a sanitized issue identity`);
+      }
+      const body = liveIssue ? String(liveIssue.body ?? "") : issueBody(task, issueNumbers);
+      const labels = liveIssue
+        ? sortedStrings((liveIssue.labels ?? []).map((label) => typeof label === "string" ? label : label.name))
+        : expectedTaskLabels(task);
+      const milestone = freezeMilestone(task);
+      const issue = {
+        number,
+        url,
+        state: String(liveIssue?.state ?? issueStateFor(task.status)).toUpperCase(),
+        title: liveIssue?.title ?? task.issueTitle,
+        bodySha256: crypto.createHash("sha256").update(body).digest("hex"),
+        bodyByteSize: Buffer.byteLength(body),
+        labels,
+        milestone: liveIssue ? {
+          title: liveIssue.milestone?.title ?? null,
+          dueOn: liveIssue.milestone?.due_on ?? null,
+          description: liveIssue.milestone?.description ?? null,
+        } : milestone,
+      };
+      const managedValues = Object.fromEntries((liveItem
+        ? projectFieldSpecs.map((spec) => [lowerInitial(spec.name), projectItemField(liveItem, spec.name)])
+        : Object.entries(projectValues(task)).map(([name, value]) => [lowerInitial(name), value]))
+        .filter(([, value]) => value !== null && value !== undefined));
+      const projectMilestone = {
+        ...(liveIssue ? issue.milestone : milestone),
+        dueOn: (liveIssue ? issue.milestone.dueOn : milestone.dueOn) ?? "",
+      };
+      const projectFields = {
+        ...managedValues,
+        content: {
+          number: liveItem?.content?.number ?? number,
+          repository: liveItem?.content?.repository ?? repo,
+          title: liveItem?.content?.title ?? issue.title,
+          type: liveItem?.content?.type ?? "Issue",
+          url: liveItem?.content?.url ?? url,
+        },
+        labels: liveItem ? sortedStrings(liveItem.labels ?? []) : labels,
+        milestone: projectMilestone,
+        repository: repoUrl,
+        title: liveItem?.content?.title ?? issue.title,
+      };
+      return { taskId: task.id, issue, projectFields };
+    }),
+  };
+}
+
+function verifyFreezeBoundary(boundary, { projection, live = null }) {
+  projectionSourceGuard(`freeze:${boundary}:pre-source`);
+  const snapshot = loadCommittedFreezeSnapshot({ repoRoot });
+  const source = loadSourceFromWorkingTree({ repoRoot, snapshot });
+  const result = verifyFrozenScope({
+    snapshot,
+    source,
+    projection,
+    live,
+    projectionClaimed: true,
+    liveClaimed: live !== null,
+  });
+  projectionSourceGuard(`freeze:${boundary}:post-source`);
+  return result;
+}
+
+function assertNoFrozenMutationTargets(issueBodyDeltas, projectFieldDeltas) {
+  const frozenIssueTargets = issueBodyDeltas.filter((change) => frozenTaskIdPattern.test(change.taskId));
+  const frozenProjectTargets = projectFieldDeltas.filter((change) => frozenTaskIdPattern.test(change.taskId));
+  if (frozenIssueTargets.length || frozenProjectTargets.length) {
+    const targets = [
+      ...frozenIssueTargets.map((change) => `${change.taskId}:issue-body`),
+      ...frozenProjectTargets.map((change) => `${change.taskId}:project:${change.fieldName}`),
+    ];
+    throw new Error(`P0_R1_R10_FREEZE_FAILED: sync may not target frozen fields (${targets.join(", ")})`);
+  }
+  return true;
+}
+
 function validateManifest() {
   if (manifest.tasks.length !== 58) {
     throw new Error(`Expected the canonical 58 tasks; found ${manifest.tasks.length}`);
@@ -848,10 +978,37 @@ function validateManifest() {
 
 if (!selfTest) projectionSourceGuard("pre-projection");
 validateManifest();
+if (!selfTest && !structuralValidation.passed) {
+  throw new Error("P0_CONTROL_VALIDATION_FAILED: structural validation must pass before freeze projection or sync");
+}
 
 const plannedIssueNumbers = Object.fromEntries(
   manifest.tasks.map((task) => [task.id, issueMap[task.id]?.number ?? null]),
 );
+const localFreezeProjection = selfTest
+  ? null
+  : deriveSanitizedFreezeAdapter({ issueNumbers: plannedIssueNumbers });
+const preSyncFreeze = selfTest
+  ? null
+  : verifyFreezeBoundary("pre-sync", { projection: localFreezeProjection });
+
+if (freezeAdapter) {
+  await new Promise((resolve, reject) => {
+    process.stdout.write(`${JSON.stringify({
+      mode: "freeze-adapter",
+      adapter: localFreezeProjection,
+      verification: {
+        passed: preSyncFreeze.passed,
+        frozenTasks: preSyncFreeze.projection.taskCount,
+        snapshotSha256: preSyncFreeze.snapshotSha256,
+      },
+    }, null, 2)}\n`, (error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
+  process.exit(0);
+}
 
 const plan = {
   repository: repo,
@@ -910,6 +1067,11 @@ const plan = {
   finalIssueStates: {
     open: manifest.tasks.filter((task) => task.status !== "Done").length,
     closed: manifest.tasks.filter((task) => task.status === "Done").length,
+  },
+  frozenScope: {
+    passed: preSyncFreeze?.passed ?? null,
+    taskCount: preSyncFreeze?.projection?.taskCount ?? null,
+    mutationTargets: 0,
   },
 };
 
@@ -1690,14 +1852,75 @@ function runMutationAllowlistSelfTest() {
       guard("post-apply-parity");
     }, `source-main movement at ${movementBoundary}`);
   }
+  const freezeSnapshot = loadCommittedFreezeSnapshot({ repoRoot });
+  const selfTestIssueNumbers = Object.fromEntries(
+    manifest.tasks.map((candidate) => [candidate.id, issueMap[candidate.id]?.number ?? null]),
+  );
+  const selfTestFreezeAdapter = deriveSanitizedFreezeAdapter({ issueNumbers: selfTestIssueNumbers });
+  verifySanitizedIssueProjectAdapter(freezeSnapshot, selfTestFreezeAdapter, "self-test projection");
+  const partialFreezeAdapter = structuredClone(selfTestFreezeAdapter);
+  partialFreezeAdapter.tasks.pop();
+  expectRejected(
+    () => verifySanitizedIssueProjectAdapter(freezeSnapshot, partialFreezeAdapter, "self-test projection"),
+    "partial exact-50 projection adapter",
+  );
+  const driftedFreezeAdapter = structuredClone(selfTestFreezeAdapter);
+  driftedFreezeAdapter.tasks[0].issue.bodySha256 = "0".repeat(64);
+  expectRejected(
+    () => verifySanitizedIssueProjectAdapter(freezeSnapshot, driftedFreezeAdapter, "self-test projection"),
+    "frozen projection drift",
+  );
+  const incompleteIssueNumbers = { ...selfTestIssueNumbers };
+  delete incompleteIssueNumbers[selfTestFreezeAdapter.tasks[0].taskId];
+  expectRejected(
+    () => deriveSanitizedFreezeAdapter({ issueNumbers: incompleteIssueNumbers }),
+    "sync omission from the issue-number projection",
+  );
+  assertNoFrozenMutationTargets(
+    [{ taskId: "AUD-001", issueNumber: 2, body: "allowed P0 body" }],
+    [{ taskId: "ENG-R0-001", fieldName: "Task summary", expectedValue: "allowed R0 field" }],
+  );
+  expectRejected(
+    () => assertNoFrozenMutationTargets([{ taskId: selfTestFreezeAdapter.tasks[0].taskId }], []),
+    "frozen issue-body mutation target",
+  );
+  expectRejected(
+    () => assertNoFrozenMutationTargets([], [{ taskId: selfTestFreezeAdapter.tasks[0].taskId, fieldName: "Evidence" }]),
+    "frozen Project-field mutation target",
+  );
+  const capturedFreezeAdapter = spawnSync(
+    process.execPath,
+    [path.join(repoRoot, "tools/sync_phase1_github.mjs"), "--freeze-adapter"],
+    {
+      cwd: repoRoot,
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+    },
+  );
+  if (capturedFreezeAdapter.status !== 0
+    || Buffer.byteLength(capturedFreezeAdapter.stdout) <= 64 * 1024) {
+    throw new Error("Freeze-adapter capture self-test did not flush the complete projection beyond pipe capacity");
+  }
+  let capturedFreezeDocument;
+  try {
+    capturedFreezeDocument = JSON.parse(capturedFreezeAdapter.stdout);
+  } catch {
+    throw new Error("Freeze-adapter capture self-test did not emit complete JSON");
+  }
+  if (capturedFreezeDocument.mode !== "freeze-adapter"
+    || capturedFreezeDocument.adapter?.tasks?.length !== 50
+    || capturedFreezeDocument.verification?.passed !== true) {
+    throw new Error("Freeze-adapter capture self-test did not preserve the exact frozen projection contract");
+  }
   return {
     ok: true,
     suite: "PC-001 GitHub mutation allowlist",
-    cases: 48,
+    cases: 56,
     legacyMutationAllowlistCases: 30,
     projectionContractCases: 16,
     missingValueNormalizationCases: 10,
     snapshotBindingCases: 2,
+    largeFreezeAdapterCaptureCases: 1,
     sourceMainGuardMovementCases: sourceGuardBoundaries.length,
     mutableProjectFieldCount: projectFieldSpecs.length - immutableProjectValueFields.size,
     immutableProjectFields: [...immutableProjectValueFields],
@@ -1790,9 +2013,9 @@ function reconcileExistingOnly(sourceMainGuard) {
 
   for (const task of manifest.tasks) {
     const issue = issueById[task.id];
-    const expectedLabels = ["phase1", "roadmap", statusLabel(task.status), priorityLabel(task.priority), typeLabel(task.taskType)];
+    const expectedLabels = ["phase1", "roadmap", statusLabelFor(task.status), priorityLabel(task.priority), typeLabel(task.taskType)];
     const actualLabels = issue.labels.map((label) => typeof label === "string" ? label : label.name);
-    const expectedState = task.status === "Done" ? "closed" : "open";
+    const expectedState = issueStateFor(task.status);
     if (issue.title !== task.issueTitle
       || JSON.stringify(sortedStrings(actualLabels)) !== JSON.stringify(sortedStrings(expectedLabels))
       || issue.milestone?.title !== task.milestone
@@ -1809,6 +2032,8 @@ function reconcileExistingOnly(sourceMainGuard) {
   const fields = requireExistingProjectFields(project.id);
   const itemByTask = loadExistingProjectItems(project.id, issueById);
   requireExistingViews(project.id);
+  const liveFreezeProjection = deriveSanitizedFreezeAdapter({ issueNumbers, issueById, itemByTask });
+  verifyFreezeBoundary("pre-apply-live", { projection: localFreezeProjection, live: liveFreezeProjection });
   const issueBodyDeltas = [];
   const projectFieldDeltas = [];
   for (const task of manifest.tasks) {
@@ -1823,6 +2048,7 @@ function reconcileExistingOnly(sourceMainGuard) {
       }
     }
   }
+  assertNoFrozenMutationTargets(issueBodyDeltas, projectFieldDeltas);
   const delta = {
     sourceRevision: exactMainPreflight.revision,
     issueBodies: issueBodyDeltas.map(({ taskId, issueNumber, body }) => ({
@@ -1893,7 +2119,7 @@ function verifyLiveParity() {
     const expectedLabels = [
       "phase1",
       "roadmap",
-      statusLabel(task.status),
+      statusLabelFor(task.status),
       priorityLabel(task.priority),
       typeLabel(task.taskType),
     ];
@@ -1904,7 +2130,7 @@ function verifyLiveParity() {
       mismatches.push(`${task.id}:issue-labels`);
     }
     if (issue.milestone?.title !== task.milestone) mismatches.push(`${task.id}:issue-milestone`);
-    const expectedState = task.status === "Done" ? "closed" : "open";
+    const expectedState = issueStateFor(task.status);
     if (issue.state !== expectedState) mismatches.push(`${task.id}:issue-state`);
     if (issueMap[task.id]?.expectedStatus !== task.status) mismatches.push(`${task.id}:issue-map-status`);
     if (issueMap[task.id]?.expectedFinalState !== expectedState) mismatches.push(`${task.id}:issue-map-state`);
@@ -1935,6 +2161,12 @@ function verifyLiveParity() {
     itemByTask[markerId] = item;
   }
 
+  const liveFreezeProjection = deriveSanitizedFreezeAdapter({ issueNumbers, issueById, itemByTask });
+  const liveFreeze = verifyFreezeBoundary("live-parity", {
+    projection: localFreezeProjection,
+    live: liveFreezeProjection,
+  });
+
   for (const task of manifest.tasks) {
     const item = itemByTask[task.id];
     if (!item) {
@@ -1949,7 +2181,7 @@ function verifyLiveParity() {
     const expectedLabels = [
       "phase1",
       "roadmap",
-      statusLabel(task.status),
+      statusLabelFor(task.status),
       priorityLabel(task.priority),
       typeLabel(task.taskType),
     ];
@@ -1995,6 +2227,11 @@ function verifyLiveParity() {
     mismatchCount: mismatches.length,
     mismatches,
     passed: mismatches.length === 0,
+    frozenScope: {
+      passed: liveFreeze.passed,
+      projectionTasks: liveFreeze.projection.taskCount,
+      liveTasks: liveFreeze.live.taskCount,
+    },
   };
 }
 

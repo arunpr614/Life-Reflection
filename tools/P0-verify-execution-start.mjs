@@ -10,6 +10,7 @@ import {
   ARTIFACT_KINDS,
   READINESS_SCHEMA_VERSION,
   SCOPE_ACTION_COMPATIBILITY,
+  STAGE_EXECUTION_SCHEMA_VERSION,
   TASK_FILE_DESCENDANT_DELTA_PATHS,
   TASK_FILE_DIFF_EXCLUSIONS,
   canonicalJson,
@@ -19,12 +20,28 @@ import {
   computeTaskFilesSha256,
   computeTaskOwnerActionStateSha256,
   evaluateReadiness,
+  evaluateStageExecutionGateB,
+  isDedicatedDeliveryTransitionScopeAction,
   parseArtifactControlMarkers,
   validateTaskFilesManifest,
 } from "./P0-readiness-gates.mjs";
 import { parseJsonWithoutDuplicateKeys } from "./P0-json-trust.mjs";
+import {
+  hasExactKeys,
+  inspectPublicTextBytes,
+  publicTextBytesAreSafe,
+} from "./P0-content-safety.mjs";
+import {
+  CANONICAL_ORIGIN_URL,
+  verifyExactMainPreflight,
+  verifyExactMainStillCurrent,
+} from "./P0-exact-main.mjs";
+import {
+  verifyStageApprovalRegistryContinuity,
+  verifyStageApprovalRegistryHistory,
+} from "./P0-staged-actions.mjs";
 
-export const CANONICAL_ORIGIN_URL = "https://github.com/arunpr614/Life-Reflection.git";
+export { CANONICAL_ORIGIN_URL, verifyExactMainPreflight };
 
 const DEFAULT_REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const FULL_REVISION = /^[0-9a-f]{40}$/;
@@ -135,7 +152,11 @@ const messages = Object.freeze({
   ],
   TASK_PRODUCTION_OPTIONS_INVALID: [
     "The production execution request contains unsupported or injectable options.",
-    "Call the guarded production wrapper with only taskId, scopeClass, actionClass, and execute.",
+    "Use the closed serializable stage runner; arbitrary in-process callbacks are not accepted.",
+  ],
+  TASK_SERIALIZABLE_RUNNER_REQUIRED: [
+    "Direct in-process task execution is disabled.",
+    "Invoke the closed serializable stage runner with one reviewed stage identity.",
   ],
   APPROVAL_PUBLICATION_INPUT_INVALID: [
     "Approval publication input is missing or malformed.",
@@ -285,119 +306,12 @@ function sameBytes(left, right) {
   return leftBytes.equals(rightBytes);
 }
 
-const BINARY_MAGIC_PREFIXES = Object.freeze([
-  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-  Buffer.from([0xff, 0xd8, 0xff]),
-  Buffer.from("GIF87a", "ascii"),
-  Buffer.from("GIF89a", "ascii"),
-  Buffer.from([0x50, 0x4b, 0x03, 0x04]),
-  Buffer.from([0x50, 0x4b, 0x05, 0x06]),
-  Buffer.from([0x50, 0x4b, 0x07, 0x08]),
-  Buffer.from([0x1f, 0x8b]),
-  Buffer.from("BZh", "ascii"),
-  Buffer.from([0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c]),
-  Buffer.from([0x52, 0x61, 0x72, 0x21, 0x1a, 0x07]),
-  Buffer.from("%PDF-", "ascii"),
-  Buffer.from([0x7f, 0x45, 0x4c, 0x46]),
-  Buffer.from([0x00, 0x61, 0x73, 0x6d]),
-  Buffer.from("SQLite format 3\0", "binary"),
-  Buffer.from("OggS", "ascii"),
-  Buffer.from("ID3", "ascii"),
-  Buffer.from("RIFF", "ascii"),
-  Buffer.from("MZ", "ascii"),
-  Buffer.from("BM", "ascii"),
-  Buffer.from([0x49, 0x49, 0x2a, 0x00]),
-  Buffer.from([0x4d, 0x4d, 0x00, 0x2a]),
-]);
-const MEDIA_DATA_SCHEME = new RegExp(`\\bdata\\s*:\\s*(?:${["im", "age"].join("")}|${["au", "dio"].join("")}|${["vi", "deo"].join("")})/`, "iu");
-const SVG_ELEMENT = new RegExp(`<\\s*(?:[^<>\\s/:]+:)?${["s", "vg"].join("")}\\b`, "iu");
-const ENCODED_MEDIA_SIGNATURES = Object.freeze([
-  ["iV", "BORw0KGgo"].join(""),
-  ["/9", "j/"].join(""),
-  ["R0l", "GOD"].join(""),
-  ["Ukl", "GR"].join(""),
-  ["JV", "BERi0"].join(""),
-  ["UE", "sDB"].join(""),
-  ["H4", "sI"].join(""),
-  ["TV", "qQ"].join(""),
-  ["SU", "Qz"].join(""),
-  ["Z0e", "XBoZWlj"].join(""),
-]);
-const LOCAL_PUBLIC_TEXT_FORBIDDEN_PATTERNS = Object.freeze([
-  new RegExp(`(?:${["gh", "[pousr]", "_"].join("")}|${["github", "pat", ""].join("_")})[A-Za-z0-9_]{16,}`),
-  new RegExp(`${["xo", "x", "[aboprs]", "-"].join("")}[A-Za-z0-9-]{10,}`),
-  new RegExp(`\\b${["Bear", "er"].join("")}\\s+[A-Za-z0-9._~+/=-]{12,}`, "iu"),
-  new RegExp(`\\b${["s", "k", "[-_]"].join("")}[A-Za-z0-9_-]{12,}(?![A-Za-z0-9_-])`),
-  new RegExp(`\\b(?:${["AK", "IA"].join("")}|${["AS", "IA"].join("")})[0-9A-Z]{16}\\b`),
-  new RegExp(`\\b${["AI", "za"].join("")}[A-Za-z0-9_-]{20,}\\b`),
-  new RegExp(`\\b\\d{6,12}:${["A", "A"].join("")}[A-Za-z0-9_-]{25,}\\b`),
-  /\b[A-Za-z][A-Za-z0-9+.-]*:\/\/[^\s/@:]+:[^\s/@]+@/u,
-  /\bhttps?:\/\/(?:10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(?:1[6-9]|2\d|3[01])\.\d+\.\d+)(?=[:/]|$)/iu,
-  /\/Users\//u,
-  new RegExp(`-----BEGIN (?:RSA |EC |OPENSSH )?${["PRIVATE", "KEY"].join(" ")}-----`),
-  /\b(?:PVT|PVTI|PVTF|PVTV)_[A-Za-z0-9_-]+\b/u,
-]);
-
-function bytesAfterTextPreamble(value) {
-  const bytes = Buffer.isBuffer(value) ? value : Buffer.from(value);
-  let offset = bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf ? 3 : 0;
-  while (offset < bytes.length && [0x09, 0x0a, 0x0d, 0x20].includes(bytes[offset])) offset += 1;
-  return bytes.subarray(offset);
-}
-
-function knownBinaryMagicDetected(value) {
-  const bytes = bytesAfterTextPreamble(value);
-  return BINARY_MAGIC_PREFIXES.some((prefix) => bytes.subarray(0, prefix.length).equals(prefix))
-    || (bytes.length >= 12 && bytes.subarray(4, 8).toString("ascii") === "ftyp");
-}
-
-function encodedBinaryMagicDetected(text) {
-  const candidates = text.match(/[A-Za-z0-9+/_-]{24,}={0,2}/gu) ?? [];
-  return candidates.some((candidate) => {
-    if (/^[0-9a-f]{40,128}$/iu.test(candidate)) return false;
-    try {
-      const normalized = candidate.replace(/-/g, "+").replace(/_/g, "/");
-      const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), "=");
-      const decoded = Buffer.from(padded, "base64");
-      const trimmed = bytesAfterTextPreamble(decoded);
-      return BINARY_MAGIC_PREFIXES
-        .filter((prefix) => prefix.length >= 4)
-        .some((prefix) => trimmed.subarray(0, prefix.length).equals(prefix))
-        || (trimmed.length >= 12 && trimmed.subarray(4, 8).toString("ascii") === "ftyp");
-    } catch {
-      return false;
-    }
-  });
-}
-
 export function inspectLocalSyntheticTextBytes(value) {
-  const bytes = Buffer.isBuffer(value) ? value : Buffer.from(value);
-  if (bytes.includes(0)) return { safe: false, reasonCode: "TEXT_NUL" };
-  if (knownBinaryMagicDetected(bytes)) return { safe: false, reasonCode: "TEXT_BINARY_MAGIC" };
-  let text;
-  try {
-    text = decodeUtf8(bytes);
-  } catch {
-    return { safe: false, reasonCode: "TEXT_UTF8" };
-  }
-  if (MEDIA_DATA_SCHEME.test(text)) return { safe: false, reasonCode: "TEXT_MEDIA_DATA_URI" };
-  if (SVG_ELEMENT.test(text)) return { safe: false, reasonCode: "TEXT_SVG" };
-  if (LOCAL_PUBLIC_TEXT_FORBIDDEN_PATTERNS.some((pattern) => pattern.test(text))) {
-    return { safe: false, reasonCode: "TEXT_SENSITIVE_PATTERN" };
-  }
-  if (encodedBinaryMagicDetected(text)) return { safe: false, reasonCode: "TEXT_ENCODED_BINARY" };
-  const encodedMedia = ENCODED_MEDIA_SIGNATURES.some((signature) => {
-    const index = text.indexOf(signature);
-    if (index < 0) return false;
-    return /^[A-Za-z0-9+/=]{16,}/.test(text.slice(index));
-  });
-  return encodedMedia
-    ? { safe: false, reasonCode: "TEXT_ENCODED_MEDIA" }
-    : { safe: true, reasonCode: null };
+  return inspectPublicTextBytes(value);
 }
 
 export function localSyntheticTextBytesAreSafe(value) {
-  return inspectLocalSyntheticTextBytes(value).safe;
+  return publicTextBytesAreSafe(value);
 }
 
 export function localSyntheticTaskFileBytesAreSafe(entry, value) {
@@ -1206,120 +1120,6 @@ export async function deriveCandidatePublicationFacts({
     candidateTaskContractBytesVerified: true,
   });
 }
-
-/**
- * Fetch and verify the public exact-main source used by external synchronization.
- * This deliberately does not inspect a task permission, so planning projections
- * can still synchronize while every task remains fail-closed.
- */
-export async function verifyExactMainPreflight(options = {}) {
-  const repoRoot = path.resolve(options.repoRoot ?? DEFAULT_REPO_ROOT);
-  const run = options.run ?? defaultRun;
-  const canonicalOriginUrl = options.canonicalOriginUrl ?? CANONICAL_ORIGIN_URL;
-
-  const origin = await git(run, repoRoot, ["remote", "get-url", "origin"]);
-  if (!origin.ok || oneLine(origin) !== canonicalOriginUrl) {
-    return fail("PREFLIGHT_ORIGIN_URL", "exact-main");
-  }
-
-  const fetch = await git(run, repoRoot, [
-    "fetch",
-    "--quiet",
-    "--no-tags",
-    "origin",
-    "+refs/heads/main:refs/remotes/origin/main",
-  ]);
-  if (!fetch.ok) return fail("PREFLIGHT_FETCH", "exact-main");
-
-  const branchResult = await git(run, repoRoot, ["symbolic-ref", "--quiet", "--short", "HEAD"]);
-  const branch = oneLine(branchResult);
-  if (!branchResult.ok || branch.length === 0) return fail("PREFLIGHT_DETACHED", "exact-main");
-
-  const upstreamResult = await git(run, repoRoot, [
-    "rev-parse",
-    "--abbrev-ref",
-    "--symbolic-full-name",
-    "@{upstream}",
-  ]);
-  const upstream = oneLine(upstreamResult);
-  if (!upstreamResult.ok || upstream !== "origin/main") return fail("PREFLIGHT_UPSTREAM", "exact-main");
-
-  const status = await git(run, repoRoot, ["status", "--porcelain=v1", "--untracked-files=all"]);
-  if (!status.ok || status.stdout.length !== 0) return fail("PREFLIGHT_DIRTY", "exact-main");
-
-  const headResult = await git(run, repoRoot, ["rev-parse", "--verify", "HEAD^{commit}"]);
-  const originMainResult = await git(run, repoRoot, ["rev-parse", "--verify", "refs/remotes/origin/main^{commit}"]);
-  const head = oneLine(headResult);
-  const originMain = oneLine(originMainResult);
-  if (!headResult.ok || !originMainResult.ok || !FULL_REVISION.test(head) || !FULL_REVISION.test(originMain)) {
-    return fail("PREFLIGHT_REVISION", "exact-main");
-  }
-  if (head !== originMain) return fail("PREFLIGHT_EXACT_MAIN", "exact-main");
-
-  const validateStructure = options.validateStructure ?? (async ({ repoRoot: validatorRoot, run: validatorRun }) => (
-    invoke(validatorRun, process.execPath, ["tools/P0-validate-execution-controls.mjs"], { cwd: validatorRoot })
-  ));
-  let structuralResult;
-  try {
-    structuralResult = await validateStructure({ repoRoot, run, revision: head });
-  } catch {
-    structuralResult = { ok: false };
-  }
-  if (structuralResult?.ok !== true) return fail("PREFLIGHT_STRUCTURAL_VALIDATION", "exact-main");
-
-  return pass("PREFLIGHT_EXACT_MAIN_OK", "exact-main", {
-    revision: head,
-    branch,
-    upstream,
-    gitFacts: {
-      fetchSucceeded: true,
-      checkoutClean: true,
-      worktreeClean: true,
-      head,
-      headRevision: head,
-      originMain,
-      originMainRevision: originMain,
-      branch,
-      upstream,
-      detached: false,
-      externalSyncSourceRevision: head,
-    },
-  });
-}
-
-async function verifyExactMainStillCurrent({ repoRoot, run, expectedRevision }) {
-  const origin = await git(run, repoRoot, ["remote", "get-url", "origin"]);
-  if (!origin.ok || oneLine(origin) !== CANONICAL_ORIGIN_URL) return fail("PREFLIGHT_ORIGIN_URL", "exact-main-recheck");
-  const fetch = await git(run, repoRoot, [
-    "fetch",
-    "--quiet",
-    "--no-tags",
-    "--prune",
-    "origin",
-    "+refs/heads/main:refs/remotes/origin/main",
-  ]);
-  if (!fetch.ok) return fail("PREFLIGHT_FETCH", "exact-main-recheck");
-  const branch = await git(run, repoRoot, ["symbolic-ref", "--quiet", "--short", "HEAD"]);
-  if (!branch.ok || oneLine(branch).length === 0) return fail("PREFLIGHT_DETACHED", "exact-main-recheck");
-  const upstream = await git(run, repoRoot, [
-    "rev-parse",
-    "--abbrev-ref",
-    "--symbolic-full-name",
-    "@{upstream}",
-  ]);
-  if (!upstream.ok || oneLine(upstream) !== "origin/main") return fail("PREFLIGHT_UPSTREAM", "exact-main-recheck");
-  const status = await git(run, repoRoot, ["status", "--porcelain=v1", "--untracked-files=all"]);
-  if (!status.ok || status.stdout.length !== 0) return fail("PREFLIGHT_DIRTY", "exact-main-recheck");
-  const head = await git(run, repoRoot, ["rev-parse", "--verify", "HEAD^{commit}"]);
-  const originMain = await git(run, repoRoot, ["rev-parse", "--verify", "refs/remotes/origin/main^{commit}"]);
-  if (!head.ok || !originMain.ok
-    || oneLine(head) !== expectedRevision
-    || oneLine(originMain) !== expectedRevision) {
-    return fail("PREFLIGHT_EXACT_MAIN", "exact-main-recheck");
-  }
-  return pass("PREFLIGHT_EXACT_MAIN_RECHECK_OK", "exact-main-recheck", { revision: expectedRevision });
-}
-
 async function defaultReadJson(repoRoot, relativePath, { run, revision }) {
   const file = await gitFile(run, repoRoot, revision, relativePath);
   if (!file.exists || file.bytes === null) throw new Error("snapshot document unavailable");
@@ -1756,34 +1556,362 @@ async function verifyTaskExecutionStartCore(taskId, options = {}) {
   });
 }
 
+const STAGE_GATE_B_REQUEST_KEYS = Object.freeze([
+  "taskId",
+  "scopeClass",
+  "actionClass",
+  "stageId",
+  "predecessorReceiptSha256",
+  "idempotencyKey",
+]);
+const STAGE_ID_PATTERN = /^P0-STAGE-[A-Z0-9]+(?:-[A-Z0-9]+)+$/;
+const IDEMPOTENCY_KEY_PATTERN = /^P0-IDEMP-[A-Z0-9]+(?:-[A-Z0-9]+)+$/;
+const PREFIXED_SHA256_PATTERN = /^sha256:[0-9a-f]{64}$/;
+
+function validateStageGateBRequest(request) {
+  return hasExactKeys(request, STAGE_GATE_B_REQUEST_KEYS)
+    && TASK_ID.test(request.taskId ?? "")
+    && typeof request.scopeClass === "string"
+    && typeof request.actionClass === "string"
+    && SCOPE_ACTION_COMPATIBILITY[request.scopeClass]?.includes(request.actionClass) === true
+    && STAGE_ID_PATTERN.test(request.stageId ?? "")
+    && request.stageId.includes(request.taskId)
+    && IDEMPOTENCY_KEY_PATTERN.test(request.idempotencyKey ?? "")
+    && (request.predecessorReceiptSha256 === null
+      || PREFIXED_SHA256_PATTERN.test(request.predecessorReceiptSha256 ?? ""));
+}
+
+function stageReadinessOverride({ taskId, stageId, scopeClass, actionClass }) {
+  return {
+    ...(isDedicatedDeliveryTransitionScopeAction({ taskId, stageId, scopeClass, actionClass })
+      ? { requestedStageId: stageId }
+      : {}),
+    requestedScopeClass: scopeClass,
+    requestedActionClass: actionClass,
+  };
+}
+
+async function verifyStageTerminalHistoryAtExactMainCore(request, options = {}) {
+  if (!validateStageGateBRequest(request)) {
+    return fail("TASK_PRODUCTION_OPTIONS_INVALID", "stage-terminal-history", { taskId: request?.taskId });
+  }
+  const { taskId, scopeClass, actionClass } = request;
+  const repoRoot = path.resolve(options.repoRoot ?? DEFAULT_REPO_ROOT);
+  const run = options.run ?? defaultRun;
+  const exactMain = options.exactMainResult ?? await verifyExactMainPreflight({ ...options, repoRoot, run });
+  if (exactMain?.ok !== true) return exactMain;
+  const continuityVerifier = options.verifyStageRegistryContinuity ?? verifyStageApprovalRegistryContinuity;
+  const continuity = await continuityVerifier({ repoRoot, run, publishedRef: exactMain.revision });
+  if (continuity?.ok !== true) {
+    return fail(continuity?.code ?? "STAGE_REGISTRY_CONTINUITY_INVALID", "stage-terminal-history", { taskId });
+  }
+  const historyVerifier = options.verifyStageHistory ?? verifyStageApprovalRegistryHistory;
+  const history = await historyVerifier({
+    repoRoot,
+    run,
+    publishedRef: exactMain.revision,
+    stageId: request.stageId,
+    continuity,
+  });
+  if (history?.ok !== true) {
+    return fail(history?.code ?? "STAGE_APPROVAL_HISTORY_INVALID", "stage-terminal-history", { taskId });
+  }
+  if (history.registrySha256 !== continuity.registrySha256) {
+    return fail("STAGE_REGISTRY_CONTINUITY_DIGEST_MISMATCH", "stage-terminal-history", { taskId });
+  }
+  const stage = history.record;
+  const requestPredecessorHex = request.predecessorReceiptSha256?.slice("sha256:".length) ?? null;
+  if (stage.taskId !== taskId
+    || stage.stageId !== request.stageId
+    || stage.scopeClass !== scopeClass
+    || stage.actionClass !== actionClass
+    || stage.idempotencyKey !== request.idempotencyKey
+    || stage.predecessorReceiptSha256 !== requestPredecessorHex) {
+    return fail("STAGE_APPROVAL_REQUEST_MISMATCH", "stage-terminal-history", { taskId });
+  }
+  const finalExactMain = await verifyExactMainStillCurrent({
+    repoRoot,
+    run,
+    expectedRevision: exactMain.revision,
+  });
+  if (!finalExactMain.ok) return finalExactMain;
+  return pass("STAGE_TERMINAL_HISTORY_VALID", "stage-terminal-history", {
+    taskId,
+    stageId: stage.stageId,
+    scopeClass,
+    actionClass,
+    sourceRevision: exactMain.revision,
+    candidateRevision: stage.candidateRevision,
+    dossierDigest: stage.dossierDigest,
+    preparationReviewId: stage.preparationReviewId,
+    preparationReviewSha256: history.preparationReviewSha256,
+    gateKind: stage.gateKind,
+    predecessorReceiptSha256: request.predecessorReceiptSha256,
+    idempotencyKey: stage.idempotencyKey,
+    stageDefinitionSha256: stage.stageDefinitionSha256,
+    moduleId: stage.moduleId,
+    moduleSha256: stage.moduleSha256,
+    rollbackSnapshotReference: stage.rollback.snapshotReference,
+    stageApprovalSha256: history.stageApprovalSha256,
+    registrySha256: history.registrySha256,
+  });
+}
+
+/** Read-only immutable-history proof for reconciling an already terminal receipt. */
+export async function verifyStageTerminalHistoryAtExactMain(request = {}) {
+  return verifyStageTerminalHistoryAtExactMainCore(request);
+}
+
+async function verifyStageGateBAtExactMainCore(request, options = {}) {
+  if (!validateStageGateBRequest(request)) {
+    return fail("TASK_PRODUCTION_OPTIONS_INVALID", "stage-gate-b", { taskId: request?.taskId });
+  }
+  const { taskId, scopeClass, actionClass } = request;
+  const repoRoot = path.resolve(options.repoRoot ?? DEFAULT_REPO_ROOT);
+  const run = options.run ?? defaultRun;
+  const exactMain = options.exactMainResult ?? await verifyExactMainPreflight({ ...options, repoRoot, run });
+  if (exactMain?.ok !== true) return exactMain;
+
+  const continuityVerifier = options.verifyStageRegistryContinuity ?? verifyStageApprovalRegistryContinuity;
+  const continuity = await continuityVerifier({
+    repoRoot,
+    run,
+    publishedRef: exactMain.revision,
+  });
+  if (continuity?.ok !== true) {
+    return fail(continuity?.code ?? "STAGE_REGISTRY_CONTINUITY_INVALID", "stage-gate-b", { taskId });
+  }
+  const historyVerifier = options.verifyStageHistory ?? verifyStageApprovalRegistryHistory;
+  const history = await historyVerifier({
+    repoRoot,
+    run,
+    publishedRef: exactMain.revision,
+    stageId: request.stageId,
+    continuity,
+  });
+  if (history?.ok !== true) return fail(history?.code ?? "STAGE_APPROVAL_HISTORY_INVALID", "stage-gate-b", { taskId });
+  if (history.registrySha256 !== continuity.registrySha256) {
+    return fail("STAGE_REGISTRY_CONTINUITY_DIGEST_MISMATCH", "stage-gate-b", { taskId });
+  }
+  const stage = history.record;
+  const requestPredecessorHex = request.predecessorReceiptSha256?.slice("sha256:".length) ?? null;
+  if (stage.taskId !== taskId
+    || stage.scopeClass !== scopeClass
+    || stage.actionClass !== actionClass
+    || stage.idempotencyKey !== request.idempotencyKey
+    || stage.predecessorReceiptSha256 !== requestPredecessorHex) {
+    return fail("STAGE_APPROVAL_REQUEST_MISMATCH", "stage-gate-b", { taskId });
+  }
+
+  const readJson = options.readJson ?? defaultReadJson;
+  const documents = {};
+  try {
+    for (const [name, relativePath] of Object.entries(DOCUMENT_PATHS)) {
+      documents[name] = await readJson(repoRoot, relativePath, { run, revision: exactMain.revision });
+    }
+  } catch {
+    return fail("TASK_CONTROL_DOCUMENT_UNAVAILABLE", "stage-gate-b", { taskId });
+  }
+  const records = taskRecords(documents.register, taskId);
+  if (records.length !== 1) return fail("TASK_REGISTER_RECORD_MISSING", "stage-gate-b", { taskId });
+  const candidateRevision = stage.candidateRevision;
+  if (!FULL_REVISION.test(candidateRevision ?? "") || stage.candidate?.revision !== candidateRevision) {
+    return fail("TASK_CANDIDATE_REVISION_INVALID", "stage-gate-b", { taskId });
+  }
+
+  const candidateResult = await deriveCandidatePublicationFacts({
+    repoRoot,
+    run,
+    taskId,
+    candidate: stage.candidate,
+    registeredArtifacts: records[0].artifacts,
+    publishedRef: exactMain.revision,
+    scopeClass,
+  });
+  if (!candidateResult.ok) return candidateResult;
+  const { ok: _candidateOk, code: _candidateCode, scope: _candidateScope, ...candidatePublication } = candidateResult;
+  const context = {
+    repoRoot,
+    run,
+    revision: exactMain.revision,
+    taskId,
+    register: documents.register,
+    manifest: documents.manifest,
+    readinessState: {
+      schemaVersion: documents.readinessState.schemaVersion,
+      asOf: documents.readinessState.asOf,
+      evidenceBoundary: documents.readinessState.evidenceBoundary,
+      taskOverrides: {
+        [taskId]: stageReadinessOverride({ taskId, stageId: stage.stageId, scopeClass, actionClass }),
+      },
+    },
+    reviewerRegistry: documents.reviewerRegistry,
+    // Gate B deliberately builds the ordinary task facts with no legacy
+    // task-wide approval. Candidate and authorization facts are overlaid only
+    // from the immutable stage record returned by the trusted history verifier.
+    approvalRegistry: { taskApprovals: {} },
+    ownerActionState: documents.ownerActionState,
+    gitFacts: {},
+  };
+  const loadEvaluationInput = options.loadEvaluationInput ?? defaultLoadEvaluationInput;
+  let input;
+  try {
+    input = await loadEvaluationInput(context);
+  } catch {
+    return fail("TASK_EVALUATION_ADAPTER_UNAVAILABLE", "stage-gate-b", { taskId });
+  }
+  if (input !== null && typeof input === "object" && !Array.isArray(input)) {
+    input = {
+      ...input,
+      candidate: structuredClone(stage.candidate),
+      artifactReviews: structuredClone(stage.artifactReviews),
+      designCoverage: structuredClone(stage.designCoverage),
+      dependencyEvidence: structuredClone(stage.dependencyEvidence),
+      privateAuthority: structuredClone(stage.privateAuthority),
+      openDecisions: structuredClone(stage.openDecisions),
+      specialistVetoes: structuredClone(stage.specialistVetoes),
+      council: {
+        verdict: "hold",
+        reviewedRevision: null,
+        dossierDigest: null,
+        unresolvedBlockers: ["Legacy task-wide approval is non-authorizing for Gate B."],
+        seatVerdicts: {},
+      },
+      approvalRecord: null,
+    };
+  }
+  if (input === null || typeof input !== "object" || Array.isArray(input)
+    || input.requestedScope?.scopeClass !== scopeClass
+    || input.requestedScope?.actionClass !== actionClass) {
+    return fail("TASK_REQUESTED_ACTION_MISMATCH", "stage-gate-b", { taskId });
+  }
+  if (candidatePublication.candidateTaskContractSha256 !== stage.candidate.taskContractSha256) {
+    return fail("TASK_CANDIDATE_TASK_CONTRACT_UNVERIFIED", "stage-gate-b", { taskId });
+  }
+  const candidateAncestorOfHead = candidatePublication.candidateOnFetchedMain === true;
+  const gitFacts = {
+    ...exactMain.gitFacts,
+    candidateRevision,
+    approvalRevision: history.stagePublicationRevision,
+    candidateAncestorOfHead,
+    candidateReachableFromHead: candidateAncestorOfHead,
+    approvalRecordReachable: false,
+    approvalRecordReachableFromHead: false,
+    candidateBytesVerified: candidatePublication.candidateBytesVerified,
+    candidateOnFetchedMain: candidatePublication.candidateOnFetchedMain,
+  };
+  const activation = {
+    fetchSucceeded: true,
+    worktreeClean: gitFacts.checkoutClean === true,
+    branch: gitFacts.branch,
+    detached: gitFacts.detached,
+    upstream: gitFacts.upstream,
+    headRevision: gitFacts.head,
+    originMainRevision: gitFacts.originMain,
+    approvalRecordReachableFromHead: false,
+    approvalPublicationRevision: history.stagePublicationRevision,
+    stageApprovalRecordReachableFromHead: true,
+    candidateReachableFromHead: candidateAncestorOfHead,
+    candidateRevision,
+    taskFilesVerifiedAtRevision: exactMain.revision,
+    runtimeRequestedScopeClass: scopeClass,
+    runtimeRequestedActionClass: actionClass,
+    externalSyncSourceRevision: gitFacts.head,
+  };
+  const evaluationInput = { ...input, evaluationPhase: "activation" };
+  const stageApprovalPublication = {
+    registryPath: "docs/council/execution/P0-R0-STAGE-APPROVAL-REGISTRY.json",
+    registrySha256: history.registrySha256,
+    registryBytesVerified: true,
+    taskId,
+    stageId: stage.stageId,
+    preparationReviewId: history.preparationReview.preparationReviewId,
+    publishedPreparationReviewSha256: history.preparationReviewSha256,
+    currentPreparationReviewSha256: history.preparationReviewSha256,
+    preparationReviewBytesVerified: true,
+    preparationPublicationRevision: history.preparationPublicationRevision,
+    preparationCandidateAncestorOfPublication: true,
+    publishedStageApprovalSha256: history.stageApprovalSha256,
+    currentStageApprovalSha256: history.stageApprovalSha256,
+    stageApprovalBytesVerified: true,
+    stagePublicationRevision: history.stagePublicationRevision,
+    stageCandidateAncestorOfPublication: true,
+    preparationPublicationAncestorOfStageCandidate: true,
+    stageApprovalPublishedOnFetchedMain: true,
+  };
+  const now = trustedNow(options);
+  if (now === null) return fail("TASK_RUNTIME_EVALUATION_FAILED", "stage-gate-b", { taskId });
+  const evaluator = options.evaluateStage ?? evaluateStageExecutionGateB;
+  let evaluation;
+  try {
+    evaluation = await evaluator({
+      schemaVersion: STAGE_EXECUTION_SCHEMA_VERSION,
+      taskInput: evaluationInput,
+      preparationReview: history.preparationReview,
+      stage,
+    }, {
+      taskEvaluationOptions: {
+        phase: "activation",
+        now,
+        candidatePublication,
+        approvalPublication: stageApprovalPublication,
+        activation,
+      },
+    });
+  } catch {
+    return fail("TASK_RUNTIME_EVALUATION_FAILED", "stage-gate-b", { taskId });
+  }
+  if (evaluation?.executionAllowed !== true
+    || !["Ready to execute — Gate B", "Ready to accept — Gate B"].includes(evaluation.decision)) {
+    const failedGateCodes = Array.isArray(evaluation?.gateResults)
+      ? evaluation.gateResults.filter((gate) => gate?.passed !== true).map((gate) => gate?.code).filter(Boolean)
+      : [];
+    return fail("TASK_RUNTIME_PERMISSION_DENIED", "stage-gate-b", { taskId, failedGateCodes });
+  }
+  const deadline = callbackDeadline({ options, evaluationInput, now });
+  if (deadline === null) return fail("TASK_BOUNDED_ACTION_DEADLINE_EXCEEDED", "stage-gate-b", { taskId });
+  const finalExactMain = await verifyExactMainStillCurrent({ repoRoot, run, expectedRevision: exactMain.revision });
+  if (!finalExactMain.ok) return finalExactMain;
+  return pass("STAGE_GATE_B_READY", "stage-gate-b", {
+    taskId,
+    stageId: stage.stageId,
+    scopeClass,
+    actionClass,
+    sourceRevision: exactMain.revision,
+    candidateRevision: stage.candidateRevision,
+    dossierDigest: stage.dossierDigest,
+    preparationReviewId: stage.preparationReviewId,
+    preparationReviewSha256: history.preparationReviewSha256,
+    gateKind: stage.gateKind,
+    gateDecision: evaluation.decision,
+    independentQaResult: stage.independentQa.result,
+    predecessorReceiptSha256: request.predecessorReceiptSha256,
+    idempotencyKey: stage.idempotencyKey,
+    stageDefinitionSha256: stage.stageDefinitionSha256,
+    moduleId: stage.moduleId,
+    moduleSha256: stage.moduleSha256,
+    rollbackSnapshotReference: stage.rollback.snapshotReference,
+    stageApprovalSha256: history.stageApprovalSha256,
+    registrySha256: history.registrySha256,
+    gateSourceFingerprint: evaluation.normalizedEvidence?.sourceFingerprint,
+    deadlineAt: deadline.deadlineAt,
+  });
+}
+
+/** Closed read-only Gate B authorization used only by the serializable stage runner. */
+export async function verifyStageGateBAtExactMain(request = {}) {
+  return verifyStageGateBAtExactMainCore(request);
+}
+
 /**
- * Production execution surface. No Git, filesystem, evaluator, clock, snapshot,
- * or lock dependency can be injected through this API.
+ * Retained diagnostic surface. Direct in-process execution is intentionally
+ * disabled; only the serializable stage runner may start reviewed work.
  */
 export async function executeTaskFromExactMain(request = {}) {
-  let keys;
-  try {
-    if (request === null || typeof request !== "object" || Array.isArray(request)
-      || Object.getPrototypeOf(request) !== Object.prototype) {
-      return fail("TASK_PRODUCTION_OPTIONS_INVALID", "task-start");
-    }
-    keys = Object.keys(request).sort();
-  } catch {
+  if (!hasExactKeys(request, ["taskId", "scopeClass", "actionClass"])) {
     return fail("TASK_PRODUCTION_OPTIONS_INVALID", "task-start");
   }
-  if (keys.join(",") !== "actionClass,execute,scopeClass,taskId") {
-    return fail("TASK_PRODUCTION_OPTIONS_INVALID", "task-start");
-  }
-  let taskId;
-  let scopeClass;
-  let actionClass;
-  let execute;
-  try {
-    ({ taskId, scopeClass, actionClass, execute } = request);
-  } catch {
-    return fail("TASK_PRODUCTION_OPTIONS_INVALID", "task-start");
-  }
-  return verifyTaskExecutionStartCore(taskId, { scopeClass, actionClass, execute });
+  return fail("TASK_SERIALIZABLE_RUNNER_REQUIRED", "task-start", { taskId: request.taskId });
 }
 
 async function selfTest() {
@@ -2190,7 +2318,17 @@ async function selfTest() {
     const run = async (command, args) => {
       if (command !== "git") return { ok: false, stdout: "" };
       const key = args.join(" ");
-      if (key === "remote get-url origin") return { ok: true, stdout: `${CANONICAL_ORIGIN_URL}\n` };
+      if (key === "remote get-url --all origin"
+        || key === "remote get-url --push --all origin") {
+        return { ok: true, stdout: `${CANONICAL_ORIGIN_URL}\n` };
+      }
+      if (key === "rev-parse --show-toplevel") return { ok: true, stdout: `${DEFAULT_REPO_ROOT}\n` };
+      if (key === "rev-parse --path-format=absolute --git-dir") {
+        return { ok: true, stdout: "/fixture/.git/worktrees/Phase1\n" };
+      }
+      if (key === "rev-parse --path-format=absolute --git-common-dir") {
+        return { ok: true, stdout: "/fixture/.git\n" };
+      }
       if (key === "fetch --quiet --no-tags origin +refs/heads/main:refs/remotes/origin/main") return { ok: true, stdout: "" };
       if (key === "fetch --quiet --no-tags --prune origin +refs/heads/main:refs/remotes/origin/main") {
         exactMainRecheckFetches += 1;
@@ -2326,6 +2464,173 @@ async function selfTest() {
     },
     [DOCUMENT_PATHS.ownerActionState]: ownerActionState,
   };
+  const stageId = `P0-STAGE-${taskId}-SYNTHETIC`;
+  const stageRequest = {
+    taskId,
+    scopeClass,
+    actionClass,
+    stageId,
+    predecessorReceiptSha256: null,
+    idempotencyKey: `P0-IDEMP-${taskId}-SYNTHETIC`,
+  };
+  const stageRecord = {
+    taskId,
+    stageId,
+    scopeClass,
+    actionClass,
+    idempotencyKey: stageRequest.idempotencyKey,
+    predecessorReceiptSha256: null,
+    candidateRevision,
+    dossierDigest: currentTaskApproval.candidate.dossierDigest,
+    candidate: structuredClone(currentTaskApproval.candidate),
+    artifactReviews: { trustedStageMarker: true },
+    designCoverage: { trustedStageMarker: true },
+    dependencyEvidence: [{ trustedStageMarker: true }],
+    privateAuthority: null,
+    openDecisions: [],
+    specialistVetoes: [],
+    preparationReviewId: `P0-PREP-${taskId}-SYNTHETIC`,
+    preparationReviewSha256: "1".repeat(64),
+    gateKind: "execute",
+    independentQa: { result: "pass" },
+    rollback: { snapshotReference: "rollback:synthetic-snapshot" },
+    stageDefinitionSha256: `sha256:${"2".repeat(64)}`,
+    moduleId: "pc.synthetic",
+    moduleSha256: sha256(implementationBytes),
+  };
+  const preparationReview = {
+    preparationReviewId: stageRecord.preparationReviewId,
+    trustedPreparationMarker: true,
+  };
+  let stageAdapterContext = null;
+  let stageEvaluationSource = null;
+  const gateBAuthorization = await verifyStageGateBAtExactMainCore(stageRequest, {
+    exactMainResult: exactMain,
+    run: validFixture.run,
+    verifyStageRegistryContinuity: async () => ({
+      ok: true,
+      code: "STAGE_REGISTRY_CONTINUITY_VALID",
+      registrySha256: "4".repeat(64),
+    }),
+    verifyStageHistory: async () => ({
+      ok: true,
+      record: structuredClone(stageRecord),
+      preparationReview: structuredClone(preparationReview),
+      preparationReviewSha256: stageRecord.preparationReviewSha256,
+      stageApprovalSha256: "3".repeat(64),
+      registrySha256: "4".repeat(64),
+      preparationPublicationRevision: priorRevision,
+      stagePublicationRevision: approvalRevision,
+    }),
+    readJson: async (_repoRoot, relativePath) => structuredClone(documents[relativePath]),
+    loadEvaluationInput: async (context) => {
+      stageAdapterContext = context;
+      return {
+        taskId,
+        requestedScope: { scopeClass, actionClass },
+        candidate: { revision: "9".repeat(40), untrustedLegacyMarker: true },
+        artifactReviews: { untrustedLegacyMarker: true },
+        designCoverage: { untrustedLegacyMarker: true },
+        dependencyEvidence: [{ untrustedLegacyMarker: true }],
+        privateAuthority: { untrustedLegacyMarker: true },
+        openDecisions: ["untrusted legacy decision"],
+        specialistVetoes: ["untrusted legacy veto"],
+        council: { verdict: "ready-for-execution", seatVerdicts: { legacy: true } },
+        approvalRecord: { approvalsVerified: true },
+      };
+    },
+    evaluateStage: async (source) => {
+      stageEvaluationSource = source;
+      const stageFactsOnly = canonicalJson(source.taskInput.candidate) === canonicalJson(stageRecord.candidate)
+        && canonicalJson(source.taskInput.artifactReviews) === canonicalJson(stageRecord.artifactReviews)
+        && canonicalJson(source.taskInput.designCoverage) === canonicalJson(stageRecord.designCoverage)
+        && canonicalJson(source.taskInput.dependencyEvidence) === canonicalJson(stageRecord.dependencyEvidence)
+        && source.taskInput.privateAuthority === null
+        && source.taskInput.openDecisions.length === 0
+        && source.taskInput.specialistVetoes.length === 0
+        && source.taskInput.approvalRecord === null
+        && source.taskInput.council.verdict === "hold";
+      return {
+        executionAllowed: stageFactsOnly,
+        decision: "Ready to execute — Gate B",
+        gateResults: stageFactsOnly ? [] : [{ code: "LEGACY_STAGE_SUBSTITUTION", passed: false }],
+        normalizedEvidence: { sourceFingerprint: sha256("trusted synthetic stage source") },
+      };
+    },
+    now: "2026-08-15T12:00:00.000Z",
+  });
+  const terminalHistory = await verifyStageTerminalHistoryAtExactMainCore(stageRequest, {
+    exactMainResult: exactMain,
+    run: validFixture.run,
+    verifyStageRegistryContinuity: async () => ({
+      ok: true,
+      code: "STAGE_REGISTRY_CONTINUITY_VALID",
+      registrySha256: "4".repeat(64),
+    }),
+    verifyStageHistory: async () => ({
+      ok: true,
+      record: structuredClone(stageRecord),
+      preparationReview: structuredClone(preparationReview),
+      preparationReviewSha256: stageRecord.preparationReviewSha256,
+      stageApprovalSha256: "3".repeat(64),
+      registrySha256: "4".repeat(64),
+      preparationPublicationRevision: priorRevision,
+      stagePublicationRevision: approvalRevision,
+    }),
+  });
+  if (!gateBAuthorization.ok
+    || gateBAuthorization.code !== "STAGE_GATE_B_READY"
+    || Object.keys(stageAdapterContext?.approvalRegistry?.taskApprovals ?? {}).length !== 0
+    || Object.hasOwn(stageAdapterContext?.readinessState?.taskOverrides?.[taskId] ?? {}, "requestedStageId")
+    || stageEvaluationSource?.preparationReview?.trustedPreparationMarker !== true
+    || stageEvaluationSource?.stage?.stageId !== stageId
+    || gateBAuthorization.stageDefinitionSha256 !== stageRecord.stageDefinitionSha256
+    || gateBAuthorization.moduleSha256 !== stageRecord.moduleSha256
+    || terminalHistory.code !== "STAGE_TERMINAL_HISTORY_VALID"
+    || terminalHistory.stageDefinitionSha256 !== stageRecord.stageDefinitionSha256
+    || terminalHistory.moduleSha256 !== stageRecord.moduleSha256) {
+    throw new Error("Gate B immutable-stage/no-legacy-approval self-test failed");
+  }
+  const deliveryTransitionTaskId = "SPK-R0-001";
+  const deliveryTransitionStageId = `P0-STAGE-${deliveryTransitionTaskId}-STATUS-DELIVERY-TRANSITION`;
+  const deliveryTransitionOverrideProbe = stageReadinessOverride({
+    taskId: deliveryTransitionTaskId,
+    stageId: deliveryTransitionStageId,
+    scopeClass: "private-execution",
+    actionClass: "project-workflow-mutation",
+  });
+  if (deliveryTransitionOverrideProbe.requestedStageId !== deliveryTransitionStageId
+    || deliveryTransitionOverrideProbe.requestedScopeClass !== "private-execution"
+    || deliveryTransitionOverrideProbe.requestedActionClass !== "project-workflow-mutation") {
+    throw new Error("Gate B delivery-transition readiness seam self-test failed");
+  }
+  const rejectedStageRegistryContinuity = await verifyStageGateBAtExactMainCore(stageRequest, {
+    exactMainResult: exactMain,
+    run: validFixture.run,
+    verifyStageRegistryContinuity: async () => ({
+      ok: false,
+      code: "STAGE_REGISTRY_CONTINUITY_REWRITE",
+    }),
+  });
+  if (rejectedStageRegistryContinuity.code !== "STAGE_REGISTRY_CONTINUITY_REWRITE") {
+    throw new Error("Gate B global registry-continuity self-test failed");
+  }
+  const rejectedStageRegistryDigest = await verifyStageGateBAtExactMainCore(stageRequest, {
+    exactMainResult: exactMain,
+    run: validFixture.run,
+    verifyStageRegistryContinuity: async () => ({
+      ok: true,
+      code: "STAGE_REGISTRY_CONTINUITY_VALID",
+      registrySha256: "5".repeat(64),
+    }),
+    verifyStageHistory: async () => ({
+      ok: true,
+      registrySha256: "4".repeat(64),
+    }),
+  });
+  if (rejectedStageRegistryDigest.code !== "STAGE_REGISTRY_CONTINUITY_DIGEST_MISMATCH") {
+    throw new Error("Gate B registry-continuity digest self-test failed");
+  }
   const withFixtureLock = async (_context, callback) => callback();
   const productionOverrideAttempt = await executeTaskFromExactMain({
     taskId,
@@ -2828,7 +3133,7 @@ async function selfTest() {
     throw new Error("advancing-clock near-expiry self-test failed");
   }
 
-  return { ok: true, code: "SELF_TEST_OK", cases: 62 };
+  return { ok: true, code: "SELF_TEST_OK", cases: 65 };
 }
 
 function usage() {
@@ -2855,7 +3160,6 @@ async function main(argv) {
     taskId: flags.get("--task"),
     scopeClass: flags.get("--scope"),
     actionClass: flags.get("--action"),
-    execute: undefined,
   });
 }
 

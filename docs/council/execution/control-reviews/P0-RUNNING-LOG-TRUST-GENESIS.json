@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0.0",
+  "genesisId": "P0-RUNNING-LOG-TRUST-GENESIS",
+  "createdDate": "2026-08-15",
+  "logPath": "RUNNING_LOG.md",
+  "baseRevision": "43c5ccb772bd5e4cabc52d73aa40c35ed999dbb7",
+  "baseSha256": "3d374855b011327d34a20440a4ca8ba33625c21e4ea470d52a5768653532234e",
+  "baseByteLength": 85328,
+  "requiredGitMode": "100644",
+  "requiredGitType": "blob",
+  "maximumTotalBytes": 4194304,
+  "maximumAppendBytes": 262144,
+  "eventMarkerPrefix": "<!-- P0-RUNNING-LOG-EVENT:",
+  "allowedEventAuthorIds": [
+    "codex-primary-integrator-01",
+    "codex-project-manager-01"
+  ],
+  "evidenceEffect": {
+    "taskContractEffect": "none",
+    "dossierDigestEffect": "none",
+    "taskApprovalEffect": "none",
+    "gateAEffect": "none",
+    "gateBEffect": "none",
+    "authorityEffect": "none",
+    "ownerActionEffect": "none",
+    "taskStatusEffect": "none",
+    "issueOrProjectStatusEffect": "none",
+    "permissionEffect": "none",
+    "executionAllowed": false
+  },
+  "genesisPayloadSha256": "c90a7174bbcf8f3c46c5c0b40c6f7037789df0d54133031b3fca8fbb6eca852e"
+}

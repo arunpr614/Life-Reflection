@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "1.0.0",
+  "genesisId": "P0-SUCCESSOR-CONTROL-REVIEW-GENESIS",
+  "createdDate": "2026-08-15",
+  "sourceBaseRevision": "2dc4d05cdeca8cb9aeacf393076f6c6f946ff62b",
+  "recordDirectory": "docs/council/execution/control-reviews",
+  "recordFilePattern": "^P0-CONTROL-REVIEW-P0-[A-Z0-9][A-Z0-9-]{5,95}\\.json$",
+  "historicalAnchor": {
+    "registryPath": "docs/council/execution/P0-EXECUTION-APPROVAL-REGISTRY.json",
+    "taskId": "PC-001",
+    "reviewId": "P0-PC-001-GATE-B-CONTROL-IMPLEMENTATION-REVIEW",
+    "candidateRevision": "946a36e2e68796f4c7a0cd2156103fbd1416302d",
+    "publicationRevision": "6bf7da157220f59cb0fab6e07d0bf783e8b4265b",
+    "canonicalRecordSha256": "ab64115cee5894722831b58cca724beafcf872a1532959e085c093ba89e6114e",
+    "reviewContextSha256": "8efcd458442920dc0a9f050c691d677ec2c811e502dfb9555ae0c6c393a198b8"
+  },
+  "requiredCouncilRoles": [
+    "product",
+    "design",
+    "architecture",
+    "qa",
+    "project"
+  ],
+  "bootstrapPendingPolicy": {
+    "maximumPendingCandidates": 1,
+    "state": "review-pending",
+    "mergeAuthority": "one-time-stage0-goal-only",
+    "runtimeAuthority": false,
+    "taskApprovalEffect": "none",
+    "permissionEffect": "none"
+  },
+  "permittedClaim": "Accepted only for normal publication of the exact public/local control candidate; this review is non-authorizing and creates no task approval, execution permission, private access, R0 action, deployment, acceptance, status transition, or R1-R10 effect.",
+  "genesisPayloadSha256": "8d07f29280f9a0ff54715c25ad74f07bc47fdc04defd0021434f211b093fde89"
+}

@@ -7,56 +7,29 @@ on:
 permissions:
   contents: read
 
+env:
+  P0_EXPECTED_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+
 jobs:
   static-controls:
-    name: Syntax, generated roadmap, and P0 controls
+    name: Exact-head P0/R0 control suite
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 20
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - name: Check out exact event revision
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 22
-      - name: Parse control tools
+      - name: Verify the closed CI contract
         run: |
-          node --check tools/build-wiki.mjs
-          node --check tools/build_phase1_release_plan.mjs
-          node --check tools/generate_phase1_roadmap_manifest.mjs
-          node --check tools/P0-json-trust.mjs
-          node --check tools/P0-control-review-trust.mjs
-          node --check tools/P0-readiness-gates.mjs
-          node --check tools/P0-build-task-readiness-input.mjs
-          node --check tools/P0-test-execution-controls.mjs
-          node --check tools/P0-test-control-review-trust.mjs
-          node --check tools/P0-generate-task-artifacts.mjs
-          node --check tools/P0-verify-generated-tracking.mjs
-          node --check tools/P0-verify-execution-start.mjs
-          node --check tools/sync_phase1_github.mjs
-          node --check tools/P0-validate-execution-controls.mjs
-      - name: Exercise fail-closed readiness controls
+          node --check tools/P0-stage0-ci.mjs
+          node tools/P0-stage0-ci.mjs --self-test
+      - name: Run two deterministic exact-head passes
         run: |
-          node tools/P0-test-execution-controls.mjs
-          node tools/P0-test-control-review-trust.mjs
-          node tools/P0-verify-execution-start.mjs --self-test
-          node tools/sync_phase1_github.mjs --self-test
-      - name: Parse frozen v10 prototype JavaScript
-        run: npm --prefix prototypes/calendar-ui run check:v10
-      - name: Regenerate roadmap projections
-        run: |
-          node tools/P0-generate-task-artifacts.mjs
-          node tools/generate_phase1_roadmap_manifest.mjs
-          node tools/P0-generate-task-artifacts.mjs
-          node tools/generate_phase1_roadmap_manifest.mjs
-      - name: Reject uncommitted generated drift
-        run: node tools/P0-verify-generated-tracking.mjs
-      - name: Validate P0 execution controls
-        run: node tools/P0-validate-execution-controls.mjs
-      - name: Render safe GitHub sync plan
-        run: |
-          node tools/sync_phase1_github.mjs > /tmp/P0-sync-plan-1.json
-          node tools/sync_phase1_github.mjs > /tmp/P0-sync-plan-2.json
-          cmp /tmp/P0-sync-plan-1.json /tmp/P0-sync-plan-2.json
+          node tools/P0-stage0-ci.mjs

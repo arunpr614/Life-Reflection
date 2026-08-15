@@ -20,6 +20,11 @@ const executionGovernance = {
   reviewerRegistry: "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json",
   approvalRegistry: "docs/council/execution/P0-EXECUTION-APPROVAL-REGISTRY.json",
   ownerActionState: "docs/council/execution/P0-OWNER-ACTION-STATE.json",
+  stageApprovalRegistry: "docs/council/execution/P0-R0-STAGE-APPROVAL-REGISTRY.json",
+  successorControlReviewGenesis: "docs/council/execution/control-reviews/P0-SUCCESSOR-CONTROL-REVIEW-GENESIS.json",
+  runningLogTrustGenesis: "docs/council/execution/control-reviews/P0-RUNNING-LOG-TRUST-GENESIS.json",
+  r1R10FreezeSnapshot: "docs/project/P0-R1-R10-FREEZE-SNAPSHOT.json",
+  stage0StateContract: "docs/council/execution/releases/P0-P0-R0-STAGE0-STATE-CONTRACT.md",
 };
 const taskState = JSON.parse(
   fs.readFileSync(path.join(repoRoot, executionGovernance.taskState), "utf8"),

@@ -79,4 +79,4 @@ R0 is synthetic-only. R1 is the earliest release that may admit an explicitly au
 
 The council authorizes only the local P0 control remediation and synthetic preparation. It holds R0 implementation acceptance, private access, deployment, authentic-content admission, and production claims. Deployment is **Unknown — private read authority pending**.
 
-All 58 generated task dossiers are currently drafts and Incomplete/Hold; zero tasks have `executionAllowed=true`. The first subsequent council wave may prepare R0 task artifacts, but substantive R0 work remains held until the exact owning task passes.
+Current structured truth is exactly **58 Incomplete; 45 Hold + 13 Historical non-authorizing; 0 Ready; 0 execution-allowed**. Artifact state is 342 Draft plus six PC-001 artifacts In review. A later Council wave may permit only a named substantive R0 task's local/public/fictional/synthetic Gate A preparation after Stage 0 closes; substantive work remains held until a separate exact-stage Gate B passes.

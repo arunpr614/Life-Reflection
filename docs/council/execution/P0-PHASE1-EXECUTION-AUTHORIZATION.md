@@ -1,21 +1,21 @@
 # Life in Days Phase 1 — P0 execution authorization addendum
 
-- **Effective:** 2026-08-14
-- **Authority source:** Direct Product Owner activation of the committed Phase 1 P0-to-production Goal
-- **Status:** Active, subject to every evidence, privacy, recovery, and non-delegable gate below
+- **Effective:** 2026-08-15
+- **Authority source:** Direct Product Owner activation of the published bounded P0/R0 Gold Goal from clean exact main `2dc4d05cdeca8cb9aeacf393076f6c6f946ff62b`
+- **Status:** Stage 0 local/public control-plane repair active; no R0 stage or private action currently authorized
 - **Deployment state:** **Unknown — private read authority pending**
 
 ## Decision
 
-The activated Goal supersedes historical statements that all implementation is categorically unauthorized or that G1 shared-understanding confirmation is the current universal execution stop. It authorizes local/public work, fictional/synthetic implementation and evaluation, normal Git/GitHub delivery flow, and separately scoped live actions only after their specific gates pass.
+The historical broad P0-to-production activation is superseded. The bounded Goal owns exactly eight P0/R0 task records and freezes all 50 R1-R10 tasks. Its one-time Stage 0 bootstrap authority permits the reviewed local/public control-plane and factual repair under existing issue `PC-001`; it does not authorize an R0 action. Later local fictional/synthetic candidate preparation requires task-bound Gate A, and any execution or acceptance requires a separate immutable stage to pass Gate B and the guarded exact-main runtime.
 
 This addendum changes authority, not evidence. Every truthful statement that application implementation, testing, host qualification, deployment, restore, accessibility conformance, production verification, or launch has not occurred remains in force until direct evidence changes it.
 
 ## Delegated routine authority
 
-When every named gate passes, the five-role execution council may make routine, reversible R0–R8 readiness, implementation, scoped deployment, repair, rollback, and promotion decisions without adding a generic owner walkthrough at every release. Decisions must follow source precedence, use the smallest reversible action, and be recorded with evidence.
+When every named stage gate passes, the five-role execution council may make routine, reversible R0 preparation, implementation, repair, rollback, and promotion decisions within the bounded Goal. R1-R10 remain frozen and unavailable. Decisions must follow source precedence, use the smallest reversible action, and be recorded with evidence.
 
-The council may create/edit code, tests, migrations, app-scoped deployment configuration, documents, `P0-` evidence, generators, projections, branches, commits, pull requests, issues/Project metadata, workbook, Wiki, and `RUNNING_LOG.md` within the activated Goal's rules. Normal PR review and required checks remain mandatory; no direct push to `main`, force-push, history rewrite, destructive cleanup, or unrelated mutation is authorized.
+During Stage 0 the council may create/edit only the named control tools, tests, governing documents, `P0-` evidence, generators, projections, workflow, branch/PR records, workbook, Wiki, and append-only log mechanism required by the Gold Goal. No product/prototype behavior, private target, authentic content, live delivery-state transition, or R1-R10 task surface is authorized. Normal PR review and required checks remain mandatory; no direct push to `main`, force-push, history rewrite, destructive cleanup, or unrelated mutation is authorized.
 
 ## Non-delegable human acts
 
@@ -65,18 +65,22 @@ Every newly created document or artifact uses a basename beginning `P0-`. Existi
 
 Authorized now:
 
-- P0 execution governance and control remediation under existing task `PC-001`;
-- task-specific Product, Architecture, Design, QA, Delivery, and Council dossier authoring for all 58 existing issues;
-- R4/System Health contract correction;
-- local generator, verification, Project-view containment, Wiki, CI, and public-safety hardening;
-- fictional/synthetic R0 design and host-independent preparation after the P0 package passes.
+- the exact Stage 0 control repair and factual reconciliation under existing task `PC-001`;
+- the permanent 50-task R1-R10 freeze verifier and deterministic aggregate-only provenance checks;
+- Gate A/Gate B, successor-review, append-only log, staged-runner, delivery-transition, Wiki, CI, generator, workbook, and public-safety controls using only fictional/synthetic test fixtures;
+- normal branch, exact-head PR review, expected-head merge, and local/public projection/Wiki reconciliation after every required review passes.
 
 Held now:
 
 - private-system reads or mutations;
 - host-specific architecture freeze;
-- R0 implementation/release acceptance and deployment;
+- every R0 preparation stage until its own Gate A proposal passes;
+- every R0 execution/acceptance stage until its later exact Gate B record and guarded runtime pass;
+- R0 implementation/release acceptance and deployment outside those exact stages;
+- all R1-R10 work;
 - substantive work on any task whose dossier is not council-approved at the exact reviewed revision;
 - authentic-content admission;
 - provider/spend/terms changes; and
 - production or recovery claims.
+
+The current authoritative distribution is **58 Incomplete; 45 Hold + 13 Historical non-authorizing; 0 Ready; 0 execution-allowed**. This Stage 0 candidate begins with only the non-authorizing successor-review genesis; empty `preparationReviews` and `stageApprovals` arrays; and empty production action, module, and outcome-verifier maps. A later preparation-only publication remains inert. A later implementation candidate may add a reviewed definition/module while still non-executable. Only a separately published stage record that binds the exact definition/module and passes the full exact-main Gate B runtime can authorize that one stage. The current successor-review state is derived from the immutable record history by `node tools/P0-successor-control-review.mjs`; this document does not freeze a later publication result into mutable prose.
