@@ -38,7 +38,7 @@ The Product Owner directly activated the committed Phase 1 P0-to-production Goal
 - [`P0-PHASE1-EXECUTION-DECISIONS.md`](docs/council/execution/P0-PHASE1-EXECUTION-DECISIONS.md); and
 - [`P0-OWNER-ACTION-LEDGER.md`](docs/council/execution/P0-OWNER-ACTION-LEDGER.md).
 
-Every one of the 58 canonical tasks is also governed by the [P0 task Definition of Ready](docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md) and [task artifact register](docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json). A substantive task may start only when its Product, Architecture, Design, QA, Delivery, and Council artifacts pass at an exact reviewed revision and the manifest records `executionAllowed=true`. Roadmap status, code, a prototype, a shared PRD, or a global plan cannot override this gate. All task dossiers begin as drafts; generation is not approval.
+Every one of the 58 canonical tasks is also governed by the [P0 task Definition of Ready](docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md) and [task artifact register](docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json). A substantive task may start only when its six discipline artifacts pass at an exact reviewed single-commit candidate whose complete non-excluded Git diff is byte/mode/type-bound, a later non-self-referential approval record and still-later permission projection are merged, the manifest derives `executionAllowed=true`, and `executeTaskFromExactMain({taskId, scopeClass, actionClass, execute})` repeats that result for the caller's exact task/scope/action from a clean non-detached checkout tracking freshly fetched exact `origin/main` before invoking the bounded callback under lock. The narrow API rejects extra trust hooks; the injectable core is private, and the CLI is diagnostic and cannot execute a task. Roadmap status, code, a prototype, a shared PRD, a global plan, or planning approval cannot override this gate.
 
 That activation supersedes historical universal G1/“implementation not authorized” stops, but it changes no implementation, test, deployment, recovery, or production evidence by itself. Routine R0–R8 decisions are delegated to the five-seat execution council only when every named gate passes. Human-only account/MFA/secret, terms/spend/provider, authentic-content, authentic-photo UAT, recovery-key, Recovery Ceremony, final R9, and irreversible R10 acts remain non-delegable.
 
@@ -52,28 +52,25 @@ Before any private host/provider/tunnel/backup/production read or mutation, requ
 approved evidence, task state, and governing documents
                 |
                 v
+tools/P0-generate-task-artifacts.mjs         <- source-only readiness state + reviewer/approval/action registries
+                |
+                +--> docs/work-items/<TASK-ID>/P0-<TASK-ID>-*.md
+                +--> docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json
+                |
+                v
 tools/generate_phase1_roadmap_manifest.mjs   <- edit releases/tasks; status comes from the P0 task-state ledger
                 |
                 +--> docs/project/PHASE1-ROADMAP-MANIFEST.json
                 +--> docs/project/PHASE1-RELEASE-PLAN.md
                 |
                 v
-tools/P0-generate-task-artifacts.mjs
-                |
-                +--> docs/work-items/<TASK-ID>/P0-<TASK-ID>-*.md
-                +--> docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json
+repeat both generators and reject byte drift
                 |
                 v
-rerun the manifest generator to embed dossier hashes/readiness
+tools/sync_phase1_github.mjs                 <- clean exact origin/main only
                 |
-                v
-tools/sync_phase1_github.mjs
-                |
-                +--> GitHub issues, milestones, Project fields and saved views
-                +--> docs/project/PHASE1-GITHUB-ISSUES.json
-                |
-                v
-rerun the manifest generator to resolve current issue URLs
+                +--> mismatched bodies on the existing 58 issues
+                +--> mismatched values in the existing 58 Project items / 17 managed fields
                 |
                 v
 tools/build_phase1_release_plan.mjs
@@ -82,7 +79,7 @@ tools/build_phase1_release_plan.mjs
                 +--> outputs/phase1/Life-in-Days-Phase1-Release-Plan.xlsx
 ```
 
-The generated [roadmap manifest](docs/project/PHASE1-ROADMAP-MANIFEST.json) is the canonical machine-readable delivery contract. It is not the editing surface. Update `releases`, `definitions`, status logic, evidence, and related metadata in [`tools/generate_phase1_roadmap_manifest.mjs`](tools/generate_phase1_roadmap_manifest.mjs), together with the source evidence. Never hand-edit only the manifest, generated Markdown plan, GitHub fields, issue map, or workbook.
+The generated [roadmap manifest](docs/project/PHASE1-ROADMAP-MANIFEST.json) is the canonical machine-readable delivery contract. It is not the editing surface. Readiness input is source-only: never set `artifactReadiness`, `executionDecision`, `executionAllowed`, aggregate dependency/authority/action satisfaction, blockers, or next action. The evaluator derives them, the validator independently rebuilds all 58 inputs and compares every projection, and the runtime verifier repeats the decision at actual start time. Update source files and run both generators twice; never hand-edit only the register, manifest, generated Markdown plan, live GitHub fields, issue map, or workbook.
 
 ## Status and evidence policy
 
@@ -101,7 +98,7 @@ Apply these rules strictly:
 - A planning or product-definition task marked Done proves only its named planning artifact. It does not prove implementation, testing, deployment, production readiness, or release acceptance.
 - Implementation, persistent-data, QA, and release tasks need the applicable merged implementation, tests, migration, restore, rollback, defect-gate, and owner-acceptance evidence named by the task.
 - Prototype evidence is design intent unless the task explicitly asks for prototype evidence. It cannot close an implementation or release task.
-- GitHub issue open/closed state and Project Status are separate. Review every currently Done task before using `--close-done`.
+- GitHub issue open/closed state and Project Status are separate. The current sync tool cannot change either; any future state/status mutation needs a separately reviewed and authorized control change.
 - Planned dates are estimates. Evidence gates control entry and exit.
 - Keep R10 release and task dates blank until its measured storage trigger is explicitly approved.
 
@@ -174,24 +171,24 @@ gh auth refresh -h github.com -s read:project
 # Approved Project mutation on a new credential; do not run both refreshes:
 gh auth refresh -h github.com -s project
 
-# Repository issues and milestones are already correct; refresh Project fields/views only:
+# Repository issues and milestones are already correct; update only mismatched values in existing Project fields:
 node tools/sync_phase1_github.mjs --apply --project-only
 
-# Reconcile issues, milestones, Project fields/views, and evidence-backed issue closure:
-node tools/sync_phase1_github.mjs --apply --close-done
+# Update only mismatched bodies on the existing 58 issues:
+node tools/sync_phase1_github.mjs --apply --issues-only
 ```
 
-Do not casually run plain `--apply` against the live baseline. It updates issue metadata, opens non-Done issues, and preserves existing Done issue state; `--close-done` additionally closes only manifest-Done tasks. Use `--close-done` only after evidence review.
+Every apply first fetches canonical origin and requires a clean non-detached branch tracking `origin/main` with exact `HEAD === origin/main`. Plain `--apply` may update only mismatched existing issue bodies and existing Project field values after the complete preflight. It cannot create or reconfigure issues, items, fields, views, labels, milestones, or workflows, and it cannot change issue state/status/labels/milestones.
 
-Keep the stable `[TASK-ID]` prefix at the beginning of every managed issue title; the sync uses it as issue identity, and removing it can create a duplicate. Managed issue bodies and label sets are replaced by a full repository sync, so put durable evidence and metadata in the governing documents and generator rather than relying on manual issue-only edits.
+Keep the stable `[TASK-ID]` prefix and hidden task marker on every managed issue; the sync uses the public issue map plus those signals as identity and refuses ambiguous or drifted issues. Managed issue bodies are source projections, so put durable evidence and metadata in the governing documents and generator rather than relying on manual issue-only edits.
 
-The current full sync does not use an open-first state transition: its first pass preserves issue state, and its second pass opens non-Done items and optionally closes Done items. Do not use full sync for a Project-only change; when repository metadata truly must change, use an explicitly authorized maintenance window and verify final issue state immediately. Then verify again after two consecutive read-only snapshots show no further relevant issue or Project workflow changes; an immediate pass alone can precede asynchronous automation. A partial failure can still leave drift because GitHub mutations are not transactional.
+Do not use full sync for a Project-only change. After any authorized delta apply, verify immediately and again after two consecutive read-only snapshots show no further relevant issue or Project workflow changes; an immediate pass alone can precede asynchronous automation. A partial failure can still leave drift because GitHub mutations are not transactional.
 
 The operation is idempotent by stable task ID but is not transactional. On an API or network failure, stop, inspect the partial state, fix the authoritative source or access problem, and rerun the appropriate idempotent mode. Never claim synchronization until a read-only reconciliation passes. Deletion of an issue, milestone, field, option, item, or view is a separate destructive action and needs explicit authorization.
 
 ### 5. Refresh generated links and rebuild Excel
 
-An authorized apply rewrites [`PHASE1-GITHUB-ISSUES.json`](docs/project/PHASE1-GITHUB-ISSUES.json). Rerun the generator so the manifest carries current issue numbers and URLs:
+The existing-only apply never rewrites [`PHASE1-GITHUB-ISSUES.json`](docs/project/PHASE1-GITHUB-ISSUES.json); the complete preflight requires that map to match before the first mutation. Rerun the manifest generator after an authorized source change, but do not claim or fabricate an issue-map refresh unless a separately authorized issue-identity change actually occurred:
 
 ```sh
 node tools/generate_phase1_roadmap_manifest.mjs
@@ -200,7 +197,7 @@ node tools/generate_phase1_roadmap_manifest.mjs
 For the workbook, use the installed `spreadsheets:Spreadsheets` skill and follow it fully: load the workspace dependency runtime, use only its Node and `node_modules`, prepare the untracked working-directory dependency link it prescribes, and run its artifact-operation marker exactly once immediately before the first workbook edit. This builder writes two `.xlsx` copies, so use operation kind `edit` and expected output count `2`. Do not install a replacement spreadsheet library, modify the provided dependency directory, or manually edit the generated `.xlsx`.
 
 ```sh
-workbook_run_id="$(date +%Y%m%d%H%M%S)"
+workbook_run_id="P0-$(date +%Y%m%d%H%M%S)"
 node tools/build_phase1_release_plan.mjs "$workbook_run_id"
 
 shasum -a 256 \
@@ -218,7 +215,7 @@ The builder must report 12 releases, 58 tasks, 78 requirements, and zero formula
 6. Risks & Gates
 7. Review Guide
 
-Reject the workbook if a formula error, clipping, broken layout, stale issue URL, incorrect count, or R10 date appears. The task-scoped and canonical workbook hashes must match. Only `outputs/phase1/Life-in-Days-Phase1-Release-Plan.xlsx` is the stable public copy; task-scoped exports are local review artifacts covered by `.gitignore` when their directory begins with at least four hexadecimal characters.
+Reject the workbook if a formula error, clipping, broken layout, stale issue URL, incorrect count, or R10 date appears. The resolved Review Guide must contain exactly one visible `Source manifest SHA-256` label/value whose digest equals the raw current manifest bytes. The task-scoped and canonical workbook hashes must match. Only `outputs/phase1/Life-in-Days-Phase1-Release-Plan.xlsx` is the stable public copy; task-scoped exports are local review artifacts covered by `.gitignore` when their directory begins with at least four hexadecimal characters.
 
 ### 6. Reconcile the live control surfaces
 
@@ -261,10 +258,10 @@ Generated issue and artifact links target `main`. Do not claim publication is co
 
 ## Current tool limitations — fail closed
 
-- `acceptanceEvidence` describes the evidence required; it is not itself proof. Before `In progress` or `Done`, record retrievable evidence links in the task dossier and affected issue or decision record, then review them manually. Never let status logic, `executionAllowed`, or `--close-done` substitute for semantic review.
-- The sync enforces five identity signals before mutation: title `[TASK-ID]`, hidden body marker, `phase1` label, issue-map entry, and manifest ID. Stop on any collision or mismatch.
+- `acceptanceEvidence` describes the evidence required; it is not itself proof. Before `In progress` or `Done`, record retrievable evidence links in the task dossier and affected issue or decision record, then review them manually. Never let status logic or `executionAllowed` substitute for semantic review.
+- Live apply first fetches canonical origin and requires a clean non-detached branch tracking `origin/main` with exact `HEAD === origin/main`. It then resolves all existing issues, items, fields, and views before the first mutation. It may change only mismatched issue bodies and existing field values; issue/item/field/view/workflow creation and status/state/label/milestone mutation fail closed.
 - The dry-run validates local shape but does not query live GitHub. A successful dry-run is not live reconciliation.
-- The built-in workbook inspection and PNGs do not cover every row. Whole-workbook programmatic inspection plus paginated rendering is mandatory until the builder itself performs those checks.
+- Workbook acceptance requires whole-workbook programmatic inspection plus all 20 paginated renders and an exact visible raw-manifest SHA-256 binding in the resolved Review Guide. Same-build canonical/review copies must hash equally; an isolated rebuild is compared by sheet/order/used-range/cell/formula/link/count/R10/render semantics rather than OOXML ZIP packaging bytes. CI also requires every one of the 352 canonical generated targets to remain a tracked, present, clean regular `100644` Git blob.
 - `generatedAt` and the workbook subtitle date are literals. Update both during every accepted refresh until the builder derives its date from the manifest.
 
 Treat these as known controls, not optional improvement ideas. If the compensating check cannot be completed, leave the task blocked and state which tool gap prevented trustworthy synchronization.
@@ -287,7 +284,7 @@ The repository and repository issues are public even though Project #1 is privat
 Before any live apply, manually review every changed task description, evidence requirement/link, rollback/restore statement, and artifact URL exactly as it will appear in a public issue. Then scan unstaged, staged, and untracked text; any match requires investigation and sanitization, not blind deletion:
 
 ```bash
-safety_pattern='(/(Users)/|/var/(folders)/|file[:]//|github[_]pat_|gh[pousr]_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,}|Bearer[[:space:]]+[A-Za-z0-9._-]{12,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{10,}|BEGIN[[:space:]].*PRIVATE[[:space:]]KEY|PVT[A-Z_][A-Za-z0-9_]+)'
+safety_pattern='(/(Users)/|/var/(folders)/|file[:]//|github[_]pat_|gh[pousr]_[A-Za-z0-9]{20,}|sk[-_][A-Za-z0-9_-]{12,}|Bearer[[:space:]]+[A-Za-z0-9._-]{12,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{10,}|BEGIN[[:space:]].*PRIVATE[[:space:]]KEY|PVT[A-Z_][A-Za-z0-9_]+)'
 
 umask 077
 safety_scan_dir="$(mktemp -d)" || {

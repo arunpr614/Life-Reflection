@@ -22,6 +22,7 @@ Life in Days is a proposed private, single-user visual memory archive that bring
 | Phase 1 Product Council package | Complete as a planning artifact; 58 work packages across P0 and R0–R10 |
 | P0 execution authority | Activated under a five-seat execution council; local/public/synthetic work only until each named gate passes |
 | Per-task Product Council gate | 58 six-artifact P0 dossier bundles generated as drafts; 58 Incomplete/Hold, 0 Ready, and 0 with `executionAllowed=true` |
+| PC-001 readiness controls | Gate A planning merged; the local/public fail-closed implementation candidate is under test/review and does not authorize itself or any R0 task |
 | Release PRDs/PID | Council-reviewed planning baselines; task-specific approval and executed evidence remain separate |
 | R0 shared-host coexistence spike | Historically In progress; restricted to readiness/control documentation until its task dossier passes; no private-host probe authorized |
 | Latest frozen UI prototype | v10 Resilient Application Shell |
@@ -44,6 +45,9 @@ The prototypes use browser-memory-only behavior and simulated states. They do no
 | Per-task start gate | [P0 Task Definition of Ready](docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md) |
 | Task artifact register | [P0 Task Artifact Register](docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json) |
 | Task readiness state | [P0 Task Readiness State](docs/project/P0-PHASE1-TASK-READINESS-STATE.json) |
+| Stable reviewer identities | [P0 Execution Reviewer Registry](docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json) |
+| Exact-candidate approvals | [P0 Execution Approval Registry](docs/council/execution/P0-EXECUTION-APPROVAL-REGISTRY.json) |
+| Machine owner-action state | [P0 Owner Action State](docs/council/execution/P0-OWNER-ACTION-STATE.json) |
 | Task dossier library | [P0 Task Work Items](docs/work-items/) |
 | Owner-only dependencies | [P0 Owner Action Ledger](docs/council/execution/P0-OWNER-ACTION-LEDGER.md) |
 | Detailed release plan | [Phase 1 Release Plan](docs/project/PHASE1-RELEASE-PLAN.md) |

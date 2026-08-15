@@ -1,42 +1,29 @@
 {
-  "schemaVersion": "1.1.0",
-  "asOf": "2026-08-14",
-  "evidenceBoundary": "This file is the editable readiness-state input. An override cannot authorize execution unless named artifact reviews, exact hashes and merged revisions, structured Design coverage, all five council-seat verdicts, dependencies, authority, owner actions, and blockers all pass validation.",
-  "approvalModel": {
-    "artifactReviewDecisions": [
-      "hold",
-      "approved",
-      "not-applicable"
-    ],
-    "councilSeatVerdicts": [
-      "hold",
-      "approved",
-      "not-applicable"
-    ],
-    "designStateDimensions": [
-      "normal",
-      "empty",
-      "loading",
-      "error",
-      "interruption",
-      "destructive"
-    ],
-    "designAccessibilityDimensions": [
-      "keyboard",
-      "focus",
-      "screenReader",
-      "targetSize",
-      "contrast",
-      "zoom",
-      "reducedMotion"
-    ],
-    "privateAuthorityEvidenceReferencePattern": "^P0-AUTH-[A-Z0-9-]{4,}$"
-  },
+  "schemaVersion": "2.0.0",
+  "asOf": "2026-08-15T00:53:00+05:30",
+  "evidenceBoundary": "This editable input contains source evidence and requested scope only. Artifact readiness, execution decision, owner-action satisfaction, private-authority state, and executionAllowed are always derived and cannot be overridden.",
+  "approvalRegistryPath": "docs/council/execution/P0-EXECUTION-APPROVAL-REGISTRY.json",
+  "reviewerRegistryPath": "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json",
+  "ownerActionStatePath": "docs/council/execution/P0-OWNER-ACTION-STATE.json",
   "taskOverrides": {
     "PC-001": {
+      "requestedScopeClass": "local-synthetic",
+      "requestedActionClass": "readiness-control-hardening",
+      "implementerIds": [
+        "codex-primary-integrator-01"
+      ],
+      "evidenceProducerIds": [
+        "codex-evidence-producer-01"
+      ],
+      "dependencyEvidence": [],
+      "privateAuthority": null,
       "openDecisions": [
-        "Exact-candidate five-seat planning approval and publication are pending.",
-        "Implementation fixture evidence has not yet been executed."
+        "The exact implementation candidate has not yet completed independent QA and five-seat Product Council review.",
+        "The reviewed Gate B candidate and its later non-self-referential review record have not yet merged."
+      ],
+      "unresolvedBlockers": [
+        "Precommit fail-open findings are still being remediated and re-tested.",
+        "Fresh exact-candidate Product, Design, Architecture, QA, and Project dispositions are pending."
       ],
       "designCoverage": {
         "applicability": "applicable",
@@ -89,29 +76,6 @@
           ]
         },
         "notApplicableRationale": null
-      },
-      "council": {
-        "unresolvedBlockers": [
-          "The six PC-001 artifacts are in review; exact-candidate five-seat planning approval and publication are incomplete.",
-          "The control-hardening implementation and executable fixture evidence do not yet exist."
-        ],
-        "seatVerdicts": {
-          "product": {
-            "rationale": "Planning packet is in review; no permitting attestation is recorded in the central registry."
-          },
-          "design": {
-            "rationale": "Proposed Design coverage is mapped; exact-candidate approval is pending."
-          },
-          "architecture": {
-            "rationale": "Planning packet is in review; no permitting attestation is recorded in the central registry."
-          },
-          "qa": {
-            "rationale": "Planning review is not executed implementation-test evidence."
-          },
-          "project": {
-            "rationale": "Planning packet is in review; merge, sync, and parity evidence are pending."
-          }
-        }
       }
     }
   }

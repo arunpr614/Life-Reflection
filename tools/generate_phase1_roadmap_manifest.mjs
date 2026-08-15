@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
+import { parseJsonWithoutDuplicateKeys } from "./P0-json-trust.mjs";
 
 const repoRoot = path.resolve(import.meta.dirname, "..");
 const repoUrl = "https://github.com/arunpr614/Life-Reflection";
-const generatedAt = "2026-08-14";
+const generatedAt = "2026-08-15";
 const executionGovernance = {
   contextDigest: "docs/council/execution/P0-PHASE1-CONTEXT-DIGEST.md",
   councilCharter: "docs/council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md",
@@ -16,6 +17,9 @@ const executionGovernance = {
   taskReadinessState: "docs/project/P0-PHASE1-TASK-READINESS-STATE.json",
   taskDefinitionOfReady: "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
   taskArtifactRegister: "docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json",
+  reviewerRegistry: "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json",
+  approvalRegistry: "docs/council/execution/P0-EXECUTION-APPROVAL-REGISTRY.json",
+  ownerActionState: "docs/council/execution/P0-OWNER-ACTION-STATE.json",
 };
 const taskState = JSON.parse(
   fs.readFileSync(path.join(repoRoot, executionGovernance.taskState), "utf8"),
@@ -30,7 +34,10 @@ for (const [taskId, status] of Object.entries(taskState.statusOverrides ?? {})) 
 const issueMapPath = path.join(repoRoot, "docs/project/PHASE1-GITHUB-ISSUES.json");
 let issueMap = {};
 if (fs.existsSync(issueMapPath)) {
-  issueMap = JSON.parse(fs.readFileSync(issueMapPath, "utf8")).issues ?? {};
+  issueMap = parseJsonWithoutDuplicateKeys(
+    fs.readFileSync(issueMapPath, "utf8"),
+    "docs/project/PHASE1-GITHUB-ISSUES.json",
+  ).issues ?? {};
 }
 const taskArtifactRegister = JSON.parse(
   fs.readFileSync(path.join(repoRoot, executionGovernance.taskArtifactRegister), "utf8"),

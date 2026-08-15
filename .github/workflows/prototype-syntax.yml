@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -22,20 +24,39 @@ jobs:
       - name: Parse control tools
         run: |
           node --check tools/build-wiki.mjs
+          node --check tools/build_phase1_release_plan.mjs
           node --check tools/generate_phase1_roadmap_manifest.mjs
+          node --check tools/P0-json-trust.mjs
+          node --check tools/P0-control-review-trust.mjs
+          node --check tools/P0-readiness-gates.mjs
+          node --check tools/P0-build-task-readiness-input.mjs
+          node --check tools/P0-test-execution-controls.mjs
+          node --check tools/P0-test-control-review-trust.mjs
           node --check tools/P0-generate-task-artifacts.mjs
+          node --check tools/P0-verify-generated-tracking.mjs
+          node --check tools/P0-verify-execution-start.mjs
           node --check tools/sync_phase1_github.mjs
           node --check tools/P0-validate-execution-controls.mjs
+      - name: Exercise fail-closed readiness controls
+        run: |
+          node tools/P0-test-execution-controls.mjs
+          node tools/P0-test-control-review-trust.mjs
+          node tools/P0-verify-execution-start.mjs --self-test
+          node tools/sync_phase1_github.mjs --self-test
       - name: Parse frozen v10 prototype JavaScript
         run: npm --prefix prototypes/calendar-ui run check:v10
       - name: Regenerate roadmap projections
         run: |
+          node tools/P0-generate-task-artifacts.mjs
           node tools/generate_phase1_roadmap_manifest.mjs
           node tools/P0-generate-task-artifacts.mjs
           node tools/generate_phase1_roadmap_manifest.mjs
       - name: Reject uncommitted generated drift
-        run: git diff --exit-code -- docs/project/PHASE1-ROADMAP-MANIFEST.json docs/project/PHASE1-RELEASE-PLAN.md docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json docs/work-items
+        run: node tools/P0-verify-generated-tracking.mjs
       - name: Validate P0 execution controls
         run: node tools/P0-validate-execution-controls.mjs
       - name: Render safe GitHub sync plan
-        run: node tools/sync_phase1_github.mjs
+        run: |
+          node tools/sync_phase1_github.mjs > /tmp/P0-sync-plan-1.json
+          node tools/sync_phase1_github.mjs > /tmp/P0-sync-plan-2.json
+          cmp /tmp/P0-sync-plan-1.json /tmp/P0-sync-plan-2.json

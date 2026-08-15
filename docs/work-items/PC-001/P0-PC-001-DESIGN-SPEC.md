@@ -33,7 +33,7 @@ Make the control plane understandable without teaching an operator its JSON sche
 ### `PC-001-D-002` — Project Manager publishes reconciled evidence
 
 1. Run structural generation/validation and see that a pass means only `Control validation: Passed`.
-2. Run start/sync preflight from fetched exact main; a dirty, stale, wrong-branch, or unmerged state is denied with a safe corrective action.
+2. Run the local structural validator against one captured manifest/issue-map snapshot before fetch; only after it passes may start/sync preflight fetch exact main. A dirty, stale, wrong-branch, unmerged, or snapshot-drift state is denied.
 3. Review generated issue/Project/workbook/Wiki payloads and their source SHA before mutation.
 4. Publish only from exact merged main, then verify two quiescent zero-mismatch snapshots.
 5. Preserve issue #3 as closed and `Done — historical planning`; no R0 task is promoted by this slice.
@@ -41,7 +41,7 @@ Make the control plane understandable without teaching an operator its JSON sche
 ### `PC-001-D-003` — Operator encounters a failed or protected action
 
 1. The control stops before an unsafe mutation and exits nonzero.
-2. Output identifies the stable gate code, task ID, failed condition, and safe next action.
+2. Evaluator/start/refresh output identifies its stable gate code, task ID, failed condition, and safe next action. A sync structural failure instead emits the complete review projection labeled `Control validation: Failed`, exits nonzero, and blocks live modes before fetch or `gh`; detailed validator findings remain in the validator output.
 3. For `--refresh-drafts`, output previews affected/protected artifacts and reports created/refreshed/preserved counts only after success.
 4. No message exposes a secret, private target/account/topology, raw response, Project node ID, recovery value, authentic content, or photo-derived data.
 5. Retry is offered only after the named stale/missing evidence is corrected; a partial result is never presented as success.
@@ -66,9 +66,9 @@ No new Project field, field rename, view, or workflow is required. Gate B change
 | Historical Roadmap state | `Status` plus `Task summary` | Native Status stays `Done`; the first Task summary line is `Roadmap status: Planning Done — historical`. |
 | Derived artifact completeness | `Artifact readiness` | Exact `Incomplete` or `Ready`; no icon-only or validation-pass substitute. |
 | Derived permission and bounded scope | `Execution scope` | First line `Execution allowed: No|Yes`; second line `Scope: <canonical scope>`. The field name remains unchanged. |
-| Blockers and next safe action | `Task summary` | After historical status: `Blockers: <stable codes or None>` and `Next action: <one safe action>`. |
+| Blockers and next safe action | `Task summary` | Exact line order is Roadmap status, task description, `Blockers: <count and stable-code preview or None>`, then `Next action: <one safe action>`. |
 | Six artifacts and effective review evidence | `PRD / PID`, `Design artifact`, `Architecture plan`, `QA plan`, `Delivery control`, `Council decision`, and `Task dossier` | Dedicated links remain; Task dossier lists all six. Issue body carries the expanded state/reviewer table. |
-| Candidate, digest, evidence, and structural validation | `Evidence` | Ordered lines: `Control validation`, `Candidate revision`, `Dossier digest`, `Required evidence`, `References`, and remaining limitation. Missing values use `Not yet recorded`. |
+| Candidate, digest, evidence, and structural validation | `Evidence` | Ordered lines: `Control validation`, `Candidate revision`, `Dossier digest`, `Required evidence`, bounded reference count with exact URLs retained in the linked issue/dossier, and `Remaining limitation`. Missing, blank, malformed, or partial candidate/digest/authority/reference values use `Not yet recorded`; complete valid values are preserved. |
 | Traceability and ownership | `Requirement IDs`, `Owner role` | Stable IDs and accountable role; no readiness inference. |
 | Schedule and prioritization | `Start date`, `Target date`, `Priority` | Existing values remain estimates/control metadata and never imply permission. R10 blanks remain blank. |
 
@@ -83,13 +83,13 @@ The issue body remains the detailed accessible surface for seat rationales, Desi
 | Permission | `Execution allowed: No` or `Execution allowed: Yes`; always labeled derived |
 | Structural validator | `Control validation: Passed` or `Control validation: Failed`; never `Ready` or `Approved` |
 | Missing review | `Not yet reviewed` |
-| Missing binding/evidence | `Not yet recorded` |
+| Missing binding/evidence | `Not yet recorded` for missing, blank, malformed, or partial candidate/digest/private-authority/reference values |
 | Private denial | `Blocked — private authority required` |
 | Deployment unknown | `Unknown — private read authority pending` |
 | Historical enum | Show `Historical — non-authorizing` alongside `historical-non-authorizing` |
 | Local enum | Show `Ready — local synthetic only` alongside `ready-local-synthetic` |
 
-Blank, `null`, a green success icon, and an unlabeled `Passed` are not acceptable substitutes for these states. Shortened hashes may be visual conveniences only when the full value remains retrievable and copyable.
+Blank, `null`, `undefined`, a malformed/partial binding, a green success icon, and an unlabeled `Passed` are not acceptable substitutes for these states. Shortened hashes may be visual conveniences only when the full value remains retrievable and copyable.
 
 ## State contract
 
@@ -98,7 +98,7 @@ Blank, `null`, a green success icon, and an unlabeled `Passed` are not acceptabl
 | Normal/held | Show all derived values, blocking gates, and next safe action; historical `Done` remains visually and verbally separate. |
 | Empty/never reviewed | Use `Not yet reviewed` / `Not yet recorded`; never infer a pass from absence. |
 | Bounded processing | Name the non-mutating phase, current task/count, and that authorization has not changed. |
-| Validation error | Stable gate code, task ID, failed condition, corrective action, nonzero result; no ambiguous partial success. |
+| Validation error | Evaluator/start/refresh surfaces show stable gate code, task ID, failed condition, corrective action, and nonzero result. Sync shows `Control validation: Failed`, complete review JSON, and nonzero result while the validator retains detailed findings. No ambiguous partial success. |
 | Stale candidate | State which binding is stale or mismatched and require a new exact-candidate review. |
 | Interrupted/retry | Preserve prior accepted state, say no authorization changed, and require a fresh complete rerun. |
 | Denied/blocked | Explain the missing scope/role/action/authority class without exposing private detail. |
@@ -131,6 +131,15 @@ Blank, `null`, a green success icon, and an unlabeled `Passed` are not acceptabl
 2. **`PC-001-D-002` — Accessible publication:** every operator surface preserves semantic order, non-color cues, full evidence retrieval, and readable/operable responsive behavior.
 3. **`PC-001-D-003` — Safe failure:** stale, missing, denied, interrupted, unavailable-origin, and protected-refresh states stop safely and provide a public-safe next action without partial-success language.
 
+## Gate B implementation evidence contract
+
+- The exact implementation candidate must include this Design artifact in its complete non-excluded Git diff; listing an unchanged Design hash beside changed code is not candidate-bound review evidence.
+- CLI, generated Markdown, issue bodies, Project values, and workbook cells retain the frozen labels above. `Status` remains historical roadmap state; `Artifact readiness`, `Execution allowed`, validator result, blocker codes, and next action remain separately labeled and retrievable.
+- The 48-case sync oracle preserves this language through a captured manifest/issue-map snapshot: byte drift across validator/projection/output fails, all malformed/missing bindings use the exact fallback, Failed dry-run JSON remains fully reviewable and exits nonzero, and live modes stop before network.
+- The final workbook review and canonical copies must hash-match within one build. Its resolved Review Guide must show the exact raw roadmap-manifest SHA-256, all 20 paginated renders must remain readable without clipped identifiers, and the workbook must retain text/non-color state cues, full identifiers, semantic table headers, R10 blanks, and zero formula errors.
+- Exact candidate review evidence records the candidate revision, complete task-file digest, six artifact hashes, independent workbook disposition, and all five seat references in the audit-only `controlReviews.PC-001` entry of `P0-EXECUTION-APPROVAL-REGISTRY.json`. That already-declared descendant path may report executed checks, but the evaluator ignores `controlReviews`; only the separately governed `taskApprovals` section can participate in a future execution decision.
+- There is still no Life in Days product UI or prototype change in this slice. The only rendered artifact is the synthetic planning workbook; no authentic photo, journal entry, private target, credential, or photo-derived data may be opened or represented.
+
 ## Design vetoes and exclusions
 
 - Design is not `not-applicable`; these operational surfaces are human-facing.
@@ -142,4 +151,4 @@ Blank, `null`, a green success icon, and an unlabeled `Passed` are not acceptabl
 
 ## UI/UX Designer disposition
 
-**In review / Hold.** The operator experience contract is complete for exact-candidate Council review. Screenshots and runtime accessibility claims are not applicable before implementation because this slice has no product UI; executed CLI/rendered-output evidence remains required afterward.
+**In review / Hold.** The operator experience contract and Gate B evidence boundary are complete for exact-candidate Council review. Product-UI screenshots remain not applicable because this slice changes no product UI; workbook/CLI evidence is reviewed only for the bounded operator-control claims above. PC-001 and every R0 task remain non-authorizing.
