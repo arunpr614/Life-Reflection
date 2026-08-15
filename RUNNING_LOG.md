@@ -825,3 +825,69 @@ Complete the previously approved PC-001 Gate A planning packet, implement only t
 - **Wiki:** `25f438faa2adc57d42f62ef139a9f615de57af99`, exact deterministic build from that repository merge.
 - **Planning surfaces:** 58 existing issues and issue-backed Project items, zero verifier mismatches, no definition/workflow mutation.
 - **Execution authority:** 58 Incomplete/Hold, zero Ready, zero `executionAllowed`; R0/private/authentic/deployment/release lanes remain blocked.
+
+---
+
+## 2026-08-15 15:28 IST — Bounded P0/R0 Goal activated; Stage 0 Council contract established
+
+**Entry author:** AI agent (Codex) · **Triggered by:** Arun's direct submission of the bounded P0/R0 Gold Goal and the completed clean exact-main activation gate.
+
+### Correction and continuation intent
+
+The prior entry's remaining-work section is historical. Evidence reconciliation was subsequently published through PR #68, and the bounded Goal publication bootstrap was reviewed and merged through PR #69. This entry begins the newly activated bounded P0/R0 continuation; it does not rewrite any prior log bytes and does not claim that Stage 0, R0 implementation, private access, deployment, restore, rollback, or acceptance is complete.
+
+Stage 0 will repair the public/local bootstrap control plane under existing issue #3 before any R0 task action. Its expected outcome is a fail-closed two-phase preparation/execution model, append-only successor review and log evidence, a staged runtime, a separately gated delivery-state transition mechanism, exact frozen-scope protection, and repaired factual/Wiki surfaces. Stage 0 itself performs no delivery-status transition, product implementation, private-system action, or R0 acceptance.
+
+### Activation and provenance
+
+- Normal bootstrap PR [#69](https://github.com/arunpr614/Life-Reflection/pull/69) bound exact three-file head `fd381a65b7776d3611386b0c93422febd713d65b` to parent `e8130729d005fe6fd8731860963ab5ffa5ed1682`; two current-head repository checks completed successfully before expected-head merge.
+- Merge `2dc4d05cdeca8cb9aeacf393076f6c6f946ff62b` is the exact current `origin/main` and the source revision for this continuation. The same owner-pinned Phase1 worktree is clean on a fresh no-upstream `codex/*` execution branch.
+- The committed bounded Goal is byte-identical to the Product Owner submission at SHA-256 `e99511da51463022efebe56ceaad10eb2897a48a55eb54e4fc33a903205a7b99`.
+- The mandatory context bootstrap produced sanitized deterministic context digest `sha256:320ace71f8355c15da4dfaa7d576ba3f2a38bfb8bfbb44284516d3816a4dd16a` across 60 governing source files plus current public issue, Project, Wiki, workbook, and control evidence.
+
+### Frozen boundary established before control edits
+
+- The first Stage 0 repository mutation added `docs/project/P0-R1-R10-FREEZE-SNAPSHOT.json`, a non-authorizing machine-readable snapshot with payload digest `sha256:0f1e213e666309a2338a965434b4644c17bb37c6285d7e799278ab033c7257b1`.
+- It binds exactly 50 R1-R10 tasks, 300 Draft artifact path/mode/byte/state records, live issue body/state/label facts, sanitized Project values with no node IDs, readiness/approval/execution state, 40 Backlog plus ten historical planning Done tasks, 40 Hold plus ten Historical non-authorizing decisions, and zero execution permission.
+- Those 50 tasks and their per-task artifact bytes, issue/Project values, readiness, approvals, decisions, and permissions are frozen. Only independently explained deterministic provenance churn in an explicitly enumerated shared aggregate may differ.
+
+### Product Council disposition
+
+- **Technical Architect — APPROVE candidate preparation with binding gates.** Separate preparation from execution and execution from acceptance; use stage-level scope/action cardinality; preserve the historical PC-001 record; add successor/log/stage journals, a bounded or serializable runner, a distinct transition tool, and exact freeze/Wiki/CI controls.
+- **Expert Product Manager — HOLD exact candidate until amendments are implemented.** Require stage-scoped requirement evidence, a reproducible freeze, one immutable action per stage, explicit transition evidence, exact terminal invariants, and unambiguous `Task Preparation Gate A` / `Bounded Action Gate B` language.
+- **Independent QA — APPROVE candidate preparation only.** Exact-candidate approval requires the frozen-50, two-gate, successor-review, log-descendant, staged-runner, delivery-transition, workflow-integrity, factual/Wiki, workbook, rollback, and durable-evidence matrices.
+- **Expert UI/UX Designer — HOLD exact candidate until amendments are implemented.** Require separate state vocabularies, a closed recoverable stage lifecycle, accessible non-color receipts, truthful cancellation/recovery, one-task transitions, exact Almanac anchors, and a side-effect-free Wiki operator contract.
+- **Expert Project Manager — APPROVE candidate preparation only.** Deliver one atomic Stage 0 control/factual candidate, then only the non-recursive add-only review publication needed to bind that candidate; no live mutation before exact-main closure.
+
+These are proposal-stage dispositions, not exact-candidate attestations, task approvals, private authority, merge approval, or execution permission. Product and Design Holds are expected to clear only by implementing and proving every binding amendment on one immutable candidate.
+
+### Untouched baseline and current defects
+
+- Existing controls pass unchanged: readiness `341/341`, historical control-review `35/35`, exact-start `62/62`, sync `48/48`, generated tracking `352`, structural validation, frozen v10 syntax, and two byte-identical 832,529-byte sync dry runs at SHA-256 `eeceaf5170f36a23c573fd807dc7cd279aebc49855a7a86a194e125e92162ba6`.
+- Current truth is **58 Incomplete; 45 Hold plus 13 Historical non-authorizing; zero Ready; zero execution-allowed**. Artifact state is 342 Draft plus six PC-001 In review. Deployment remains **Unknown — private read authority pending**.
+- The canonical workbook remains a seven-sheet, 58-task, 78-requirement projection with 2,009 formulas, zero detected formula errors, exact R10 blanks, and current manifest binding. It is evidence, not authority.
+- The live Wiki remains dated provenance at source `e8130729d005fe6fd8731860963ab5ffa5ed1682`, 456 files, and 450/450 mapped Markdown sources. Exact current source contains 451 Markdown files before new Stage 0 documents.
+- Deterministic Wiki generation currently fails because `tools/build-wiki.mjs` hard-codes the removed README row `P0 execution authority`. Its `--help` path also writes output instead of remaining side-effect-free. The two removed Timeline fragments, INDEX Wiki self-reference, stale PC-001 blocker text, durable verifier evidence, and append-only log descendant remain Stage 0 repairs.
+- Existing green suites cover only the legacy model. They do not yet prove the frozen-50, successor-review, staged-action, process-tree cancellation, transition rollback, link/fragment, or workflow-integrity contracts.
+
+### Current remaining to-do
+
+1. Add the deterministic freeze verifier and public-safe activation-context artifact, then prove the committed snapshot against exact Git and live sanitized issue/Project inputs.
+2. Author the named P0 Stage 0 dossier and implement the complete Council contract without changing historical PC-001 review bytes, its six In-review artifacts, frozen prototypes, product code, infrastructure, or any R1-R10 task.
+3. Repair and regression-test README/INDEX/readiness wording, the two Almanac anchors, Wiki generation/help/link safety, and durable verifier evidence.
+4. Run all old and new suites twice, deterministic generators/dry runs/Wiki builds, workbook semantic/formula/link/render checks, rollback rehearsal, privacy scan, frozen-50 verification, and exact changed-path dossier construction.
+5. Freeze one immutable candidate, obtain five fresh exact-head seats plus independent adversarial review and CI, merge normally, then publish the add-only successor review record without creating a task approval.
+6. Reconcile only permitted P0/R0 shared projections from exact merged main, perform immediate and quiescent read-only verification plus the separate Roadmap UI audit, publish the Wiki normally, and record final Stage 0 evidence in the merged PR/check channel.
+
+### Open questions / owner actions
+
+No Product Owner input is required for the local/public Stage 0 repair. No private host/provider, credential, spend, deployment, backup, restore, or authentic-content action is authorized. `P0-OA-001` and `R0-OA-001` remain pending and block the private R0 lane; `R0-OA-002` is due only if a material provider or spend decision later arises.
+
+### State snapshot and self-critique
+
+- **Current branch/source:** fresh Goal-owned execution branch at exact source `2dc4d05cdeca8cb9aeacf393076f6c6f946ff62b`; Stage 0 has no commit or PR yet.
+- **Changed files at this entry:** the new frozen-50 snapshot and this append-only log continuation only.
+- **Roadmap/runtime:** eight P0/R0 tasks are in scope; 50 R1-R10 tasks are frozen; no task status, issue state/label, Project Status, implementation, runtime, deployment, or acceptance changed.
+- **Workbook/Wiki:** workbook baseline is structurally green; live Wiki is known-stale dated provenance and current-source generation is blocked until the named repairs land.
+- **Blockers:** no blocker to preparing the Stage 0 candidate. Product and Design exact-candidate Holds, the incomplete new test matrix, and the broken Wiki build remain mandatory gates before freeze or merge.
+- **Self-critique:** the preliminary private freeze capture was intentionally broader than the committed compact artifact, and the committed artifact still needs an independent verifier before it can be trusted as a durable guard. The Project UI has not yet received its required authenticated visual audit, and no legacy passing suite should be cited as proof of the new Stage 0 design.
