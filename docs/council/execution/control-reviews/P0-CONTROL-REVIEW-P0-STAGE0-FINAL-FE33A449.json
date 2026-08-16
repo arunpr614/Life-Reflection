@@ -1,0 +1,935 @@
+{
+  "schemaVersion": "1.0.0",
+  "reviewId": "P0-STAGE0-FINAL-FE33A449",
+  "reviewDate": "2026-08-16",
+  "reviewType": "non-authorizing-successor-control-review",
+  "predecessor": {
+    "kind": "genesis",
+    "reviewId": "P0-SUCCESSOR-CONTROL-REVIEW-GENESIS",
+    "recordPath": "docs/council/execution/control-reviews/P0-SUCCESSOR-CONTROL-REVIEW-GENESIS.json",
+    "recordSha256": "8d07f29280f9a0ff54715c25ad74f07bc47fdc04defd0021434f211b093fde89"
+  },
+  "candidate": {
+    "baseRevision": "2dc4d05cdeca8cb9aeacf393076f6c6f946ff62b",
+    "revision": "fe33a44903846b898553e7d56a438714469b8cc9",
+    "dossierPath": "docs/council/execution/releases/P0-P0-R0-STAGE0-CANDIDATE-REVIEW.md",
+    "dossierSha256": "cdb66b4992a932dd746a784aa77c91b916cf45c1301657f3317de7a26ac06936",
+    "reviewerRegistryPath": "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json",
+    "reviewerRegistrySha256": "71c3eaf517da4bec7048fa53617410160032def15ded247bdfbfd11dcb83a30e",
+    "changedFiles": [
+      {
+        "path": ".github/workflows/P0-stage0-workflow-guard.yml",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "355b856d69e5f78aaf6f58b23a1d848690b2ee8b2ee031e321ce047865831445",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": ".github/workflows/prototype-syntax.yml",
+        "changeType": "modify",
+        "base": {
+          "sha256": "f8bcc4134dac52b970845bfa4166a59192b773bd1882d02dbc36d4d7af902b81",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "b30ab0281ab56742136c6b2cd53e7d2a85657ffb8d214dce2e5279c0dbeec062",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "AGENTS.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "105b027ecfd2003c63a697d7b665c0490f53f11b98e730b8bbdf751b630f7fdf",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "aac18c9ee735ebcfc51193cef8cb850331c6e158ef44a012841db731857bb574",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "README.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "8b4a92d483431f777b5ad5ee70e4ad2525ad3bf3948dea4bf3463922f01d25a6",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "82120e27ead79f6e7f6ead23f5b769112b01ca1ebaf14b490e860d8ced47c840",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "RUNNING_LOG.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "4ff6850746140e906561b9583b9dfe32a3f07d6eb2c893ee75496b969276a65c",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "fc10c8e7173300d6578fab46a015ef3bfbfc9d0ee04c058642bbc8b92482e567",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/INDEX.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "9e3456871658630c08e2861cf664e566d80d588718a45174692bf8f6eed6bad3",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "6bd35d4b73bf0d27b2a38c2ddf3b272cb02b615db96993cb54c50372e2653ad0",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/PHASE1-COUNCIL-DECISION-RECORD.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "053aa13f9830afdad2820871d10930cb81f12549c22100a9127008815e01e639",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "58b1b0e4aa651f7b50d1a6bff2ce3c22a0d940d38a5909875d32a8dea2841ae6",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/PRODUCT-COUNCIL-CHARTER.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "40aa8a942bafab50b0a1afd6c817e1d84842121cf84e5c049d7875ca7abf1696",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "052361bf7716943883f7d052385079eafd9f24b4c0afb68aadf680425cdc57da",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/PRODUCT-COUNCIL.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "75c49ab04889708077beaefe62a3184a8eb420820c7bccbf9466eb89739a6760",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "31fc122673e8540275ebe25891de64f595b6463d5fc4b0711bc6171152c48a5f",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/UX-DESIGN-REVIEW.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "1e761daf2bbf6850d0880a856099d194eea416c2f68b46e14181d69757307090",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "e85af633e6cedf1636ae374ec6b75750a4be5be6d66e4a17282b3f59f34cbf08",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/agents/P0-QA-LEAD.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "9bc29109c34389c441462fa7ca706a6205eef7a222b8fb4d98b74c5029439857",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "ed73d0eb6f44ee187cce315834006b92ff106b0111114b18496cb940a2e911f6",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "391d847da4e7a75bfd25be2a5af7a9247560a39d814eb452eaa14acb3de61392",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "a9aae7ba49da6ab9de0dea5763059fdbebbfc0460958dccd0d27bbb54abb06fe",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "90f86ff02eab41e919a4e9ee557953beb37d3837b42930f9e96ae4f59418947b",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "e11488cb99d5763fc43dac81adca23e6210ae1b13c587b00c1feaab12cffb0be",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/P0-PHASE1-EXECUTION-DECISIONS.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "3117e55db72449fe37c8337bf744ba33a40d82a80e126f25a37429ef24288ba3",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "a4d7f502ca09bcc5c3f5e7d22ed4729da75210301031bc8a62269ad57efa1855",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "f5097998e8b3e34c69315c60e38c30ba70eadacb222ba8e2717946552f813808",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "b2861176b67077f2be5c9bf637ed6bad033be4fd7d5bd55438f9c1346971f58e",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/P0-R0-STAGE-APPROVAL-REGISTRY.json",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "ca0d280f5474c318dca101e2576fe2ed250223c8140f8abd8cb8b04d2cef64f5",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "b8d5efa0b797d94a70c1c07e4417c884218965e2fbc6b49407124a7c38046dac",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/control-reviews/P0-RUNNING-LOG-TRUST-GENESIS.json",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "b7fbfebdd38d2a25959611054823939f79abaa969538451d442d12b0ed71c57d",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/control-reviews/P0-SUCCESSOR-CONTROL-REVIEW-GENESIS.json",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "84d068f149441cad5451e7ffa978c2926e1af3877711e981b7b8a7f7864cddb2",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/releases/P0-P0-R0-STAGE0-CANDIDATE-REVIEW.md",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "cdb66b4992a932dd746a784aa77c91b916cf45c1301657f3317de7a26ac06936",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/releases/P0-P0-R0-STAGE0-DELIVERY-CHECKLIST.md",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "c5240ec55709c05c2c3bf602a2b2f3d5358d66f51e71e5a806594f9ac2e58ced",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/releases/P0-P0-R0-STAGE0-ROLLBACK-PLAN.md",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "bd22e8cdd89eb33ff170f96219eb46199cb27cdae247c3b87b5ae892aecfbd8c",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/releases/P0-P0-R0-STAGE0-STATE-CONTRACT.md",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "aa6de009855bc388e431c0fb981715ec89eee6386e702de0172dd45a1f083b91",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/releases/P0-P0-R0-STAGE0-TEST-PLAN.md",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "0b10437dc18e30437e21f114971218b9b04eda5ed104681eb1f711f1e081a71f",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/product/PRODUCT-REQUIREMENTS.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "00ac10eed59d27c331eb20bfff3fa403d5a177c87fe17f66a8ccabf439f116cc",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "afcc9b1d05a7f0f691d69179d0770d8a39d0f39a2e8e03b8ab216967d32eb54b",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json",
+        "changeType": "modify",
+        "base": {
+          "sha256": "aab0f6b299e4691491463c3288d75a19f0acdd63d121b126be53e8818b653056",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "c2524539b3436afccb5bb171b3b99a5e8cf382151385f7bfa203d3ce0baafcd9",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/project/P0-PHASE1-TASK-READINESS-STATE.json",
+        "changeType": "modify",
+        "base": {
+          "sha256": "8f3a705e7c9d8b778fe6ed828f09067170cac64c209f40d0dbd99d17acdd5f85",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "9634b11a880a1c14f99e429b0d46a9093d328c68f5e2c6a611ca3c73eaa128be",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/project/P0-R1-R10-FREEZE-SNAPSHOT.json",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "59a35a48b41f78426fb6fcb56e91cba0891bdf6debde11aaad999a11d18c8ecf",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/project/PHASE1-GITHUB-PROJECT-SYNC.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "32bdcc7f68300bc9bcb1dd4fefe44424afd55eadd376b63bc10bc33bdeba6ddf",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "fbe2e1d2ad7a0958a4eeaa7bf9534e465e53880b4d2d5130f357fc9e09c9f32b",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/project/PHASE1-RELEASE-PLAN.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "138f6f39b89955eb4f06145f6a677a293b45568f7003bea22765fc6debd825f1",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "fd07f7e6423704a77dcccf7507299d935eca7f5431c5e3e06cc609bf4475deaf",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/project/PHASE1-ROADMAP-MANIFEST.json",
+        "changeType": "modify",
+        "base": {
+          "sha256": "65060d958a3ac35e312112b180ffc2b7543f63dd02e1d346574c6804f0b64942",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "27c2a54fbdf9aa45822ad8758741ca64e0c95c554db1457c5ae977d3e7c15b72",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/project/PROJECT-TRACKER.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "e0d610b0030584eb75f441539e68b6404a15cded68d9dadf09927926513e032d",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "c131c141d9745edfaf67a9807c0de6a727b6a57d910928a2c2398afba1c45e92",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "outputs/P0-stage0-20260816-r5/P0-Life-in-Days-Phase1-Release-Plan.xlsx",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "e0fea0bc314033f49ce88300ea2d819b016b81e522cdbff3b5a7f36391fa6ae8",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "outputs/P0-stage0-20260816-r6/P0-Life-in-Days-Phase1-Release-Plan.xlsx",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "b539b500147f9d80f0508a1fd458dc7061a51d44b6848a35512c1424c75cd229",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "outputs/phase1/Life-in-Days-Phase1-Release-Plan.xlsx",
+        "changeType": "modify",
+        "base": {
+          "sha256": "d8b21f955366a516bca0b0961b941b3f76c84b5aa2e9406e3740005ca7547994",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "b539b500147f9d80f0508a1fd458dc7061a51d44b6848a35512c1424c75cd229",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-append-only-trust.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "675e90ac2660b820a6466f2dcf3f33f0797080a41824677cd1a46e2638c48b00",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-bounded-authority.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "8b8646d93334661d407c67afd7d8d40aed569425af25b90fb95c980a697fc85d",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-build-task-readiness-input.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "c9f5bbe89d083d2a1ec41e3552f762c6c2bee7a7abd7cb0d230e9415e4f4e87a",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "c299bb46e46f0424b60d560302381f85e24a80c527ccbb129659f5e3513f86ff",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-content-safety.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "2c5456193d474fa880d4cb65a699c483f808a2aab98655d60707ccac0cab96ed",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-control-review-trust.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "5ed8bd3b535f98dfdc5f841387e8d72c5c32de1808b544156d058882851b1d78",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "e479c440c496b4e76b2365d8f0ce4a739ccffa278fffcc3287afa5cda5ad5ed8",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-delivery-transition.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "c29d0f4451fd76a5954f79ac2bdfabbe0466ef5a284a4f9c1a20b74ac4558a2c",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-exact-main.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "d68b4d71a2f474dc20e4b969d210bae05ee61301e4902ed7a9ad275adc1b0b70",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-generate-task-artifacts.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "0f7d23f3bfb5935a3ad14d1391b08b37407788825a7c09ba8714fdd0c240ebd6",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "03bde157ef957d3281556def3ff82f6e06fc9a6abccb6eaa41653ba112ed454a",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-github-projection-model.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "f72bdbbcdb3c51de44e7a38c8bc8453e16043e07600f45422c7158689aa2a298",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-readiness-gates.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "fb865a6f5ca198220bb016ce7c920809ba7d3e5b2c0cdc7fd18c6562b636da3d",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "ee56270564ed29a0e4fe95460cee9f2ec1839e86a48900b2af9ab6b1ec5f02e5",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-running-log-trust.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "f97b2c602e61751b1c4526a7a65a058d7128096a936fbdefa93653375339b241",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-stage-runner.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "f73c2a22a029597b8c0c8af0022b1c536c2a4bea3b73ddae9e9db2eeab0eb2f6",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-stage0-ci.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "84764bd1be4c77bba4ee094bb71c79cb8f27bce88a972235ba68e1f15fabf25f",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-staged-actions.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "28e3d528f147c27b490a72cbec14c0a41705fa68db5607a09ecc465d5ad6ced5",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-successor-control-review.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "944e753eecdaa096463449b0b4bbbed9b6d46e41436b38d65c0ce91706729814",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-test-control-review-trust.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "6c53b03a6e3f09da65203953ef9d4dfaa0ab9d149dd6f0a39f2f2a524abcd165",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "63da71b4b66f58bbff51d4138c2c682168ebc51ae674110f041a6c98f2bf9b15",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-test-delivery-transition.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "63a3267c974ec45f299a4dba89f037264eaf714062331b60033ff7fc9d31e8e3",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-test-execution-controls.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "fce1a187fa528ea94dcdccaa6db6a9faccc4a24e3e694a25616c923f26ea7fd3",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "0451e6f0e5887d82db5e74e6f63027d86fe1862f70befb519daf1ca6e5028a38",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-test-r1-r10-freeze.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "5285890ca16b9d9f4d2183c060ff9a183421d74640cfc38b56a45714c3e89db9",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-test-running-log-trust.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "a57b0aae1aeaab28af255a2c532ca8ac567c4d736282953eb5ab9bd88fca0cf6",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-test-stage-runner.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "66f163861827197d1ce13d05be8d27cd0ea9f04c45900ca072bf00145a488a9f",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-test-staged-actions.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "86c6e6d191ac48abbb0b08e78b63f95fad5b8f50674943e4f1b5785d6ebd5d77",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-test-successor-control-review.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "c23ab23a2c12851ef927dd8d1f9505556da2c440ef69d9d124bf2338bf284fc1",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-test-wiki-trust.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "162c1b80d70af6765115eca5da387043430a094261bb69d288eb86c50572d738",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-validate-execution-controls.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "efbd365391f265c160515dd2a3352adcb66fb21f23dc54e2c35a3a0929eaf6b6",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "33b397c3355cd33fb9361975cfa785feaacd1d7def18ff3b1ea32590693fd4ee",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-verify-execution-start.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "e363c40875812ef98bda91767b7d3a3af79a2a0572e57fc775985ace33c28237",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "526cdc2b0631c8f2f1a8c4f39937928dfe77108bd6c89d264a4191f795a53872",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-verify-r1-r10-freeze.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "0d439f0d3e5bf209675f47984e38843ad519ebdd0c2103ad9ae791024d21f565",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-wiki-trust.mjs",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "c208b4b88eb3dd8d3337f9706cd62f1484df992c0e24b53f2e12859e70e98cce",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/build-wiki.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "4fc7d7a312125273cca49f52b563cf40e4d60bdab04b79be33f4da0167662d7a",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "e0145f0e1627ac31e908630d8baac34ed67bc0672cd5ad9347fa3e1bb0c6a5fa",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/build_phase1_release_plan.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "7157af109412469cb2a61d79060521ba0ab14b94f248e57db4f81f9238bc29ed",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "8d9714960c2f528a3e7c760d9511c1b74622483bdb4dbeb61b3bfed77bd64b8d",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/generate_phase1_roadmap_manifest.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "af4aaaa96b0b33e322e642e9cc2913b43296a9e4498226768947b94d7d25855a",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "26792e09192825251bd81c35b24ea141b6c3d4c53383dcf9a2b3bda1112706c0",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/sync_phase1_github.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "e0420494c29ff3e9ac5ffae551bbc6c4aa89c18aad9c0895f49c48226cbf1fbe",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "e231adce514fb8631ec794e8d578d852fcd45629594201620d2e390e638d1fc7",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      }
+    ],
+    "changedFilesSha256": "bdd49aaa3df7f77fff8e8fccb44259dfc8063e5acc9176af57d7cd5cb2472981",
+    "implementerIds": [
+      "codex-primary-integrator-01"
+    ],
+    "evidenceProducerIds": [
+      "codex-evidence-producer-01"
+    ]
+  },
+  "namedChecks": [
+    {
+      "checkId": "P0-CHECK-ADVERSARIAL",
+      "result": "pass",
+      "evidenceDigest": "sha256:1d91c8bf62c1ed396bbe5f832aa9f4badf4b5d5056af73d3ced96ef43a8f28fa",
+      "evidenceReference": "review:P0-STAGE0-FINAL-FE33A449-adversarial"
+    },
+    {
+      "checkId": "P0-CHECK-FROZEN-SCOPE",
+      "result": "pass",
+      "evidenceDigest": "sha256:14d4f65eea3c2e286f740c08e80cb932aad35f21d91ce43d47f2d30b4b03a55b",
+      "evidenceReference": "local-evidence:P0-STAGE0-FINAL-FE33A449-frozen-scope"
+    },
+    {
+      "checkId": "P0-CHECK-GITHUB-CI",
+      "result": "pass",
+      "evidenceDigest": "sha256:86c82c76b211f839de6b09841175459212944ee8745df147f39c984a2336126c",
+      "evidenceReference": "github-pr:70"
+    },
+    {
+      "checkId": "P0-CHECK-INDEPENDENT-QA",
+      "result": "pass",
+      "evidenceDigest": "sha256:3a8aa9e0b49c64197ac49cc2043754a28ecae8648c7b4cddb5330da94ca99c80",
+      "evidenceReference": "review:P0-STAGE0-FINAL-FE33A449-independent-qa"
+    },
+    {
+      "checkId": "P0-CHECK-LOCAL-CI",
+      "result": "pass",
+      "evidenceDigest": "sha256:fb54f243d7110a31eb51ae20f019a096e351cf702bb26680aa8f59e735392574",
+      "evidenceReference": "local-evidence:P0-STAGE0-FINAL-FE33A449-local-ci"
+    }
+  ],
+  "namedChecksSha256": "2d7682ce953bca0efa91121736fd0264eadbab9ae69eebd79f09305af6fd5db4",
+  "reviewContextSha256": "1f588a82ea75872bc671816af100bcb87ef65dd76a617245653ebe4c9fb3cc79",
+  "seatAttestations": {
+    "product": {
+      "reviewerId": "codex-product-manager-01",
+      "reviewerRole": "product",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "fe33a44903846b898553e7d56a438714469b8cc9",
+      "reviewContextSha256": "1f588a82ea75872bc671816af100bcb87ef65dd76a617245653ebe4c9fb3cc79",
+      "evidenceDigest": "sha256:f7a6ffa5801a9b683244a10dda44abe6ce49e4dbfe44d4fa08fa6e2be6627d9c",
+      "evidenceReference": "review:P0-STAGE0-FINAL-FE33A449-product-seat",
+      "rationale": "Exact fe33 candidate preserves the frozen product baseline and every fail-closed authority boundary; approval is limited to normal publication of inert Stage 0 controls.",
+      "attestationDigest": "430d519922c1b93ac2af0317a4a318d73403fe0b788547b733b969e7e27b9f3f"
+    },
+    "design": {
+      "reviewerId": "codex-ui-ux-designer-01",
+      "reviewerRole": "design",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "fe33a44903846b898553e7d56a438714469b8cc9",
+      "reviewContextSha256": "1f588a82ea75872bc671816af100bcb87ef65dd76a617245653ebe4c9fb3cc79",
+      "evidenceDigest": "sha256:330ac737e31aa079a3b38fe7f278157f5221a66c74e3cb7e74aac382d6281fff",
+      "evidenceReference": "review:p0-stage0-fe33-design-context",
+      "rationale": "Exact-context Design review passes: state labels, recovery and cancellation receipts, corrected Monthly Almanac anchors, Wiki navigation, workbook and projection boundaries, and frozen R1-R10 semantics remain coherent. Approval is only for normal inert Stage 0 publication and grants no task or runtime authority.",
+      "attestationDigest": "fdb0c80b1e300825726ae5e74c4da47651cb46f9b5f7377eaef8b8bbb4419a76"
+    },
+    "architecture": {
+      "reviewerId": "codex-technical-architect-01",
+      "reviewerRole": "architecture",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "fe33a44903846b898553e7d56a438714469b8cc9",
+      "reviewContextSha256": "1f588a82ea75872bc671816af100bcb87ef65dd76a617245653ebe4c9fb3cc79",
+      "evidenceDigest": "sha256:0de3b661abe74b0eb9ab7356a7a938ef9201e81da1aa233ba151ce74867c2fbd",
+      "evidenceReference": "review:P0-STAGE0-FINAL-FE33A449/architecture",
+      "rationale": "Exact-base architecture review found no unresolved structural or deadline-settlement veto; approval is limited to normal publication of the inert Stage 0 controls and grants no task, runtime, private, R0, deployment, status, acceptance, release, or R1-R10 authority.",
+      "attestationDigest": "6e1c126a9be42957545b835d3d889d6dfdc8a12d2ec068ce58b3360895c8cdd5"
+    },
+    "qa": {
+      "reviewerId": "codex-independent-qa-01",
+      "reviewerRole": "qa",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "fe33a44903846b898553e7d56a438714469b8cc9",
+      "reviewContextSha256": "1f588a82ea75872bc671816af100bcb87ef65dd76a617245653ebe4c9fb3cc79",
+      "evidenceDigest": "sha256:920acdde14f62ba77cf6ee43a9f85f484ffbd73484cefdcfc8f0c77d2f35a3c4",
+      "evidenceReference": "review:P0-STAGE0-FINAL-FE33A449-QA-RECONTEXT",
+      "rationale": "Focused runner (90), delivery-transition (96), and successor-review self-tests pass at the exact revision; QA approves only normal inert publication and grants no task, runtime, private-action, status-transition, deployment, or R1-R10 authority.",
+      "attestationDigest": "af2df91565f37e8caeb6d48cfc779c26547cd2690499c016690607e7daa26d26"
+    },
+    "project": {
+      "reviewerId": "codex-project-manager-01",
+      "reviewerRole": "project",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "fe33a44903846b898553e7d56a438714469b8cc9",
+      "reviewContextSha256": "1f588a82ea75872bc671816af100bcb87ef65dd76a617245653ebe4c9fb3cc79",
+      "evidenceDigest": "sha256:60360b6af319cb1c47d1ca15a405ce629ce0fe671142efe41fbd8522abb68dd0",
+      "evidenceReference": "review:P0-STAGE0-FINAL-FE33A449-PROJECT-REATTESTATION",
+      "rationale": "Exact fe33 lineage, 67-path manifest, frozen scope, and zero-authority lifecycle remain intact; approve only a normal inert Stage0 merge.",
+      "attestationDigest": "467884c62e8d1a5ce9c8c055e5a5766fe7d0034f73f70b9a59709bb6b65a84c6"
+    }
+  },
+  "unresolvedVetoes": [],
+  "disposition": "accepted-normal-merge-only",
+  "taskApprovalCreated": false,
+  "runtimeAuthority": false,
+  "executionAllowed": false,
+  "privateActionAllowed": false,
+  "statusTransitionAllowed": false,
+  "r1R10Effect": "none",
+  "permittedClaim": "Accepted only for normal publication of the exact public/local control candidate; this review is non-authorizing and creates no task approval, execution permission, private access, R0 action, deployment, acceptance, status transition, or R1-R10 effect."
+}
