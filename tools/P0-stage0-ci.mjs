@@ -22,6 +22,8 @@ export const STAGE0_CI_SCHEMA_VERSION = "1.0.0";
 export const STAGE0_WORKFLOW_GUARD_PATH = ".github/workflows/P0-stage0-workflow-guard.yml";
 export const STAGE0_PROTECTED_WORKFLOW_PATH = ".github/workflows/prototype-syntax.yml";
 export const STAGE0_CONTROL_INTEGRITY_PATH = "docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json";
+export const STAGE0_STAGE_APPROVAL_REGISTRY_PATH =
+  "docs/council/execution/P0-R0-STAGE-APPROVAL-REGISTRY.json";
 export const STAGE0_PROTECTED_WORKFLOW_SHA256 = "b30ab0281ab56742136c6b2cd53e7d2a85657ffb8d214dce2e5279c0dbeec062";
 const STAGE0_WORKFLOW_GUARD_SHA256 = "355b856d69e5f78aaf6f58b23a1d848690b2ee8b2ee031e321ce047865831445";
 const MODULE_REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -99,6 +101,18 @@ export const CONTROL_INTEGRITY_PATHS = Object.freeze([
   "prototypes/calendar-ui/serve.mjs",
 ].filter((filePath, index, paths) => paths.indexOf(filePath) === index).sort(compareCodeUnits));
 
+// The empty Stage 0 registry predates the base-owned ratchet inventory. Its
+// first accepted record is therefore the sole allowed 54 -> 55 inventory
+// activation. Once activated, the immutable manifest keeps the registry pinned
+// and every later append uses an ordinary exact-hash modify transition.
+export const CONTROL_INTEGRITY_ACTIVATABLE_PATHS = Object.freeze([
+  STAGE0_STAGE_APPROVAL_REGISTRY_PATH,
+]);
+const ACTIVATED_CONTROL_INTEGRITY_PATHS = Object.freeze([
+  ...CONTROL_INTEGRITY_PATHS,
+  ...CONTROL_INTEGRITY_ACTIVATABLE_PATHS,
+].sort(compareCodeUnits));
+
 const gateAProjectionControlOverlap = P0_GATE_A_PROPOSAL_PROJECTION_PATHS
   .filter((filePath) => CONTROL_INTEGRITY_PATHS.includes(filePath));
 if (gateAProjectionControlOverlap.length !== 0) {
@@ -118,7 +132,7 @@ const TEST_COMMANDS = Object.freeze([
   }],
   ["wiki_fixtures", "node", ["tools/P0-test-wiki-trust.mjs"], { ok: true, cases: 30, helpWrites: 0 }],
   ["staged_action_fixtures", "node", ["tools/P0-test-staged-actions.mjs"], {
-    ok: true, code: "SELF_TEST_OK", cases: 192, productionActions: 0,
+    ok: true, code: "SELF_TEST_OK", cases: 223, productionActions: 0,
   }],
   ["stage_runner_fixtures", "node", ["tools/P0-test-stage-runner.mjs"], {
     ok: true, code: "SELF_TEST_OK", cases: 90, productionModules: 0,
@@ -133,7 +147,7 @@ const TEST_COMMANDS = Object.freeze([
     ok: true, cases: 56, mutableProjectFieldCount: 16,
   }],
   ["stage0_ci_contract_fixtures", "node", ["tools/P0-stage0-ci.mjs", "--self-test"], {
-    ok: true, code: "P0_STAGE0_CI_SELF_TEST_OK", cases: 209,
+    ok: true, code: "P0_STAGE0_CI_SELF_TEST_OK", cases: 214,
   }],
 ]);
 
@@ -241,6 +255,7 @@ export function validateAuthoritySourcePathSet(actualPaths) {
 export function validateControlIntegrityDefinition({
   scannerPaths = SCANNER_BOUNDED_AUTHORITY_SOURCE_PATHS,
   integrityPaths = CONTROL_INTEGRITY_PATHS,
+  activatablePaths = CONTROL_INTEGRITY_ACTIVATABLE_PATHS,
 } = {}) {
   const findings = [];
   if (!validateAuthoritySourcePathSet(scannerPaths).ok) {
@@ -267,6 +282,12 @@ export function validateControlIntegrityDefinition({
   if (CONTROL_AUTHORITY_SOURCE_PATHS.length !== 17 || expectedIntegrity?.length !== 54) {
     findings.push("CI_CONTROL_INTEGRITY_EXPECTED_CARDINALITY_INVALID");
   }
+  const actualActivatable = exactPathSet(activatablePaths);
+  if (actualActivatable === null
+    || canonicalJson(actualActivatable) !== canonicalJson([STAGE0_STAGE_APPROVAL_REGISTRY_PATH])
+    || actualActivatable.some((filePath) => expectedIntegrity.includes(filePath))) {
+    findings.push("CI_CONTROL_INTEGRITY_ACTIVATABLE_PATH_SET_INVALID");
+  }
   return Object.freeze({ ok: findings.length === 0, findings: [...new Set(findings)] });
 }
 
@@ -281,6 +302,7 @@ function exactObjectKeys(value, keys) {
 
 function isAllowedControlIntegrityPath(filePath) {
   return CONTROL_INTEGRITY_PATHS.includes(filePath)
+    || CONTROL_INTEGRITY_ACTIVATABLE_PATHS.includes(filePath)
     || /^tools\/P0-[A-Za-z0-9][A-Za-z0-9-]*\.mjs$/.test(filePath)
     || /^docs\/council\/execution\/P0-[A-Z0-9][A-Z0-9-]*\.(?:json|md)$/.test(filePath)
     || /^\.github\/workflows\/P0-[a-z0-9][a-z0-9-]*\.yml$/.test(filePath);
@@ -383,13 +405,21 @@ export function validateControlIntegrityManifest(source) {
   }
 }
 
-export function validateControlIntegrityCurrent(source, observed) {
+export function validateControlIntegrityCurrent(source, observed, {
+  stageRegistryNonEmpty = false,
+} = {}) {
   try {
+    if (typeof stageRegistryNonEmpty !== "boolean") {
+      throw new Error("CI_CONTROL_INTEGRITY_STAGE_REGISTRY_STATE_INVALID");
+    }
     const definition = validateControlIntegrityDefinition();
     if (!definition.ok) throw new Error(definition.findings[0]);
     const manifest = parseControlIntegrityManifest(source, "CURRENT");
     const paths = manifest.current.map((entry) => entry.path);
-    if (canonicalJson(paths) !== canonicalJson(CONTROL_INTEGRITY_PATHS)) {
+    const expectedPaths = stageRegistryNonEmpty
+      ? ACTIVATED_CONTROL_INTEGRITY_PATHS
+      : CONTROL_INTEGRITY_PATHS;
+    if (canonicalJson(paths) !== canonicalJson(expectedPaths)) {
       throw new Error("CI_CONTROL_INTEGRITY_CURRENT_PATH_SET_INVALID");
     }
     assertAuthoritySourceSubset(manifest.current, "CURRENT");
@@ -815,7 +845,9 @@ function stage0SelfTest() {
   expect(validateAuthoritySourcePathSet(SCANNER_BOUNDED_AUTHORITY_SOURCE_PATHS).ok,
     "semantic scanner authority-source path set equality");
   expect(validateControlIntegrityDefinition().ok
-    && CONTROL_INTEGRITY_PATHS.length === 54,
+    && CONTROL_INTEGRITY_PATHS.length === 54
+    && CONTROL_INTEGRITY_ACTIVATABLE_PATHS.length === 1
+    && CONTROL_INTEGRITY_ACTIVATABLE_PATHS[0] === STAGE0_STAGE_APPROVAL_REGISTRY_PATH,
   "closed control-integrity definition");
   const caseNearPath = (filePath) => `${filePath[0] === filePath[0].toUpperCase()
     ? filePath[0].toLowerCase() : filePath[0].toUpperCase()}${filePath.slice(1)}`;
@@ -843,6 +875,9 @@ function stage0SelfTest() {
   expect(!validateControlIntegrityDefinition({
     integrityPaths: [...CONTROL_INTEGRITY_PATHS, "docs/product/EXTRA-AUTHORITY.md"],
   }).ok, "control-integrity definition extra rejected");
+  expect(!validateControlIntegrityDefinition({
+    activatablePaths: [...CONTROL_INTEGRITY_ACTIVATABLE_PATHS, "docs/product/EXTRA-AUTHORITY.md"],
+  }).ok, "activatable control-integrity path extra rejected");
 
   const fixtureCurrent = CONTROL_INTEGRITY_PATHS.map((filePath) => ({
     path: filePath,
@@ -885,6 +920,32 @@ function stage0SelfTest() {
   expect(validateControlIntegrityManifest(clearSource).ok, "valid clear control-integrity manifest");
   expect(validateControlIntegrityCurrent(clearSource, baseObserved).ok,
     "exact 54-path current control-integrity inventory");
+  const activatedRegistryEntry = {
+    path: STAGE0_STAGE_APPROVAL_REGISTRY_PATH,
+    mode: "100644",
+    type: "blob",
+    sha256: sha256("nonempty stage approval registry"),
+  };
+  const activatedCurrent = [...fixtureCurrent, activatedRegistryEntry]
+    .sort((left, right) => compareCodeUnits(left.path, right.path));
+  const activatedSource = renderControlIntegrityManifest({
+    ...clearManifest,
+    current: activatedCurrent,
+  });
+  expect(validateControlIntegrityCurrent(
+    activatedSource,
+    fixtureObserved(activatedCurrent),
+    { stageRegistryNonEmpty: true },
+  ).ok, "exact singleton-activated 55-path current inventory");
+  expect(!validateControlIntegrityCurrent(
+    activatedSource,
+    fixtureObserved(activatedCurrent),
+  ).ok, "empty registry state cannot claim activated inventory");
+  expect(!validateControlIntegrityCurrent(
+    clearSource,
+    baseObserved,
+    { stageRegistryNonEmpty: true },
+  ).ok, "nonempty registry state requires activated inventory");
   const missingAuthorityCurrent = fixtureCurrent.filter((entry) => entry.path !== "README.md");
   const missingAuthoritySource = renderControlIntegrityManifest({
     ...clearManifest,
@@ -1171,6 +1232,18 @@ function stage0SelfTest() {
     baseObserved,
     headObserved: fixtureObserved(addedCurrent),
   }).transition === "consumed", "closed-namespace addition consumed");
+  const armedStageRegistrySource = renderControlIntegrityManifest({
+    ...clearManifest,
+    next: { changes: [{ operation: "add", ...activatedRegistryEntry }] },
+  });
+  expect(validateControlIntegrityTransition({
+    baseSource: armedStageRegistrySource,
+    headSource: activatedSource,
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, STAGE0_STAGE_APPROVAL_REGISTRY_PATH]
+      .sort(compareCodeUnits),
+    baseObserved,
+    headObserved: fixtureObserved(activatedCurrent),
+  }).transition === "consumed", "first nonempty stage registry activates singleton inventory path");
   const deleteCurrent = fixtureCurrent;
   const deletedCurrent = fixtureCurrent.filter((entry) => entry.path !== fixtureEntry.path);
   const armedDeleteSource = renderControlIntegrityManifest({
@@ -1407,7 +1480,21 @@ function actualToolPaths(repoRoot) {
     .sort(compareCodeUnits);
 }
 
-function localControlIntegrityObserved(repoRoot, filePaths = CONTROL_INTEGRITY_PATHS) {
+function stageRegistryHasRecords(repoRoot) {
+  let registry;
+  try {
+    registry = JSON.parse(readFileSync(path.join(repoRoot, STAGE0_STAGE_APPROVAL_REGISTRY_PATH), "utf8"));
+  } catch {
+    throw new Error("P0_STAGE0_CI_STAGE_REGISTRY_STATE_INVALID");
+  }
+  if (registry === null || typeof registry !== "object" || Array.isArray(registry)
+    || !Array.isArray(registry.preparationReviews) || !Array.isArray(registry.stageApprovals)) {
+    throw new Error("P0_STAGE0_CI_STAGE_REGISTRY_STATE_INVALID");
+  }
+  return registry.preparationReviews.length !== 0 || registry.stageApprovals.length !== 0;
+}
+
+function localControlIntegrityObserved(repoRoot, filePaths = ACTIVATED_CONTROL_INTEGRITY_PATHS) {
   return Object.fromEntries(filePaths.map((filePath) => {
     const absolutePath = path.join(repoRoot, filePath);
     const metadata = lstatSync(absolutePath);
@@ -1449,10 +1536,12 @@ function main() {
   const workflowGuardSource = readFileSync(path.join(repoRoot, STAGE0_WORKFLOW_GUARD_PATH), "utf8");
   const workflowGuard = validateWorkflowGuardContract(workflowGuardSource);
   if (!workflowGuard.ok) throw new Error(`P0_STAGE0_CI_WORKFLOW_GUARD_INVALID: ${workflowGuard.findings.join(",")}`);
+  const stageRegistryNonEmpty = stageRegistryHasRecords(repoRoot);
   const controlIntegritySource = readFileSync(path.join(repoRoot, STAGE0_CONTROL_INTEGRITY_PATH), "utf8");
   const controlIntegrity = validateControlIntegrityCurrent(
     controlIntegritySource,
     localControlIntegrityObserved(repoRoot),
+    { stageRegistryNonEmpty },
   );
   if (!controlIntegrity.ok) {
     throw new Error(`P0_STAGE0_CI_CONTROL_INTEGRITY_INVALID: ${controlIntegrity.findings.join(",")}`);
@@ -1465,7 +1554,8 @@ function main() {
     schemaVersion: STAGE0_CI_SCHEMA_VERSION,
     toolPaths: CONTROL_TOOL_PATHS,
     authoritySourcePaths: CONTROL_AUTHORITY_SOURCE_PATHS,
-    controlIntegrityPaths: CONTROL_INTEGRITY_PATHS,
+    controlIntegrityPaths: controlIntegrity.manifest.current.map((entry) => entry.path),
+    activatableControlIntegrityPaths: CONTROL_INTEGRITY_ACTIVATABLE_PATHS,
     resultIds: commandIds(),
     passCount: 2,
     workflowContracts: [
