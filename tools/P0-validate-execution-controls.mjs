@@ -5,11 +5,19 @@ import path from "node:path";
 import {
   ARTIFACT_KINDS,
   COUNCIL_SEATS,
+  DELIVERY_TRANSITION_GATE_B_CONTRACT,
   DESIGN_ACCESSIBILITY_DIMENSIONS,
   DESIGN_STATE_DIMENSIONS,
   LOCAL_SYNTHETIC_CONTENT_POLICY,
+  P0_R0_SCOPE_TASK_IDS,
+  P0_R0_SUBSTANTIVE_TASK_IDS,
   READINESS_SCHEMA_VERSION,
   SCOPE_ACTION_COMPATIBILITY,
+  STAGE_APPROVAL_REGISTRY_PATH,
+  STAGE_EXECUTION_SCHEMA_VERSION,
+  STAGE_LIFECYCLE_STATES,
+  TASK_EXECUTION_CONTRACT,
+  TERMINAL_STAGE_STATES,
   TASK_FILE_DESCENDANT_DELTA_PATHS,
   TASK_FILE_DIFF_EXCLUSIONS,
   TASK_FILE_GIT_MODES,
@@ -22,6 +30,7 @@ import {
   parseArtifactControlMarkers,
   validateTaskFilesManifest,
 } from "./P0-readiness-gates.mjs";
+import { loadBoundedAuthoritySources } from "./P0-bounded-authority.mjs";
 import {
   OWNER_ACTION_REQUIREMENT_CATALOG,
   acceptanceScenarioIdsFor,
@@ -56,6 +65,24 @@ import {
   validateControlReviewHistorySequence,
   validateControlReviewRegistryContinuity,
 } from "./P0-control-review-trust.mjs";
+import { verifySuccessorControlReviews } from "./P0-successor-control-review.mjs";
+import {
+  RUNNING_LOG_GENESIS_PATH,
+  verifyRunningLogTrust,
+} from "./P0-running-log-trust.mjs";
+import {
+  PRODUCTION_STAGED_ACTIONS,
+  STAGE_APPROVAL_REGISTRY_BOOTSTRAP_PARENT_REVISION,
+  validateStageApprovalRegistry,
+  validateStageRuntimeLifecycle,
+  verifyPreparationReviewRegistryHistory,
+  verifyStageApprovalRegistryContinuity,
+  verifyStageApprovalRegistryHistory,
+} from "./P0-staged-actions.mjs";
+import {
+  PRODUCTION_MODULE_METADATA,
+  PRODUCTION_OUTCOME_VERIFICATION_MODULE_IDS,
+} from "./P0-stage-runner.mjs";
 
 const repoRoot = path.resolve(import.meta.dirname, "..");
 const readText = (filePath) => fs.readFileSync(path.join(repoRoot, filePath), "utf8");
@@ -64,6 +91,21 @@ const failures = [];
 const check = (condition, message) => {
   if (!condition) failures.push(message);
 };
+let boundedAuthority;
+try {
+  boundedAuthority = loadBoundedAuthoritySources(repoRoot);
+} catch {
+  boundedAuthority = { ok: false, findings: ["BOUNDED_AUTHORITY_HELPER_FAILED"] };
+}
+const boundedAuthorityFindings = Array.isArray(boundedAuthority.findings)
+  ? boundedAuthority.findings
+  : ["BOUNDED_AUTHORITY_FINDINGS_MISSING"];
+for (const finding of boundedAuthorityFindings) {
+  check(false, `GOV-AUTH-SCOPE: ${finding}`);
+}
+if (boundedAuthority.ok !== true && boundedAuthorityFindings.length === 0) {
+  check(false, "GOV-AUTH-SCOPE: BOUNDED_AUTHORITY_VALIDATION_FAILED");
+}
 check(assertDuplicateKeyRejection(), "GOV-JSON-001: duplicate-key JSON rejection self-test failed");
 const sameSet = (left, right) => left.size === right.size && [...left].every((value) => right.has(value));
 const hasExactKeys = (value, expected) => value !== null
@@ -94,6 +136,17 @@ const revisionIsAncestorOfHead = (revision) => revisionExists(revision)
 const fetchedMainRevision = (() => {
   try {
     const revision = execFileSync("git", ["rev-parse", "--verify", "refs/remotes/origin/main^{commit}"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+    }).trim();
+    return fullCommitPattern.test(revision) ? revision : null;
+  } catch {
+    return null;
+  }
+})();
+const headRevision = (() => {
+  try {
+    const revision = execFileSync("git", ["rev-parse", "--verify", "HEAD^{commit}"], {
       cwd: repoRoot,
       encoding: "utf8",
     }).trim();
@@ -166,6 +219,7 @@ const readinessStatePath = "docs/project/P0-PHASE1-TASK-READINESS-STATE.json";
 const reviewerRegistryPath = "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json";
 const approvalRegistryPath = "docs/council/execution/P0-EXECUTION-APPROVAL-REGISTRY.json";
 const ownerActionStatePath = "docs/council/execution/P0-OWNER-ACTION-STATE.json";
+const stageApprovalRegistryPath = STAGE_APPROVAL_REGISTRY_PATH;
 const controlReviewCanonicalWorkbookPath = "outputs/phase1/Life-in-Days-Phase1-Release-Plan.xlsx";
 const manifest = readJson(manifestPath);
 const taskState = readJson(taskStatePath);
@@ -175,6 +229,7 @@ const readinessState = readJson(readinessStatePath);
 const reviewerRegistry = readJson(reviewerRegistryPath);
 const approvalRegistry = readJson(approvalRegistryPath);
 const ownerActionState = readJson(ownerActionStatePath);
+const stageApprovalRegistry = readJson(stageApprovalRegistryPath);
 const dossierById = new Map(artifactRegister.tasks.map((record) => [record.taskId, record]));
 const productRequirements = readText("docs/product/PRODUCT-REQUIREMENTS.md");
 const traceability = readText("docs/project/REQUIREMENTS-TRACEABILITY.md");
@@ -250,6 +305,154 @@ const artifactSuffix = Object.freeze({
   council: "COUNCIL-READINESS",
 });
 const jsonEqual = (left, right) => JSON.stringify(left) === JSON.stringify(right);
+const expectedP0R0ScopeTaskIds = [
+  "AUD-001", "PC-001", "PRD-R0-001", "SPK-R0-001", "UX-R0-001", "ARCH-R0-001", "ENG-R0-001", "REL-R0-001",
+];
+const expectedP0R0SubstantiveTaskIds = ["SPK-R0-001", "UX-R0-001", "ARCH-R0-001", "ENG-R0-001", "REL-R0-001"];
+const expectedP0R0HistoricalTaskIds = ["AUD-001", "PC-001", "PRD-R0-001"];
+check(jsonEqual(P0_R0_SCOPE_TASK_IDS, expectedP0R0ScopeTaskIds), "GOV-STAGE-001: bounded P0/R0 scope task IDs drifted");
+check(jsonEqual(P0_R0_SUBSTANTIVE_TASK_IDS, expectedP0R0SubstantiveTaskIds), "GOV-STAGE-002: substantive R0 stage task IDs drifted");
+check(jsonEqual(DELIVERY_TRANSITION_GATE_B_CONTRACT.taskIds, expectedP0R0SubstantiveTaskIds),
+  "GOV-STAGE-017: delivery-transition task allowlist is not the exact five substantive R0 tasks");
+check(DELIVERY_TRANSITION_GATE_B_CONTRACT.stageIdSuffix === "-DELIVERY-TRANSITION"
+  && DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass === "delivery-control"
+  && DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass === "delivery-status-transition"
+  && DELIVERY_TRANSITION_GATE_B_CONTRACT.moduleId === "p0.delivery-transition"
+  && DELIVERY_TRANSITION_GATE_B_CONTRACT.modulePath === "tools/P0-delivery-transition.mjs",
+"GOV-STAGE-018: delivery-transition Gate-B contract drifted");
+check(jsonEqual(SCOPE_ACTION_COMPATIBILITY[DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass], [
+  DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass,
+]), "GOV-STAGE-019: delivery-control scope is not closed to one status-transition action");
+check(Object.values(TASK_EXECUTION_CONTRACT).every((contract) => (
+  contract.scopeActions[DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass] === undefined
+)), "GOV-STAGE-020: ordinary task execution contract borrowed delivery-transition authority");
+check(!OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-001"].requiredForScopeClasses
+  .includes(DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass)
+  && !OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-002"].requiredForScopeClasses
+    .includes(DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass),
+"GOV-STAGE-021: delivery transition incorrectly requires P0-OA-001 or P0-OA-002");
+check(jsonEqual(OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-002"].requiredForScopeClasses, ["private-execution"])
+  && jsonEqual(OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-002"].requiredForActionClasses, [
+    "project-workflow-mutation", "project-non-delivery-item",
+  ]), "GOV-STAGE-022: P0-OA-002 no longer remains exclusive to private workflow/non-delivery mutations");
+check(jsonEqual(STAGE_LIFECYCLE_STATES, [
+  "declared", "ready", "running", "verification-pending", "recovery-required", "rolling-back",
+  "verified-complete", "verified-rolled-back", "cancelled-before-mutation", "blocked-no-mutation", "expired-before-mutation",
+]), "GOV-STAGE-003: stage lifecycle vocabulary drifted");
+check(jsonEqual(TERMINAL_STAGE_STATES, [
+  "verified-complete", "verified-rolled-back", "cancelled-before-mutation", "blocked-no-mutation", "expired-before-mutation",
+]), "GOV-STAGE-004: terminal stage vocabulary drifted");
+check(hasExactKeys(stageApprovalRegistry, [
+  "schemaVersion", "registryId", "scopeTaskIds", "historicalNonAuthorizingTaskIds", "preparationReviews", "stageApprovals",
+]), "GOV-STAGE-005: stage-approval registry top-level schema contains missing or unknown fields");
+check(stageApprovalRegistry.schemaVersion === STAGE_EXECUTION_SCHEMA_VERSION, "GOV-STAGE-006: stage-approval registry schema version drifted");
+check(stageApprovalRegistry.registryId === "P0-R0-STAGE-APPROVAL-REGISTRY", "GOV-STAGE-007: stage-approval registry ID drifted");
+check(jsonEqual(stageApprovalRegistry.scopeTaskIds, expectedP0R0SubstantiveTaskIds), "GOV-STAGE-008: stage-approval registry scope is not the exact five substantive tasks");
+check(jsonEqual(stageApprovalRegistry.historicalNonAuthorizingTaskIds, expectedP0R0HistoricalTaskIds), "GOV-STAGE-009: stage-approval historical denylist drifted");
+const stageApprovals = Array.isArray(stageApprovalRegistry.stageApprovals) ? stageApprovalRegistry.stageApprovals : [];
+const preparationReviews = Array.isArray(stageApprovalRegistry.preparationReviews) ? stageApprovalRegistry.preparationReviews : [];
+check(Array.isArray(stageApprovalRegistry.preparationReviews), "GOV-STAGE-010: preparationReviews is not an array");
+check(Array.isArray(stageApprovalRegistry.stageApprovals), "GOV-STAGE-010: stageApprovals is not an array");
+check(new Set(preparationReviews.map((record) => record?.preparationReviewId)).size === preparationReviews.length,
+  "GOV-STAGE-011: preparation review IDs are duplicated");
+check(new Set(preparationReviews.map((record) => record?.stageId)).size === preparationReviews.length,
+  "GOV-STAGE-011: preparation review stage IDs are duplicated");
+check(new Set(stageApprovals.map((record) => record?.stageId)).size === stageApprovals.length, "GOV-STAGE-011: stage approval IDs are duplicated");
+check(new Set(stageApprovals.map((record) => record?.idempotencyKey)).size === stageApprovals.length, "GOV-STAGE-012: stage idempotency keys are duplicated");
+const stageRegistryValidation = validateStageApprovalRegistry(stageApprovalRegistry);
+check(stageRegistryValidation.ok, `GOV-STAGE-013: stage approval registry is invalid (${stageRegistryValidation.code})`);
+const stageLifecycleValidation = validateStageRuntimeLifecycle({
+  registry: stageApprovalRegistry,
+  definitions: PRODUCTION_STAGED_ACTIONS,
+  moduleBindings: PRODUCTION_MODULE_METADATA,
+  outcomeVerificationModuleIds: PRODUCTION_OUTCOME_VERIFICATION_MODULE_IDS,
+});
+check(stageLifecycleValidation.ok,
+  `GOV-STAGE-016: stage registry/runtime lifecycle is invalid (${stageLifecycleValidation.code})`);
+const stageHistoryRun = async (command, args, options = {}) => {
+  try {
+    return {
+      ok: true,
+      status: 0,
+      stdout: execFileSync(command, args, {
+        cwd: options.cwd ?? repoRoot,
+        encoding: options.encoding === null ? null : "utf8",
+        env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
+        maxBuffer: 64 * 1024 * 1024,
+      }),
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      status: Number.isSafeInteger(error?.status) ? error.status : 1,
+      stdout: options.encoding === null ? Buffer.alloc(0) : "",
+    };
+  }
+};
+let stageRegistryTrackedAtHead = false;
+let stageRegistryHeadBytes = null;
+let stageRegistryHeadInspectionOk = false;
+if (fullCommitPattern.test(headRevision ?? "")) {
+  try {
+    const tree = execFileSync("git", ["ls-tree", headRevision, "--", stageApprovalRegistryPath], {
+      cwd: repoRoot,
+      encoding: "utf8",
+    }).trim();
+    stageRegistryTrackedAtHead = tree !== "";
+    stageRegistryHeadInspectionOk = true;
+    if (stageRegistryTrackedAtHead) {
+      stageRegistryHeadBytes = execFileSync("git", ["show", `${headRevision}:${stageApprovalRegistryPath}`], {
+        cwd: repoRoot,
+        encoding: null,
+        maxBuffer: 64 * 1024 * 1024,
+      });
+    }
+  } catch {
+    stageRegistryTrackedAtHead = false;
+    stageRegistryHeadBytes = null;
+    stageRegistryHeadInspectionOk = false;
+  }
+}
+check(stageRegistryHeadInspectionOk, "GOV-STAGE-014: committed HEAD stage-registry inspection failed");
+if (stageRegistryHeadInspectionOk && stageRegistryTrackedAtHead && fullCommitPattern.test(headRevision ?? "")) {
+  check(stageRegistryHeadBytes?.equals(fs.readFileSync(path.join(repoRoot, stageApprovalRegistryPath))) === true,
+    "GOV-STAGE-014: stage registry worktree bytes differ from committed HEAD");
+  const continuity = await verifyStageApprovalRegistryContinuity({
+    repoRoot,
+    run: stageHistoryRun,
+    publishedRef: headRevision,
+  });
+  check(continuity.ok,
+    `GOV-STAGE-015: global stage registry continuity is invalid (${continuity.code})`);
+  for (const record of preparationReviews) {
+    const history = await verifyPreparationReviewRegistryHistory({
+      repoRoot,
+      run: stageHistoryRun,
+      publishedRef: headRevision,
+      preparationReviewId: record.preparationReviewId,
+      continuity,
+    });
+    check(history.ok, `GOV-STAGE-017: ${record.preparationReviewId ?? "unknown preparation"} history is invalid (${history.code})`);
+  }
+  for (const record of stageApprovals) {
+    const history = await verifyStageApprovalRegistryHistory({
+      repoRoot,
+      run: stageHistoryRun,
+      publishedRef: headRevision,
+      stageId: record.stageId,
+      continuity,
+    });
+    check(history.ok, `GOV-STAGE-018: ${record.stageId ?? "unknown stage"} history is invalid (${history.code})`);
+  }
+} else if (stageRegistryHeadInspectionOk) {
+  const bootstrapStats = fs.lstatSync(path.join(repoRoot, stageApprovalRegistryPath));
+  check(headRevision === STAGE_APPROVAL_REGISTRY_BOOTSTRAP_PARENT_REVISION
+    && bootstrapStats.isFile()
+    && (bootstrapStats.mode & 0o777) === 0o644
+    && preparationReviews.length === 0
+    && stageApprovals.length === 0,
+  "GOV-STAGE-015: uncommitted bootstrap registry must be an empty regular file at the exact Stage 0 parent");
+}
 const expectedArtifactPath = (taskId, kind) => `docs/work-items/${taskId}/P0-${taskId}-${artifactSuffix[kind]}.md`;
 const actualArtifactInputs = (task) => Object.fromEntries(artifactKinds.map((kind) => {
   const filePath = expectedArtifactPath(task.id, kind);
@@ -287,7 +490,7 @@ check(jsonEqual(artifactRegister.sourceEvidenceModel, {
   councilSeatVerdicts: ["hold", "approved", "not-applicable"],
   designStateDimensions,
   designAccessibilityDimensions,
-  requestedScopeClasses: ["local-synthetic", "private-execution", "release"],
+  requestedScopeClasses: ["local-synthetic", "delivery-control", "private-execution", "release"],
   scopeActionCompatibility: SCOPE_ACTION_COMPATIBILITY,
   taskFilePurposes: TASK_FILE_PURPOSES,
   taskFileGitModes: TASK_FILE_GIT_MODES,
@@ -339,6 +542,37 @@ for (const record of reviewerRecords) {
   check(record?.active === true || record?.active === false, `GOV-ID-006: ${record?.reviewerId} lacks an explicit active Boolean`);
   check(!Object.hasOwn(record ?? {}, "roles"), `GOV-ID-007: ${record?.reviewerId} must bind exactly one role, not a roles array`);
   check(hasExactKeys(record, ["reviewerId", "role", "identityClass", "active"]), `GOV-ID-009: ${record?.reviewerId} reviewer record contains missing or unknown fields`);
+}
+
+const successorGenesisPath = "docs/council/execution/control-reviews/P0-SUCCESSOR-CONTROL-REVIEW-GENESIS.json";
+const successorGenesisTracked = gitSuccess(["ls-files", "--error-unmatch", successorGenesisPath]);
+check(fs.existsSync(path.join(repoRoot, successorGenesisPath)), "GOV-SUCCESSOR-001: successor control-review genesis is missing");
+if (successorGenesisTracked) {
+  const successorResult = verifySuccessorControlReviews({ repoRoot, currentRevision: "HEAD" });
+  check(successorResult.ok === true, `GOV-SUCCESSOR-002: successor control-review trust failed: ${successorResult.findings.join(", ")}`);
+  check(successorResult.runtimeAuthority === false
+    && successorResult.taskApprovalEffect === "none"
+    && successorResult.permissionEffect === "none", "GOV-SUCCESSOR-003: successor review has an authority or permission effect");
+}
+
+const runningLogGenesisTracked = gitSuccess(["ls-files", "--error-unmatch", RUNNING_LOG_GENESIS_PATH]);
+check(fs.existsSync(path.join(repoRoot, RUNNING_LOG_GENESIS_PATH)), "GOV-LOG-001: running-log trust genesis is missing");
+if (runningLogGenesisTracked) {
+  let runningLogTrust;
+  try {
+    runningLogTrust = verifyRunningLogTrust({
+      repoRoot,
+      genesis: readJson(RUNNING_LOG_GENESIS_PATH),
+      currentRevision: "HEAD",
+      verifyWorktree: true,
+      reviewerRecords,
+    });
+  } catch {
+    runningLogTrust = { ok: false, findings: ["RUNNING_LOG_TRUST_UNAVAILABLE"] };
+  }
+  check(runningLogTrust.ok === true, `GOV-LOG-002: append-only running-log trust failed: ${runningLogTrust.findings.join(", ")}`);
+  check(runningLogTrust.evidenceEffect?.executionAllowed === false
+    && runningLogTrust.evidenceEffect?.taskApprovalEffect === "none", "GOV-LOG-003: running-log evidence changes task approval or permission");
 }
 
 const expectedActionIds = new Set(Object.keys(OWNER_ACTION_REQUIREMENT_CATALOG));
@@ -1180,7 +1414,18 @@ for (const [name, filePath] of Object.entries(executionGovernance)) {
   check(fs.existsSync(path.join(repoRoot, filePath)), `GOV-CTRL-001: ${name} path does not exist: ${filePath}`);
   check(path.basename(filePath).startsWith("P0-"), `GOV-NAME-001: new execution artifact lacks P0- prefix: ${filePath}`);
 }
-for (const requiredPath of [readinessStatePath, artifactRegisterPath, reviewerRegistryPath, approvalRegistryPath, ownerActionStatePath]) {
+for (const requiredPath of [
+  readinessStatePath,
+  artifactRegisterPath,
+  reviewerRegistryPath,
+  approvalRegistryPath,
+  ownerActionStatePath,
+  stageApprovalRegistryPath,
+  successorGenesisPath,
+  RUNNING_LOG_GENESIS_PATH,
+  "docs/project/P0-R1-R10-FREEZE-SNAPSHOT.json",
+  "docs/council/execution/releases/P0-P0-R0-STAGE0-STATE-CONTRACT.md",
+]) {
   check(Object.values(executionGovernance).includes(requiredPath), `GOV-CTRL-002: manifest execution governance omits ${requiredPath}`);
 }
 const executionFiles = walkFiles("docs/council/execution");
@@ -1233,6 +1478,9 @@ const publicSafePaths = [
   reviewerRegistryPath,
   approvalRegistryPath,
   ownerActionStatePath,
+  stageApprovalRegistryPath,
+  successorGenesisPath,
+  RUNNING_LOG_GENESIS_PATH,
   "tools/generate_phase1_roadmap_manifest.mjs",
   "tools/sync_phase1_github.mjs",
   "tools/build-wiki.mjs",
@@ -1472,6 +1720,9 @@ const publicEvidencePaths = new Set([
   reviewerRegistryPath,
   approvalRegistryPath,
   ownerActionStatePath,
+  stageApprovalRegistryPath,
+  successorGenesisPath,
+  RUNNING_LOG_GENESIS_PATH,
   ...repositoryTextPaths,
 ]);
 const sentinelSuffix = ["SENT", "INEL"].join("");

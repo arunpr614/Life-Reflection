@@ -1,0 +1,461 @@
+name: P0 Stage 0 base-owned workflow guard
+
+# Bootstrap and update policy:
+# - pull_request_target loads this workflow only from the protected base branch;
+#   it never checks out or executes pull-request-controlled code.
+# - The PR that first introduces this guard cannot be protected by it and needs
+#   exact-head independent review before merge. Branch protection must then
+#   require this workflow and the protected static-controls workflow.
+# - This guard is immutable through ordinary PRs. Other protected controls use a
+#   base-owned two-PR ratchet: one manifest-only PR arms an exact change set; a
+#   later PR consumes every authorized change and clears the allowance. A
+#   manifest-only cancellation may clear an unused allowance.
+
+on:
+  pull_request_target:
+    branches:
+      - main
+    types:
+      - edited
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  verify-base-owned-workflows:
+    name: Verify immutable Stage 0 workflow policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify exact base-owned control ratchet
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const crypto = require("crypto");
+
+            const CANONICAL_BASE_REPOSITORY = "arunpr614/Life-Reflection";
+            const CANONICAL_BASE_REF = "main";
+            const GUARD_PATH = ".github/workflows/P0-stage0-workflow-guard.yml";
+            const MANIFEST_PATH = "docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json";
+            const MANIFEST_SCHEMA_VERSION = "1.0.0";
+            const MAX_CHANGES = 8;
+            const EXPECTED_WORKFLOW_NAME = "P0 Stage 0 base-owned workflow guard";
+            const EXPECTED_GUARD_CHECK = "Verify immutable Stage 0 workflow policy";
+            const EXPECTED_STATIC_CHECK = "Exact-head P0/R0 control suite";
+            const FULL_REVISION = /^[0-9a-f]{40}$/;
+            const SHA256 = /^[0-9a-f]{64}$/;
+            const ALLOWED_MODES = new Set(["100644"]);
+            const CONTROL_INTEGRITY_NAMESPACE_PATHS = new Set([
+              ".github/workflows/prototype-syntax.yml",
+              "prototypes/calendar-ui/app-v10.js",
+              "prototypes/calendar-ui/package.json",
+              "prototypes/calendar-ui/serve.mjs",
+              "tools/P0-append-only-trust.mjs",
+              "tools/P0-bounded-authority.mjs",
+              "tools/P0-build-task-readiness-input.mjs",
+              "tools/P0-content-safety.mjs",
+              "tools/P0-control-review-trust.mjs",
+              "tools/P0-delivery-transition.mjs",
+              "tools/P0-exact-main.mjs",
+              "tools/P0-generate-task-artifacts.mjs",
+              "tools/P0-github-projection-model.mjs",
+              "tools/P0-json-trust.mjs",
+              "tools/P0-readiness-gates.mjs",
+              "tools/P0-running-log-trust.mjs",
+              "tools/P0-stage-runner.mjs",
+              "tools/P0-stage0-ci.mjs",
+              "tools/P0-staged-actions.mjs",
+              "tools/P0-successor-control-review.mjs",
+              "tools/P0-test-control-review-trust.mjs",
+              "tools/P0-test-delivery-transition.mjs",
+              "tools/P0-test-execution-controls.mjs",
+              "tools/P0-test-r1-r10-freeze.mjs",
+              "tools/P0-test-running-log-trust.mjs",
+              "tools/P0-test-stage-runner.mjs",
+              "tools/P0-test-staged-actions.mjs",
+              "tools/P0-test-successor-control-review.mjs",
+              "tools/P0-test-wiki-trust.mjs",
+              "tools/P0-validate-execution-controls.mjs",
+              "tools/P0-verify-execution-start.mjs",
+              "tools/P0-verify-generated-tracking.mjs",
+              "tools/P0-verify-r1-r10-freeze.mjs",
+              "tools/P0-wiki-trust.mjs",
+              "tools/build-wiki.mjs",
+              "tools/build_phase1_release_plan.mjs",
+              "tools/generate_phase1_roadmap_manifest.mjs",
+              "tools/sync_phase1_github.mjs",
+            ]);
+            const AUTHORITY_SOURCE_PATHS = new Set([
+              "AGENTS.md",
+              "README.md",
+              "docs/INDEX.md",
+              "docs/council/PHASE1-COUNCIL-DECISION-RECORD.md",
+              "docs/council/PRODUCT-COUNCIL-CHARTER.md",
+              "docs/council/PRODUCT-COUNCIL.md",
+              "docs/council/agents/P0-QA-LEAD.md",
+              "docs/council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md",
+              "docs/council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md",
+              "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
+              "docs/council/execution/P0-PHASE1-EXECUTION-DECISIONS.md",
+              "docs/council/execution/releases/P0-P0-R0-STAGE0-STATE-CONTRACT.md",
+              "docs/product/PRODUCT-REQUIREMENTS.md",
+              "docs/project/PHASE1-GITHUB-PROJECT-SYNC.md",
+              "docs/project/PHASE1-RELEASE-PLAN.md",
+              "docs/project/PROJECT-TRACKER.md",
+              "tools/generate_phase1_roadmap_manifest.mjs",
+            ]);
+
+            const pullRequest = context.payload.pull_request;
+            if (!pullRequest || !FULL_REVISION.test(pullRequest.base?.sha ?? "")
+              || !FULL_REVISION.test(pullRequest.head?.sha ?? "")) {
+              throw new Error("P0_CONTROL_INTEGRITY_EVENT_INVALID");
+            }
+            if (`${context.repo.owner}/${context.repo.repo}` !== CANONICAL_BASE_REPOSITORY
+              || pullRequest.base?.repo?.full_name !== CANONICAL_BASE_REPOSITORY
+              || pullRequest.base?.ref !== CANONICAL_BASE_REF) {
+              throw new Error("P0_CONTROL_INTEGRITY_BASE_IDENTITY_INVALID");
+            }
+            const expectedWorkflowRef = `${CANONICAL_BASE_REPOSITORY}/${GUARD_PATH}@refs/heads/${CANONICAL_BASE_REF}`;
+            if (context.workflow !== EXPECTED_WORKFLOW_NAME
+              || process.env.GITHUB_WORKFLOW_REF !== expectedWorkflowRef
+              || process.env.GITHUB_WORKFLOW_SHA !== pullRequest.base.sha) {
+              throw new Error("P0_CONTROL_INTEGRITY_WORKFLOW_IDENTITY_INVALID");
+            }
+
+            const coordinates = (side) => {
+              const repository = pullRequest[side]?.repo;
+              const owner = repository?.owner?.login;
+              const repo = repository?.name;
+              if (typeof owner !== "string" || owner.length === 0
+                || typeof repo !== "string" || repo.length === 0) {
+                throw new Error(`P0_CONTROL_INTEGRITY_${side.toUpperCase()}_REPOSITORY_INVALID`);
+              }
+              return { owner, repo };
+            };
+            const baseRepository = coordinates("base");
+            const headRepository = coordinates("head");
+            const baseRevision = pullRequest.base.sha;
+            const headRevision = pullRequest.head.sha;
+
+            const assertLiveMain = async () => {
+              const reference = await github.rest.git.getRef({
+                ...baseRepository,
+                ref: `heads/${CANONICAL_BASE_REF}`,
+              });
+              if (reference.data.object?.type !== "commit"
+                || reference.data.object?.sha !== baseRevision) {
+                throw new Error("P0_CONTROL_INTEGRITY_BASE_NOT_LIVE_MAIN");
+              }
+            };
+
+            const readRevision = async (repository, revision) => {
+              const commit = await github.rest.git.getCommit({
+                ...repository,
+                commit_sha: revision,
+              });
+              const treeSha = commit.data.tree?.sha;
+              if (!FULL_REVISION.test(treeSha ?? "")) {
+                throw new Error("P0_CONTROL_INTEGRITY_COMMIT_TREE_INVALID");
+              }
+              const tree = await github.rest.git.getTree({
+                ...repository,
+                tree_sha: treeSha,
+                recursive: "true",
+              });
+              if (tree.data.truncated === true || !Array.isArray(tree.data.tree)) {
+                throw new Error("P0_CONTROL_INTEGRITY_TREE_INVALID_OR_TRUNCATED");
+              }
+              const entries = new Map();
+              for (const entry of tree.data.tree) {
+                if (typeof entry.path !== "string" || entries.has(entry.path)) {
+                  throw new Error("P0_CONTROL_INTEGRITY_TREE_PATH_INVALID");
+                }
+                entries.set(entry.path, entry);
+              }
+              return { repository, entries };
+            };
+
+            const readPath = async (revision, filePath, allowAbsent = false) => {
+              const entry = revision.entries.get(filePath);
+              if (entry === undefined && allowAbsent) return null;
+              if (!entry || !ALLOWED_MODES.has(entry.mode) || entry.type !== "blob"
+                || !FULL_REVISION.test(entry.sha ?? "")) {
+                throw new Error(`P0_CONTROL_INTEGRITY_PATH_INVALID:${filePath}`);
+              }
+              const blob = await github.rest.git.getBlob({
+                ...revision.repository,
+                file_sha: entry.sha,
+              });
+              if (blob.data.encoding !== "base64" || typeof blob.data.content !== "string"
+                || blob.data.sha !== entry.sha) {
+                throw new Error(`P0_CONTROL_INTEGRITY_BLOB_INVALID:${filePath}`);
+              }
+              const bytes = Buffer.from(blob.data.content.replace(/\s/g, ""), "base64");
+              if (!Number.isSafeInteger(blob.data.size) || bytes.length !== blob.data.size) {
+                throw new Error(`P0_CONTROL_INTEGRITY_BLOB_SIZE_INVALID:${filePath}`);
+              }
+              return {
+                path: filePath,
+                mode: entry.mode,
+                type: entry.type,
+                blobSha: entry.sha,
+                sha256: crypto.createHash("sha256").update(bytes).digest("hex"),
+                bytes,
+              };
+            };
+
+            const exactKeys = (value, keys) => value !== null && typeof value === "object"
+              && !Array.isArray(value)
+              && JSON.stringify(Object.keys(value)) === JSON.stringify(keys);
+            const compareCodeUnits = (left, right) => left < right ? -1 : left > right ? 1 : 0;
+            const isAllowedAddition = (filePath) => CONTROL_INTEGRITY_NAMESPACE_PATHS.has(filePath)
+              || AUTHORITY_SOURCE_PATHS.has(filePath)
+              || /^tools\/P0-[A-Za-z0-9][A-Za-z0-9-]*\.mjs$/.test(filePath)
+              || /^docs\/council\/execution\/P0-[A-Z0-9][A-Z0-9-]*\.(?:json|md)$/.test(filePath)
+              || /^\.github\/workflows\/P0-[a-z0-9][a-z0-9-]*\.yml$/.test(filePath);
+            const parseEntry = (value, label) => {
+              if (!exactKeys(value, ["path", "mode", "type", "sha256"])
+                || typeof value.path !== "string" || value.path.length === 0
+                || !ALLOWED_MODES.has(value.mode) || value.type !== "blob"
+                || !SHA256.test(value.sha256 ?? "")
+                || value.path === GUARD_PATH || value.path === MANIFEST_PATH
+                || !isAllowedAddition(value.path)) {
+                throw new Error(`P0_CONTROL_INTEGRITY_${label}_INVALID`);
+              }
+              return { path: value.path, mode: value.mode, type: value.type, sha256: value.sha256 };
+            };
+            const assertSortedUnique = (entries, label) => {
+              const paths = entries.map((entry) => entry.path);
+              if (new Set(paths).size !== paths.length
+                || JSON.stringify(paths) !== JSON.stringify([...paths].sort(compareCodeUnits))) {
+                throw new Error(`P0_CONTROL_INTEGRITY_${label}_NOT_SORTED_UNIQUE`);
+              }
+            };
+            const assertAuthoritySourceSubset = (entries, label) => {
+              const paths = new Set(entries.map((entry) => entry.path));
+              if (AUTHORITY_SOURCE_PATHS.size !== 17
+                || [...AUTHORITY_SOURCE_PATHS].some((filePath) => !paths.has(filePath))) {
+                throw new Error(`P0_CONTROL_INTEGRITY_${label}_AUTHORITY_SOURCE_SET_INVALID`);
+              }
+            };
+            const parseManifest = (file, label) => {
+              let value;
+              try {
+                value = JSON.parse(file.bytes.toString("utf8"));
+              } catch {
+                throw new Error(`P0_CONTROL_INTEGRITY_${label}_JSON_INVALID`);
+              }
+              if (!exactKeys(value, ["schemaVersion", "current", "next"])
+                || value.schemaVersion !== MANIFEST_SCHEMA_VERSION
+                || !Array.isArray(value.current) || value.current.length === 0) {
+                throw new Error(`P0_CONTROL_INTEGRITY_${label}_SCHEMA_INVALID`);
+              }
+              const current = value.current.map((entry) => parseEntry(entry, `${label}_CURRENT`));
+              assertSortedUnique(current, `${label}_CURRENT`);
+              const currentByPath = new Map(current.map((entry) => [entry.path, entry]));
+              let next = null;
+              if (value.next !== null) {
+                if (!exactKeys(value.next, ["changes"])
+                  || !Array.isArray(value.next.changes) || value.next.changes.length === 0
+                  || value.next.changes.length > MAX_CHANGES) {
+                  throw new Error(`P0_CONTROL_INTEGRITY_${label}_NEXT_INVALID`);
+                }
+                const changes = value.next.changes.map((change) => {
+                  if (!exactKeys(change, ["operation", "path", "mode", "type", "sha256"])
+                    || !["add", "modify", "delete"].includes(change.operation)) {
+                    throw new Error(`P0_CONTROL_INTEGRITY_${label}_CHANGE_INVALID`);
+                  }
+                  const entry = parseEntry({
+                    path: change.path,
+                    mode: change.mode,
+                    type: change.type,
+                    sha256: change.sha256,
+                  }, `${label}_CHANGE`);
+                  const currentEntry = currentByPath.get(entry.path);
+                  if (change.operation === "add") {
+                    if (currentEntry || !isAllowedAddition(entry.path)) {
+                      throw new Error(`P0_CONTROL_INTEGRITY_${label}_ADD_INVALID`);
+                    }
+                  } else if (!currentEntry) {
+                    throw new Error(`P0_CONTROL_INTEGRITY_${label}_${change.operation.toUpperCase()}_ABSENT`);
+                  } else if (change.operation === "delete") {
+                    if (JSON.stringify(entry) !== JSON.stringify(currentEntry)) {
+                      throw new Error(`P0_CONTROL_INTEGRITY_${label}_DELETE_PREIMAGE_INVALID`);
+                    }
+                  } else if (JSON.stringify(entry) === JSON.stringify(currentEntry)) {
+                    throw new Error(`P0_CONTROL_INTEGRITY_${label}_MODIFY_NOOP`);
+                  }
+                  return { operation: change.operation, ...entry };
+                });
+                assertSortedUnique(changes, `${label}_CHANGES`);
+                next = { changes };
+              }
+              const normalized = { schemaVersion: MANIFEST_SCHEMA_VERSION, current, next };
+              const canonical = Buffer.from(`${JSON.stringify(normalized, null, 2)}\n`, "utf8");
+              if (!file.bytes.equals(canonical)) {
+                throw new Error(`P0_CONTROL_INTEGRITY_${label}_NONCANONICAL`);
+              }
+              return normalized;
+            };
+
+            const same = (left, right) => JSON.stringify(left) === JSON.stringify(right);
+            const assertExactPathSet = (actual, expected, code) => {
+              const normalized = [...new Set(expected)].sort(compareCodeUnits);
+              if (!same(actual, normalized)) throw new Error(code);
+            };
+            const applyChanges = (current, changes) => {
+              const entries = new Map(current.map((entry) => [entry.path, entry]));
+              for (const change of changes) {
+                if (change.operation === "delete") entries.delete(change.path);
+                else entries.set(change.path, {
+                  path: change.path,
+                  mode: change.mode,
+                  type: change.type,
+                  sha256: change.sha256,
+                });
+              }
+              return [...entries.values()].sort((left, right) => compareCodeUnits(left.path, right.path));
+            };
+            const assertInventory = async (revision, inventory, label) => {
+              for (const expected of inventory) {
+                const actual = await readPath(revision, expected.path);
+                if (actual.mode !== expected.mode || actual.type !== expected.type
+                  || actual.sha256 !== expected.sha256) {
+                  throw new Error(`P0_CONTROL_INTEGRITY_${label}_MISMATCH:${expected.path}`);
+                }
+              }
+            };
+            const assertExactMatch = (filePath, baseFile, headFile, code) => {
+              if (headFile.mode !== baseFile.mode || headFile.type !== baseFile.type
+                || headFile.blobSha !== baseFile.blobSha
+                || headFile.sha256 !== baseFile.sha256
+                || !headFile.bytes.equals(baseFile.bytes)) {
+                throw new Error(`${code}:${filePath}`);
+              }
+            };
+            const changedFilePaths = (base, head) => {
+              const paths = new Set([...base.entries.keys(), ...head.entries.keys()]);
+              return [...paths].filter((filePath) => {
+                const before = base.entries.get(filePath);
+                const after = head.entries.get(filePath);
+                if (before?.type === "tree" && after?.type === "tree") return false;
+                return !before || !after || before.mode !== after.mode
+                  || before.type !== after.type || before.sha !== after.sha;
+              }).sort(compareCodeUnits);
+            };
+
+            const verifyRequiredChecksWhenVisible = async () => {
+              const visible = new Set();
+              try {
+                const rules = await github.request("GET /repos/{owner}/{repo}/rules/branches/{branch}", {
+                  ...baseRepository,
+                  branch: CANONICAL_BASE_REF,
+                });
+                for (const rule of Array.isArray(rules.data) ? rules.data : []) {
+                  if (rule.type !== "required_status_checks") continue;
+                  for (const check of rule.parameters?.required_status_checks ?? []) {
+                    if (typeof check.context === "string") visible.add(check.context);
+                  }
+                }
+              } catch (error) {
+                if (![403, 404].includes(error.status)) throw error;
+              }
+              try {
+                const protection = await github.rest.repos.getBranchProtection({
+                  ...baseRepository,
+                  branch: CANONICAL_BASE_REF,
+                });
+                for (const check of protection.data.required_status_checks?.checks ?? []) {
+                  if (typeof check.context === "string") visible.add(check.context);
+                }
+                for (const check of protection.data.required_status_checks?.contexts ?? []) {
+                  if (typeof check === "string") visible.add(check);
+                }
+              } catch (error) {
+                if (![403, 404].includes(error.status)) throw error;
+              }
+              if (visible.size === 0) {
+                core.warning("P0_CONTROL_INTEGRITY_REQUIRED_CHECKS_NOT_OBSERVABLE");
+              } else if (!visible.has(EXPECTED_GUARD_CHECK) || !visible.has(EXPECTED_STATIC_CHECK)) {
+                throw new Error("P0_CONTROL_INTEGRITY_REQUIRED_CHECK_IDENTITY_INVALID");
+              }
+            };
+
+            await assertLiveMain();
+            await verifyRequiredChecksWhenVisible();
+            const [base, head] = await Promise.all([
+              readRevision(baseRepository, baseRevision),
+              readRevision(headRepository, headRevision),
+            ]);
+            const [baseGuard, headGuard, baseManifestFile, headManifestFile] = await Promise.all([
+              readPath(base, GUARD_PATH),
+              readPath(head, GUARD_PATH),
+              readPath(base, MANIFEST_PATH),
+              readPath(head, MANIFEST_PATH),
+            ]);
+            assertExactMatch(GUARD_PATH, baseGuard, headGuard,
+              "P0_CONTROL_INTEGRITY_GUARD_CHANGE_FORBIDDEN");
+
+            const baseManifest = parseManifest(baseManifestFile, "BASE_MANIFEST");
+            const headManifest = parseManifest(headManifestFile, "HEAD_MANIFEST");
+            assertAuthoritySourceSubset(baseManifest.current, "BASE_MANIFEST");
+            assertAuthoritySourceSubset(headManifest.current, "HEAD_MANIFEST");
+            await assertInventory(base, baseManifest.current, "BASE_CURRENT");
+            const changedPaths = changedFilePaths(base, head);
+            let transition;
+            let expectedHeadCurrent;
+
+            if (baseManifest.next === null) {
+              if (headManifest.next !== null) {
+                if (!same(headManifest.current, baseManifest.current)) {
+                  throw new Error("P0_CONTROL_INTEGRITY_ARM_CURRENT_CHANGED");
+                }
+                assertExactPathSet(changedPaths, [MANIFEST_PATH],
+                  "P0_CONTROL_INTEGRITY_ARM_PATH_SET_INVALID");
+                transition = "armed";
+                expectedHeadCurrent = baseManifest.current;
+              } else {
+                if (!same(headManifest.current, baseManifest.current)) {
+                  throw new Error("P0_CONTROL_INTEGRITY_CLEAR_CURRENT_CHANGED");
+                }
+                const controlled = new Set(baseManifest.current.map((entry) => entry.path));
+                const forbidden = changedPaths.filter((filePath) => filePath === GUARD_PATH
+                  || filePath === MANIFEST_PATH || controlled.has(filePath)
+                  || filePath.startsWith(".github/workflows/") || isAllowedAddition(filePath));
+                if (forbidden.length !== 0) {
+                  throw new Error(`P0_CONTROL_INTEGRITY_UNAUTHORIZED_PATH:${forbidden[0]}`);
+                }
+                transition = "clear";
+                expectedHeadCurrent = baseManifest.current;
+              }
+            } else {
+              if (headManifest.next !== null) {
+                throw new Error("P0_CONTROL_INTEGRITY_ARMED_BASE_REQUIRES_CLEAR_HEAD");
+              }
+              if (same(headManifest.current, baseManifest.current)) {
+                assertExactPathSet(changedPaths, [MANIFEST_PATH],
+                  "P0_CONTROL_INTEGRITY_CANCEL_PATH_SET_INVALID");
+                transition = "cancelled";
+                expectedHeadCurrent = baseManifest.current;
+              } else {
+                const applied = applyChanges(baseManifest.current, baseManifest.next.changes);
+                if (!same(headManifest.current, applied)) {
+                  throw new Error("P0_CONTROL_INTEGRITY_CONSUME_CURRENT_INVALID");
+                }
+                assertExactPathSet(changedPaths,
+                  [MANIFEST_PATH, ...baseManifest.next.changes.map((change) => change.path)],
+                  "P0_CONTROL_INTEGRITY_CONSUME_PATH_SET_INVALID");
+                transition = "consumed";
+                expectedHeadCurrent = applied;
+              }
+            }
+
+            await assertInventory(head, expectedHeadCurrent, "HEAD_CURRENT");
+            await assertLiveMain();
+            core.info(`P0_CONTROL_INTEGRITY_OK:${transition}`);

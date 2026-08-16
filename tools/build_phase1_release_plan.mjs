@@ -54,10 +54,23 @@ for (const task of tasks) {
 }
 const readyCount = tasks.filter((task) => task.artifactReadiness === "Ready").length;
 const executionAllowedCount = tasks.filter((task) => task.executionAllowed).length;
+const holdCount = tasks.filter((task) => task.executionDecision === "Hold").length;
+const historicalNonAuthorizingCount = tasks.filter(
+  (task) => task.executionDecision === "Historical non-authorizing",
+).length;
 if ((manifest.summary.artifactReadinessCounts.Ready ?? 0) !== readyCount
   || manifest.summary.executionAllowedCount !== executionAllowedCount) {
   throw new Error("Manifest readiness summary does not match task-level readiness fields.");
 }
+if (tasks.length !== 58
+  || (manifest.summary.artifactReadinessCounts.Incomplete ?? 0) !== 58
+  || readyCount !== 0
+  || holdCount !== 45
+  || historicalNonAuthorizingCount !== 13
+  || executionAllowedCount !== 0) {
+  throw new Error("Current readiness truth must remain exactly 58 Incomplete; 45 Hold + 13 Historical non-authorizing; 0 Ready; 0 execution-allowed.");
+}
+const currentReadinessTruth = `${manifest.summary.artifactReadinessCounts.Incomplete} Incomplete; ${holdCount} Hold + ${historicalNonAuthorizingCount} Historical non-authorizing; ${readyCount} Ready; ${executionAllowedCount} execution-allowed`;
 if (tasks.some((task) => task.executionAllowed && task.artifactReadiness !== "Ready")) {
   throw new Error("Execution cannot be allowed unless the task dossier is Ready.");
 }
@@ -206,7 +219,7 @@ addTitle(
   summary,
   "U",
   "Life in Days — Phase 1 Release Plan",
-  `Review workbook generated from PHASE1-ROADMAP-MANIFEST.json on 2026-08-15. All ${tasks.length} task dossiers are currently Incomplete; ${manifest.summary.executionAllowedCount} are execution-authorized. Dates are estimates; evidence gates control delivery.`,
+  `Review workbook generated from PHASE1-ROADMAP-MANIFEST.json on 2026-08-16. Current readiness: ${currentReadinessTruth}. Dates are estimates; evidence gates control delivery.`,
 );
 summary.getRange("A5:B5").values = [["Plan metric", "Value"]];
 styleHeader(summary.getRange("A5:B5"));
@@ -349,7 +362,7 @@ addTitle(
   taskSheet,
   "AC",
   "Detailed Roadmap Tasks — 58 Work Packages",
-  "Every stable task ID projects six P0-prefixed dossier artifacts into its existing issue and Roadmap item. All current dossiers are Incomplete/Hold; Done on a planning item never implies implementation or deployment.",
+  "Every stable task ID projects six P0-prefixed dossier artifacts into its existing issue and Roadmap item. Current control truth: 58 Incomplete; 45 Hold + 13 Historical non-authorizing; 0 Ready; 0 execution-allowed. Done on a planning item never implies implementation or deployment.",
 );
 const taskHeaders = [
   "ID", "Title", "Status", "Artifact readiness", "Execution allowed", "Execution scope", "Milestone", "Type", "Owner role", "Priority", "Start", "Target", "Days",
@@ -603,7 +616,7 @@ const guideRows = [
   ["Implementation plan", "docs/architecture/PHASE1-IMPLEMENTATION-PLAN.md", "Detailed technical sequence, architecture, security, recovery, and task contracts."],
   ["Task Definition of Ready", "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md", "Every substantive task requires Product, Architecture, Design, QA, Delivery, and Council approval."],
   ["Task artifact register", "docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json", "Paths, states, SHA-256, scenario IDs, owner actions, execution scope, and council decision."],
-  ["Current task readiness", `${manifest.summary.artifactReadinessCounts.Incomplete} Incomplete; ${manifest.summary.executionAllowedCount} execution-authorized`, "Artifact generation is not specialist approval; roadmap status is not a start override."],
+  ["Current task readiness", currentReadinessTruth, "Artifact generation is not specialist approval; roadmap status is not a start override."],
   ["GitHub projection", "58 existing issues; 17 managed Project fields; six dossier links per task", "Publish only from merged remote main, then verify read-only by stable task ID."],
   ["Deployment spike", "docs/research/HETZNER-SHARED-HOST-DEPLOYMENT-SPIKE.md", "Live host capacity/readiness remains unverified until sanitized evidence exists."],
   ["Roadmap", "https://github.com/users/arunpr614/projects/1", "Four lanes: Backlog, Next, In progress, Done."],

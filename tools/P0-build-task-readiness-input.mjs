@@ -1,6 +1,7 @@
 import {
   ARTIFACT_KINDS,
   COUNCIL_SEATS,
+  DELIVERY_TRANSITION_GATE_B_CONTRACT,
   DESIGN_ACCESSIBILITY_DIMENSIONS,
   DESIGN_STATE_DIMENSIONS,
   OWNER_ACTION_REQUIREMENT_CATALOG,
@@ -12,6 +13,7 @@ import {
   computeTaskContractSha256,
   computeTaskFilesSha256,
   defaultTaskScopeAction,
+  isDedicatedDeliveryTransitionScopeAction,
   isTaskMilestoneScopeActionCompatible,
 } from "./P0-readiness-gates.mjs";
 
@@ -80,6 +82,12 @@ export function ownerActionIdsFor(task) {
 export function requestedScopeFor(task, override = {}) {
   const taskDefault = defaultTaskScopeAction(task.id);
   if (!taskDefault) throw new Error(`${task.id}: no closed default scope/action pair exists`);
+  const requestedStageIdPresent = hasOwn(override, "requestedStageId");
+  const requestedScopeClassPresent = hasOwn(override, "requestedScopeClass");
+  const requestedActionClassPresent = hasOwn(override, "requestedActionClass");
+  if (requestedStageIdPresent && !(requestedScopeClassPresent && requestedActionClassPresent)) {
+    throw new Error(`${task.id}: requested stage does not bind the exact dedicated delivery-transition scope/action pair`);
+  }
   const requestedScope = {
     scopeClass: override.requestedScopeClass ?? taskDefault.scopeClass,
     actionClass: override.requestedActionClass ?? taskDefault.actionClass,
@@ -87,7 +95,19 @@ export function requestedScopeFor(task, override = {}) {
   if (!SCOPE_ACTION_COMPATIBILITY[requestedScope.scopeClass]?.includes(requestedScope.actionClass)) {
     throw new Error(`${task.id}: incompatible requested scope/action pair ${requestedScope.scopeClass}/${requestedScope.actionClass}`);
   }
-  if (!isTaskMilestoneScopeActionCompatible({
+  const dedicatedDeliveryTransition = requestedStageIdPresent
+    && requestedScopeClassPresent
+    && requestedActionClassPresent
+    && isDedicatedDeliveryTransitionScopeAction({
+      taskId: task.id,
+      stageId: override.requestedStageId,
+      scopeClass: requestedScope.scopeClass,
+      actionClass: requestedScope.actionClass,
+    });
+  if (requestedStageIdPresent && !dedicatedDeliveryTransition) {
+    throw new Error(`${task.id}: requested stage does not bind the exact dedicated delivery-transition scope/action pair`);
+  }
+  if (!dedicatedDeliveryTransition && !isTaskMilestoneScopeActionCompatible({
     taskId: task.id,
     milestone: task.milestone,
     scopeClass: requestedScope.scopeClass,
@@ -96,6 +116,16 @@ export function requestedScopeFor(task, override = {}) {
     throw new Error(`${task.id}: action ${requestedScope.scopeClass}/${requestedScope.actionClass} is not permitted for milestone ${task.milestone}`);
   }
   return requestedScope;
+}
+
+function isRequestedDedicatedDeliveryTransition(task, override, requestedScope) {
+  return hasOwn(override, "requestedStageId")
+    && isDedicatedDeliveryTransitionScopeAction({
+      taskId: task.id,
+      stageId: override.requestedStageId,
+      scopeClass: requestedScope.scopeClass,
+      actionClass: requestedScope.actionClass,
+    });
 }
 
 export function executionScopeLabelFor(task, requestedScope) {
@@ -129,6 +159,10 @@ export function validateReadinessState(readinessState, taskIds) {
     if (derived.length) throw new Error(`${taskId}: derived readiness overrides are forbidden: ${derived.join(", ")}`);
     const unknown = Object.keys(override).filter((key) => !ALLOWED_OVERRIDE_KEYS.has(key));
     if (unknown.length) throw new Error(`${taskId}: unknown source-evidence override keys: ${unknown.join(", ")}`);
+    if (override.requestedScopeClass === DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass
+      || override.requestedActionClass === DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass) {
+      throw new Error(`${taskId}: delivery-transition scope/action is ephemeral Gate-B stage authority and cannot be persisted`);
+    }
     if (override.requestedScopeClass !== undefined && override.requestedActionClass !== undefined
       && !SCOPE_ACTION_COMPATIBILITY[override.requestedScopeClass]?.includes(override.requestedActionClass)) {
       throw new Error(`${taskId}: incompatible requested scope/action pair ${override.requestedScopeClass}/${override.requestedActionClass}`);
@@ -304,7 +338,8 @@ export function buildTaskReadinessInput({
       ...clone(approval?.council?.seatVerdicts ?? {}),
     },
   };
-  const actionIds = ownerActionIdsFor(task);
+  const dedicatedDeliveryTransition = isRequestedDedicatedDeliveryTransition(task, override, requestedScope);
+  const actionIds = dedicatedDeliveryTransition ? [] : ownerActionIdsFor(task);
   const actionRecords = actionIds.map((actionId) => ownerActionState?.actions?.[actionId]).filter(Boolean).map(clone);
   const actionRecordById = new Map(actionRecords.map((record) => [record.actionId, record]));
   const approvalRecord = clone(approval?.approvalRecord ?? null);

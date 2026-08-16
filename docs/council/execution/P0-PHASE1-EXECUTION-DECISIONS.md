@@ -1,8 +1,11 @@
 # Life in Days Phase 1 — P0 execution decision ledger
 
 - **Opened:** 2026-08-14
+- **Current authority interpretation:** 2026-08-16
 - **Owner:** Five-role execution council; primary agent is mechanical editor
 - **Change rule:** Append dated decisions; do not erase historical planning records
+
+Earlier accepted entries remain visible as historical provenance. When scope interpretations conflict, the latest accepted superseding entry controls; `P0-ED-016` controls current execution scope.
 
 | ID | Decision | Status | Affected scope |
 | --- | --- | --- | --- |
@@ -21,10 +24,13 @@
 | `P0-ED-013` | Require a six-artifact, P0-prefixed, task-bound dossier and five-seat council readiness decision for each of the existing 58 issues before substantive execution; generation never equals approval. | Accepted; supersedes the scheduling portion of `P0-ED-012` until each named R0 task passes | All task entry and GitHub/Project projection |
 | `P0-ED-014` | Use Monthly Almanac as the sole user-facing chronological destination, keep the Calendar/Almanac switcher near Search, and show no Calendar source/AI overlay beyond accessible/selected-detail disclosure. | Accepted | `LID-REF-002`, `LID-AIA-005`, R1/R3/R8/R9 and UX |
 | `P0-ED-015` | Accept the six-artifact PC-001 readiness-hardening planning packet at `d44dbfbc8d040baddf46b7288476d4dc53c81e8c` / `sha256:32deebe971b1321a7ccd4203d4c861d93c4ec3d45ba3bf4c9fab2ea048b9eaed`; require its normal merge before any bounded local/public control-code edit. | Accepted planning scope; execution remains false | `PC-001`, readiness-control Gate A |
+| `P0-ED-016` | Supersede only the current-authority effect of `P0-ED-001` and its routine R0–R8 delegation: the active bounded P0/R0 Gold Goal reaches the eight named P0/R0 tasks only; freeze R1-R10 until a new direct Product Owner activation. | Accepted; controls current authority scope | `AUD-001`, `PC-001`, `PRD-R0-001`, `SPK-R0-001`, `UX-R0-001`, `ARCH-R0-001`, `ENG-R0-001`, `REL-R0-001`; 50 R1-R10 tasks and 300 artifacts frozen |
 
 ## Decision details
 
 ### P0-ED-001 — Activated authority
+
+> Historical authority record. `P0-ED-016` supersedes only its current-authority effect; the original decision text remains below unchanged.
 
 The direct Goal supersedes only stale authorization stops. It does not turn planned, proposed, or prototype behavior into implementation or evidence. Routine R0–R8 decisions are delegated only after every named gate passes. Human-only acts remain human.
 
@@ -65,11 +71,19 @@ Every canonical task uses the existing stable-ID issue and owns a task-specific 
 
 All five seats independently matched the six artifact hashes and canonical dossier digest recorded in the [PC-001 planning review](releases/P0-PC-001-READINESS-HARDENING-PLANNING-REVIEW.md). R3 supersedes R2 because an isolated workbook build proved that semantically identical OOXML packages can have different internal relationship IDs; same-build published copies still require equal hashes, while independent builds require exhaustive semantic and render equivalence. The planning PR was required to merge with the R3-reviewed bytes unchanged; PR #66 subsequently satisfied that condition at merge commit `2fc31ec905f4c664b86bebdc511a87390a24a4e9`. The separate local/public hardening slice may therefore proceed, but its implementation candidate still requires executable fixtures, fresh Independent QA, five-seat review, normal merge, exact-main synchronization, workbook/Wiki reconciliation, and two quiescent parity snapshots. This bootstrap decision does not set `executionAllowed=true`, promote PC-001, authorize R0/private work, or create a 59th issue.
 
+### P0-ED-016 — Bounded R0 authority
+
+Effective 2026-08-16, the directly activated bounded P0/R0 Gold Goal supersedes only the current-authority effect of `P0-ED-001` and its routine R0–R8 delegation. It does not erase or revise their historical provenance, the accepted P0/R0–R10 release sequence, requirements, data shapes, or evidence gates. Those remain the planning baseline; they are not current execution authority.
+
+Current execution scope is R0 only under this bounded Goal.
+
+The bounded Goal covers exactly `AUD-001`, `PC-001`, `PRD-R0-001`, `SPK-R0-001`, `UX-R0-001`, `ARCH-R0-001`, `ENG-R0-001`, and `REL-R0-001`. Its current authorization reaches only the one-time local/public Stage 0 control repair. After Stage 0 closes, the five-seat council may authorize one of the five substantive R0 tasks (`SPK-R0-001`, `UX-R0-001`, `ARCH-R0-001`, `ENG-R0-001`, or `REL-R0-001`) only through its separate exact Gate A and Gate B controls. All 50 R1-R10 tasks and their 300 task artifacts remain frozen and out of scope. A planning document, historical Goal, prior council decision, code path, artifact, or passed gate cannot unfreeze them. Any broader execution requires a new direct Product Owner activation. Nothing in this decision presently authorizes R0 implementation, private-system access, deployment, authentic-content admission, acceptance, release, or production; every named human-only act retains its separate authority gate.
+
 ## Open decision frontier
 
 - Exact private deployment target, authority, and rollback inputs: human/private record required.
 - SQLCipher/SQLite versus PostgreSQL: R0 hard-gate evidence required.
 - Project workflow rule changes: complete private configuration/rollback capture required.
-- Task entry: all 58 dossiers require task-specific specialist review; R0 is the first planned readiness wave.
+- Task entry: the five substantive R0 dossiers require task-specific specialist review within the bounded Goal; the remaining R1-R10 dossiers stay frozen planning records until new direct Product Owner activation.
 - Provider/model/secret/spend choices: release-specific evidence and named human act required.
 - R10 trigger: no measured approved trigger; keep date-free and Backlog.

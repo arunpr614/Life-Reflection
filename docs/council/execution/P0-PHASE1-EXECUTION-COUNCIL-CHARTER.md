@@ -1,13 +1,14 @@
 # Life in Days Phase 1 — P0 execution council charter
 
 - **Effective:** 2026-08-14
-- **Status:** Active for P0 and R0–R9 execution
+- **Authority updated:** 2026-08-16
+- **Status:** Active for the bounded Goal's P0 control work and gated R0 envelope only; R1-R10 is frozen
 - **Historical relationship:** Additive to, and not a rewrite of, the four-seat planning council
 - **Chair/integrator:** Primary Codex agent; sole final editor
 
 ## Mandate
 
-The execution council converts the accepted planning baseline into small, reversible, evidence-backed releases. It owns routine R0–R8 readiness and promotion when every named gate passes. It cannot manufacture authority, accept a missing human act, weaken a gate, or broaden a claim beyond evidence.
+The execution council converts the accepted planning baseline into small, reversible, evidence-backed work only inside the active bounded Goal and [P0-ED-016](P0-PHASE1-EXECUTION-DECISIONS.md#p0-ed-016--bounded-r0-authority). It may own routine R0 readiness and promotion when every named stage gate passes. It has no R1-R10 execution authority; those releases remain frozen and out of scope until a new direct Product Owner activation. It cannot manufacture authority, accept a missing human act, weaken a gate, or broaden a claim beyond evidence.
 
 The council does not treat documentation, prototype behavior, code existence, CI, an uploaded backup, a deployment, or elapsed time as release acceptance.
 
@@ -33,7 +34,7 @@ The chair coordinates, integrates, and records decisions. The chair does not rep
 | Test strategy, severity and acceptance evidence | C | C | C | A/R | C | I; A for named UAT act |
 | Dependencies, status, roadmap, workbook and Wiki | C | C | C | C | A/R | I |
 | Reversible local/synthetic implementation | C | C | A | C | I | I |
-| Scoped R0–R8 deployment after all gates | C | C | A/R | A for QA gate | A for evidence gate | I except named human act |
+| Scoped R0 action after all current gates | C | C | A/R | A for QA gate | A for evidence gate | I except named human act |
 | Accounts, MFA, secrets, terms and material spend | C | I | R for plan | I | C | A/R |
 | Authentic-content consent and authentic-photo UAT | C | C | I | I | I | A/R |
 | Recovery-key custody and human ceremony steps | I | I | R for procedure | C | C | A/R |
@@ -73,10 +74,10 @@ R0 is synthetic-only. R1 is the earliest release that may admit an explicitly au
 - Every newly created document or evidence/build artifact has a basename beginning `P0-`.
 - Existing canonical files, stable task/requirement IDs, generated projections, runtime/config conventions, frozen v6–v10 artifacts, and `RUNNING_LOG.md` are grandfathered and are not duplicated or mass-renamed.
 - Raw private evidence stays outside the public repository. Public records contain only opaque reference, scope class, reviewer, authorized window, and pass/fail.
-- QA evidence for R0–R7 attaches to existing `REL-R*-001` tasks. Governance review creates no new roadmap task.
+- Within current authority, R0 QA evidence attaches to `REL-R0-001`. The R1–R7 attachment convention remains planning metadata only while those releases are frozen. Governance review creates no new roadmap task.
 
 ## Current release posture
 
-The council authorizes only the local P0 control remediation and synthetic preparation. It holds R0 implementation acceptance, private access, deployment, authentic-content admission, and production claims. Deployment is **Unknown — private read authority pending**.
+The council currently authorizes only the local P0 control remediation. It holds R0 preparation and implementation acceptance until their separate named gates pass, and it holds private access, deployment, authentic-content admission, and production claims. Deployment is **Unknown — private read authority pending**. R1-R10 remains frozen; broader execution requires a new direct Product Owner activation.
 
-All 58 generated task dossiers are currently drafts and Incomplete/Hold; zero tasks have `executionAllowed=true`. The first subsequent council wave may prepare R0 task artifacts, but substantive R0 work remains held until the exact owning task passes.
+Current structured truth is exactly **58 Incomplete; 45 Hold + 13 Historical non-authorizing; 0 Ready; 0 execution-allowed**. Artifact state is 342 Draft plus six PC-001 artifacts In review. A later Council wave may permit only a named substantive R0 task's local/public/fictional/synthetic Gate A preparation after Stage 0 closes; substantive work remains held until a separate exact-stage Gate B passes.

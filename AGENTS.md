@@ -1,6 +1,6 @@
 # AI agent operating contract — keep Phase 1 alive
 
-Updated: 2026-08-14
+Updated: 2026-08-16
 
 Scope: this entire repository.
 
@@ -29,18 +29,19 @@ If live GitHub mutation is not explicitly authorized or cannot be completed safe
 
 Direct owner instructions outrank repository documents. Do not silently resolve a conflict between authoritative sources; record it in the council decision record and the affected task before proceeding.
 
-## Current activated execution and artifact naming
+## Current bounded P0/R0 authority and artifact naming
 
-The Product Owner directly activated the committed Phase 1 P0-to-production Goal on 2026-08-14. The current public-safe execution authority is recorded in:
+The historical Phase 1 P0-to-production Goal is superseded. On 2026-08-15 the Product Owner published the bounded P0/R0 Gold Goal through normal PR #69 and activated it from clean exact main `2dc4d05cdeca8cb9aeacf393076f6c6f946ff62b`. It owns exactly eight P0/R0 task records, freezes all 50 R1-R10 tasks, and currently authorizes only Stage 0 local/public control-plane repair under existing issue #3. It does not itself authorize an R0 action, private access, authentic content, deployment, release, or production. The governing sources are:
 
 - [`P0-PHASE1-EXECUTION-AUTHORIZATION.md`](docs/council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md);
 - [`P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md`](docs/council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md);
 - [`P0-PHASE1-EXECUTION-DECISIONS.md`](docs/council/execution/P0-PHASE1-EXECUTION-DECISIONS.md); and
-- [`P0-OWNER-ACTION-LEDGER.md`](docs/council/execution/P0-OWNER-ACTION-LEDGER.md).
+- [`P0-OWNER-ACTION-LEDGER.md`](docs/council/execution/P0-OWNER-ACTION-LEDGER.md); and
+- [`P0-CODEX-GOLD-GOAL-PROMPT-P0-R0-ONLY-2026-08-15.md`](docs/project/P0-CODEX-GOLD-GOAL-PROMPT-P0-R0-ONLY-2026-08-15.md).
 
-Every one of the 58 canonical tasks is also governed by the [P0 task Definition of Ready](docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md) and [task artifact register](docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json). A substantive task may start only when its six discipline artifacts pass at an exact reviewed single-commit candidate whose complete non-excluded Git diff is byte/mode/type-bound, a later non-self-referential approval record and still-later permission projection are merged, the manifest derives `executionAllowed=true`, and `executeTaskFromExactMain({taskId, scopeClass, actionClass, execute})` repeats that result for the caller's exact task/scope/action from a clean non-detached checkout tracking freshly fetched exact `origin/main` before invoking the bounded callback under lock. The narrow API rejects extra trust hooks; the injectable core is private, and the CLI is diagnostic and cannot execute a task. Roadmap status, code, a prototype, a shared PRD, a global plan, or planning approval cannot override this gate.
+Every one of the 58 canonical tasks is also governed by the [P0 task Definition of Ready](docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md) and [task artifact register](docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json). The current baseline is exactly **58 Incomplete; 45 Hold + 13 Historical non-authorizing; 0 Ready; 0 execution-allowed**. For the five substantive R0 tasks, Gate A may later permit only preparation of one named local/public/fictional/synthetic candidate; `preparationAllowed` can never substitute for `executionAllowed`. Gate B requires a later exact implementation/evidence candidate, one immutable stage and scope/action pair, independent executed QA, rollback evidence, current dependencies and owner actions, exact environment/authority where due, five exact-candidate seats, append-only stage publication, and exact-main guarded runtime verification. Historical AUD-001, PC-001, and PRD-R0-001 can never become execution stages. Roadmap status, code, a prototype, a shared PRD, a global plan, a control review, or Gate A cannot override Gate B.
 
-That activation supersedes historical universal G1/“implementation not authorized” stops, but it changes no implementation, test, deployment, recovery, or production evidence by itself. Routine R0–R8 decisions are delegated to the five-seat execution council only when every named gate passes. Human-only account/MFA/secret, terms/spend/provider, authentic-content, authentic-photo UAT, recovery-key, Recovery Ceremony, final R9, and irreversible R10 acts remain non-delegable.
+The bounded activation changes no implementation, test, deployment, recovery, or production evidence by itself. Current execution authority is limited to R0 under the active bounded Goal, and routine R0 decisions are delegated to the five-seat execution council only when every named stage gate passes. All R1-R10 work is frozen and out of scope; any broader execution authority requires a new direct Product Owner activation. Human-only account/MFA/secret, terms/spend/provider, authentic-content, authentic-photo UAT, recovery-key, Recovery Ceremony, final R9, and irreversible R10 acts remain non-delegable.
 
 Every newly created document or evidence/build artifact must have a basename beginning `P0-`. Existing canonical files, generated outputs, stable IDs, frozen v6–v10 artifacts, runtime/config filenames, and `RUNNING_LOG.md` are grandfathered; edit them under normal change control rather than renaming or duplicating them.
 
@@ -102,6 +103,8 @@ Apply these rules strictly:
 - Planned dates are estimates. Evidence gates control entry and exit.
 - Keep R10 release and task dates blank until its measured storage trigger is explicitly approved.
 
+Never conflate the state vocabularies. Task status is `Backlog`, `Next`, `In progress`, or `Done`; artifact readiness is `Incomplete` or `Ready`; execution decision is `Hold`, `Historical non-authorizing`, or a gate-specific readiness decision; issue state is `Open` or `Closed`; permission is the separate boolean `executionAllowed`; and a control review can be only `Hold` or `Accepted for merge`. Stage state is separately one of `declared`, `ready`, `running`, `verification-pending`, `recovery-required`, `rolling-back`, `verified-complete`, `verified-rolled-back`, `cancelled-before-mutation`, `blocked-no-mutation`, or `expired-before-mutation`. Never display an unqualified `Ready`, `Approved`, `Complete`, or `Done`. A verified stage does not make its task Done without the task's named acceptance evidence and reviewed delivery transition.
+
 ## Mandatory update workflow
 
 ### 1. Preflight and evidence
@@ -119,7 +122,7 @@ Read the affected issue, manifest task, dependencies, acceptance evidence, relea
 
 Update the governing source document or decision record first. Then edit the generator's release/task definition, status, dates, dependencies, requirements, links, evidence, and rollback impact as needed.
 
-On every accepted planning refresh, update the generator's `generatedAt` literal and the workbook builder's generated-on subtitle date to the actual refresh date. Keep those two dates aligned; do not change release/task dates without evidence and approval.
+On every accepted planning refresh, update all three date literals to the actual refresh date: the roadmap generator's `generatedAt`, the task-artifact generator's `generatedAt`, and the workbook builder's generated-on subtitle date. Keep all three aligned; do not change release/task dates without evidence and approval.
 
 Do not renumber a stable task or requirement ID casually. A scope change must update every validator and traceability artifact deliberately.
 
@@ -262,7 +265,7 @@ Generated issue and artifact links target `main`. Do not claim publication is co
 - Live apply first fetches canonical origin and requires a clean non-detached branch tracking `origin/main` with exact `HEAD === origin/main`. It then resolves all existing issues, items, fields, and views before the first mutation. It may change only mismatched issue bodies and existing field values; issue/item/field/view/workflow creation and status/state/label/milestone mutation fail closed.
 - The dry-run validates local shape but does not query live GitHub. A successful dry-run is not live reconciliation.
 - Workbook acceptance requires whole-workbook programmatic inspection plus all 20 paginated renders and an exact visible raw-manifest SHA-256 binding in the resolved Review Guide. Same-build canonical/review copies must hash equally; an isolated rebuild is compared by sheet/order/used-range/cell/formula/link/count/R10/render semantics rather than OOXML ZIP packaging bytes. CI also requires every one of the 352 canonical generated targets to remain a tracked, present, clean regular `100644` Git blob.
-- `generatedAt` and the workbook subtitle date are literals. Update both during every accepted refresh until the builder derives its date from the manifest.
+- The roadmap-generator `generatedAt`, task-artifact-generator `generatedAt`, and workbook subtitle date are literals. Update all three during every accepted refresh until each consumer derives its date from one canonical source.
 
 Treat these as known controls, not optional improvement ideas. If the compensating check cannot be completed, leave the task blocked and state which tool gap prevented trustworthy synchronization.
 
@@ -284,7 +287,7 @@ The repository and repository issues are public even though Project #1 is privat
 Before any live apply, manually review every changed task description, evidence requirement/link, rollback/restore statement, and artifact URL exactly as it will appear in a public issue. Then scan unstaged, staged, and untracked text; any match requires investigation and sanitization, not blind deletion:
 
 ```bash
-safety_pattern='(/(Users)/|/var/(folders)/|file[:]//|github[_]pat_|gh[pousr]_[A-Za-z0-9]{20,}|sk[-_][A-Za-z0-9_-]{12,}|Bearer[[:space:]]+[A-Za-z0-9._-]{12,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{10,}|BEGIN[[:space:]].*PRIVATE[[:space:]]KEY|PVT[A-Z_][A-Za-z0-9_]+)'
+safety_pattern='(/(Users)/|/var/(folders)/|file[:]//|github[_]pat_|gh[pousr]_[A-Za-z0-9]{20,}|(^|[^A-Za-z0-9_])sk[-_][A-Za-z0-9_-]{12,}|Bearer[[:space:]]+[A-Za-z0-9._-]{12,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{10,}|BEGIN[[:space:]].*PRIVATE[[:space:]]KEY|PVT[A-Z_][A-Za-z0-9_]+)'
 
 umask 077
 safety_scan_dir="$(mktemp -d)" || {

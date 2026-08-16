@@ -20,11 +20,11 @@ Life in Days is a proposed private, single-user visual memory archive that bring
 | Area | Status |
 | --- | --- |
 | Phase 1 Product Council package | Complete as a planning artifact; 58 work packages across P0 and R0–R10 |
-| Historical broad P0 authority | Previously activated under a five-seat council, but superseded for the next run by the bounded P0/R0 Gold Goal; its publication bootstrap grants no Stage 0 or execution authority until the clean exact-main gate passes |
-| Per-task Product Council gate | 58 six-artifact P0 dossier bundles generated as drafts; 58 Incomplete/Hold, 0 Ready, and 0 with `executionAllowed=true` |
-| PC-001 readiness controls | Gate A and exact-candidate five-seat Gate B review merged through PRs #66/#67; local/public controls and issue/Project/Wiki reconciliation are published, while all 58 tasks remain Hold |
+| Current bounded authority | The P0/R0 Gold Goal was published through PR #69 and activated from clean exact main at `2dc4d05cdeca8cb9aeacf393076f6c6f946ff62b`. Stage 0 control status derives from its exact-candidate dossier, append-only successor-review registry, and durable PR evidence; this README grants no R0 action. All 50 R1-R10 tasks and their 300 task artifacts remain frozen and out of scope. |
+| Per-task Product Council gate | 58 six-artifact P0 dossier bundles exist; all 58 are Incomplete, with 45 Hold + 13 Historical non-authorizing, 0 Ready, and 0 execution-allowed. |
+| PC-001 readiness controls | Gate A and exact-candidate five-seat audit-only review merged through PRs #66/#67. PC-001 remains Historical non-authorizing, its six artifacts remain In review, and `taskApprovals` is empty. |
 | Release PRDs/PID | Council-reviewed planning baselines; task-specific approval and executed evidence remain separate |
-| R0 shared-host coexistence spike | Historically In progress; restricted to readiness/control documentation until its task dossier passes; no private-host probe authorized |
+| R0 shared-host coexistence spike | Historically In progress; no substantive stage is authorized. Its first permitted future lane is a separately reviewed `local-synthetic/synthetic-foundation` Gate A/Gate B stage; private-host read authority remains absent. |
 | Latest frozen UI prototype | v10 Resilient Application Shell |
 | Product implementation and deployment | Substantive implementation has not started; live state is Unknown — private read authority pending; no implementation release is Done |
 | Conditional storage transition | R10 is trigger-gated and intentionally has no dates |

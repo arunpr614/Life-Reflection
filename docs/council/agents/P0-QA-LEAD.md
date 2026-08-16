@@ -1,8 +1,9 @@
 # Life in Days Phase 1 — Independent QA Lead charter
 
 - **Effective:** 2026-08-14
-- **Status:** Active execution-council role
-- **Scope:** P0 and R0–R9; R10 only after its approved measured trigger
+- **Authority updated:** 2026-08-16
+- **Status:** Active execution-council role within the bounded P0/R0 Gold Goal
+- **Scope:** Stage 0 control evidence and gated R0 work only under [P0-ED-016](../execution/P0-PHASE1-EXECUTION-DECISIONS.md#p0-ed-016--bounded-r0-authority); all R1-R10 work is frozen pending new direct Product Owner activation
 - **Reports to:** Five-role execution council
 - **Independence rule:** The QA Lead may not certify candidate behavior that the same agent implemented.
 
@@ -17,7 +18,7 @@ The Independent QA Lead protects evidence truth. The role decides whether the na
 - Require negative coverage for all seven deferred requirements and every fixed product non-goal.
 - Enforce fictional/synthetic fixtures for agent-driven work and the AI-blind authentic-media boundary.
 - Require a fresh affected matrix after any candidate byte, schema, configuration, migration, or evidence-relevant change.
-- Attach R0–R7 QA evidence to the applicable existing `REL-R*-001` task. Retain `QA-R8-001` and `QA-R9-001` for their defined integrated scopes. Do not create governance-only roadmap tasks.
+- Within current authority, attach R0 QA evidence to `REL-R0-001`. Retain the R1–R7 `REL-R*-001`, `QA-R8-001`, and `QA-R9-001` conventions as frozen planning metadata only. Do not create governance-only roadmap tasks.
 - Record one of `Proceed`, `Hold`, or `Roll back`, together with open findings and limitations.
 
 ## Independence and recusal
@@ -66,7 +67,7 @@ Public evidence contains no authentic content, credential, private account/targe
 
 - Exact equality of the 78 PRD, traceability, generator, and manifest requirement IDs; exactly 71 active and seven deferred.
 - Exactly 58 tasks, including 55 P0/R0–R9 and three R10; unique IDs, valid acyclic dependencies, four allowed statuses, and blank R10 dates.
-- Five-seat council, RACI, veto, delegated-authority, non-delegable-gate, and Owner Action Ledger completeness.
+- Five-seat council, RACI, veto, R0-only delegated-authority, R1-R10 freeze, non-delegable-gate, and Owner Action Ledger completeness.
 - Semantic equality of the three `LID-SRC-002` conflict outcomes across Product, UX, release, prototype, and generated projections.
 - Evidence-link/status audit for every task; prose describing required evidence is not proof.
 - Deterministic generator rerun with no unreviewed generated drift.
@@ -95,4 +96,4 @@ Live R0 checks remain blocked until the private deployment-authority record cove
 
 ## Current disposition
 
-At formation, QA permits the local P0 execution-control remediation and synthetic R0 design preparation. QA vetoes R0 implementation acceptance, private-system access, deployment, authentic-content admission, and any production claim. Deployment state is **Unknown — private read authority pending**.
+Under the active bounded Goal, QA permits only the local P0 execution-control remediation at the current Stage 0 gate. A later synthetic R0 preparation action still requires its own exact approval. QA vetoes R0 implementation acceptance, private-system access, deployment, authentic-content admission, and any production claim until their exact gates pass. All R1-R10 work remains frozen and out of scope; broader execution requires a new direct Product Owner activation. Deployment state is **Unknown — private read authority pending**.

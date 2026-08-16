@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1.0.0",
+  "registryId": "P0-R0-STAGE-APPROVAL-REGISTRY",
+  "scopeTaskIds": [
+    "SPK-R0-001",
+    "UX-R0-001",
+    "ARCH-R0-001",
+    "ENG-R0-001",
+    "REL-R0-001"
+  ],
+  "historicalNonAuthorizingTaskIds": [
+    "AUD-001",
+    "PC-001",
+    "PRD-R0-001"
+  ],
+  "preparationReviews": [],
+  "stageApprovals": []
+}

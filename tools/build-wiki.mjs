@@ -4,16 +4,29 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, posix, resolve } from "node:path";
+import { validateGeneratedWiki, validateSourceMarkdownGraph } from "./P0-wiki-trust.mjs";
 
 const REPOSITORY = "arunpr614/Life-Reflection";
 const GITHUB = `https://github.com/${REPOSITORY}`;
-const outputArgument = process.argv[2];
-const revision = process.argv[3] ?? "HEAD";
-const priorWikiArgument = process.argv[4] ?? null;
+const USAGE = "Usage: node tools/build-wiki.mjs <empty-output-directory> [revision] [prior-wiki-directory]";
+const cliArguments = process.argv.slice(2);
 
-if (!outputArgument) {
-  throw new Error("Usage: node tools/build-wiki.mjs <empty-output-directory> [revision] [prior-wiki-directory]");
+if (cliArguments.length === 1 && ["--help", "-h"].includes(cliArguments[0])) {
+  process.stdout.write(`${USAGE}\n\nBuilds a deterministic, complete Wiki candidate from an exact committed repository revision.\n`);
+  process.exit(0);
 }
+if (cliArguments.some((argument) => argument === "--help" || argument === "-h")) {
+  throw new Error("--help cannot be combined with build arguments");
+}
+if (cliArguments.length < 1 || cliArguments.length > 3) {
+  throw new Error(USAGE);
+}
+for (const [index, argument] of cliArguments.entries()) {
+  if (argument.startsWith("-")) {
+    throw new Error(`Unknown option-like argument at position ${index + 1}: ${argument}`);
+  }
+}
+const [outputArgument, revision = "HEAD", priorWikiArgument = null] = cliArguments;
 
 function git(args, options = {}) {
   return execFileSync("git", args, {
@@ -57,6 +70,9 @@ function naturalCompare(left, right) {
 function readAtCommit(file, encoding = "utf8") {
   return git(["show", `${commit}:${file}`], { encoding });
 }
+
+const sourceDocuments = new Map(markdownFiles.map((file) => [file, readAtCommit(file)]));
+validateSourceMarkdownGraph({ documents: sourceDocuments, trackedPaths: trackedFileSet });
 
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -264,7 +280,7 @@ function wikiLink(slug, label) {
 
 const sourcePages = [];
 for (const source of markdownFiles) {
-  const sourceContent = readAtCommit(source);
+  const sourceContent = sourceDocuments.get(source);
   const slug = pageBySource.get(source);
   const title = titleFrom(sourceContent, source);
   const provenance = `> Canonical source: [\`${source}\`](${sourceLink(source)}) · Snapshot commit: [\`${commit.slice(0, 12)}\`](${GITHUB}/commit/${commit})\n\n`;
@@ -384,43 +400,70 @@ sidebar.push(
 const sidebarContent = `${sidebar.join("\n").trimEnd()}\n`;
 writeFileSync(join(outputDirectory, "_Sidebar.md"), sidebarContent);
 
-function statusTableValue(markdown, label) {
-  const row = markdown
-    .split("\n")
-    .find((line) => line.startsWith(`| ${label} |`));
-  if (!row) throw new Error(`README current-state row is missing: ${label}`);
-  const cells = row.split("|").map((cell) => cell.trim());
-  if (!cells[2]) throw new Error(`README current-state row has no value: ${label}`);
-  return cells[2];
-}
-
-const readmeAtCommit = readAtCommit("README.md");
 const manifestAtCommit = JSON.parse(readAtCommit("docs/project/PHASE1-ROADMAP-MANIFEST.json"));
+const artifactRegisterAtCommit = JSON.parse(readAtCommit("docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json"));
 const executionAuthorizationSource = "docs/council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md";
 if (!trackedFileSet.has(executionAuthorizationSource)) {
   throw new Error(`Committed execution authorization is missing: ${executionAuthorizationSource}`);
 }
-const executionAuthorizationAtCommit = readAtCommit(executionAuthorizationSource);
 const deploymentState = "Unknown — private read authority pending";
-if (
-  manifestAtCommit.project?.deploymentState !== deploymentState ||
-  !executionAuthorizationAtCommit.includes(deploymentState)
-) {
-  throw new Error("Manifest and execution authorization do not agree on the deployment state");
+if (manifestAtCommit.project?.deploymentState !== deploymentState) {
+  throw new Error("Manifest does not contain the required unknown deployment state");
 }
 
-const roadmapState = `${manifestAtCommit.summary.taskCount} tasks: ${manifestAtCommit.summary.statusCounts.Backlog} Backlog, ${manifestAtCommit.summary.statusCounts.Next} Next, ${manifestAtCommit.summary.statusCounts["In progress"]} In progress, ${manifestAtCommit.summary.statusCounts.Done} planning-scoped Done`;
-const executionState = statusTableValue(readmeAtCommit, "P0 execution authority");
-const r0State = statusTableValue(readmeAtCommit, "R0 shared-host coexistence spike");
-const prototypeState = statusTableValue(readmeAtCommit, "Latest frozen UI prototype");
-const implementationState = statusTableValue(readmeAtCommit, "Product implementation and deployment");
-const r10State = statusTableValue(readmeAtCommit, "Conditional storage transition");
-if (!implementationState.includes(deploymentState)) {
-  throw new Error("README implementation/deployment state does not include the required unknown-live-state phrase");
+const registerTaskById = new Map(artifactRegisterAtCommit.tasks.map((task) => [task.taskId, task]));
+if (manifestAtCommit.tasks.length !== manifestAtCommit.summary.taskCount
+  || artifactRegisterAtCommit.tasks.length !== artifactRegisterAtCommit.summary.taskCount
+  || manifestAtCommit.tasks.length !== artifactRegisterAtCommit.tasks.length
+  || registerTaskById.size !== manifestAtCommit.tasks.length) {
+  throw new Error("Manifest/register task counts or identities do not agree");
 }
+for (const task of manifestAtCommit.tasks) {
+  const registered = registerTaskById.get(task.id);
+  if (!registered || registered.artifactReadiness !== task.artifactReadiness
+    || registered.executionDecision !== task.executionDecision
+    || registered.executionAllowed !== task.executionAllowed) {
+    throw new Error(`Manifest/register execution truth differs for ${task.id}`);
+  }
+}
+const derivedStatusCounts = Object.fromEntries(
+  ["Backlog", "Next", "In progress", "Done"].map((status) => [
+    status,
+    manifestAtCommit.tasks.filter((task) => task.status === status).length,
+  ]),
+);
+const derivedIncompleteCount = artifactRegisterAtCommit.tasks.filter((task) => task.artifactReadiness === "Incomplete").length;
+const derivedReadyCount = artifactRegisterAtCommit.tasks.filter((task) => task.artifactReadiness === "Ready").length;
+const derivedExecutionAllowedCount = artifactRegisterAtCommit.tasks.filter((task) => task.executionAllowed === true).length;
+if (JSON.stringify(derivedStatusCounts) !== JSON.stringify(manifestAtCommit.summary.statusCounts)
+  || artifactRegisterAtCommit.summary.incompleteCount !== derivedIncompleteCount
+  || artifactRegisterAtCommit.summary.readyCount !== derivedReadyCount
+  || artifactRegisterAtCommit.summary.executionAllowedCount !== derivedExecutionAllowedCount) {
+  throw new Error("Manifest/register structured summary counts do not match their task rows");
+}
+const decisionCounts = Object.fromEntries(
+  [...new Set(artifactRegisterAtCommit.tasks.map((task) => task.executionDecision))]
+    .sort(naturalCompare)
+    .map((decision) => [decision, artifactRegisterAtCommit.tasks.filter((task) => task.executionDecision === decision).length]),
+);
+const roadmapState = `${manifestAtCommit.summary.taskCount} tasks: ${manifestAtCommit.summary.statusCounts.Backlog} Backlog, ${manifestAtCommit.summary.statusCounts.Next} Next, ${manifestAtCommit.summary.statusCounts["In progress"]} In progress, ${manifestAtCommit.summary.statusCounts.Done} planning-scoped Done`;
+const executionState = `${artifactRegisterAtCommit.summary.incompleteCount} Incomplete; ${decisionCounts.Hold ?? 0} Hold + ${decisionCounts["Historical non-authorizing"] ?? 0} Historical non-authorizing; ${artifactRegisterAtCommit.summary.readyCount} Ready; ${artifactRegisterAtCommit.summary.executionAllowedCount} execution-allowed`;
+const r0Task = manifestAtCommit.tasks.find((task) => task.id === "SPK-R0-001");
+const r0Registered = registerTaskById.get("SPK-R0-001");
+if (!r0Task || !r0Registered) throw new Error("Structured R0 spike state is missing");
+const r0State = `Historically ${r0Task.status}; ${r0Registered.artifactReadiness}; ${r0Registered.executionDecision}; execution-allowed ${r0Registered.executionAllowed ? "Yes" : "No"}`;
+const prototypeState = `Frozen prototype path: \`${manifestAtCommit.project.latestFrozenPrototype}\``;
+const implementationState = `${artifactRegisterAtCommit.summary.executionAllowedCount} of ${artifactRegisterAtCommit.summary.taskCount} tasks execution-allowed; deployment ${deploymentState}`;
+const r10Release = manifestAtCommit.releases.find((release) => release.id === "R10");
+const r10Tasks = manifestAtCommit.tasks.filter((task) => task.milestone === "R10");
+if (!r10Release || r10Release.startDate !== null || r10Release.targetDate !== null
+  || r10Tasks.some((task) => task.startDate !== null || task.targetDate !== null)) {
+  throw new Error("Structured R10 release/task dates are not all blank");
+}
+const r10State = `Trigger-gated; R10 release and ${r10Tasks.length} tasks remain undated`;
 
 const hero = `https://raw.githubusercontent.com/${REPOSITORY}/${commit}/docs/prototypes/v7/calendar-landing-light-1280-v7.png`;
-const homeContent = `# Life in Days\n\n> **Planning baseline and fictional static prototypes—not a working or deployed application.** No live integration, persistence, authentication, backup, recovery, accessibility-conformance, or production-readiness claim is made.\n\n![Life in Days fictional calendar prototype](${hero})\n\nLife in Days is a proposed private, single-user visual memory archive for textual VoiceNotes journals, Telegram photos, and manually uploaded text journals. It organizes source material into calendar-based **Journal Days** while keeping authentic content distinct from AI-derived titles, summaries, tags, briefs, and artwork.\n\n## Current state\n\n| Area | State |\n| --- | --- |\n| Roadmap | ${roadmapState} |\n| Execution authority | ${executionState} |\n| R0 spike | ${r0State} |\n| Static prototype | ${prototypeState} |\n| Implementation and deployment | ${implementationState} |\n| Conditional transition | ${r10State} |\n\n## Read the project\n\n| Need | Page |\n| --- | --- |\n| Product promise and boundaries | ${wikiLink("Shared-Understanding", "Shared Understanding")} |\n| Complete product contract | ${wikiLink("Product-Requirements", "Product Requirements")} |\n| Current execution authority | ${wikiLink(pageBySource.get(executionAuthorizationSource), "P0 Execution Authorization")} |\n| Screen, flow, and accessibility specification | ${wikiLink("UX-Specification", "UX Specification")} |\n| Proposed technical shape | ${wikiLink("Implementation-Plan", "Implementation Plan")} |\n| Gates, tasks, risks, and decisions | ${wikiLink("Project-Tracker", "Project Tracker")} |\n| Requirement-by-requirement coverage | ${wikiLink("Requirements-Traceability", "Requirements Traceability")} |\n| Versioned prototype roadmap | ${wikiLink("Prototype-Completeness-Tracker", "Prototype Completeness Tracker")} |\n| Every canonical document | ${wikiLink("Documentation-Index", "Documentation Index")} |\n| Code, screenshots, and non-document files | ${wikiLink("Asset-Catalog", "Asset Catalog")} |\n\n## Non-negotiable privacy boundary\n\n- Real photos and data derived from real photos never go to AI providers.\n- Authentic sources remain separate from Corrections, revisions, and derived artifacts.\n- Journal Dates use fixed \`Asia/Kolkata\` time and preserve immutable original timestamps.\n- The MVP has no sharing, public links, reminders, AI coaching, or historical import.\n- Repository examples and media remain fictional.\n\n## About this Wiki\n\nThis Wiki contains a full page for every Markdown artifact in repository commit [\`${commit.slice(0, 12)}\`](${GITHUB}/commit/${commit}). Relative document links are translated to Wiki pages; source code and media links are pinned to that commit. The Git-tracked documents remain authoritative. Current state is parsed from committed README/manifest/authorization evidence and validated during generation. See the ${wikiLink("Page-Audit", "page audit")} for the one-to-one source mapping.\n`;
+const homeContent = `# Life in Days\n\n> **Planning baseline and fictional static prototypes—not a working or deployed application.** No live integration, persistence, authentication, backup, recovery, accessibility-conformance, or production-readiness claim is made.\n\n![Life in Days fictional calendar prototype](${hero})\n\nLife in Days is a proposed private, single-user visual memory archive for textual VoiceNotes journals, Telegram photos, and manually uploaded text journals. It organizes source material into calendar-based **Journal Days** while keeping authentic content distinct from AI-derived titles, summaries, tags, briefs, and artwork.\n\n## Current state\n\n| Area | State |\n| --- | --- |\n| Roadmap | ${roadmapState} |\n| Execution authority | ${executionState} |\n| R0 spike | ${r0State} |\n| Static prototype | ${prototypeState} |\n| Implementation and deployment | ${implementationState} |\n| Conditional transition | ${r10State} |\n\n## Read the project\n\n| Need | Page |\n| --- | --- |\n| Product promise and boundaries | ${wikiLink("Shared-Understanding", "Shared Understanding")} |\n| Complete product contract | ${wikiLink("Product-Requirements", "Product Requirements")} |\n| Current execution authority | ${wikiLink(pageBySource.get(executionAuthorizationSource), "P0 Execution Authorization")} |\n| Screen, flow, and accessibility specification | ${wikiLink("UX-Specification", "UX Specification")} |\n| Proposed technical shape | ${wikiLink("Implementation-Plan", "Implementation Plan")} |\n| Gates, tasks, risks, and decisions | ${wikiLink("Project-Tracker", "Project Tracker")} |\n| Requirement-by-requirement coverage | ${wikiLink("Requirements-Traceability", "Requirements Traceability")} |\n| Versioned prototype roadmap | ${wikiLink("Prototype-Completeness-Tracker", "Prototype Completeness Tracker")} |\n| Every canonical document | ${wikiLink("Documentation-Index", "Documentation Index")} |\n| Code, screenshots, and non-document files | ${wikiLink("Asset-Catalog", "Asset Catalog")} |\n\n## Non-negotiable privacy boundary\n\n- Real photos and data derived from real photos never go to AI providers.\n- Authentic sources remain separate from Corrections, revisions, and derived artifacts.\n- Journal Dates use fixed \`Asia/Kolkata\` time and preserve immutable original timestamps.\n- The MVP has no sharing, public links, reminders, AI coaching, or historical import.\n- Repository examples and media remain fictional.\n\n## About this Wiki\n\nThis Wiki contains a full page for every Markdown artifact in repository commit [\`${commit.slice(0, 12)}\`](${GITHUB}/commit/${commit}). Relative document links are translated to Wiki pages; source code and media links are pinned to that commit. The Git-tracked documents remain authoritative. Current execution truth is derived from the committed structured roadmap manifest and task-artifact register, then cross-checked during generation. See the ${wikiLink("Page-Audit", "page audit")} for the current one-to-one source mapping.\n`;
 writeFileSync(join(outputDirectory, "Home.md"), homeContent);
 
 const nonMarkdownFiles = trackedFiles.filter((file) => !file.toLowerCase().endsWith(".md"));
@@ -551,6 +594,15 @@ for (const page of sourcePages) {
     throw new Error(`Sidebar is missing ${page.slug}`);
   }
 }
+const generatedPages = new Map(
+  generatedFiles.map((file) => [file.slice(0, -3), readFileSync(join(outputDirectory, file), "utf8")]),
+);
+const wikiTrust = validateGeneratedWiki({
+  pages: generatedPages,
+  sourceDocuments,
+  pageBySource,
+  commit,
+});
 
 process.stdout.write(
   `${JSON.stringify(
@@ -562,7 +614,10 @@ process.stdout.write(
       wikiFiles: generatedFiles.length,
       priorWikiSupplied: Boolean(priorWikiDirectory),
       preservedLiveOnlyPages: preservedLivePages.map((page) => page.file),
-      outputDirectory,
+      sourceCoverage: wikiTrust.sourceCoverage,
+      checkedWikiLinks: wikiTrust.checkedLinks,
+      checkedWikiFragments: wikiTrust.checkedFragments,
+      publicSafetyMatches: wikiTrust.sensitiveMatches,
     },
     null,
     2,

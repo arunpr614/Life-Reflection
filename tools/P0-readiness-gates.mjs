@@ -18,6 +18,54 @@ export const COUNCIL_SEATS = Object.freeze([
   "qa",
   "project",
 ]);
+export const P0_R0_SCOPE_TASK_IDS = Object.freeze([
+  "AUD-001",
+  "PC-001",
+  "PRD-R0-001",
+  "SPK-R0-001",
+  "UX-R0-001",
+  "ARCH-R0-001",
+  "ENG-R0-001",
+  "REL-R0-001",
+]);
+export const P0_R0_SUBSTANTIVE_TASK_IDS = Object.freeze([
+  "SPK-R0-001",
+  "UX-R0-001",
+  "ARCH-R0-001",
+  "ENG-R0-001",
+  "REL-R0-001",
+]);
+export const TASK_PREPARATION_SCHEMA_VERSION = "1.0.0";
+export const STAGE_EXECUTION_SCHEMA_VERSION = "1.0.0";
+export const STAGE_APPROVAL_REGISTRY_PATH = "docs/council/execution/P0-R0-STAGE-APPROVAL-REGISTRY.json";
+export const DELIVERY_TRANSITION_GATE_B_CONTRACT = Object.freeze({
+  taskIds: P0_R0_SUBSTANTIVE_TASK_IDS,
+  stageIdSuffix: "-DELIVERY-TRANSITION",
+  scopeClass: "delivery-control",
+  actionClass: "delivery-status-transition",
+  moduleId: "p0.delivery-transition",
+  modulePath: "tools/P0-delivery-transition.mjs",
+});
+export const STAGE_LIFECYCLE_STATES = Object.freeze([
+  "declared",
+  "ready",
+  "running",
+  "verification-pending",
+  "recovery-required",
+  "rolling-back",
+  "verified-complete",
+  "verified-rolled-back",
+  "cancelled-before-mutation",
+  "blocked-no-mutation",
+  "expired-before-mutation",
+]);
+export const TERMINAL_STAGE_STATES = Object.freeze([
+  "verified-complete",
+  "verified-rolled-back",
+  "cancelled-before-mutation",
+  "blocked-no-mutation",
+  "expired-before-mutation",
+]);
 export const TASK_FILE_PURPOSES = Object.freeze([
   ...ARTIFACT_KINDS.map((kind) => `artifact:${kind}`),
   "implementation",
@@ -65,6 +113,9 @@ export const TASK_FILE_DIFF_EXCLUSIONS = Object.freeze([
 ]);
 export const TASK_FILE_DESCENDANT_DELTA_PATHS = Object.freeze([
   ...TASK_FILE_DIFF_EXCLUSIONS,
+  // Gate A acceptance and later Gate B stage approval are append-only records
+  // published after their distinct reviewed candidates.
+  STAGE_APPROVAL_REGISTRY_PATH,
   // A private/release candidate may complete its candidate-bound accountable-
   // human action only after candidate review and before approval publication.
   "docs/council/execution/P0-OWNER-ACTION-STATE.json",
@@ -91,6 +142,9 @@ export const SCOPE_ACTION_COMPATIBILITY = Object.freeze({
     "planning-control",
     "readiness-control-hardening",
     "synthetic-foundation",
+  ]),
+  "delivery-control": Object.freeze([
+    "delivery-status-transition",
   ]),
   "private-execution": Object.freeze([
     "private-system-read",
@@ -359,6 +413,19 @@ export function isTaskMilestoneScopeActionCompatible({ taskId, milestone, scopeC
   return asArray(taskContract.scopeActions[scopeClass]).includes(actionClass);
 }
 
+export function isDeliveryTransitionScopeAction({ scopeClass, actionClass }) {
+  return scopeClass === DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass
+    && actionClass === DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass;
+}
+
+export function isDedicatedDeliveryTransitionScopeAction({ taskId, stageId, scopeClass, actionClass }) {
+  return DELIVERY_TRANSITION_GATE_B_CONTRACT.taskIds.includes(taskId)
+    && typeof stageId === "string"
+    && stageId.startsWith(`P0-STAGE-${taskId}-`)
+    && stageId.endsWith(DELIVERY_TRANSITION_GATE_B_CONTRACT.stageIdSuffix)
+    && isDeliveryTransitionScopeAction({ scopeClass, actionClass });
+}
+
 export const OWNER_ACTION_IDS_BY_MILESTONE = Object.freeze({
   P0: Object.freeze([]),
   R0: Object.freeze(["P0-OA-001", "R0-OA-001", "R0-OA-002"]),
@@ -475,6 +542,9 @@ export const OWNER_ACTION_REQUIREMENT_CATALOG = Object.freeze({
 
 const FULL_REVISION = /^[0-9a-f]{40}$/;
 const SHA256 = /^[0-9a-f]{64}$/;
+const STAGE_ID = /^P0-STAGE-[A-Z0-9]+(?:-[A-Z0-9]+)+$/;
+const PREPARATION_REVIEW_ID = /^P0-PREP-[A-Z0-9]+(?:-[A-Z0-9]+)+$/;
+const IDEMPOTENCY_KEY = /^P0-IDEMP-[A-Z0-9]+(?:-[A-Z0-9]+)+$/;
 const OPAQUE_REFERENCE = /^[a-z][a-z0-9-]*:[A-Za-z0-9._/-]{4,}$/;
 const AUTHORITY_ID = /^P0-AUTH-[A-Z0-9-]{4,}$/;
 const REQUIRED_APPROVED_ARTIFACTS = new Set(["product", "qa", "delivery", "council"]);
@@ -609,6 +679,7 @@ const sameStringSet = (left, right) => {
     && left.length === right.length
     && [...left].sort().every((value, index) => value === [...right].sort()[index]);
 };
+const hasExactKeys = (value, keys) => isObject(value) && sameStringSet(Object.keys(value), keys);
 const isOpaqueReference = (value) => isNonemptyString(value)
   && OPAQUE_REFERENCE.test(value)
   && !value.includes("://")
@@ -1072,6 +1143,701 @@ export function computeAttestationDigest(attestation) {
   return `sha256:${sha256(JSON.stringify(attestationPayload(attestation)))}`;
 }
 
+export function preparationDossierPayload(input) {
+  const source = asObject(input);
+  const candidate = asObject(source.candidate);
+  return {
+    schemaVersion: source.schemaVersion ?? null,
+    preparationReviewId: source.preparationReviewId ?? null,
+    taskId: source.taskId ?? null,
+    milestone: source.milestone ?? null,
+    stageId: source.stageId ?? null,
+    requestedScope: {
+      scopeClass: source.requestedScope?.scopeClass ?? null,
+      actionClass: source.requestedScope?.actionClass ?? null,
+    },
+    candidate: {
+      revision: candidate.revision ?? null,
+      baseRevision: candidate.baseRevision ?? null,
+      artifacts: Object.fromEntries(ARTIFACT_KINDS.map((kind) => [kind, {
+        path: candidate.artifacts?.[kind]?.path ?? null,
+        sha256: candidate.artifacts?.[kind]?.sha256 ?? null,
+      }])),
+    },
+    dependencyIds: [...asArray(source.dependencyIds)].sort(),
+    acceptanceScenarioIds: [...asArray(source.acceptanceScenarioIds)].sort(),
+  };
+}
+
+export function computePreparationDossierDigest(input) {
+  return `sha256:${sha256(canonicalJson(preparationDossierPayload(input)))}`;
+}
+
+export function stageCouncilAttestationPayload(input) {
+  const source = asObject(input);
+  return {
+    gateKind: source.gateKind ?? null,
+    preparationReviewId: source.preparationReviewId ?? null,
+    taskId: source.taskId ?? null,
+    stageId: source.stageId ?? null,
+    subject: source.subject ?? null,
+    decision: source.decision ?? null,
+    reviewerId: source.reviewerId ?? null,
+    reviewerRole: source.reviewerRole ?? null,
+    reviewedRevision: source.reviewedRevision ?? null,
+    dossierDigest: source.dossierDigest ?? null,
+    artifactSha256: source.artifactSha256 ?? null,
+    scopeClass: source.scopeClass ?? null,
+    actionClass: source.actionClass ?? null,
+    evidenceReference: source.evidenceReference ?? null,
+  };
+}
+
+export function computeStageCouncilAttestationDigest(input) {
+  return `sha256:${sha256(canonicalJson(stageCouncilAttestationPayload(input)))}`;
+}
+
+export function computePreparationReviewRecordSha256(record) {
+  return sha256(canonicalJson(asObject(record)));
+}
+
+export function stageApprovalContextPayload(record) {
+  const source = asObject(record);
+  return Object.fromEntries(Object.entries(source).filter(([key]) => key !== "stageCouncil"));
+}
+
+export function computeStageApprovalContextSha256(record) {
+  return sha256(canonicalJson(stageApprovalContextPayload(record)));
+}
+
+export function stageApprovalSeatAttestationPayload(input) {
+  const source = asObject(input);
+  return {
+    reviewerId: source.reviewerId ?? null,
+    reviewerRole: source.reviewerRole ?? null,
+    verdict: source.verdict ?? null,
+    reviewedRevision: source.reviewedRevision ?? null,
+    dossierDigest: source.dossierDigest ?? null,
+    preparationReviewId: source.preparationReviewId ?? null,
+    preparationReviewSha256: source.preparationReviewSha256 ?? null,
+    stageId: source.stageId ?? null,
+    gateKind: source.gateKind ?? null,
+    scopeClass: source.scopeClass ?? null,
+    actionClass: source.actionClass ?? null,
+    stageContextSha256: source.stageContextSha256 ?? null,
+    evidenceReference: source.evidenceReference ?? null,
+  };
+}
+
+export function computeStageApprovalSeatAttestationDigest(input) {
+  return `sha256:${sha256(canonicalJson(stageApprovalSeatAttestationPayload(input)))}`;
+}
+
+function gateEvaluation(taskId, gates, allowedKey, allowed, decision, nextAction, normalizedEvidence) {
+  const failedGates = gates.filter((gate) => !gate.passed);
+  const result = {
+    [allowedKey]: allowed === true && failedGates.length === 0,
+    executionAllowed: allowedKey === "executionAllowed" && allowed === true && failedGates.length === 0,
+    decision: failedGates.length === 0 ? decision : "Hold",
+    nextAction: failedGates.length === 0 ? nextAction : failedGates[0].correctiveAction,
+    blockers: failedGates.map(({ code, reason, correctiveAction }) => ({
+      code,
+      reason: `${taskId}: ${reason}; action: ${correctiveAction}.`,
+    })),
+    gateResults: gates.map(({ code, passed, reason, correctiveAction }) => ({
+      code,
+      passed,
+      reason: passed
+        ? `${taskId}: ${code} passed.`
+        : `${taskId}: ${reason}; action: ${correctiveAction}.`,
+    })),
+    normalizedEvidence,
+  };
+  if (allowedKey === "preparationAllowed") result.executionAllowed = false;
+  return result;
+}
+
+/**
+ * Gate A authorizes only preparation of a later immutable implementation and
+ * test candidate. It deliberately has no path to task execution permission.
+ * Publication facts and the canonical manifest task are trusted adapter inputs.
+ */
+export function evaluateTaskPreparationGateA(input, context = {}) {
+  const source = asObject(input);
+  const taskId = isNonemptyString(source.taskId) ? source.taskId : "UNKNOWN-TASK";
+  const isDeliveryTransitionStage = typeof source.stageId === "string"
+    && source.stageId.endsWith(DELIVERY_TRANSITION_GATE_B_CONTRACT.stageIdSuffix);
+  const candidate = asObject(source.candidate);
+  const publication = asObject(context.candidatePublication);
+  const expectedTask = asObject(context.expectedTask);
+  const requestedScope = asObject(source.requestedScope);
+  const dedicatedDeliveryTransition = isDedicatedDeliveryTransitionScopeAction({
+    taskId,
+    stageId: source.stageId,
+    scopeClass: requestedScope.scopeClass,
+    actionClass: requestedScope.actionClass,
+  });
+  const artifacts = asObject(candidate.artifacts);
+  const reviews = asObject(source.artifactReviews);
+  const council = asObject(source.council);
+  const seats = asObject(council.seatVerdicts);
+  const { records: registryRecords, byId: registryById, duplicateIds } = normalizeRegistry(source.reviewerRegistry);
+  const proposalAuthorIds = asArray(source.proposalAuthorIds);
+  const computedDossierDigest = computePreparationDossierDigest(source);
+  const gates = [];
+  const addGate = (code, passed, reason, correctiveAction) => gates.push({
+    code,
+    passed: passed === true,
+    reason,
+    correctiveAction,
+  });
+
+  addGate("PREP_SCHEMA", source.schemaVersion === TASK_PREPARATION_SCHEMA_VERSION
+    && hasExactKeys(source, [
+      "schemaVersion", "preparationReviewId", "taskId", "milestone", "stageId", "requestedScope",
+      "candidate", "dependencyIds", "dependencyEvidence", "acceptanceScenarioIds", "proposalAuthorIds",
+      "artifactReviews", "council", "reviewerRegistry", "openDecisions", "specialistVetoes", "safety",
+    ]), "the Gate A proposal has an unknown or incomplete schema", "rebuild the exact preparation proposal schema");
+  addGate("PREP_SCOPE_TASK", P0_R0_SUBSTANTIVE_TASK_IDS.includes(taskId) && (!isDeliveryTransitionStage || dedicatedDeliveryTransition),
+    "Gate A names a historical, unknown, or out-of-scope task", "select one of the five substantive R0 tasks and bind the exact delivery-transition pair when using its suffix");
+  addGate("PREP_STAGE_ID", STAGE_ID.test(source.stageId ?? "") && source.stageId.includes(taskId),
+    "the immutable task-bound stage ID is missing or malformed", "use a P0-STAGE-* ID containing the exact task ID");
+  addGate("PREP_REVIEW_ID", PREPARATION_REVIEW_ID.test(source.preparationReviewId ?? ""),
+    "the preparation review ID is missing or malformed", "use a stable P0-PREP-* review ID");
+  addGate("PREP_TASK_CONTRACT", expectedTask.taskId === taskId
+    && expectedTask.milestone === source.milestone
+    && sameStringSet(expectedTask.dependencyIds, source.dependencyIds)
+    && sameStringSet(expectedTask.acceptanceScenarioIds, source.acceptanceScenarioIds),
+  "the proposal differs from the trusted manifest task contract", "rebuild task, milestone, dependency, and scenario bindings from the manifest");
+  addGate("PREP_SCOPE_ACTION", hasExactKeys(requestedScope, ["scopeClass", "actionClass"])
+    && (isDeliveryTransitionStage
+      ? isDedicatedDeliveryTransitionScopeAction({
+          taskId,
+          stageId: source.stageId,
+          scopeClass: requestedScope.scopeClass,
+          actionClass: requestedScope.actionClass,
+        })
+      : isTaskMilestoneScopeActionCompatible({
+          taskId,
+          milestone: source.milestone,
+          scopeClass: requestedScope.scopeClass,
+          actionClass: requestedScope.actionClass,
+    })), "the intended later stage scope/action is neither task-owned nor the closed delivery-transition pair", "select one exact task pair or the dedicated delivery-control contract");
+  addGate("PREP_LOCAL_ONLY", source.safety?.authenticMediaAccessed === false
+    && source.safety?.privateNetworkAccessed === false
+    && source.safety?.externalMutationPerformed === false,
+  "Gate A evidence includes or permits a private, authentic, or external action", "use only local, public, fictional, and synthetic preparation evidence");
+  addGate("PREP_PUBLIC_SAFETY", sensitiveInputPaths(source).length === 0,
+    "the preparation proposal contains a sensitive or authentic-content sentinel", "replace sensitive values with approved opaque public-safe references");
+  addGate("PREP_CANDIDATE", hasExactKeys(candidate, ["revision", "baseRevision", "dossierDigest", "artifacts"])
+    && FULL_REVISION.test(candidate.revision ?? "")
+    && FULL_REVISION.test(candidate.baseRevision ?? "")
+    && candidate.revision !== candidate.baseRevision
+    && candidate.dossierDigest === computedDossierDigest,
+  "the proposal candidate revision, base, or dossier digest is invalid", "bind the exact proposal commit and recompute its preparation dossier digest");
+  addGate("PREP_PUBLICATION", publication.revision === candidate.revision
+    && publication.baseRevision === candidate.baseRevision
+    && publication.bytesVerified === true
+    && publication.fullDiffVerified === true
+    && publication.candidateOnFetchedMain === true,
+  "trusted Git facts do not prove the exact merged proposal candidate", "verify the full proposal diff and candidate bytes on fetched origin/main");
+  addGate("PREP_ARTIFACT_SET", sameStringSet(Object.keys(artifacts), [...ARTIFACT_KINDS])
+    && ARTIFACT_KINDS.every((kind) => {
+      const artifact = asObject(artifacts[kind]);
+      const basename = isNonemptyString(artifact.path) ? path.posix.basename(artifact.path) : "";
+      return hasExactKeys(artifact, ["path", "sha256", "contentState"])
+        && basename.startsWith("P0-")
+        && basename.includes(taskId)
+        && SHA256.test(artifact.sha256 ?? "")
+        && ["in-review", "approved", "not-applicable"].includes(artifact.contentState);
+    }), "the six proposal artifact bindings are missing, unsafe, or malformed", "bind exactly six P0-prefixed task artifacts with exact hashes");
+  addGate("PREP_REVIEWER_REGISTRY", registryRecords.length > 0 && duplicateIds.size === 0,
+    "the reviewer registry is empty or contains duplicate IDs", "use the canonical active reviewer registry");
+
+  const artifactReviewerIds = [];
+  for (const kind of ARTIFACT_KINDS) {
+    const artifact = asObject(artifacts[kind]);
+    const review = asObject(reviews[kind]);
+    const reviewer = registryById.get(review.reviewerId);
+    const role = registryRole(reviewer);
+    const expectedDecision = OPTIONAL_NA_ARTIFACTS.has(kind) && artifact.contentState === "not-applicable"
+      ? "not-applicable"
+      : "approved";
+    if (isNonemptyString(review.reviewerId)) artifactReviewerIds.push(review.reviewerId);
+    const expectedDigest = computeStageCouncilAttestationDigest({
+      gateKind: "gate-a-prepare",
+      preparationReviewId: source.preparationReviewId,
+      taskId,
+      stageId: source.stageId,
+      subject: `artifact:${kind}`,
+      decision: expectedDecision,
+      reviewerId: review.reviewerId,
+      reviewerRole: review.reviewerRole,
+      reviewedRevision: review.reviewedRevision,
+      dossierDigest: review.dossierDigest,
+      artifactSha256: review.artifactSha256,
+      scopeClass: requestedScope.scopeClass,
+      actionClass: requestedScope.actionClass,
+      evidenceReference: review.evidenceReference,
+    });
+    addGate(`PREP_ARTIFACT_${kind.toUpperCase()}_REVIEW`, hasExactKeys(review, [
+      "reviewerId", "reviewerRole", "decision", "reviewedRevision", "dossierDigest",
+      "artifactSha256", "evidenceReference", "attestationDigest",
+    ]) && reviewer?.active === true
+      && role === ARTIFACT_ROLE[kind]
+      && review.reviewerRole === role
+      && review.decision === expectedDecision
+      && review.reviewedRevision === candidate.revision
+      && review.dossierDigest === candidate.dossierDigest
+      && review.artifactSha256 === artifact.sha256
+      && isOpaqueReference(review.evidenceReference)
+      && review.attestationDigest === expectedDigest,
+    `${kind} proposal review is absent, role-invalid, stale, or tampered`, `obtain an exact-candidate ${kind} proposal review`);
+  }
+  const dependencyIds = asArray(source.dependencyIds);
+  const dependencyEvidence = asArray(source.dependencyEvidence);
+  addGate("PREP_DEPENDENCIES", unique(dependencyIds)
+    && dependencyEvidence.length === dependencyIds.length
+    && dependencyIds.every((dependencyId) => dependencyEvidence.filter((record) => (
+      record?.dependencyId === dependencyId
+        && record?.result === "pass"
+        && isOpaqueReference(record?.evidenceReference)
+    )).length === 1), "dependency-entry evidence is incomplete or non-canonical", "record one passing opaque reference per canonical dependency");
+  addGate("PREP_OPEN_DECISIONS", Array.isArray(source.openDecisions) && source.openDecisions.length === 0,
+    "the proposal retains an open decision", "resolve every open proposal decision");
+  addGate("PREP_SPECIALIST_VETO", Array.isArray(source.specialistVetoes) && source.specialistVetoes.length === 0,
+    "the proposal retains a specialist veto", "resolve every specialist veto");
+  addGate("PREP_COUNCIL", council.verdict === "ready-to-prepare"
+    && council.reviewedRevision === candidate.revision
+    && council.dossierDigest === candidate.dossierDigest
+    && Array.isArray(council.unresolvedBlockers)
+    && council.unresolvedBlockers.length === 0
+    && sameStringSet(Object.keys(seats), [...COUNCIL_SEATS]),
+  "the five-seat Council proposal decision is absent, stale, or blocked", "record a blocker-free exact-candidate ready-to-prepare decision");
+
+  const seatIds = [];
+  for (const seat of COUNCIL_SEATS) {
+    const record = asObject(seats[seat]);
+    const reviewer = registryById.get(record.reviewerId);
+    const role = registryRole(reviewer);
+    if (isNonemptyString(record.reviewerId)) seatIds.push(record.reviewerId);
+    const expectedDigest = computeStageCouncilAttestationDigest({
+      gateKind: "gate-a-prepare",
+      preparationReviewId: source.preparationReviewId,
+      taskId,
+      stageId: source.stageId,
+      subject: `council:${seat}`,
+      decision: "approve-preparation-candidate",
+      reviewerId: record.reviewerId,
+      reviewerRole: record.reviewerRole,
+      reviewedRevision: record.reviewedRevision,
+      dossierDigest: record.dossierDigest,
+      scopeClass: requestedScope.scopeClass,
+      actionClass: requestedScope.actionClass,
+      evidenceReference: record.evidenceReference,
+    });
+    addGate(`PREP_SEAT_${seat.toUpperCase()}`, hasExactKeys(record, [
+      "reviewerId", "reviewerRole", "verdict", "reviewedRevision", "dossierDigest",
+      "preparationReviewId", "stageId", "evidenceReference", "attestationDigest",
+    ]) && reviewer?.active === true
+      && role === SEAT_ROLE[seat]
+      && record.reviewerRole === role
+      && record.verdict === "approve-preparation-candidate"
+      && record.reviewedRevision === candidate.revision
+      && record.dossierDigest === candidate.dossierDigest
+      && record.preparationReviewId === source.preparationReviewId
+      && record.stageId === source.stageId
+      && isOpaqueReference(record.evidenceReference)
+      && record.attestationDigest === expectedDigest,
+    `${seat} preparation seat is absent, role-invalid, stale, or tampered`, `obtain the exact ${seat} preparation attestation`);
+  }
+  addGate("PREP_SEAT_INDEPENDENCE", seatIds.length === COUNCIL_SEATS.length
+    && unique(seatIds)
+    && !seatIds.some((reviewerId) => proposalAuthorIds.includes(reviewerId)),
+  "Council seats are duplicated or overlap proposal authors", "use five distinct reviewers independent of proposal authors");
+
+  return gateEvaluation(
+    taskId,
+    gates,
+    "preparationAllowed",
+    true,
+    "Ready to prepare — Gate A",
+    "Prepare only the named local/public/fictional/synthetic implementation-and-test candidate; private and external actions remain prohibited.",
+    {
+      schemaVersion: source.schemaVersion ?? null,
+      preparationReviewId: source.preparationReviewId ?? null,
+      taskId,
+      stageId: source.stageId ?? null,
+      requestedScope: {
+        scopeClass: requestedScope.scopeClass ?? null,
+        actionClass: requestedScope.actionClass ?? null,
+      },
+      candidateRevision: candidate.revision ?? null,
+      dossierDigest: candidate.dossierDigest ?? null,
+      preparationBounds: ["local", "public", "fictional", "synthetic"],
+      privateActionsAllowed: false,
+      externalMutationsAllowed: false,
+      sourceFingerprint: `sha256:${sha256(canonicalJson(source))}`,
+    },
+  );
+}
+
+/**
+ * Gate B adds an immutable stage envelope around the existing exact-candidate
+ * execution evaluator. It consumes all non-legacy task gates without changing
+ * the direct task evaluator, then replaces only the task-wide authorization
+ * gates with immutable preparation and stage authorization.
+ */
+export function evaluateStageExecutionGateB(input, context = {}) {
+  const source = asObject(input);
+  const taskInput = asObject(source.taskInput);
+  const preparationReview = asObject(source.preparationReview);
+  const stage = asObject(source.stage);
+  const taskId = isNonemptyString(taskInput.taskId) ? taskInput.taskId : "UNKNOWN-TASK";
+  const isDeliveryTransitionStage = typeof stage.stageId === "string"
+    && stage.stageId.endsWith(DELIVERY_TRANSITION_GATE_B_CONTRACT.stageIdSuffix);
+  const requestedScope = asObject(taskInput.requestedScope);
+  const dedicatedDeliveryTransition = isDedicatedDeliveryTransitionScopeAction({
+    taskId,
+    stageId: stage.stageId,
+    scopeClass: requestedScope.scopeClass,
+    actionClass: requestedScope.actionClass,
+  });
+  const stageDedicatedDeliveryTransition = isDedicatedDeliveryTransitionScopeAction({
+    taskId,
+    stageId: stage.stageId,
+    scopeClass: stage.scopeClass,
+    actionClass: stage.actionClass,
+  });
+  const taskOptions = asObject(context.taskEvaluationOptions);
+  const baseEvaluation = evaluateReadiness(taskInput, {
+    ...taskOptions,
+    deliveryTransitionStageId: stage.stageId,
+  });
+  const legacyAuthorizationGate = (code) => code === "TASK_EXECUTION_CONTRACT_CARDINALITY"
+    || code === "COUNCIL_SCOPE_VERDICT"
+    || code === "COUNCIL_CANDIDATE_BINDING"
+    || code === "COUNCIL_SEAT_SET"
+    || code === "COUNCIL_SEAT_UNIQUENESS"
+    || code === "UNRESOLVED_BLOCKERS"
+    || code.startsWith("SEAT_")
+    || code.startsWith("APPROVAL_RECORD_")
+    || code.startsWith("APPROVAL_PUBLICATION_")
+    || code === "ACTIVATION_APPROVAL_REACHABLE";
+  const gates = baseEvaluation.gateResults.filter((gate) => !legacyAuthorizationGate(gate.code)
+    && !(dedicatedDeliveryTransition && gate.code === "TASK_SCOPE_ACTION_COMPATIBILITY")).map((gate) => ({
+    code: gate.code,
+    passed: gate.passed,
+    reason: gate.reason.replace(new RegExp(`^${taskId}: `), "").replace(/; action: .+\.$/, ""),
+    correctiveAction: gate.reason.match(/; action: (.+)\.$/)?.[1] ?? "repair the failed task authorization gate",
+  }));
+  const addGate = (code, passed, reason, correctiveAction) => gates.push({ code, passed: passed === true, reason, correctiveAction });
+  const candidate = asObject(taskInput.candidate);
+  const requirementIds = asArray(taskInput.requirementIds);
+  const requirementEvidence = asArray(stage.requirementEvidence);
+  const acceptanceScenarioIds = asArray(taskInput.acceptanceScenarioIds);
+  const independentQa = asObject(stage.independentQa);
+  const rollback = asObject(stage.rollback);
+  const publication = asObject(taskOptions.approvalPublication);
+  const reviewerRegistry = normalizeRegistry(taskInput.reviewerRegistry);
+  const qaReviewer = reviewerRegistry.byId.get(independentQa.reviewerId);
+  const qaRole = registryRole(qaReviewer);
+  const candidateContributors = new Set([
+    ...asArray(candidate.implementerIds),
+    ...asArray(candidate.evidenceProducerIds),
+  ]);
+  const preparationCandidate = asObject(preparationReview.proposalCandidate);
+  const preparationSeats = asObject(preparationReview.councilSeatAttestations);
+  const stageCouncil = asObject(stage.stageCouncil);
+  const stageSeats = asObject(stageCouncil.seatVerdicts);
+  const reviewerRegistrySha256 = computeReviewerRegistrySha256(taskInput.reviewerRegistry);
+  const ownerActionStateSha256 = computeTaskOwnerActionStateSha256({
+    taskId,
+    requirements: asArray(taskInput.ownerActionRequirements),
+    records: asArray(taskInput.ownerActions),
+  });
+  const preparationReviewSha256 = computePreparationReviewRecordSha256(preparationReview);
+  const stageContextSha256 = computeStageApprovalContextSha256(stage);
+  const stageApprovalSha256 = sha256(canonicalJson(stage));
+
+  addGate("STAGE_GATE_B_BINDING", P0_R0_SUBSTANTIVE_TASK_IDS.includes(taskId)
+    && stage.taskId === taskId
+    && STAGE_ID.test(stage.stageId ?? "")
+    && stage.stageId.includes(taskId)
+    && ["execute", "accept"].includes(stage.gateKind)
+    && stage.state === "ready"
+    && stage.scopeClass === requestedScope.scopeClass
+    && stage.actionClass === requestedScope.actionClass,
+  "the stage envelope is malformed or differs from the task request", "supply one exact immutable ready stage for the requested pair");
+
+  addGate("STAGE_SCHEMA", source.schemaVersion === STAGE_EXECUTION_SCHEMA_VERSION
+    && hasExactKeys(source, ["schemaVersion", "taskInput", "preparationReview", "stage"])
+    && hasExactKeys(stage, [
+      "stageId", "preparationReviewId", "preparationReviewSha256", "taskId", "gateKind", "state", "scopeClass", "actionClass",
+      "sequence", "candidateRevision", "dossierDigest", "predecessorReceiptSha256", "idempotencyKey",
+      "stageDefinitionSha256", "moduleId", "moduleSha256",
+      "candidate", "artifactReviews", "designCoverage", "dependencyEvidence", "openDecisions", "specialistVetoes",
+      "privateAuthority", "reviewerRegistrySha256", "ownerActionStateSha256", "requirementEvidence",
+      "independentQa", "rollback", "stageCouncil",
+    ]), "the Gate B stage envelope has an unknown or incomplete schema", "rebuild the exact stage authorization record");
+  addGate("STAGE_SCOPE_TASK", P0_R0_SUBSTANTIVE_TASK_IDS.includes(taskId)
+    && stage.taskId === taskId,
+  "the stage names a historical, unknown, or out-of-scope task", "select one of the five substantive R0 tasks");
+  addGate("STAGE_ID", STAGE_ID.test(stage.stageId ?? "") && stage.stageId.includes(taskId),
+    "the immutable task-bound stage ID is missing or malformed", "use a P0-STAGE-* ID containing the exact task ID");
+  addGate("STAGE_GATE_KIND", ["execute", "accept"].includes(stage.gateKind),
+    "the Gate B action kind is not execute or accept", "select the exact execute or accept gate kind");
+  addGate("STAGE_STATE", stage.state === "ready",
+    "the stage is not in the explicit ready state", "complete declaration and Gate B review before runtime start");
+  addGate("STAGE_SCOPE_ACTION", stage.scopeClass === requestedScope.scopeClass
+    && stage.actionClass === requestedScope.actionClass
+    && (isDedicatedDeliveryTransitionScopeAction({
+      taskId,
+      stageId: stage.stageId,
+      scopeClass: stage.scopeClass,
+      actionClass: stage.actionClass,
+    }) || isTaskMilestoneScopeActionCompatible({
+      taskId,
+      milestone: taskInput.milestone,
+      scopeClass: stage.scopeClass,
+      actionClass: stage.actionClass,
+    })), "the stage scope/action differs from the exact task candidate or closed delivery-transition contract", "bind one task-owned pair or the dedicated delivery-control pair");
+  const usesDeliveryTransitionModule = stage.moduleId === DELIVERY_TRANSITION_GATE_B_CONTRACT.moduleId;
+  addGate("STAGE_DELIVERY_TRANSITION_CONTRACT",
+    stageDedicatedDeliveryTransition === dedicatedDeliveryTransition
+      && isDeliveryTransitionStage === stageDedicatedDeliveryTransition
+      && usesDeliveryTransitionModule === stageDedicatedDeliveryTransition
+      && (!stageDedicatedDeliveryTransition || asArray(candidate.taskFiles).some((entry) => (
+        entry?.path === DELIVERY_TRANSITION_GATE_B_CONTRACT.modulePath
+          && entry?.purpose === "implementation"
+          && entry.gitMode === "100644"
+          && entry.gitType === "blob"
+          && `sha256:${entry.sha256}` === stage.moduleSha256
+      ))),
+  "the delivery-transition suffix, scope/action pair, and code-owned module are not bound as one closed contract", "bind delivery-control/delivery-status-transition only to the exact delivery-transition suffix and p0.delivery-transition module");
+  addGate("STAGE_CANDIDATE", stage.candidateRevision === candidate.revision
+    && stage.dossierDigest === candidate.dossierDigest
+    && canonicalJson(stage.candidate) === canonicalJson(candidate)
+    && canonicalJson(stage.artifactReviews) === canonicalJson(taskInput.artifactReviews)
+    && canonicalJson(stage.designCoverage) === canonicalJson(taskInput.designCoverage)
+    && canonicalJson(stage.dependencyEvidence) === canonicalJson(taskInput.dependencyEvidence)
+    && canonicalJson(stage.openDecisions) === canonicalJson(taskInput.openDecisions)
+    && canonicalJson(stage.specialistVetoes) === canonicalJson(taskInput.specialistVetoes)
+    && canonicalJson(stage.privateAuthority) === canonicalJson(taskInput.privateAuthority),
+  "the stage does not bind the exact implementation/evidence candidate", "bind stage revision and dossier digest to the reviewed candidate");
+  addGate("STAGE_MODULE_CANDIDATE_BINDING", /^sha256:[0-9a-f]{64}$/.test(stage.stageDefinitionSha256 ?? "")
+    && /^[a-z][a-z0-9.-]{2,63}$/.test(stage.moduleId ?? "")
+    && /^sha256:[0-9a-f]{64}$/.test(stage.moduleSha256 ?? "")
+    && asArray(candidate.taskFiles).some((entry) => entry?.purpose === "implementation"
+      && ["100644", "100755"].includes(entry.gitMode)
+      && entry.gitType === "blob"
+      && entry.sha256 === stage.moduleSha256.slice("sha256:".length)),
+  "the stage does not bind a reviewed implementation module in the exact candidate", "bind the stage definition and module digest to one candidate implementation file");
+  addGate("STAGE_CURRENT_CONTEXT", stage.reviewerRegistrySha256 === reviewerRegistrySha256
+    && stage.ownerActionStateSha256 === ownerActionStateSha256,
+  "the reviewer registry or task owner-action state differs from the stage review context", "obtain fresh stage review after any reviewer or owner-action change");
+  addGate("STAGE_PREPARATION_RECORD", hasExactKeys(preparationReview, [
+    "preparationReviewId", "taskId", "stageId", "state", "scopeClass", "actionClass", "proposalCandidate",
+    "reviewerRegistrySha256", "councilSeatAttestations", "evidenceReference",
+  ]) && preparationReview.preparationReviewId === stage.preparationReviewId
+    && preparationReview.taskId === taskId
+    && preparationReview.stageId === stage.stageId
+    && preparationReview.state === "accepted"
+    && preparationReview.scopeClass === stage.scopeClass
+    && preparationReview.actionClass === stage.actionClass
+    && preparationReview.reviewerRegistrySha256 === reviewerRegistrySha256
+    && preparationReviewSha256 === stage.preparationReviewSha256
+    && preparationCandidate.revision !== stage.candidateRevision
+    && FULL_REVISION.test(preparationCandidate.revision ?? "")
+    && FULL_REVISION.test(preparationCandidate.baseRevision ?? "")
+    && preparationCandidate.revision !== preparationCandidate.baseRevision
+    && SHA256.test(preparationCandidate.dossierDigest ?? "")
+    && isOpaqueReference(preparationReview.evidenceReference),
+  "the stage does not resolve to one immutable accepted Gate A preparation record", "publish and bind the exact accepted preparation predecessor");
+  const preparationSeatIds = [];
+  addGate("PREPARATION_SEAT_SET", sameStringSet(Object.keys(preparationSeats), [...COUNCIL_SEATS]),
+    "the accepted preparation record does not contain exactly five seats", "publish the five exact Gate A seat attestations");
+  for (const seat of COUNCIL_SEATS) {
+    const record = asObject(preparationSeats[seat]);
+    const reviewer = reviewerRegistry.byId.get(record.reviewerId);
+    const role = registryRole(reviewer);
+    if (isNonemptyString(record.reviewerId)) preparationSeatIds.push(record.reviewerId);
+    const expectedDigest = computeStageCouncilAttestationDigest({
+      gateKind: "gate-a-prepare",
+      preparationReviewId: preparationReview.preparationReviewId,
+      taskId,
+      stageId: stage.stageId,
+      subject: `council:${seat}`,
+      decision: "approve-preparation-candidate",
+      reviewerId: record.reviewerId,
+      reviewerRole: record.reviewerRole,
+      reviewedRevision: preparationCandidate.revision,
+      dossierDigest: preparationCandidate.dossierDigest,
+      scopeClass: stage.scopeClass,
+      actionClass: stage.actionClass,
+      evidenceReference: record.evidenceReference,
+    });
+    addGate(`PREPARATION_SEAT_${seat.toUpperCase()}`, hasExactKeys(record, [
+      "reviewerId", "reviewerRole", "verdict", "reviewedRevision", "dossierDigest", "preparationReviewId",
+      "stageId", "scopeClass", "actionClass", "evidenceReference", "attestationDigest",
+    ]) && reviewer?.active === true
+      && role === SEAT_ROLE[seat]
+      && record.reviewerRole === role
+      && record.verdict === "approve-preparation-candidate"
+      && record.reviewedRevision === preparationCandidate.revision
+      && record.dossierDigest === preparationCandidate.dossierDigest
+      && record.preparationReviewId === preparationReview.preparationReviewId
+      && record.stageId === stage.stageId
+      && record.scopeClass === stage.scopeClass
+      && record.actionClass === stage.actionClass
+      && isOpaqueReference(record.evidenceReference)
+      && record.attestationDigest === expectedDigest,
+    `${seat} accepted-preparation seat is absent, stale, role-invalid, or tampered`, `publish a valid ${seat} Gate A attestation`);
+  }
+  addGate("PREPARATION_SEAT_INDEPENDENCE", preparationSeatIds.length === COUNCIL_SEATS.length && unique(preparationSeatIds),
+    "accepted-preparation seat identities are missing or duplicated", "use five distinct active Gate A reviewers");
+  addGate("STAGE_PREPARATION_PREDECESSOR", PREPARATION_REVIEW_ID.test(stage.preparationReviewId ?? "")
+    && Number.isInteger(stage.sequence)
+    && stage.sequence >= 1
+    && ((stage.sequence === 1 && stage.predecessorReceiptSha256 === null)
+      || (stage.sequence > 1 && SHA256.test(stage.predecessorReceiptSha256 ?? ""))),
+  "the Gate A predecessor, stage sequence, or predecessor receipt is invalid", "bind the accepted preparation review and exact prior-stage receipt");
+  addGate("STAGE_IDEMPOTENCY", IDEMPOTENCY_KEY.test(stage.idempotencyKey ?? ""),
+    "the stage lacks a stable closed-schema idempotency key", "use a P0-IDEMP-* key bound to this stage input");
+  addGate("STAGE_REQUIREMENT_EVIDENCE", unique(requirementIds)
+    && requirementEvidence.length === requirementIds.length
+    && requirementIds.every((requirementId) => requirementEvidence.filter((record) => (
+      hasExactKeys(record, [
+        "requirementId", "stageId", "acceptanceScenarioIds", "candidateRevision", "environmentClass",
+        "fixtureClass", "evidenceReference", "result", "residualObligations",
+      ])
+        && record.requirementId === requirementId
+        && record.stageId === stage.stageId
+        && record.candidateRevision === candidate.revision
+        && Array.isArray(record.acceptanceScenarioIds)
+        && record.acceptanceScenarioIds.length > 0
+        && unique(record.acceptanceScenarioIds)
+        && record.acceptanceScenarioIds.every((scenarioId) => acceptanceScenarioIds.includes(scenarioId))
+        && ["fictional-local", "synthetic-local", "sanitized-private", "private-target"].includes(record.environmentClass)
+        && ["fictional", "synthetic", "sanitized-metadata"].includes(record.fixtureClass)
+        && record.result === "pass"
+        && isOpaqueReference(record.evidenceReference)
+        && Array.isArray(record.residualObligations)
+    )).length === 1), "stage-scoped requirement evidence is missing, duplicated, stale, or unsafe", "bind one passing stage record to every canonical requirement");
+  addGate("STAGE_INDEPENDENT_QA", hasExactKeys(independentQa, [
+    "reviewerId", "reviewerRole", "result", "candidateRevision", "dossierDigest", "evidenceReference",
+  ]) && qaReviewer?.active === true
+    && qaRole === "qa"
+    && independentQa.reviewerRole === "qa"
+    && independentQa.result === "pass"
+    && independentQa.candidateRevision === candidate.revision
+    && independentQa.dossierDigest === candidate.dossierDigest
+    && isOpaqueReference(independentQa.evidenceReference)
+    && !candidateContributors.has(independentQa.reviewerId),
+  "independent executed QA is absent, stale, or contributor-conflicted", "obtain an active independent QA pass for the exact candidate");
+  addGate("STAGE_ROLLBACK", hasExactKeys(rollback, [
+    "planReference", "snapshotReference", "rehearsalResult", "evidenceReference",
+  ]) && isOpaqueReference(rollback.planReference)
+    && isOpaqueReference(rollback.snapshotReference)
+    && rollback.rehearsalResult === "pass"
+    && isOpaqueReference(rollback.evidenceReference),
+  "rollback plan, snapshot, or rehearsal evidence is incomplete", "record passing rollback evidence and an exact pre-action snapshot reference");
+  addGate("STAGE_COUNCIL", hasExactKeys(stageCouncil, [
+    "verdict", "reviewedRevision", "dossierDigest", "unresolvedBlockers", "seatVerdicts",
+  ]) && stageCouncil.verdict === (stage.gateKind === "accept" ? "ready-to-accept" : "ready-to-execute")
+    && stageCouncil.reviewedRevision === stage.candidateRevision
+    && stageCouncil.dossierDigest === stage.dossierDigest
+    && Array.isArray(stageCouncil.unresolvedBlockers)
+    && stageCouncil.unresolvedBlockers.length === 0,
+  "the stage-specific Council verdict is missing, stale, or blocked", "obtain a blocker-free five-seat stage verdict");
+  const stageSeatIds = [];
+  addGate("STAGE_SEAT_SET", sameStringSet(Object.keys(stageSeats), [...COUNCIL_SEATS]),
+    "the stage Council does not contain exactly five seats", "publish Product, Design, Architecture, QA, and Project stage seats only");
+  for (const seat of COUNCIL_SEATS) {
+    const record = asObject(stageSeats[seat]);
+    const reviewer = reviewerRegistry.byId.get(record.reviewerId);
+    const role = registryRole(reviewer);
+    if (isNonemptyString(record.reviewerId)) stageSeatIds.push(record.reviewerId);
+    const expectedVerdict = stage.gateKind === "accept" ? "approve-stage-acceptance" : "approve-stage-execution";
+    const expectedDigest = computeStageApprovalSeatAttestationDigest(record);
+    addGate(`STAGE_SEAT_${seat.toUpperCase()}`, hasExactKeys(record, [
+      "reviewerId", "reviewerRole", "verdict", "reviewedRevision", "dossierDigest", "preparationReviewId",
+      "preparationReviewSha256", "stageId", "gateKind", "scopeClass", "actionClass", "stageContextSha256",
+      "evidenceReference", "attestationDigest",
+    ]) && reviewer?.active === true
+      && role === SEAT_ROLE[seat]
+      && record.reviewerRole === role
+      && record.verdict === expectedVerdict
+      && record.reviewedRevision === stage.candidateRevision
+      && record.dossierDigest === stage.dossierDigest
+      && record.preparationReviewId === stage.preparationReviewId
+      && record.preparationReviewSha256 === stage.preparationReviewSha256
+      && record.stageId === stage.stageId
+      && record.gateKind === stage.gateKind
+      && record.scopeClass === stage.scopeClass
+      && record.actionClass === stage.actionClass
+      && record.stageContextSha256 === stageContextSha256
+      && isOpaqueReference(record.evidenceReference)
+      && record.attestationDigest === expectedDigest,
+    `${seat} stage seat is absent, stale, role-invalid, or tampered`, `publish a valid ${seat} full-context stage attestation`);
+  }
+  addGate("STAGE_SEAT_INDEPENDENCE", stageSeatIds.length === COUNCIL_SEATS.length
+    && unique(stageSeatIds)
+    && stageSeatIds.every((reviewerId) => !candidateContributors.has(reviewerId)),
+  "stage seats are duplicated or overlap candidate contributors", "use five distinct stage reviewers independent of implementation and evidence production");
+  addGate("STAGE_PUBLICATION", publication.stageId === stage.stageId
+    && publication.taskId === taskId
+    && publication.registryPath === STAGE_APPROVAL_REGISTRY_PATH
+    && publication.registryBytesVerified === true
+    && SHA256.test(publication.registrySha256 ?? "")
+    && publication.preparationReviewId === preparationReview.preparationReviewId
+    && publication.publishedPreparationReviewSha256 === preparationReviewSha256
+    && publication.currentPreparationReviewSha256 === preparationReviewSha256
+    && publication.preparationReviewBytesVerified === true
+    && FULL_REVISION.test(publication.preparationPublicationRevision ?? "")
+    && publication.preparationCandidateAncestorOfPublication === true
+    && publication.stageApprovalBytesVerified === true
+    && SHA256.test(publication.publishedStageApprovalSha256 ?? "")
+    && publication.publishedStageApprovalSha256 === stageApprovalSha256
+    && publication.currentStageApprovalSha256 === stageApprovalSha256
+    && FULL_REVISION.test(publication.stagePublicationRevision ?? "")
+    && publication.stageCandidateAncestorOfPublication === true
+    && publication.preparationPublicationAncestorOfStageCandidate === true
+    && publication.stageApprovalPublishedOnFetchedMain === true,
+  "trusted publication facts do not bind the append-only preparation and stage records", "verify the exact two-record publication sequence from Git history");
+  const activation = asObject(taskOptions.activation);
+  addGate("STAGE_ACTIVATION_REACHABLE", activation.stageApprovalRecordReachableFromHead === true
+    && activation.candidateReachableFromHead === true,
+  "the exact stage record or implementation candidate is not reachable from fetched main", "refresh exact-main stage publication facts before runtime start");
+
+  return gateEvaluation(
+    taskId,
+    gates,
+    "executionAllowed",
+    true,
+    stage.gateKind === "accept" ? "Ready to accept — Gate B" : "Ready to execute — Gate B",
+    `Run only ${stage.stageId ?? "the named stage"} through the guarded runtime with its frozen idempotency and predecessor bindings.`,
+    {
+      schemaVersion: source.schemaVersion ?? null,
+      taskId,
+      stageId: stage.stageId ?? null,
+      preparationReviewId: stage.preparationReviewId ?? null,
+      gateKind: stage.gateKind ?? null,
+      stageState: stage.state ?? null,
+      scopeClass: stage.scopeClass ?? null,
+      actionClass: stage.actionClass ?? null,
+      candidateRevision: stage.candidateRevision ?? null,
+      dossierDigest: stage.dossierDigest ?? null,
+      predecessorReceiptSha256: stage.predecessorReceiptSha256 ?? null,
+      idempotencyKey: stage.idempotencyKey ?? null,
+      dueOwnerActionIds: asArray(baseEvaluation.normalizedEvidence?.dueOwnerActionIds),
+      privateAuthorityRequired: baseEvaluation.normalizedEvidence?.privateAuthorityRequired === true,
+      taskEvaluationFingerprint: baseEvaluation.normalizedEvidence?.sourceFingerprint ?? null,
+      sourceFingerprint: `sha256:${sha256(canonicalJson(source))}`,
+    },
+  );
+}
+
 export function deriveEffectiveArtifactState(artifact, review) {
   if (!isObject(artifact)) return "missing";
   const contentState = artifact?.contentState ?? artifact?.state ?? "missing";
@@ -1484,6 +2250,12 @@ export function evaluateReadiness(input, options = {}) {
     requirements: actionRequirements,
     records: actionRecords,
   });
+  const dedicatedDeliveryTransition = isDedicatedDeliveryTransitionScopeAction({
+    taskId,
+    stageId: options.deliveryTransitionStageId,
+    scopeClass: requestedScope.scopeClass,
+    actionClass: requestedScope.actionClass,
+  });
   const expectedVerdict = expectedScopeVerdict(requestedScope.scopeClass);
   const executionContractPairCount = taskExecutionContractPairCount(taskId);
   addGate("TASK_APPROVAL_ACTION_CARDINALITY",
@@ -1496,8 +2268,9 @@ export function evaluateReadiness(input, options = {}) {
   "the exact task contract contains zero or multiple execution-bearing scope/action pairs", "obtain a Council-approved task split or adopt a future reviewed staged-approval schema before task approval");
   addGate("HISTORICAL_TASK_NON_AUTHORIZING", !isHistoricalNonAuthorizingTaskId(taskId),
     "this Done record is historical planning or control-review evidence and can never authorize execution", "create and approve a distinct non-historical execution task instead of attaching a later taskApproval");
-  addGate("REQUESTED_SCOPE", Boolean(expectedVerdict) && isNonemptyString(requestedScope.actionClass),
-    "the requested scope or action class is missing or unsupported", "select a named local-synthetic, private-execution, or release scope and action");
+  addGate("REQUESTED_SCOPE", (Boolean(expectedVerdict) || dedicatedDeliveryTransition)
+    && isNonemptyString(requestedScope.actionClass),
+  "the requested scope or action class is missing or unsupported", "select a named ordinary task pair or the exact stage-bound delivery-control pair");
   addGate("SCOPE_ACTION_COMPATIBILITY",
     asArray(SCOPE_ACTION_COMPATIBILITY[requestedScope.scopeClass]).includes(requestedScope.actionClass),
   "the requested action class is not permitted for the requested scope", "select the immutable scope/action pair required by the canonical task contract");
@@ -1631,10 +2404,12 @@ export function evaluateReadiness(input, options = {}) {
   }
 
   const actionRequirementIds = actionRequirements.map((entry) => entry?.actionId);
-  const expectedActionIds = canonicalOwnerActionIdsForTask({
-    taskId,
-    milestone: source.milestone,
-  });
+  const expectedActionIds = dedicatedDeliveryTransition
+    ? []
+    : canonicalOwnerActionIdsForTask({
+        taskId,
+        milestone: source.milestone,
+      });
   const canonicalActionRequirements = expectedActionIds.map((actionId) => ({
     actionId,
     ...OWNER_ACTION_REQUIREMENT_CATALOG[actionId],
@@ -1655,6 +2430,7 @@ export function evaluateReadiness(input, options = {}) {
       && entry?.accountableHumanRole === OWNER_ACTION_REQUIREMENT_CATALOG[entry.actionId]?.accountableHumanRole),
   "owner-action requirements are malformed, non-canonical, incomplete, or duplicated", "rebuild the exact task-and-milestone owner-action requirements from the immutable catalog");
   addGate("OWNER_ACTION_SCOPE_COVERAGE", requestedScope.scopeClass === "local-synthetic"
+    || dedicatedDeliveryTransition
     || dueActionIds.includes("P0-OA-001"),
   "the requested private or release scope-and-action pair lacks the global P0-OA-001 gate", "map P0-OA-001 to every canonical private and release action before evaluating it");
   addGate("OWNER_ACTION_RECORD_SET", Array.isArray(source.ownerActions)

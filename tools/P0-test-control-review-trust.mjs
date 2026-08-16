@@ -249,10 +249,18 @@ expectFinding((review) => {
   review.candidate.taskFiles.push({ path: "src/P0-unreviewed-control.mjs", purpose: "implementation" });
   review.reviewContextSha256 = computeControlReviewContextSha256(review);
 }, "CONTROL_REVIEW_TASK_FILE_PARTITION_INVALID");
-expectFinding((_review, facts) => { facts.headStableTaskFilesSha256 = "9".repeat(64); },
-  "CONTROL_REVIEW_CURRENT_CONTROL_FILES_BINDING_INVALID");
-expectFinding((_review, facts) => { facts.worktreeStableTaskFilesSha256 = "9".repeat(64); },
-  "CONTROL_REVIEW_CURRENT_CONTROL_FILES_BINDING_INVALID");
+expectFinding((_review, facts) => { facts.candidateStableTaskFilesSha256 = "invalid"; },
+  "CONTROL_REVIEW_CANDIDATE_CONTROL_FILES_BINDING_INVALID");
+const descendantControlDriftFacts = candidateFacts();
+descendantControlDriftFacts.headStableTaskFilesSha256 = "9".repeat(64);
+descendantControlDriftFacts.worktreeStableTaskFilesSha256 = "8".repeat(64);
+expect(controlReviewEvidenceFindings({
+  taskId,
+  review: completeReview(),
+  reviewerRecords,
+  candidateFacts: descendantControlDriftFacts,
+}).length === 0,
+"Later successor-reviewed control changes must not rewrite or invalidate the historical PC-001 review");
 expectFinding((_review, facts) => { facts.publicationDescendantDeltaPaths.push("tools/unreviewed-change.mjs"); },
   "CONTROL_REVIEW_PUBLICATION_DELTA_INVALID");
 const laterUnrelatedFacts = candidateFacts();

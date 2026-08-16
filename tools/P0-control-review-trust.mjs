@@ -380,10 +380,12 @@ export function controlReviewEvidenceFindings({
   "CONTROL_REVIEW_PUBLICATION_TASK_FILES_BINDING_INVALID");
   add(controlReviewImplementationPartition(candidate?.taskFiles).valid,
     "CONTROL_REVIEW_TASK_FILE_PARTITION_INVALID");
-  add(SHA256.test(candidateFacts?.candidateStableTaskFilesSha256 ?? "")
-    && candidateFacts.candidateStableTaskFilesSha256 === candidateFacts?.headStableTaskFilesSha256
-    && candidateFacts.candidateStableTaskFilesSha256 === candidateFacts?.worktreeStableTaskFilesSha256,
-  "CONTROL_REVIEW_CURRENT_CONTROL_FILES_BINDING_INVALID");
+  // PC-001 remains an immutable historical exact-candidate review. Its stable
+  // implementation partition is still validated at the candidate and first
+  // publication, but it must not freeze current descendant control bytes.
+  // Current controls are governed by add-only successor reviews instead.
+  add(SHA256.test(candidateFacts?.candidateStableTaskFilesSha256 ?? ""),
+    "CONTROL_REVIEW_CANDIDATE_CONTROL_FILES_BINDING_INVALID");
   const publicationDeltaValid = (paths, forbiddenCount) => Array.isArray(paths)
     && paths.length === CONTROL_REVIEW_PUBLICATION_DELTA_PATHS.length
     && new Set(paths).size === paths.length

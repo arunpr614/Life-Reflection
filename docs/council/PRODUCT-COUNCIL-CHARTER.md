@@ -1,17 +1,18 @@
 # Life in Days Phase 1 — Product Council charter
 
-- **Status:** active
+- **Status:** active planning baseline; current execution authority is R0-only under the bounded P0/R0 Gold Goal
 - **Council formed:** 2026-08-14
+- **Authority updated:** 2026-08-16
 - **Product owner and final decision authority:** Product Owner
 - **Release-plan owner:** Project Manager
 
-> **2026-08-14 execution addendum:** The historical planning council is preserved. Current execution uses the five-seat council and delegated/human-only authority in [P0 Execution Council Charter](execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md) and [P0 Execution Authorization](execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md).
+> **2026-08-16 bounded-authority overlay:** The historical planning council and complete release sequence are preserved as planning. At present, only the local/public Stage 0 control repair is authorized; no R0 implementation, private-system action, deployment, acceptance, release, or production work is authorized. The five-seat council may later decide only eligible R0 work under the active bounded Goal and [P0-ED-016](execution/P0-PHASE1-EXECUTION-DECISIONS.md#p0-ed-016--bounded-r0-authority), after every named stage gate passes. All R1-R10 work is frozen and out of scope; broader execution requires a new direct Product Owner activation. Named human-only acts remain controlling.
 
 ## Mandate
 
 The Product Council converts the frozen product requirements, UX specification, and v5 prototype into a release system that can deliver the complete private product through small, meaningful, independently verifiable production increments on the existing shared Hetzner host.
 
-The council owns planning and evidence design. It does not claim that implementation, provider qualification, live-host capacity, deployment, recovery, accessibility, or production readiness has passed until the named evidence exists.
+The council owns the complete Phase 1 planning and evidence design. That planning baseline does not expand the active execution envelope: only gated R0 work is currently in scope, and it does not claim that implementation, provider qualification, live-host capacity, deployment, recovery, accessibility, or production readiness has passed until the named evidence exists.
 
 ## Membership and decision rights
 
@@ -88,7 +89,7 @@ A release is Done only when:
 - new persistent data is included in verified backup, restore and export paths;
 - privacy, security, accessibility, browser and failure checks appropriate to the slice pass;
 - the production deployment and rollback evidence exists for that version; and
-- a fresh Independent QA Lead has passed the affected matrix, the full execution council has recorded a disposition, and any specifically named non-delegable owner act is complete. Routine R0–R8 promotion does not add a generic owner walkthrough.
+- a fresh Independent QA Lead has passed the affected matrix, the full execution council has recorded a disposition, and any specifically named non-delegable owner act is complete. Within the current bounded authority, this delegation applies only to R0 and does not add a generic owner walkthrough; R1-R10 promotion remains frozen pending new direct Product Owner activation.
 
 ## Publication and privacy boundary
 
@@ -99,7 +100,7 @@ Council artifacts are suitable for the public repository. They use placeholders 
 - Council planning review: at every release boundary or requirement change.
 - Delivery status: update GitHub Project when work starts, evidence lands, a gate blocks, or dates move.
 - Risk review: weekly while a release is active.
-- Release decision: full five-seat council review; routine R0–R8 promotion uses delegated authority when all gates pass, while named human acts remain controlling.
+- Release decision: full five-seat council review; within the active bounded Goal, only routine R0 promotion may use delegated authority after all gates pass. R1-R10 is frozen pending new direct Product Owner activation, and named human acts remain controlling.
 - Recovery review: after every new durable data type, then on the cadence defined by the implementation plan.
 
 ## Execution references

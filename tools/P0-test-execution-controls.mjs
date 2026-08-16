@@ -8,12 +8,19 @@ import {
   COUNCIL_SEATS,
   DESIGN_ACCESSIBILITY_DIMENSIONS,
   DESIGN_STATE_DIMENSIONS,
+  DELIVERY_TRANSITION_GATE_B_CONTRACT,
   HISTORICAL_DONE_PLANNING_TASK_IDS,
   HISTORICAL_NON_AUTHORIZING_TASK_IDS,
   LOCAL_SYNTHETIC_CONTENT_POLICY,
   MILESTONE_SCOPE_ACTION_COMPATIBILITY,
+  P0_R0_SCOPE_TASK_IDS,
+  P0_R0_SUBSTANTIVE_TASK_IDS,
   READINESS_SCHEMA_VERSION,
   SCOPE_ACTION_COMPATIBILITY,
+  STAGE_APPROVAL_REGISTRY_PATH,
+  STAGE_EXECUTION_SCHEMA_VERSION,
+  STAGE_LIFECYCLE_STATES,
+  TASK_PREPARATION_SCHEMA_VERSION,
   TASK_APPROVAL_EXECUTION_ACTION_CARDINALITY,
   TASK_EXECUTION_CONTRACT,
   TASK_FUTURE_SCOPE_ACTION_OPTIONS,
@@ -28,16 +35,24 @@ import {
   computeDossierDigest,
   computeIdentitySetDigest,
   computePrivateAuthoritySha256,
+  computePreparationDossierDigest,
+  computePreparationReviewRecordSha256,
   computeRefreshProtectionFingerprint,
   computeReviewerRegistrySha256,
   computeStringSetDigest,
+  computeStageCouncilAttestationDigest,
+  computeStageApprovalContextSha256,
+  computeStageApprovalSeatAttestationDigest,
   computeTaskApprovalSha256,
   computeTaskContractSha256,
   computeTaskFilesSha256,
   computeTaskOwnerActionStateSha256,
   classifyLocalSyntheticTaskFile,
   evaluateReadiness,
+  evaluateStageExecutionGateB,
+  evaluateTaskPreparationGateA,
   executeRefreshTransaction,
+  isDedicatedDeliveryTransitionScopeAction,
   isTaskMilestoneScopeActionCompatible,
   taskExecutionContractPairCount,
   parseArtifactControlMarkers,
@@ -49,6 +64,7 @@ import {
   buildTaskReadinessInput,
   ownerActionIdsFor,
   requestedScopeFor,
+  validateReadinessState,
 } from "./P0-build-task-readiness-input.mjs";
 import { parseJsonWithoutDuplicateKeys } from "./P0-json-trust.mjs";
 
@@ -1005,6 +1021,10 @@ assert.deepEqual(OWNER_ACTION_REQUIREMENT_CATALOG["R0-OA-001"].requiredForAction
   ["private-system-read", "private-system-mutation", "deployment"]);
 assert.deepEqual(OWNER_ACTION_REQUIREMENT_CATALOG["R0-OA-002"].requiredForActionClasses,
   ["provider-change", "spend-change"]);
+assert.ok(!OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-001"].requiredForScopeClasses
+  .includes(DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass));
+assert.deepEqual(OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-002"].requiredForActionClasses,
+  ["project-workflow-mutation", "project-non-delivery-item"]);
 
 const manifestForActionContract = parseJsonWithoutDuplicateKeys(
   fs.readFileSync(path.join(repoRoot, "docs/project/PHASE1-ROADMAP-MANIFEST.json"), "utf8"),
@@ -1089,6 +1109,63 @@ for (const task of manifestForActionContract.tasks) {
     !historicalNonAuthorizingTaskIdSet.has(task.id),
     `${task.id}: historical non-authorization gate mismatch`);
 }
+const deliveryTransitionTask = manifestForActionContract.tasks.find((task) => task.id === "SPK-R0-001");
+const deliveryTransitionStageId = "P0-STAGE-SPK-R0-001-STATUS-DELIVERY-TRANSITION";
+const deliveryTransitionOverride = {
+  requestedStageId: deliveryTransitionStageId,
+  requestedScopeClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass,
+  requestedActionClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass,
+};
+const deliveryTransitionSource = buildTaskReadinessInput({
+  task: deliveryTransitionTask,
+  artifacts: {},
+  readinessState: {
+    schemaVersion: READINESS_SCHEMA_VERSION,
+    taskOverrides: { [deliveryTransitionTask.id]: deliveryTransitionOverride },
+  },
+  reviewerRegistry: clone(defaultAssemblyBase.reviewerRegistry),
+  approvalRegistry: { taskApprovals: {} },
+  ownerActionState: { actions: clone(defaultAssemblyOwnerActions) },
+  evaluationPhase: "activation",
+});
+assert.deepEqual(deliveryTransitionSource.requestedScope, {
+  scopeClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass,
+  actionClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass,
+});
+assert.deepEqual(deliveryTransitionSource.ownerActionRequirements, []);
+assert.deepEqual(deliveryTransitionSource.ownerActions, []);
+assert.equal(deliveryTransitionSource.privateAuthority, null);
+recordResult("PC-001-CTL-P05", "ephemeral task-bound transition stage reaches source assembly with the exact delivery-control pair and no owner-action leakage", "pass");
+assert.throws(() => requestedScopeFor(deliveryTransitionTask, {
+  requestedScopeClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass,
+  requestedActionClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass,
+}), /not permitted for milestone/);
+recordResult("PC-001-CTL-P05", "delivery-control authority without a transition stage remains outside ordinary task execution", "pass");
+assert.throws(() => requestedScopeFor(deliveryTransitionTask, {
+  ...deliveryTransitionOverride,
+  requestedStageId: "P0-STAGE-UX-R0-001-STATUS-DELIVERY-TRANSITION",
+}), /does not bind the exact dedicated delivery-transition/);
+recordResult("PC-001-CTL-P05", "a transition stage bound to a different task cannot reach source assembly", "pass");
+assert.throws(() => requestedScopeFor(deliveryTransitionTask, {
+  requestedStageId: deliveryTransitionStageId,
+  requestedScopeClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass,
+}), /does not bind the exact dedicated delivery-transition/);
+recordResult("PC-001-CTL-P05", "the ephemeral transition key cannot default a missing scope or action", "pass");
+assert.throws(() => validateReadinessState({
+  schemaVersion: READINESS_SCHEMA_VERSION,
+  taskOverrides: { [deliveryTransitionTask.id]: deliveryTransitionOverride },
+}, new Set(manifestTaskIds)), /unknown source-evidence override keys: requestedStageId/);
+recordResult("PC-001-CTL-P05", "persisted readiness state still rejects the ephemeral transition-stage key", "pass");
+assert.throws(() => validateReadinessState({
+  schemaVersion: READINESS_SCHEMA_VERSION,
+  taskOverrides: {
+    [deliveryTransitionTask.id]: {
+      requestedScopeClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass,
+      requestedActionClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass,
+    },
+  },
+}, new Set(manifestTaskIds)), /cannot be persisted/);
+recordResult("PC-001-CTL-P05", "persisted readiness state rejects the delivery-control pair even without the ephemeral stage key", "pass");
 assert.deepEqual(requestedScopeFor(manifestForActionContract.tasks.find((task) => task.id === "PRD-R0-001")), {
   scopeClass: "local-synthetic",
   actionClass: "planning-control",
@@ -2284,12 +2361,13 @@ assert.deepEqual(TASK_FILE_DIFF_EXCLUSIONS, [
 ]);
 assert.deepEqual(TASK_FILE_DESCENDANT_DELTA_PATHS, [
   ...TASK_FILE_DIFF_EXCLUSIONS,
+  STAGE_APPROVAL_REGISTRY_PATH,
   "docs/council/execution/P0-OWNER-ACTION-STATE.json",
 ]);
 assert.notStrictEqual(TASK_FILE_DIFF_EXCLUSIONS, TASK_FILE_DESCENDANT_DELTA_PATHS);
 assert.equal(Object.isFrozen(TASK_FILE_DIFF_EXCLUSIONS), true);
 assert.equal(Object.isFrozen(TASK_FILE_DESCENDANT_DELTA_PATHS), true);
-recordResult("PC-001-CTL-R01", "shared task-file schema has exact five-path candidate exclusions and six-path descendant policy", "pass", {
+recordResult("PC-001-CTL-R01", "shared task-file schema has exact five-path candidate exclusions and seven-path descendant policy", "pass", {
   taskFilesSha256: sharedManifestValidation.sha256,
 });
 
@@ -2473,6 +2551,575 @@ assertNegative("PC-001-CTL-S01.media", "authentic-media access flag rejects", lo
   (fixture) => { fixture.safety.authenticMediaAccessed = true; }, ["AUTHENTIC_MEDIA_EXCLUSION"]);
 assertNegative("PC-001-CTL-S01.network", "private-network access flag rejects", localFixture,
   (fixture) => { fixture.safety.privateNetworkAccessed = true; }, ["PRIVATE_NETWORK_EXCLUSION"]);
+
+function preparationFixture({ deliveryTransition = false } = {}) {
+  const taskId = "SPK-R0-001";
+  const stageId = deliveryTransition
+    ? "P0-STAGE-SPK-R0-001-STATUS-DELIVERY-TRANSITION"
+    : "P0-STAGE-SPK-R0-001-SYNTHETIC-001";
+  const preparationReviewId = deliveryTransition
+    ? "P0-PREP-SPK-R0-001-STATUS-DELIVERY-TRANSITION"
+    : "P0-PREP-SPK-R0-001-SYNTHETIC-001";
+  const base = localFixture();
+  const artifacts = Object.fromEntries(ARTIFACT_KINDS.map((kind) => [kind, {
+    path: `docs/work-items/${taskId}/P0-${taskId}-${kind}.md`,
+    sha256: sha256(`fictional ${taskId} ${kind} proposal bytes\n`),
+    contentState: "in-review",
+  }]));
+  const source = {
+    schemaVersion: TASK_PREPARATION_SCHEMA_VERSION,
+    preparationReviewId,
+    taskId,
+    milestone: "R0",
+    stageId,
+    requestedScope: {
+      scopeClass: deliveryTransition ? DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass : "local-synthetic",
+      actionClass: deliveryTransition ? DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass : "synthetic-foundation",
+    },
+    candidate: {
+      revision: CANDIDATE_REVISION,
+      baseRevision: BASE_REVISION,
+      dossierDigest: null,
+      artifacts,
+    },
+    dependencyIds: ["PC-001"],
+    dependencyEvidence: [{
+      dependencyId: "PC-001",
+      result: "pass",
+      evidenceReference: "dependency:SPK-R0-001-PC-001",
+    }],
+    acceptanceScenarioIds: ["SPK-R0-001-P-001", "SPK-R0-001-QA-001"],
+    proposalAuthorIds: ["implementer-controls", "fixture-author-controls"],
+    artifactReviews: {},
+    council: {
+      verdict: "ready-to-prepare",
+      reviewedRevision: CANDIDATE_REVISION,
+      dossierDigest: null,
+      unresolvedBlockers: [],
+      seatVerdicts: {},
+    },
+    reviewerRegistry: clone(base.reviewerRegistry),
+    openDecisions: [],
+    specialistVetoes: [],
+    safety: {
+      authenticMediaAccessed: false,
+      privateNetworkAccessed: false,
+      externalMutationPerformed: false,
+    },
+  };
+  source.candidate.dossierDigest = computePreparationDossierDigest(source);
+  for (const kind of ARTIFACT_KINDS) {
+    const role = roleByArtifact[kind];
+    const review = {
+      reviewerId: reviewerIdForRole(role),
+      reviewerRole: role,
+      decision: "approved",
+      reviewedRevision: CANDIDATE_REVISION,
+      dossierDigest: source.candidate.dossierDigest,
+      artifactSha256: artifacts[kind].sha256,
+      evidenceReference: `review:${taskId}-${kind}-proposal`,
+      attestationDigest: null,
+    };
+    review.attestationDigest = computeStageCouncilAttestationDigest({
+      gateKind: "gate-a-prepare",
+      preparationReviewId,
+      taskId,
+      stageId,
+      subject: `artifact:${kind}`,
+      decision: review.decision,
+      reviewerId: review.reviewerId,
+      reviewerRole: review.reviewerRole,
+      reviewedRevision: review.reviewedRevision,
+      dossierDigest: review.dossierDigest,
+      artifactSha256: review.artifactSha256,
+      scopeClass: source.requestedScope.scopeClass,
+      actionClass: source.requestedScope.actionClass,
+      evidenceReference: review.evidenceReference,
+    });
+    source.artifactReviews[kind] = review;
+  }
+  source.council.dossierDigest = source.candidate.dossierDigest;
+  for (const seat of COUNCIL_SEATS) {
+    const role = roleBySeat[seat];
+    const record = {
+      reviewerId: reviewerIdForRole(role),
+      reviewerRole: role,
+      verdict: "approve-preparation-candidate",
+      reviewedRevision: CANDIDATE_REVISION,
+      dossierDigest: source.candidate.dossierDigest,
+      preparationReviewId,
+      stageId,
+      evidenceReference: `seat:${taskId}-${seat}-preparation`,
+      attestationDigest: null,
+    };
+    record.attestationDigest = computeStageCouncilAttestationDigest({
+      gateKind: "gate-a-prepare",
+      preparationReviewId,
+      taskId,
+      stageId,
+      subject: `council:${seat}`,
+      decision: record.verdict,
+      reviewerId: record.reviewerId,
+      reviewerRole: record.reviewerRole,
+      reviewedRevision: record.reviewedRevision,
+      dossierDigest: record.dossierDigest,
+      scopeClass: source.requestedScope.scopeClass,
+      actionClass: source.requestedScope.actionClass,
+      evidenceReference: record.evidenceReference,
+    });
+    source.council.seatVerdicts[seat] = record;
+  }
+  return {
+    source,
+    context: {
+      expectedTask: {
+        taskId,
+        milestone: "R0",
+        dependencyIds: ["PC-001"],
+        acceptanceScenarioIds: [...source.acceptanceScenarioIds],
+      },
+      candidatePublication: {
+        revision: CANDIDATE_REVISION,
+        baseRevision: BASE_REVISION,
+        bytesVerified: true,
+        fullDiffVerified: true,
+        candidateOnFetchedMain: true,
+      },
+    },
+  };
+}
+
+function assertPreparationNegative(name, mutate, expectedCode) {
+  const fixture = preparationFixture();
+  mutate(fixture.source, fixture.context);
+  const actual = evaluateTaskPreparationGateA(fixture.source, fixture.context);
+  assert.equal(actual.preparationAllowed, false, `${name}: Gate A unexpectedly passed`);
+  assert.equal(actual.executionAllowed, false, `${name}: Gate A created execution permission`);
+  assert.ok(failedCodes(actual).includes(expectedCode), `${name}: missing ${expectedCode}; got ${failedCodes(actual).join(", ")}`);
+  recordResult("PC-001-CTL-P04", name, "pass", { expectedCodes: [expectedCode] });
+}
+
+assert.deepEqual(P0_R0_SCOPE_TASK_IDS, [
+  "AUD-001", "PC-001", "PRD-R0-001", "SPK-R0-001", "UX-R0-001", "ARCH-R0-001", "ENG-R0-001", "REL-R0-001",
+]);
+assert.deepEqual(P0_R0_SUBSTANTIVE_TASK_IDS, ["SPK-R0-001", "UX-R0-001", "ARCH-R0-001", "ENG-R0-001", "REL-R0-001"]);
+assert.deepEqual(STAGE_LIFECYCLE_STATES, [
+  "declared", "ready", "running", "verification-pending", "recovery-required", "rolling-back",
+  "verified-complete", "verified-rolled-back", "cancelled-before-mutation", "blocked-no-mutation", "expired-before-mutation",
+]);
+recordResult("PC-001-CTL-P04", "bounded P0/R0 task and stage-state vocabularies are exact", "pass");
+
+const preparationPositive = preparationFixture();
+const preparationResult = evaluateTaskPreparationGateA(preparationPositive.source, preparationPositive.context);
+assert.equal(preparationResult.preparationAllowed, true, failedCodes(preparationResult).join(", "));
+assert.equal(preparationResult.executionAllowed, false, "Gate A must never create execution permission");
+assert.equal(preparationResult.decision, "Ready to prepare — Gate A");
+assert.deepEqual(preparationResult.normalizedEvidence.preparationBounds, ["local", "public", "fictional", "synthetic"]);
+assert.equal(preparationResult.normalizedEvidence.privateActionsAllowed, false);
+recordResult("PC-001-CTL-P04", "Gate A permits only exact local/public/fictional/synthetic candidate preparation", "pass", {
+  decision: preparationResult.decision,
+  sourceFingerprint: preparationResult.normalizedEvidence.sourceFingerprint,
+});
+const transitionPreparation = preparationFixture({ deliveryTransition: true });
+const transitionPreparationResult = evaluateTaskPreparationGateA(transitionPreparation.source, transitionPreparation.context);
+assert.equal(transitionPreparationResult.preparationAllowed, true, failedCodes(transitionPreparationResult).join(", "));
+assert.equal(transitionPreparationResult.executionAllowed, false, "transition Gate A must remain preparation-only");
+assert.equal(transitionPreparationResult.normalizedEvidence.privateActionsAllowed, false);
+assert.equal(transitionPreparationResult.normalizedEvidence.externalMutationsAllowed, false);
+recordResult("PC-001-CTL-P04", "Gate A can prepare the dedicated transition proposal but grants no private or external authority", "pass", {
+  decision: transitionPreparationResult.decision,
+  sourceFingerprint: transitionPreparationResult.normalizedEvidence.sourceFingerprint,
+});
+const wrongTransitionPreparation = preparationFixture({ deliveryTransition: true });
+wrongTransitionPreparation.source.requestedScope = { scopeClass: "local-synthetic", actionClass: "synthetic-foundation" };
+const wrongTransitionPreparationResult = evaluateTaskPreparationGateA(
+  wrongTransitionPreparation.source,
+  wrongTransitionPreparation.context,
+);
+assert.equal(wrongTransitionPreparationResult.preparationAllowed, false);
+assert.ok(failedCodes(wrongTransitionPreparationResult).includes("PREP_SCOPE_ACTION"));
+recordResult("PC-001-CTL-P04", "delivery-transition Gate A rejects a generic task scope and action", "pass", {
+  expectedCodes: ["PREP_SCOPE_ACTION"],
+});
+assertPreparationNegative("Gate A rejects an unknown top-level field", (source) => { source.executionAllowed = true; }, "PREP_SCHEMA");
+assertPreparationNegative("Gate A rejects private-network access", (source) => { source.safety.privateNetworkAccessed = true; }, "PREP_LOCAL_ONLY");
+assertPreparationNegative("Gate A rejects external mutation", (source) => { source.safety.externalMutationPerformed = true; }, "PREP_LOCAL_ONLY");
+assertPreparationNegative("Gate A rejects a missing Council seat", (source) => { delete source.council.seatVerdicts.qa; }, "PREP_COUNCIL");
+assertPreparationNegative("Gate A rejects a stale proposal candidate", (_source, context) => { context.candidatePublication.bytesVerified = false; }, "PREP_PUBLICATION");
+assertPreparationNegative("Gate A rejects a tampered seat attestation", (source) => { source.council.seatVerdicts.design.attestationDigest = `sha256:${"0".repeat(64)}`; }, "PREP_SEAT_DESIGN");
+assertPreparationNegative("Gate A rejects historical PC-001", (source, context) => {
+  source.taskId = "PC-001";
+  context.expectedTask.taskId = "PC-001";
+}, "PREP_SCOPE_TASK");
+
+function stageGateBFixture({ deliveryTransition = false, taskId = "SPK-R0-001", milestone = "R0" } = {}) {
+  const taskInput = retargetTaskFixture(localFixture, {
+    taskId,
+    milestone,
+    scopeClass: deliveryTransition ? DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass : "local-synthetic",
+    actionClass: deliveryTransition ? DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass : "synthetic-foundation",
+    completeDueActions: false,
+  });
+  if (deliveryTransition) {
+    const implementationEntry = taskInput.candidate.taskFiles.find((entry) => entry.purpose === "implementation");
+    implementationEntry.path = DELIVERY_TRANSITION_GATE_B_CONTRACT.modulePath;
+    taskInput.ownerActionRequirements = [];
+    taskInput.ownerActions = [];
+    taskInput.privateAuthority = null;
+    recomputeBindings(taskInput);
+  }
+  taskInput.requirementIds = ["LID-OPS-001"];
+  taskInput.expectedRequirementIds = ["LID-OPS-001"];
+  taskInput.acceptanceScenarioIds = [`${taskId}-QA-001`];
+  taskInput.designCoverage = {
+    applicability: "applicable",
+    journeyIds: [`${taskId}-QA-001`],
+    stateCoverage: Object.fromEntries(DESIGN_STATE_DIMENSIONS.map((dimension) => [dimension, [`${taskId}-QA-001`]])),
+    accessibilityCoverage: Object.fromEntries(DESIGN_ACCESSIBILITY_DIMENSIONS.map((dimension) => [dimension, [`${taskId}-QA-001`]])),
+    notApplicableRationale: null,
+  };
+  recomputeBindings(taskInput);
+  const stageId = deliveryTransition
+    ? `P0-STAGE-${taskId}-STATUS-DELIVERY-TRANSITION`
+    : `P0-STAGE-${taskId}-SYNTHETIC-001`;
+  const preparationReviewId = deliveryTransition
+    ? `P0-PREP-${taskId}-STATUS-DELIVERY-TRANSITION`
+    : `P0-PREP-${taskId}-SYNTHETIC-001`;
+  const proposalRevision = "d".repeat(40);
+  const proposalBaseRevision = "e".repeat(40);
+  const proposalDossierDigest = sha256("synthetic Gate A proposal dossier");
+  const preparationReview = {
+    preparationReviewId,
+    taskId: taskInput.taskId,
+    stageId,
+    state: "accepted",
+    scopeClass: taskInput.requestedScope.scopeClass,
+    actionClass: taskInput.requestedScope.actionClass,
+    proposalCandidate: {
+      revision: proposalRevision,
+      baseRevision: proposalBaseRevision,
+      dossierDigest: proposalDossierDigest,
+      artifactBindings: Object.fromEntries(ARTIFACT_KINDS.map((kind) => [kind, {
+        path: taskInput.candidate.artifacts[kind].path,
+        sha256: taskInput.candidate.artifacts[kind].sha256,
+      }])),
+    },
+    reviewerRegistrySha256: computeReviewerRegistrySha256(taskInput.reviewerRegistry),
+    councilSeatAttestations: {},
+    evidenceReference: "preparation:SPK-R0-001-SYNTHETIC-001",
+  };
+  for (const seat of COUNCIL_SEATS) {
+    const role = roleBySeat[seat];
+    const record = {
+      reviewerId: reviewerIdForRole(role),
+      reviewerRole: role,
+      verdict: "approve-preparation-candidate",
+      reviewedRevision: proposalRevision,
+      dossierDigest: proposalDossierDigest,
+      preparationReviewId,
+      stageId,
+      scopeClass: taskInput.requestedScope.scopeClass,
+      actionClass: taskInput.requestedScope.actionClass,
+      evidenceReference: `seat:SPK-R0-001-${seat}-accepted-preparation`,
+      attestationDigest: null,
+    };
+    record.attestationDigest = computeStageCouncilAttestationDigest({
+      gateKind: "gate-a-prepare",
+      preparationReviewId,
+      taskId: taskInput.taskId,
+      stageId,
+      subject: `council:${seat}`,
+      decision: record.verdict,
+      reviewerId: record.reviewerId,
+      reviewerRole: record.reviewerRole,
+      reviewedRevision: record.reviewedRevision,
+      dossierDigest: record.dossierDigest,
+      scopeClass: record.scopeClass,
+      actionClass: record.actionClass,
+      evidenceReference: record.evidenceReference,
+    });
+    preparationReview.councilSeatAttestations[seat] = record;
+  }
+  const preparationReviewSha256 = computePreparationReviewRecordSha256(preparationReview);
+  const stage = {
+    stageId,
+    preparationReviewId,
+    preparationReviewSha256,
+    taskId: taskInput.taskId,
+    gateKind: "execute",
+    state: "ready",
+    scopeClass: taskInput.requestedScope.scopeClass,
+    actionClass: taskInput.requestedScope.actionClass,
+    sequence: 1,
+    candidateRevision: taskInput.candidate.revision,
+    dossierDigest: taskInput.candidate.dossierDigest,
+    predecessorReceiptSha256: null,
+    idempotencyKey: deliveryTransition
+      ? `P0-IDEMP-${taskId}-STATUS-DELIVERY-TRANSITION`
+      : `P0-IDEMP-${taskId}-SYNTHETIC-001`,
+    stageDefinitionSha256: `sha256:${sha256("synthetic stage definition")}`,
+    moduleId: deliveryTransition ? DELIVERY_TRANSITION_GATE_B_CONTRACT.moduleId : "spk.synthetic",
+    moduleSha256: `sha256:${taskInput.candidate.taskFiles.find((entry) => entry.purpose === "implementation").sha256}`,
+    candidate: clone(taskInput.candidate),
+    artifactReviews: clone(taskInput.artifactReviews),
+    designCoverage: clone(taskInput.designCoverage),
+    dependencyEvidence: clone(taskInput.dependencyEvidence),
+    openDecisions: clone(taskInput.openDecisions),
+    specialistVetoes: clone(taskInput.specialistVetoes),
+    privateAuthority: clone(taskInput.privateAuthority),
+    reviewerRegistrySha256: computeReviewerRegistrySha256(taskInput.reviewerRegistry),
+    ownerActionStateSha256: computeTaskOwnerActionStateSha256({
+      taskId: taskInput.taskId,
+      requirements: taskInput.ownerActionRequirements,
+      records: taskInput.ownerActions,
+    }),
+    requirementEvidence: [{
+      requirementId: "LID-OPS-001",
+      stageId,
+      acceptanceScenarioIds: [`${taskId}-QA-001`],
+      candidateRevision: taskInput.candidate.revision,
+      environmentClass: deliveryTransition ? "sanitized-private" : "synthetic-local",
+      fixtureClass: deliveryTransition ? "sanitized-metadata" : "synthetic",
+      evidenceReference: "evidence:SPK-R0-001-SYNTHETIC-001",
+      result: "pass",
+      residualObligations: ["Private-host qualification remains separately gated."],
+    }],
+    independentQa: {
+      reviewerId: "reviewer-qa",
+      reviewerRole: "qa",
+      result: "pass",
+      candidateRevision: taskInput.candidate.revision,
+      dossierDigest: taskInput.candidate.dossierDigest,
+      evidenceReference: "qa:SPK-R0-001-SYNTHETIC-001",
+    },
+    rollback: {
+      planReference: "rollback:SPK-R0-001-SYNTHETIC-001",
+      snapshotReference: "snapshot:SPK-R0-001-SYNTHETIC-001",
+      rehearsalResult: "pass",
+      evidenceReference: "rehearsal:SPK-R0-001-SYNTHETIC-001",
+    },
+    stageCouncil: {
+      verdict: "ready-to-execute",
+      reviewedRevision: taskInput.candidate.revision,
+      dossierDigest: taskInput.candidate.dossierDigest,
+      unresolvedBlockers: [],
+      seatVerdicts: {},
+    },
+  };
+  const stageContextSha256 = computeStageApprovalContextSha256(stage);
+  for (const seat of COUNCIL_SEATS) {
+    const role = roleBySeat[seat];
+    const record = {
+      reviewerId: reviewerIdForRole(role),
+      reviewerRole: role,
+      verdict: "approve-stage-execution",
+      reviewedRevision: stage.candidateRevision,
+      dossierDigest: stage.dossierDigest,
+      preparationReviewId,
+      preparationReviewSha256,
+      stageId,
+      gateKind: stage.gateKind,
+      scopeClass: stage.scopeClass,
+      actionClass: stage.actionClass,
+      stageContextSha256,
+      evidenceReference: `seat:SPK-R0-001-${seat}-stage-execution`,
+      attestationDigest: null,
+    };
+    record.attestationDigest = computeStageApprovalSeatAttestationDigest(record);
+    stage.stageCouncil.seatVerdicts[seat] = record;
+  }
+  const taskFacts = trustedFacts(taskInput);
+  const stageApprovalSha256 = sha256(canonicalJson(stage));
+  taskFacts.approvalPublication = {
+    registryPath: STAGE_APPROVAL_REGISTRY_PATH,
+    registrySha256: sha256("fictional append-only stage approval registry bytes\n"),
+    registryBytesVerified: true,
+    taskId: taskInput.taskId,
+    stageId,
+    preparationReviewId,
+    publishedPreparationReviewSha256: preparationReviewSha256,
+    currentPreparationReviewSha256: preparationReviewSha256,
+    preparationReviewBytesVerified: true,
+    preparationPublicationRevision: "f".repeat(40),
+    preparationCandidateAncestorOfPublication: true,
+    publishedStageApprovalSha256: stageApprovalSha256,
+    currentStageApprovalSha256: stageApprovalSha256,
+    stageApprovalBytesVerified: true,
+    stagePublicationRevision: "1".repeat(40),
+    stageCandidateAncestorOfPublication: true,
+    preparationPublicationAncestorOfStageCandidate: true,
+    stageApprovalPublishedOnFetchedMain: true,
+  };
+  taskFacts.activation.stageApprovalRecordReachableFromHead = true;
+  // Legacy task-wide approval and seats cannot contribute to Gate B.
+  taskInput.approvalRecord = null;
+  taskInput.council = {
+    verdict: "hold",
+    reviewedRevision: null,
+    dossierDigest: null,
+    unresolvedBlockers: ["Legacy task approval deliberately absent."],
+    seatVerdicts: {},
+  };
+  return {
+    source: {
+      schemaVersion: STAGE_EXECUTION_SCHEMA_VERSION,
+      taskInput,
+      preparationReview,
+      stage,
+    },
+    context: {
+      taskEvaluationOptions: {
+        now: FIXED_NOW,
+        ...taskFacts,
+      },
+    },
+  };
+}
+
+function assertStageNegative(name, mutate, expectedCode) {
+  const fixture = stageGateBFixture();
+  mutate(fixture.source, fixture.context);
+  const actual = evaluateStageExecutionGateB(fixture.source, fixture.context);
+  assert.equal(actual.executionAllowed, false, `${name}: stage Gate B unexpectedly passed`);
+  assert.ok(failedCodes(actual).includes(expectedCode), `${name}: missing ${expectedCode}; got ${failedCodes(actual).join(", ")}`);
+  recordResult("PC-001-CTL-P05", name, "pass", { expectedCodes: [expectedCode] });
+}
+
+const stagePositive = stageGateBFixture();
+const directCompositeEvaluation = evaluateReadiness(stagePositive.source.taskInput, stagePositive.context.taskEvaluationOptions);
+assert.equal(directCompositeEvaluation.executionAllowed, false);
+assert.ok(failedCodes(directCompositeEvaluation).includes("TASK_EXECUTION_CONTRACT_CARDINALITY"));
+const stagePositiveResult = evaluateStageExecutionGateB(stagePositive.source, stagePositive.context);
+assert.equal(stagePositiveResult.executionAllowed, true, failedCodes(stagePositiveResult).join(", "));
+assert.equal(stagePositiveResult.decision, "Ready to execute — Gate B");
+recordResult("PC-001-CTL-P05", "stage Gate B permits one exact pair on a composite R0 task while legacy task-wide approval stays denied", "pass", {
+  decision: stagePositiveResult.decision,
+  sourceFingerprint: stagePositiveResult.normalizedEvidence.sourceFingerprint,
+});
+assertStageNegative("stage Gate B rejects an unknown envelope field", (source) => { source.stage.extraAction = "second"; }, "STAGE_SCHEMA");
+assertStageNegative("stage Gate B rejects a scope/action mismatch", (source) => { source.stage.actionClass = "private-system-read"; }, "STAGE_GATE_B_BINDING");
+assertStageNegative("stage Gate B rejects a missing predecessor receipt on sequence two", (source) => { source.stage.sequence = 2; }, "STAGE_PREPARATION_PREDECESSOR");
+assertStageNegative("stage Gate B rejects contributor-conflicted QA", (source) => { source.stage.independentQa.reviewerId = "implementer-controls"; source.stage.independentQa.reviewerRole = "implementation"; }, "STAGE_INDEPENDENT_QA");
+assertStageNegative("stage Gate B rejects stale requirement evidence", (source) => { source.stage.requirementEvidence[0].candidateRevision = BASE_REVISION; }, "STAGE_REQUIREMENT_EVIDENCE");
+assertStageNegative("stage Gate B rejects missing rollback rehearsal", (source) => { source.stage.rollback.rehearsalResult = "pending"; }, "STAGE_ROLLBACK");
+assertStageNegative("stage Gate B rejects unpublished stage bytes", (_source, context) => { context.taskEvaluationOptions.approvalPublication.stageApprovalBytesVerified = false; }, "STAGE_PUBLICATION");
+assertStageNegative("legacy task-wide seats cannot substitute for exact stage seats", (source) => {
+  source.taskInput.council = clone(localFixture().council);
+  source.stage.stageCouncil.seatVerdicts = {};
+}, "STAGE_SEAT_SET");
+
+const transitionStagePositive = stageGateBFixture({ deliveryTransition: true });
+const directTransitionEvaluation = evaluateReadiness(
+  transitionStagePositive.source.taskInput,
+  transitionStagePositive.context.taskEvaluationOptions,
+);
+assert.equal(directTransitionEvaluation.executionAllowed, false, "ordinary task evaluation must not gain transition authority");
+assert.ok(failedCodes(directTransitionEvaluation).includes("TASK_SCOPE_ACTION_COMPATIBILITY"));
+assert.ok(!TASK_EXECUTION_CONTRACT["SPK-R0-001"].scopeActions["private-execution"].includes("project-workflow-mutation"));
+assert.ok(Object.values(TASK_EXECUTION_CONTRACT).every((contract) => (
+  contract.scopeActions[DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass] === undefined
+)), "delivery-control must remain absent from every ordinary task execution contract");
+const transitionStageResult = evaluateStageExecutionGateB(transitionStagePositive.source, transitionStagePositive.context);
+assert.equal(transitionStageResult.executionAllowed, true, failedCodes(transitionStageResult).join(", "));
+assert.equal(transitionStageResult.normalizedEvidence.scopeClass, DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass);
+assert.equal(transitionStageResult.normalizedEvidence.actionClass, DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass);
+assert.deepEqual(transitionStageResult.normalizedEvidence.dueOwnerActionIds, []);
+assert.equal(transitionStageResult.normalizedEvidence.privateAuthorityRequired, false);
+recordResult("PC-001-CTL-P05", "dedicated transition Gate B permits only the closed delivery-control branch while ordinary task execution stays denied", "pass", {
+  decision: transitionStageResult.decision,
+  sourceFingerprint: transitionStageResult.normalizedEvidence.sourceFingerprint,
+});
+
+for (const taskId of DELIVERY_TRANSITION_GATE_B_CONTRACT.taskIds) {
+  const milestone = manifestForActionContract.tasks.find((task) => task.id === taskId)?.milestone;
+  const fixture = stageGateBFixture({ deliveryTransition: true, taskId, milestone });
+  const actual = evaluateStageExecutionGateB(fixture.source, fixture.context);
+  assert.equal(actual.executionAllowed, true, `${taskId}: ${failedCodes(actual).join(", ")}`);
+  assert.deepEqual(actual.normalizedEvidence.dueOwnerActionIds, [], `${taskId}: owner action leaked`);
+  assert.equal(actual.normalizedEvidence.privateAuthorityRequired, false, `${taskId}: private authority leaked`);
+  recordResult("PC-001-CTL-P05", `dedicated delivery-transition Gate B permits bounded task ${taskId} without owner-action authority`, "pass", {
+    decision: actual.decision,
+    sourceFingerprint: actual.normalizedEvidence.sourceFingerprint,
+  });
+}
+const disallowedDeliveryTransitionTasks = [
+  { taskId: "AUD-001", milestone: "P0" },
+  { taskId: "PC-001", milestone: "P0" },
+  { taskId: "PRD-R0-001", milestone: "R0" },
+  { taskId: "PRD-R1-001", milestone: "R1" },
+  { taskId: "UNKNOWN-R0-001", milestone: null },
+];
+for (const { taskId, milestone } of disallowedDeliveryTransitionTasks) {
+  assert.equal(isDedicatedDeliveryTransitionScopeAction({
+    taskId,
+    stageId: `P0-STAGE-${taskId}-STATUS-DELIVERY-TRANSITION`,
+    scopeClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass,
+    actionClass: DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass,
+  }), false, `${taskId}: disallowed task entered delivery-transition allowlist`);
+  if (milestone !== null) {
+    const fixture = stageGateBFixture({ deliveryTransition: true, taskId, milestone });
+    const actual = evaluateStageExecutionGateB(fixture.source, fixture.context);
+    assert.equal(actual.executionAllowed, false, `${taskId}: disallowed transition passed`);
+    assert.ok(failedCodes(actual).includes("STAGE_SCOPE_TASK"), `${taskId}: ${failedCodes(actual).join(", ")}`);
+  }
+  recordResult("PC-001-CTL-P05", `${taskId} cannot enter or borrow the five-task delivery-transition exception`, "pass", {
+    expectedCodes: milestone === null ? ["DELIVERY_TRANSITION_TASK_ALLOWLIST"] : ["STAGE_SCOPE_TASK"],
+  });
+}
+
+function assertTransitionStageNegative(name, mutate, expectedCode) {
+  const fixture = stageGateBFixture({ deliveryTransition: true });
+  mutate(fixture.source, fixture.context);
+  const actual = evaluateStageExecutionGateB(fixture.source, fixture.context);
+  assert.equal(actual.executionAllowed, false, `${name}: transition Gate B unexpectedly passed`);
+  assert.ok(failedCodes(actual).includes(expectedCode), `${name}: missing ${expectedCode}; got ${failedCodes(actual).join(", ")}`);
+  recordResult("PC-001-CTL-P05", name, "pass", { expectedCodes: [expectedCode] });
+}
+
+assertTransitionStageNegative("delivery-transition Gate B rejects a generic local-synthetic action", (source) => {
+  source.stage.scopeClass = "local-synthetic";
+  source.stage.actionClass = "synthetic-foundation";
+}, "STAGE_DELIVERY_TRANSITION_CONTRACT");
+assertTransitionStageNegative("delivery-transition Gate B rejects a non-canonical module ID", (source) => {
+  source.stage.moduleId = "spk.synthetic";
+}, "STAGE_DELIVERY_TRANSITION_CONTRACT");
+assertTransitionStageNegative("delivery-transition Gate B rejects a renamed module path", (source) => {
+  source.taskInput.candidate.taskFiles.find((entry) => entry.purpose === "implementation").path = "tools/P0-delivery-transition-copy.mjs";
+}, "STAGE_DELIVERY_TRANSITION_CONTRACT");
+assertTransitionStageNegative("delivery-transition Gate B rejects an executable module mode", (source) => {
+  source.taskInput.candidate.taskFiles.find((entry) => entry.purpose === "implementation").gitMode = "100755";
+}, "STAGE_DELIVERY_TRANSITION_CONTRACT");
+assertTransitionStageNegative("private workflow authority without the transition suffix remains outside the ordinary task contract", (source) => {
+  source.stage.stageId = "P0-STAGE-SPK-R0-001-STATUS-MUTATION";
+}, "STAGE_SCOPE_ACTION");
+assertTransitionStageNegative("private workflow pair cannot masquerade behind the delivery-transition suffix", (source) => {
+  source.taskInput.requestedScope = {
+    scopeClass: "private-execution",
+    actionClass: "project-workflow-mutation",
+  };
+  source.stage.scopeClass = "private-execution";
+  source.stage.actionClass = "project-workflow-mutation";
+}, "STAGE_DELIVERY_TRANSITION_CONTRACT");
+assertTransitionStageNegative("delivery-transition Gate B rejects leaked P0-OA-001 requirements", (source) => {
+  const requirement = OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-001"];
+  source.taskInput.ownerActionRequirements.push({
+    actionId: "P0-OA-001",
+    requiredForScopeClasses: [...requirement.requiredForScopeClasses],
+    requiredForActionClasses: [...requirement.requiredForActionClasses],
+    accountableHumanId: null,
+    accountableHumanRole: requirement.accountableHumanRole,
+  });
+}, "OWNER_ACTION_REQUIREMENTS");
+assertTransitionStageNegative("delivery-transition Gate B rejects leaked P0-OA-002 requirements", (source) => {
+  const requirement = OWNER_ACTION_REQUIREMENT_CATALOG["P0-OA-002"];
+  source.taskInput.ownerActionRequirements.push({
+    actionId: "P0-OA-002",
+    requiredForScopeClasses: [...requirement.requiredForScopeClasses],
+    requiredForActionClasses: [...requirement.requiredForActionClasses],
+    accountableHumanId: null,
+    accountableHumanRole: requirement.accountableHumanRole,
+  });
+}, "OWNER_ACTION_REQUIREMENTS");
 
 const countsByScenario = Object.fromEntries(
   [...new Set(results.map((result) => result.id.split(".")[0]))]

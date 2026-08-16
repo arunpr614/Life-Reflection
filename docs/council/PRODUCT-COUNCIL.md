@@ -1,8 +1,8 @@
 # Life in Days Product Council
 
-Updated: 2026-08-13
+Updated: 2026-08-16
 
-Status: preserved planning-council record. Its original universal authorization stop is superseded by the directly activated 2026-08-14 Goal only as recorded in the [P0 execution authorization](execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md). All truthful implementation, deployment, recovery, and launch evidence disclaimers remain in force.
+Status: preserved planning-council record. Its original universal authorization stop is superseded only inside the active bounded P0/R0 Gold Goal's R0 envelope, as clarified by [P0-ED-016](execution/P0-PHASE1-EXECUTION-DECISIONS.md#p0-ed-016--bounded-r0-authority). All R1-R10 work is frozen and out of scope until a new direct Product Owner activation, and all truthful implementation, deployment, recovery, and launch evidence disclaimers remain in force.
 
 ## Purpose
 
@@ -106,7 +106,7 @@ Must define the proposed system architecture, domain/data model, boundaries, sec
 
 No later gate can compensate for an earlier gate that has not passed.
 
-> **Current execution interpretation:** The table above remains historical planning provenance. The activated Goal replaces G1 as a universal stop with release-specific evidence gates and a five-seat execution council. Routine R0–R8 decisions are delegated when every named gate passes; accounts/MFA/secrets, material terms/spend/provider choices, authentic content/UAT, recovery-key custody and human ceremony steps, final R9 authority, and irreversible R10 stages remain human-only.
+> **Current execution interpretation (2026-08-16):** The table above remains historical planning provenance. The active bounded P0/R0 Gold Goal replaces G1 as a universal stop only inside its R0 envelope. At present, only the local/public Stage 0 control repair is authorized; no R0 implementation, private-system action, deployment, acceptance, release, or production work is authorized. The five-seat execution council may later decide eligible R0 work only after every named stage gate passes. All R1-R10 work remains frozen and out of scope; broader execution requires a new direct Product Owner activation. Accounts/MFA/secrets, material terms/spend/provider choices, authentic content/UAT, recovery-key custody, and human ceremony steps remain human-only.
 
 ## RACI by workstream
 
