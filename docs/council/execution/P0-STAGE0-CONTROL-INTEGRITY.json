@@ -71,7 +71,7 @@
       "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
       "mode": "100644",
       "type": "blob",
-      "sha256": "4edf73e58daaa1ad9745e31da939edcf5676c00ac7c0b6bb91131f088261ec2c"
+      "sha256": "4566b745451107c402c5f86bfd8cf322c6804f38bf61d5de6b1b10f11d2a1db3"
     },
     {
       "path": "docs/council/execution/releases/P0-P0-R0-STAGE0-STATE-CONTRACT.md",
@@ -203,13 +203,13 @@
       "path": "tools/P0-stage0-ci.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "43eee898b72f3185d5c70d48dfe11bdc01de66da4897fe08c595e33d0f1d9827"
+      "sha256": "855fa1bf36c3d3c93f0aa17a0208cac0273cc0ad05cd09972bf95238dd282cda"
     },
     {
       "path": "tools/P0-staged-actions.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "ab210b42c8d486ac805ca037f4952e02e576a3060b881b29573489cc1920ad08"
+      "sha256": "58a8708c44dce375dde0d1e541e2287f22cdf9ca06c3681ba758ab83654d6697"
     },
     {
       "path": "tools/P0-successor-control-review.mjs",
@@ -257,7 +257,7 @@
       "path": "tools/P0-test-staged-actions.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "4456989c0d05f4b2cf2b4c3499ef38637c43d84605e3bb0bfaf72c1b68311f87"
+      "sha256": "26ec422cf11a741ceaccc35dfff2f9718ca9e22277ef584b405cf5c8a354b79d"
     },
     {
       "path": "tools/P0-test-successor-control-review.mjs",
@@ -326,36 +326,5 @@
       "sha256": "e231adce514fb8631ec794e8d578d852fcd45629594201620d2e390e638d1fc7"
     }
   ],
-  "next": {
-    "changes": [
-      {
-        "operation": "modify",
-        "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "4566b745451107c402c5f86bfd8cf322c6804f38bf61d5de6b1b10f11d2a1db3"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-stage0-ci.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "855fa1bf36c3d3c93f0aa17a0208cac0273cc0ad05cd09972bf95238dd282cda"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-staged-actions.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "58a8708c44dce375dde0d1e541e2287f22cdf9ca06c3681ba758ab83654d6697"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-test-staged-actions.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "26ec422cf11a741ceaccc35dfff2f9718ca9e22277ef584b405cf5c8a354b79d"
-      }
-    ]
-  }
+  "next": null
 }

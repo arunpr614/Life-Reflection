@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import {
   preparationReviewRecordDigest,
   MAX_SERIALIZABLE_STAGE_DEADLINE_MS,
+  P0_GATE_A_PROPOSAL_PROJECTION_PATHS,
   PRODUCTION_STAGED_ACTIONS,
   stageApprovalContextDigest,
   stageApprovalRecordDigest,
@@ -57,18 +58,19 @@ const REVISION = "a".repeat(40);
 const DIGEST = "b".repeat(64);
 const MANIFEST_PATH = "docs/project/PHASE1-ROADMAP-MANIFEST.json";
 const REVIEWER_REGISTRY_PATH = "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json";
-const PROPOSAL_PROJECTION_PATHS = [
-  "docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json",
-  MANIFEST_PATH,
-  "docs/project/PHASE1-RELEASE-PLAN.md",
-  "outputs/phase1/Life-in-Days-Phase1-Release-Plan.xlsx",
-];
+const PROPOSAL_PROJECTION_PATHS = P0_GATE_A_PROPOSAL_PROJECTION_PATHS;
 let cases = 0;
 
 function expectCode(actual, code) {
   assert.equal(actual.code, code);
   cases += 1;
 }
+
+assert.deepEqual(PROPOSAL_PROJECTION_PATHS, [
+  "docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json",
+  MANIFEST_PATH,
+  "outputs/phase1/Life-in-Days-Phase1-Release-Plan.xlsx",
+]); cases += 1;
 
 const base = Object.freeze({
   schemaVersion: STAGED_ACTION_SCHEMA_VERSION,
@@ -1935,6 +1937,23 @@ for (const topologyMutation of [
       && args[separator + 1] === fixture.proposalMainPublicationRevision) {
       return { ...result, stdout: Buffer.concat([result.stdout, Buffer.from(
         `:000000 100644 ${"0".repeat(40)} ${"1".repeat(40)} A\0tools/unrelated.mjs\0`,
+      )]) };
+    }
+    return result;
+  };
+  await expectGateAGitNegative({ fixture, run, code: "PREPARATION_GATE_A_PROPOSAL_PUBLICATION_BOUNDARY_INVALID" });
+}
+
+{
+  const fixture = stageRegistryFixture();
+  const run = async (command, args, options) => {
+    const result = await fixture.run(command, args, options);
+    const separator = args.indexOf("-z") + 1;
+    if (args[0] === "diff" && args.includes("--raw")
+      && args[separator] === fixture.proposalRevision
+      && args[separator + 1] === fixture.projectionRevision) {
+      return { ...result, stdout: Buffer.concat([result.stdout, Buffer.from(
+        `:100644 100644 ${"1".repeat(40)} ${"2".repeat(40)} M\0docs/project/PHASE1-RELEASE-PLAN.md\0`,
       )]) };
     }
     return result;
