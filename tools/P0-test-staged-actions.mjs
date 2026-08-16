@@ -58,6 +58,7 @@ const REVISION = "a".repeat(40);
 const DIGEST = "b".repeat(64);
 const MANIFEST_PATH = "docs/project/PHASE1-ROADMAP-MANIFEST.json";
 const REVIEWER_REGISTRY_PATH = "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json";
+const CONTROL_INTEGRITY_MANIFEST_PATH = "docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json";
 const PROPOSAL_PROJECTION_PATHS = P0_GATE_A_PROPOSAL_PROJECTION_PATHS;
 let cases = 0;
 
@@ -337,11 +338,15 @@ function stageRegistryFixture() {
   const proposalBaseRevision = minimumGateABaseRevision;
   const projectionRevision = "7".repeat(40);
   const proposalMainPublicationRevision = "9".repeat(40);
+  const preparationArmRevision = "01".repeat(20);
+  const preparationArmMainRevision = "02".repeat(20);
   const preparationPublicationRevision = "a".repeat(40);
   const preparationMainPublicationRevision = "d".repeat(40);
   const candidateRevision = "b".repeat(40);
-  const stagePublicationRevision = "c".repeat(40);
   const implementationMainPublicationRevision = "e".repeat(40);
+  const stageArmRevision = "03".repeat(20);
+  const stageArmMainRevision = "05".repeat(20);
+  const stagePublicationRevision = "c".repeat(40);
   const stageMainPublicationRevision = "f".repeat(40);
   const stageId = base.stageId;
   const preparationReviewId = "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION";
@@ -797,43 +802,129 @@ function stageRegistryFixture() {
   };
   const prepared = { ...empty, preparationReviews: [preparationReview] };
   const published = { ...prepared, stageApprovals: [stage] };
+  const emptyRegistryBytes = Buffer.from(`${JSON.stringify(empty, null, 2)}\n`);
+  const preparedRegistryBytes = Buffer.from(`${JSON.stringify(prepared, null, 2)}\n`);
+  const publishedRegistryBytes = Buffer.from(`${JSON.stringify(published, null, 2)}\n`);
+  const initialIntegrityCurrent = [
+    {
+      path: "tools/P0-staged-actions.mjs",
+      mode: "100644",
+      type: "blob",
+      sha256: rawDigest("fixture staged-actions control"),
+    },
+    ...Array.from({ length: 53 }, (_, index) => ({
+      path: `tools/P0-fixture-control-${String(index + 1).padStart(2, "0")}.mjs`,
+      mode: "100644",
+      type: "blob",
+      sha256: rawDigest(`fixture control ${index + 1}`),
+    })),
+  ].sort((left, right) => left.path < right.path ? -1 : left.path > right.path ? 1 : 0);
+  const preparationRegistryIntegrity = {
+    path: STAGE_APPROVAL_REGISTRY_PATH,
+    mode: "100644",
+    type: "blob",
+    sha256: rawDigest(preparedRegistryBytes),
+  };
+  const stageRegistryIntegrity = {
+    ...preparationRegistryIntegrity,
+    sha256: rawDigest(publishedRegistryBytes),
+  };
+  const preparedIntegrityCurrent = [
+    ...initialIntegrityCurrent,
+    preparationRegistryIntegrity,
+  ].sort((left, right) => left.path < right.path ? -1 : left.path > right.path ? 1 : 0);
+  const publishedIntegrityCurrent = preparedIntegrityCurrent.map((entry) => (
+    entry.path === STAGE_APPROVAL_REGISTRY_PATH ? stageRegistryIntegrity : entry
+  ));
+  const clearInitialIntegrity = {
+    schemaVersion: "1.0.0",
+    current: initialIntegrityCurrent,
+    next: null,
+  };
+  const armedPreparationIntegrity = {
+    ...clearInitialIntegrity,
+    next: { changes: [{ operation: "add", ...preparationRegistryIntegrity }] },
+  };
+  const clearPreparedIntegrity = {
+    schemaVersion: "1.0.0",
+    current: preparedIntegrityCurrent,
+    next: null,
+  };
+  const armedStageIntegrity = {
+    ...clearPreparedIntegrity,
+    next: { changes: [{ operation: "modify", ...stageRegistryIntegrity }] },
+  };
+  const clearPublishedIntegrity = {
+    schemaVersion: "1.0.0",
+    current: publishedIntegrityCurrent,
+    next: null,
+  };
   const snapshots = new Map([
     [minimumGateABaseRevision, empty],
     [proposalRevision, empty],
     [projectionRevision, empty],
     [proposalMainPublicationRevision, empty],
+    [preparationArmRevision, empty],
+    [preparationArmMainRevision, empty],
     [preparationPublicationRevision, prepared],
     [preparationMainPublicationRevision, prepared],
     [candidateRevision, prepared],
     [implementationMainPublicationRevision, prepared],
+    [stageArmRevision, prepared],
+    [stageArmMainRevision, prepared],
     [stagePublicationRevision, published],
     [stageMainPublicationRevision, published],
+  ]);
+  const integrityManifests = new Map([
+    [minimumGateABaseRevision, clearInitialIntegrity],
+    [proposalRevision, clearInitialIntegrity],
+    [projectionRevision, clearInitialIntegrity],
+    [proposalMainPublicationRevision, clearInitialIntegrity],
+    [preparationArmRevision, armedPreparationIntegrity],
+    [preparationArmMainRevision, armedPreparationIntegrity],
+    [preparationPublicationRevision, clearPreparedIntegrity],
+    [preparationMainPublicationRevision, clearPreparedIntegrity],
+    [candidateRevision, clearPreparedIntegrity],
+    [implementationMainPublicationRevision, clearPreparedIntegrity],
+    [stageArmRevision, armedStageIntegrity],
+    [stageArmMainRevision, armedStageIntegrity],
+    [stagePublicationRevision, clearPublishedIntegrity],
+    [stageMainPublicationRevision, clearPublishedIntegrity],
   ]);
   const parentByRevision = new Map([
     [minimumGateABaseRevision, [sourceBaseRevision]],
     [proposalRevision, [minimumGateABaseRevision]],
     [projectionRevision, [proposalRevision]],
     [proposalMainPublicationRevision, [minimumGateABaseRevision, projectionRevision]],
-    [preparationPublicationRevision, [proposalMainPublicationRevision]],
-    [preparationMainPublicationRevision, [proposalMainPublicationRevision, preparationPublicationRevision]],
+    [preparationArmRevision, [proposalMainPublicationRevision]],
+    [preparationArmMainRevision, [proposalMainPublicationRevision, preparationArmRevision]],
+    [preparationPublicationRevision, [preparationArmMainRevision]],
+    [preparationMainPublicationRevision, [preparationArmMainRevision, preparationPublicationRevision]],
     [candidateRevision, [preparationMainPublicationRevision]],
     [implementationMainPublicationRevision, [preparationMainPublicationRevision, candidateRevision]],
-    [stagePublicationRevision, [implementationMainPublicationRevision]],
-    [stageMainPublicationRevision, [implementationMainPublicationRevision, stagePublicationRevision]],
+    [stageArmRevision, [implementationMainPublicationRevision]],
+    [stageArmMainRevision, [implementationMainPublicationRevision, stageArmRevision]],
+    [stagePublicationRevision, [stageArmMainRevision]],
+    [stageMainPublicationRevision, [stageArmMainRevision, stagePublicationRevision]],
   ]);
   const manifestBytes = Buffer.from(`${JSON.stringify(manifestDocument, null, 2)}\n`);
   const reviewerRegistryBytes = Buffer.from(`${JSON.stringify(reviewerRegistry, null, 2)}\n`);
   const objectIdByPath = new Map([
     [MANIFEST_PATH, rawDigest("manifest object").slice(0, 40)],
     [REVIEWER_REGISTRY_PATH, rawDigest("reviewer registry object").slice(0, 40)],
+    [CONTROL_INTEGRITY_MANIFEST_PATH, rawDigest("control integrity object").slice(0, 40)],
     ...PROPOSAL_PROJECTION_PATHS.map((relativePath) => [relativePath, rawDigest(`projection:${relativePath}`).slice(0, 40)]),
     ...ARTIFACT_KINDS.map((kind) => [artifactBindings[kind].path, rawDigest(`object:${kind}`).slice(0, 40)]),
     [STAGE_APPROVAL_REGISTRY_PATH, "4".repeat(40)],
   ]);
   objectIdByPath.set(MANIFEST_PATH, rawDigest("manifest object").slice(0, 40));
-  const bytesForPath = (relativePath) => {
+  const bytesForPath = (revision, relativePath) => {
     if (relativePath === MANIFEST_PATH) return manifestBytes;
     if (relativePath === REVIEWER_REGISTRY_PATH) return reviewerRegistryBytes;
+    if (relativePath === CONTROL_INTEGRITY_MANIFEST_PATH) {
+      const value = integrityManifests.get(revision);
+      return value ? Buffer.from(`${JSON.stringify(value, null, 2)}\n`) : null;
+    }
     const artifactKind = ARTIFACT_KINDS.find((kind) => artifactBindings[kind].path === relativePath);
     if (artifactKind) return Buffer.from(artifactBytes[artifactKind]);
     return PROPOSAL_PROJECTION_PATHS.includes(relativePath)
@@ -845,10 +936,14 @@ function stageRegistryFixture() {
     proposalRevision,
     projectionRevision,
     proposalMainPublicationRevision,
+    preparationArmRevision,
+    preparationArmMainRevision,
     preparationPublicationRevision,
     preparationMainPublicationRevision,
     candidateRevision,
     implementationMainPublicationRevision,
+    stageArmRevision,
+    stageArmMainRevision,
     stagePublicationRevision,
     stageMainPublicationRevision,
   ];
@@ -902,9 +997,20 @@ function stageRegistryFixture() {
         ...PROPOSAL_PROJECTION_PATHS.map((relativePath) => modifiedRecord(relativePath)),
       ];
     }
-    if ((fromRevision === proposalMainPublicationRevision && toRevision === preparationMainPublicationRevision)
-      || (fromRevision === implementationMainPublicationRevision && toRevision === stageMainPublicationRevision)) {
-      return [modifiedRecord(STAGE_APPROVAL_REGISTRY_PATH)];
+    if ((fromRevision === proposalMainPublicationRevision
+      && [preparationArmRevision, preparationArmMainRevision].includes(toRevision))
+      || (fromRevision === implementationMainPublicationRevision
+        && [stageArmRevision, stageArmMainRevision].includes(toRevision))) {
+      return [modifiedRecord(CONTROL_INTEGRITY_MANIFEST_PATH)];
+    }
+    if ((fromRevision === preparationArmMainRevision
+      && [preparationPublicationRevision, preparationMainPublicationRevision].includes(toRevision))
+      || (fromRevision === stageArmMainRevision
+        && [stagePublicationRevision, stageMainPublicationRevision].includes(toRevision))) {
+      return [
+        modifiedRecord(CONTROL_INTEGRITY_MANIFEST_PATH),
+        modifiedRecord(STAGE_APPROVAL_REGISTRY_PATH),
+      ];
     }
     return null;
   };
@@ -925,7 +1031,7 @@ function stageRegistryFixture() {
         const value = snapshots.get(revision);
         if (value) bytes = Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
       } else if (!(revision === proposalBaseRevision && artifactPaths.includes(relativePath))) {
-        bytes = bytesForPath(relativePath);
+        bytes = bytesForPath(revision, relativePath);
       }
       if (bytes === null) return { ok: false, status: 1, stdout: options.encoding === null ? Buffer.alloc(0) : "" };
       return { ok: true, status: 0, stdout: options.encoding === null ? bytes : bytes.toString("utf8") };
@@ -1009,13 +1115,18 @@ function stageRegistryFixture() {
     proposalRevision,
     projectionRevision,
     proposalMainPublicationRevision,
+    preparationArmRevision,
+    preparationArmMainRevision,
     preparationPublicationRevision,
     preparationMainPublicationRevision,
     candidateRevision,
-    stagePublicationRevision,
     implementationMainPublicationRevision,
+    stageArmRevision,
+    stageArmMainRevision,
+    stagePublicationRevision,
     stageMainPublicationRevision,
     snapshots,
+    integrityManifests,
     artifactBindings,
     artifactBytes,
     manifestDocument,
@@ -1172,6 +1283,27 @@ function resealPreparationReview(record) {
     actionClass: record.actionClass,
   }]));
   return record;
+}
+
+function resealPreparationRatchetIntegrity(fixture) {
+  const targetSha256 = rawDigest(Buffer.from(`${JSON.stringify(fixture.prepared, null, 2)}\n`));
+  for (const revision of [fixture.preparationArmRevision, fixture.preparationArmMainRevision]) {
+    fixture.integrityManifests.get(revision).next.changes[0].sha256 = targetSha256;
+  }
+  for (const revision of [
+    fixture.preparationPublicationRevision,
+    fixture.preparationMainPublicationRevision,
+    fixture.candidateRevision,
+    fixture.implementationMainPublicationRevision,
+    fixture.stageArmRevision,
+    fixture.stageArmMainRevision,
+  ]) {
+    const entry = fixture.integrityManifests.get(revision).current.find((candidate) => (
+      candidate.path === STAGE_APPROVAL_REGISTRY_PATH
+    ));
+    assert.ok(entry);
+    entry.sha256 = targetSha256;
+  }
 }
 
 function resealStageApproval(record) {
@@ -1399,7 +1531,7 @@ const historyResult = await verifyStageApprovalRegistryHistory({
   repoRoot: "/synthetic/repository",
   run: registryFixture.run,
   publishedRef: registryFixture.stagePublicationRevision,
-  fetchedMainRevision: registryFixture.implementationMainPublicationRevision,
+  fetchedMainRevision: registryFixture.stageArmMainRevision,
   stageId: registryFixture.stage.stageId,
 });
 expectCode(historyResult, "STAGE_APPROVAL_HISTORY_VALID");
@@ -1501,7 +1633,7 @@ const preparationHistoryResult = await verifyPreparationReviewRegistryHistory({
   repoRoot: "/synthetic/repository",
   run: registryFixture.run,
   publishedRef: registryFixture.preparationPublicationRevision,
-  fetchedMainRevision: registryFixture.proposalMainPublicationRevision,
+  fetchedMainRevision: registryFixture.preparationArmMainRevision,
   preparationReviewId: registryFixture.preparationReview.preparationReviewId,
 });
 expectCode(preparationHistoryResult, "PREPARATION_REVIEW_HISTORY_VALID");
@@ -1509,41 +1641,43 @@ assert.equal(preparationHistoryResult.preparationReviewSha256, registryFixture.s
 
 const unrelatedPreparationPublication = stageRegistryFixture();
 const unrelatedPreparationRun = async (command, args, options) => {
-  if (args[0] === "diff-tree" && args.at(-1) === unrelatedPreparationPublication.preparationPublicationRevision) {
-    return {
-      ok: true,
-      status: 0,
-      stdout: `M\t${STAGE_APPROVAL_REGISTRY_PATH}\nM\tdocs/unrelated.md\n`,
-    };
+  const result = await unrelatedPreparationPublication.run(command, args, options);
+  if (args[0] === "diff" && args.includes("--raw")
+    && args.includes(unrelatedPreparationPublication.preparationArmMainRevision)
+    && args.includes(unrelatedPreparationPublication.preparationPublicationRevision)) {
+    return { ...result, stdout: Buffer.concat([result.stdout, Buffer.from(
+      `:100644 100644 ${"1".repeat(40)} ${"2".repeat(40)} M\0docs/unrelated.md\0`,
+    )]) };
   }
-  return unrelatedPreparationPublication.run(command, args, options);
+  return result;
 };
 expectCode(await verifyPreparationReviewRegistryHistory({
   repoRoot: "/synthetic/repository",
   run: unrelatedPreparationRun,
   publishedRef: unrelatedPreparationPublication.preparationPublicationRevision,
-  fetchedMainRevision: unrelatedPreparationPublication.proposalMainPublicationRevision,
+  fetchedMainRevision: unrelatedPreparationPublication.preparationArmMainRevision,
   preparationReviewId: unrelatedPreparationPublication.preparationReview.preparationReviewId,
-}), "PREPARATION_REVIEW_PUBLICATION_SCOPE_INVALID");
+}), "PREPARATION_GATE_A_PREPARATION_PUBLICATION_BOUNDARY_INVALID");
 
 const unrelatedStagePublication = stageRegistryFixture();
 const unrelatedStageRun = async (command, args, options) => {
-  if (args[0] === "diff-tree" && args.at(-1) === unrelatedStagePublication.stagePublicationRevision) {
-    return {
-      ok: true,
-      status: 0,
-      stdout: `M\t${STAGE_APPROVAL_REGISTRY_PATH}\nA\ttools/unrelated.mjs\n`,
-    };
+  const result = await unrelatedStagePublication.run(command, args, options);
+  if (args[0] === "diff" && args.includes("--raw")
+    && args.includes(unrelatedStagePublication.stageArmMainRevision)
+    && args.includes(unrelatedStagePublication.stagePublicationRevision)) {
+    return { ...result, stdout: Buffer.concat([result.stdout, Buffer.from(
+      `:000000 100644 ${"0".repeat(40)} ${"2".repeat(40)} A\0tools/unrelated.mjs\0`,
+    )]) };
   }
-  return unrelatedStagePublication.run(command, args, options);
+  return result;
 };
 expectCode(await verifyStageApprovalRegistryHistory({
   repoRoot: "/synthetic/repository",
   run: unrelatedStageRun,
   publishedRef: unrelatedStagePublication.stagePublicationRevision,
-  fetchedMainRevision: unrelatedStagePublication.implementationMainPublicationRevision,
+  fetchedMainRevision: unrelatedStagePublication.stageArmMainRevision,
   stageId: unrelatedStagePublication.stage.stageId,
-}), "STAGE_APPROVAL_PUBLICATION_SCOPE_INVALID");
+}), "STAGE_MAIN_PUBLICATION_BOUNDARY_INVALID");
 
 const selfReferentialFixture = stageRegistryFixture();
 selfReferentialFixture.snapshots.set(selfReferentialFixture.proposalRevision, selfReferentialFixture.prepared);
@@ -1551,7 +1685,7 @@ expectCode(await verifyStageApprovalRegistryHistory({
   repoRoot: "/synthetic/repository",
   run: selfReferentialFixture.run,
   publishedRef: selfReferentialFixture.stagePublicationRevision,
-  fetchedMainRevision: selfReferentialFixture.implementationMainPublicationRevision,
+  fetchedMainRevision: selfReferentialFixture.stageArmMainRevision,
   stageId: selfReferentialFixture.stage.stageId,
 }), "PREPARATION_REVIEW_HISTORY_SELF_REFERENCE");
 
@@ -1566,7 +1700,7 @@ expectCode(await verifyStageApprovalRegistryHistory({
   repoRoot: "/synthetic/repository",
   run: rewriteFixture.run,
   publishedRef: rewriteFixture.stagePublicationRevision,
-  fetchedMainRevision: rewriteFixture.implementationMainPublicationRevision,
+  fetchedMainRevision: rewriteFixture.stageArmMainRevision,
   stageId: rewriteFixture.stage.stageId,
 }), "PREPARATION_REVIEW_HISTORY_REWRITE");
 
@@ -1630,8 +1764,8 @@ const globalMergeRun = async (command, args, options) => {
     return {
       ...result,
       stdout: result.stdout.replace(
-        `${globalMergeFixture.stagePublicationRevision} ${globalMergeFixture.implementationMainPublicationRevision}`,
-        `${globalMergeFixture.stagePublicationRevision} ${globalMergeFixture.implementationMainPublicationRevision} ${missingMergeParent}`,
+        `${globalMergeFixture.stagePublicationRevision} ${globalMergeFixture.stageArmMainRevision}`,
+        `${globalMergeFixture.stagePublicationRevision} ${globalMergeFixture.stageArmMainRevision} ${missingMergeParent}`,
       ),
     };
   }
@@ -1803,11 +1937,13 @@ const premergeGateAProof = await verifyPreparationGateAProofFromGit({
   repoRoot: "/synthetic/repository",
   run: registryFixture.run,
   publishedRef: registryFixture.preparationPublicationRevision,
-  fetchedMainRevision: registryFixture.proposalMainPublicationRevision,
+  fetchedMainRevision: registryFixture.preparationArmMainRevision,
   preparationPublicationRevision: registryFixture.preparationPublicationRevision,
   record: registryFixture.preparationReview,
 });
 expectCode(premergeGateAProof, "PREPARATION_GATE_A_GIT_PROOF_VALID");
+assert.equal(premergeGateAProof.preparationArmMainRevision,
+  registryFixture.preparationArmMainRevision); cases += 1;
 assert.equal(premergeGateAProof.preparationMainPublicationRevision, null); cases += 1;
 const mergedGateAProof = await verifyPreparationGateAProofFromGit({
   repoRoot: "/synthetic/repository",
@@ -1817,6 +1953,8 @@ const mergedGateAProof = await verifyPreparationGateAProofFromGit({
   record: registryFixture.preparationReview,
 });
 expectCode(mergedGateAProof, "PREPARATION_GATE_A_GIT_PROOF_VALID");
+assert.equal(mergedGateAProof.preparationArmMainRevision,
+  registryFixture.preparationArmMainRevision); cases += 1;
 assert.equal(mergedGateAProof.preparationMainPublicationRevision,
   registryFixture.preparationMainPublicationRevision); cases += 1;
 assert.equal(registryFixture.preparationReview.gateAProof.input.acceptanceScenarioIds.length, 15); cases += 1;
@@ -1828,10 +1966,297 @@ async function expectGateAGitNegative({ fixture = stageRegistryFixture(), run, p
     repoRoot: "/synthetic/repository",
     run: run ?? fixture.run,
     publishedRef: publishedRef ?? fixture.preparationPublicationRevision,
-    fetchedMainRevision: fetchedMainRevision ?? fixture.proposalMainPublicationRevision,
+    fetchedMainRevision: fetchedMainRevision ?? fixture.preparationArmMainRevision,
     preparationPublicationRevision: fixture.preparationPublicationRevision,
     record: fixture.preparationReview,
   }), code);
+}
+
+function mutateIntegrityAt(fixture, revisions, mutate) {
+  for (const revision of revisions) {
+    const manifest = structuredClone(fixture.integrityManifests.get(revision));
+    mutate(manifest);
+    fixture.integrityManifests.set(revision, manifest);
+  }
+}
+
+async function expectRegistryRatchetNegative(fixture, lane, run = fixture.run) {
+  if (lane === "preparation") {
+    expectCode(await verifyPreparationReviewRegistryHistory({
+      repoRoot: "/synthetic/repository",
+      run,
+      publishedRef: fixture.preparationPublicationRevision,
+      fetchedMainRevision: fixture.preparationArmMainRevision,
+      preparationReviewId: fixture.preparationReview.preparationReviewId,
+    }), "PREPARATION_GATE_A_PREPARATION_PUBLICATION_BOUNDARY_INVALID");
+    return;
+  }
+  expectCode(await verifyStageApprovalRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run,
+    publishedRef: fixture.stagePublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
+    stageId: fixture.stage.stageId,
+  }), "STAGE_MAIN_PUBLICATION_BOUNDARY_INVALID");
+}
+
+async function expectRegistryRatchetRuntimeNegative(fixture, lane, run) {
+  if (lane === "preparation") {
+    expectCode(await verifyPreparationReviewRegistryHistory({
+      repoRoot: "/synthetic/repository",
+      run,
+      publishedRef: fixture.preparationMainPublicationRevision,
+      preparationReviewId: fixture.preparationReview.preparationReviewId,
+    }), "PREPARATION_GATE_A_PREPARATION_PUBLICATION_BOUNDARY_INVALID");
+    return;
+  }
+  expectCode(await verifyStageApprovalRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run,
+    publishedRef: fixture.stageMainPublicationRevision,
+    stageId: fixture.stage.stageId,
+  }), "STAGE_MAIN_PUBLICATION_BOUNDARY_INVALID");
+}
+
+const ratchetLane = (fixture, lane) => lane === "preparation" ? {
+  prerequisiteRevision: fixture.proposalMainPublicationRevision,
+  armRevision: fixture.preparationArmRevision,
+  armMainRevision: fixture.preparationArmMainRevision,
+  recordRevision: fixture.preparationPublicationRevision,
+  mainRevision: fixture.preparationMainPublicationRevision,
+  expectedOperation: "add",
+} : {
+  prerequisiteRevision: fixture.implementationMainPublicationRevision,
+  armRevision: fixture.stageArmRevision,
+  armMainRevision: fixture.stageArmMainRevision,
+  recordRevision: fixture.stagePublicationRevision,
+  mainRevision: fixture.stageMainPublicationRevision,
+  expectedOperation: "modify",
+};
+
+for (const lane of ["preparation", "stage"]) {
+  const fixture = stageRegistryFixture();
+  const revisions = ratchetLane(fixture, lane);
+  mutateIntegrityAt(fixture, [revisions.armRevision, revisions.armMainRevision], (manifest) => {
+    manifest.next = null;
+  });
+  await expectRegistryRatchetNegative(fixture, lane);
+}
+
+for (const lane of ["preparation", "stage"]) {
+  const fixture = stageRegistryFixture();
+  const revisions = ratchetLane(fixture, lane);
+  mutateIntegrityAt(fixture, [revisions.armMainRevision], (manifest) => {
+    manifest.next = null;
+  });
+  await expectRegistryRatchetNegative(fixture, lane);
+}
+
+for (const lane of ["preparation", "stage"]) {
+  const fixture = stageRegistryFixture();
+  const revisions = ratchetLane(fixture, lane);
+  mutateIntegrityAt(fixture, [revisions.armRevision, revisions.armMainRevision], (manifest) => {
+    manifest.next.changes[0].sha256 = "0".repeat(64);
+  });
+  await expectRegistryRatchetNegative(fixture, lane);
+}
+
+for (const lane of ["preparation", "stage"]) {
+  const fixture = stageRegistryFixture();
+  const revisions = ratchetLane(fixture, lane);
+  mutateIntegrityAt(fixture, [revisions.armRevision, revisions.armMainRevision], (manifest) => {
+    manifest.next.changes[0].operation = revisions.expectedOperation === "add" ? "modify" : "add";
+  });
+  await expectRegistryRatchetNegative(fixture, lane);
+}
+
+for (const lane of ["preparation", "stage"]) {
+  const fixture = stageRegistryFixture();
+  const revisions = ratchetLane(fixture, lane);
+  mutateIntegrityAt(fixture, [revisions.armRevision, revisions.armMainRevision], (manifest) => {
+    manifest.next.changes.push({
+      operation: "modify",
+      path: "tools/P0-unrelated-control.mjs",
+      mode: "100644",
+      type: "blob",
+      sha256: "1".repeat(64),
+    });
+    manifest.next.changes.sort((left, right) => (
+      left.path < right.path ? -1 : left.path > right.path ? 1 : 0
+    ));
+  });
+  await expectRegistryRatchetNegative(fixture, lane);
+}
+
+for (const lane of ["preparation", "stage"]) {
+  const fixture = stageRegistryFixture();
+  const revisions = ratchetLane(fixture, lane);
+  mutateIntegrityAt(fixture, [revisions.recordRevision, revisions.mainRevision], (manifest) => {
+    const registryEntry = manifest.current.find((entry) => entry.path === STAGE_APPROVAL_REGISTRY_PATH);
+    assert.ok(registryEntry);
+    registryEntry.sha256 = "0".repeat(64);
+  });
+  await expectRegistryRatchetNegative(fixture, lane);
+}
+
+for (const lane of ["preparation", "stage"]) {
+  const fixture = stageRegistryFixture();
+  const revisions = ratchetLane(fixture, lane);
+  mutateIntegrityAt(fixture, [revisions.recordRevision, revisions.mainRevision], (manifest) => {
+    manifest.next = {
+      changes: [{
+        operation: "modify",
+        path: STAGE_APPROVAL_REGISTRY_PATH,
+        mode: "100644",
+        type: "blob",
+        sha256: manifest.current.find((entry) => entry.path === STAGE_APPROVAL_REGISTRY_PATH).sha256,
+      }],
+    };
+  });
+  await expectRegistryRatchetNegative(fixture, lane);
+}
+
+for (const lane of ["preparation", "stage"]) {
+  const fixture = stageRegistryFixture();
+  const revisions = ratchetLane(fixture, lane);
+  const run = async (command, args, options) => (
+    args[0] === "diff" && args.includes("--quiet")
+      && args.includes(revisions.armRevision) && args.includes(revisions.armMainRevision)
+      ? { ok: false, status: 1, stdout: "" }
+      : fixture.run(command, args, options)
+  );
+  await expectRegistryRatchetNegative(fixture, lane, run);
+}
+
+for (const lane of ["preparation", "stage"]) {
+  const fixture = stageRegistryFixture();
+  const revisions = ratchetLane(fixture, lane);
+  const run = async (command, args, options) => {
+    const result = await fixture.run(command, args, options);
+    const separator = args.indexOf("-z") + 1;
+    if (args[0] === "diff" && args.includes("--raw")
+      && args[separator] === revisions.prerequisiteRevision
+      && [revisions.armRevision, revisions.armMainRevision].includes(args[separator + 1])) {
+      return { ...result, stdout: Buffer.concat([result.stdout, Buffer.from(
+        `:100644 100644 ${"1".repeat(40)} ${"2".repeat(40)} M\0tools/P0-unrelated-control.mjs\0`,
+      )]) };
+    }
+    return result;
+  };
+  await expectRegistryRatchetNegative(fixture, lane, run);
+}
+
+for (const lane of ["preparation", "stage"]) {
+  const fixture = stageRegistryFixture();
+  const revisions = ratchetLane(fixture, lane);
+  const interleavedRevision = "ef".repeat(20);
+  const run = async (command, args, options) => {
+    if (args[0] === "rev-list" && args[1] === "--parents" && args.at(-1) === revisions.armRevision) {
+      return { ok: true, status: 0, stdout: `${revisions.armRevision} ${interleavedRevision}\n` };
+    }
+    return fixture.run(command, args, options);
+  };
+  await expectRegistryRatchetNegative(fixture, lane, run);
+}
+
+for (const lane of ["preparation", "stage"]) {
+  const fixture = stageRegistryFixture();
+  const revisions = ratchetLane(fixture, lane);
+  mutateIntegrityAt(fixture, [revisions.prerequisiteRevision], (manifest) => {
+    manifest.next = {
+      changes: [{
+        operation: "modify",
+        path: "tools/P0-staged-actions.mjs",
+        mode: "100644",
+        type: "blob",
+        sha256: "2".repeat(64),
+      }],
+    };
+  });
+  await expectRegistryRatchetNegative(fixture, lane);
+}
+
+{
+  const fixture = stageRegistryFixture();
+  const revisions = ratchetLane(fixture, "stage");
+  mutateIntegrityAt(fixture, [revisions.prerequisiteRevision], (manifest) => {
+    const registryEntry = manifest.current.find((entry) => entry.path === STAGE_APPROVAL_REGISTRY_PATH);
+    assert.ok(registryEntry);
+    registryEntry.sha256 = "3".repeat(64);
+  });
+  await expectRegistryRatchetNegative(fixture, "stage");
+}
+
+{
+  const fixture = stageRegistryFixture();
+  const revisions = ratchetLane(fixture, "preparation");
+  const emptyRegistryEntry = {
+    path: STAGE_APPROVAL_REGISTRY_PATH,
+    mode: "100644",
+    type: "blob",
+    sha256: rawDigest(Buffer.from(`${JSON.stringify(fixture.empty, null, 2)}\n`)),
+  };
+  mutateIntegrityAt(fixture, [revisions.prerequisiteRevision], (manifest) => {
+    manifest.current.push(emptyRegistryEntry);
+    manifest.current.sort((left, right) => (
+      left.path < right.path ? -1 : left.path > right.path ? 1 : 0
+    ));
+  });
+  mutateIntegrityAt(fixture, [revisions.armRevision, revisions.armMainRevision], (manifest) => {
+    manifest.current.push(emptyRegistryEntry);
+    manifest.current.sort((left, right) => (
+      left.path < right.path ? -1 : left.path > right.path ? 1 : 0
+    ));
+    manifest.next.changes[0].operation = "modify";
+  });
+  await expectRegistryRatchetNegative(fixture, "preparation");
+}
+
+{
+  const fixture = stageRegistryFixture();
+  const revisions = ratchetLane(fixture, "stage");
+  mutateIntegrityAt(fixture, [revisions.prerequisiteRevision], (manifest) => {
+    manifest.current = manifest.current.filter((entry) => entry.path !== STAGE_APPROVAL_REGISTRY_PATH);
+  });
+  mutateIntegrityAt(fixture, [revisions.armRevision, revisions.armMainRevision], (manifest) => {
+    manifest.current = manifest.current.filter((entry) => entry.path !== STAGE_APPROVAL_REGISTRY_PATH);
+    manifest.next.changes[0].operation = "add";
+  });
+  await expectRegistryRatchetNegative(fixture, "stage");
+}
+
+for (const lane of ["preparation", "stage"]) {
+  const fixture = stageRegistryFixture();
+  const revisions = ratchetLane(fixture, lane);
+  const unrelatedPath = fixture.integrityManifests.get(revisions.prerequisiteRevision).current
+    .find((entry) => entry.path.startsWith("tools/P0-fixture-control-"))?.path;
+  assert.ok(unrelatedPath);
+  mutateIntegrityAt(fixture, [
+    revisions.prerequisiteRevision,
+    revisions.armRevision,
+    revisions.armMainRevision,
+    revisions.recordRevision,
+    revisions.mainRevision,
+  ], (manifest) => {
+    manifest.current = manifest.current.filter((entry) => entry.path !== unrelatedPath);
+  });
+  await expectRegistryRatchetNegative(fixture, lane);
+}
+
+for (const lane of ["preparation", "stage"]) {
+  const fixture = stageRegistryFixture();
+  const revisions = ratchetLane(fixture, lane);
+  const wrongSecondParent = "ab".repeat(20);
+  const run = async (command, args, options) => {
+    const result = await fixture.run(command, args, options);
+    if (args[0] === "rev-list" && args[1] === "--parents" && args.at(-1) === revisions.mainRevision) {
+      const tokens = result.stdout.trim().split(/\s+/);
+      tokens[2] = wrongSecondParent;
+      return { ...result, stdout: `${tokens.join(" ")}\n` };
+    }
+    return result;
+  };
+  await expectRegistryRatchetRuntimeNegative(fixture, lane, run);
 }
 
 for (const message of [
@@ -2005,7 +2430,7 @@ for (const revisionKey of ["proposalRevision", "preparationPublicationRevision",
     fixture,
     run,
     publishedRef: fixture.stagePublicationRevision,
-    fetchedMainRevision: fixture.implementationMainPublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
     code: "PREPARATION_GATE_A_REVIEWER_REGISTRY_MISMATCH",
   });
 }
@@ -2025,7 +2450,7 @@ for (const revisionKey of ["proposalRevision", "preparationPublicationRevision",
     fixture,
     run,
     publishedRef: fixture.stagePublicationRevision,
-    fetchedMainRevision: fixture.implementationMainPublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
     code: "PREPARATION_GATE_A_EXPECTED_TASK_INVALID",
   });
 }
@@ -2047,7 +2472,7 @@ for (const revisionKey of [
     fixture,
     run,
     publishedRef: fixture.stagePublicationRevision,
-    fetchedMainRevision: fixture.implementationMainPublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
     code: "PREPARATION_GATE_A_EXPECTED_TASK_INVALID",
   });
 }
@@ -2076,7 +2501,7 @@ for (const { revisionKey, mutate } of [
     repoRoot: "/synthetic/repository",
     run,
     publishedRef: fixture.stagePublicationRevision,
-    fetchedMainRevision: fixture.implementationMainPublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
     stageId: fixture.stage.stageId,
   }), "PREPARATION_GATE_A_EXPECTED_TASK_INVALID");
 }
@@ -2100,7 +2525,7 @@ for (const { publishedRefKey, revisionKey } of [
     run,
     publishedRef: fixture[publishedRefKey],
     fetchedMainRevision: fixture[publishedRefKey] === fixture.stagePublicationRevision
-      ? fixture.implementationMainPublicationRevision
+      ? fixture.stageArmMainRevision
       : fixture.stageMainPublicationRevision,
     stageId: fixture.stage.stageId,
   }), "PREPARATION_GATE_A_EXPECTED_TASK_INVALID");
@@ -2120,7 +2545,7 @@ for (const revisionKey of ["preparationPublicationRevision", "stagePublicationRe
     fixture,
     run,
     publishedRef: fixture.stagePublicationRevision,
-    fetchedMainRevision: fixture.implementationMainPublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
     code: "PREPARATION_GATE_A_ARTIFACT_CONTINUITY_INVALID",
   });
 }
@@ -2138,7 +2563,7 @@ for (const revisionKey of ["preparationPublicationRevision", "stagePublicationRe
     fixture,
     run,
     publishedRef: fixture.stagePublicationRevision,
-    fetchedMainRevision: fixture.implementationMainPublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
     code: "PREPARATION_GATE_A_ARTIFACT_CONTINUITY_INVALID",
   });
 }
@@ -2149,6 +2574,7 @@ for (const revisionKey of ["preparationPublicationRevision", "stagePublicationRe
   const unsafeBytes = Buffer.from(`${fixture.artifactBytes.product}\nhttp://10.0.0.1/evidence\n`);
   fixture.preparationReview.proposalCandidate.artifactBindings.product.sha256 = rawDigest(unsafeBytes);
   resealPreparationReview(fixture.preparationReview);
+  resealPreparationRatchetIntegrity(fixture);
   const run = async (command, args, options = {}) => {
     if (args[0] === "show" && typeof args[1] === "string" && args[1].endsWith(`:${artifactPath}`)
       && !args[1].startsWith(`${fixture.minimumGateABaseRevision}:`)) {
@@ -2181,9 +2607,9 @@ for (const revisionKey of ["preparationPublicationRevision", "stagePublicationRe
     repoRoot: "/synthetic/repository",
     run,
     publishedRef: fixture.preparationPublicationRevision,
-    fetchedMainRevision: fixture.proposalMainPublicationRevision,
+    fetchedMainRevision: fixture.preparationArmMainRevision,
     preparationReviewId: fixture.preparationReview.preparationReviewId,
-  }), "PREPARATION_REVIEW_PUBLICATION_SCOPE_INVALID");
+  }), "PREPARATION_GATE_A_PREPARATION_PUBLICATION_BOUNDARY_INVALID");
 }
 
 {
@@ -2208,9 +2634,9 @@ for (const revisionKey of ["preparationPublicationRevision", "stagePublicationRe
     repoRoot: "/synthetic/repository",
     run,
     publishedRef: fixture.preparationPublicationRevision,
-    fetchedMainRevision: fixture.proposalMainPublicationRevision,
+    fetchedMainRevision: fixture.preparationArmMainRevision,
     preparationReviewId: fixture.preparationReview.preparationReviewId,
-  }), "PREPARATION_REVIEW_PUBLICATION_SCOPE_INVALID");
+  }), "PREPARATION_GATE_A_PREPARATION_PUBLICATION_BOUNDARY_INVALID");
 }
 
 for (const boundary of [
@@ -2222,10 +2648,10 @@ for (const boundary of [
     code: "PREPARATION_GATE_A_PROPOSAL_PUBLICATION_BOUNDARY_INVALID",
   },
   {
-    revisionKey: "preparationMainPublicationRevision",
+    revisionKey: "preparationArmMainRevision",
     firstParentKey: "minimumGateABaseRevision",
-    publishedRefKey: "preparationMainPublicationRevision",
-    fetchedMainKey: "preparationMainPublicationRevision",
+    publishedRefKey: "preparationPublicationRevision",
+    fetchedMainKey: "preparationArmMainRevision",
     code: "PREPARATION_GATE_A_PREPARATION_PUBLICATION_BOUNDARY_INVALID",
   },
 ]) {
@@ -2309,7 +2735,7 @@ expectCode(await verifyStageApprovalRegistryHistory({
     repoRoot: "/synthetic/repository",
     run,
     publishedRef: fixture.stagePublicationRevision,
-    fetchedMainRevision: fixture.implementationMainPublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
     stageId: fixture.stage.stageId,
   }), "STAGE_IMPLEMENTATION_PREPARATION_BASE_INVALID");
 }
@@ -2401,9 +2827,9 @@ for (const boundaryKey of ["implementationMainPublicationRevision", "stageMainPu
     repoRoot: "/synthetic/repository",
     run,
     publishedRef: fixture.stagePublicationRevision,
-    fetchedMainRevision: fixture.implementationMainPublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
     stageId: fixture.stage.stageId,
-  }), "STAGE_APPROVAL_PUBLICATION_SCOPE_INVALID");
+  }), "STAGE_MAIN_PUBLICATION_BOUNDARY_INVALID");
 }
 
 {
@@ -2418,7 +2844,7 @@ for (const boundaryKey of ["implementationMainPublicationRevision", "stageMainPu
       fixture.prepared,
     ),
     publishedRef: extraPrHead,
-    fetchedMainRevision: fixture.proposalMainPublicationRevision,
+    fetchedMainRevision: fixture.preparationArmMainRevision,
     preparationReviewId: fixture.preparationReview.preparationReviewId,
   }), "PREPARATION_REVIEW_PUBLICATION_SCOPE_INVALID");
 }
@@ -2431,13 +2857,13 @@ for (const boundaryKey of ["implementationMainPublicationRevision", "stageMainPu
     run: fixtureWithLinearChild(
       fixture,
       advancedFetchedMain,
-      fixture.proposalMainPublicationRevision,
+      fixture.preparationArmMainRevision,
       fixture.empty,
     ),
     publishedRef: fixture.preparationPublicationRevision,
     fetchedMainRevision: advancedFetchedMain,
     preparationReviewId: fixture.preparationReview.preparationReviewId,
-  }), "PREPARATION_REVIEW_PUBLICATION_SCOPE_INVALID");
+  }), "PREPARATION_GATE_A_PREPARATION_PUBLICATION_BOUNDARY_INVALID");
 }
 
 {
@@ -2452,7 +2878,7 @@ for (const boundaryKey of ["implementationMainPublicationRevision", "stageMainPu
       fixture.published,
     ),
     publishedRef: extraPrHead,
-    fetchedMainRevision: fixture.implementationMainPublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
     stageId: fixture.stage.stageId,
   }), "STAGE_APPROVAL_PUBLICATION_SCOPE_INVALID");
 }
@@ -2465,13 +2891,13 @@ for (const boundaryKey of ["implementationMainPublicationRevision", "stageMainPu
     run: fixtureWithLinearChild(
       fixture,
       advancedFetchedMain,
-      fixture.implementationMainPublicationRevision,
+      fixture.stageArmMainRevision,
       fixture.prepared,
     ),
     publishedRef: fixture.stagePublicationRevision,
     fetchedMainRevision: advancedFetchedMain,
     stageId: fixture.stage.stageId,
-  }), "STAGE_APPROVAL_PUBLICATION_SCOPE_INVALID");
+  }), "STAGE_MAIN_PUBLICATION_BOUNDARY_INVALID");
 }
 
 console.log(JSON.stringify({ ok: true, code: "SELF_TEST_OK", cases, productionActions: 0 }));

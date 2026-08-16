@@ -56,6 +56,12 @@ const RAW_SHA256 = /^[0-9a-f]{64}$/;
 const OPAQUE_REFERENCE = /^[a-z][a-z0-9-]*:[A-Za-z0-9._/-]{4,}$/;
 const MANIFEST_PATH = "docs/project/PHASE1-ROADMAP-MANIFEST.json";
 const REVIEWER_REGISTRY_PATH = "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json";
+const CONTROL_INTEGRITY_MANIFEST_PATH = "docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json";
+const CONTROL_INTEGRITY_SCHEMA_VERSION = "1.0.0";
+const CONTROL_INTEGRITY_BASELINE_PATH_COUNT = 54;
+const CONTROL_INTEGRITY_ACTIVATED_PATH_COUNT = 55;
+const CONTROL_INTEGRITY_ENTRY_KEYS = Object.freeze(["path", "mode", "type", "sha256"]);
+const CONTROL_INTEGRITY_CHANGE_KEYS = Object.freeze(["operation", ...CONTROL_INTEGRITY_ENTRY_KEYS]);
 export const P0_GATE_A_PROPOSAL_PROJECTION_PATHS = Object.freeze([
   "docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json",
   "docs/project/PHASE1-ROADMAP-MANIFEST.json",
@@ -761,6 +767,248 @@ async function rawGitDiffRecords(run, repoRoot, fromRevision, toRevision) {
   return { ok: rawDiff.ok, records };
 }
 
+function controlIntegrityEntryValid(entry, keys = CONTROL_INTEGRITY_ENTRY_KEYS) {
+  return hasExactKeys(entry, keys)
+    && typeof entry.path === "string" && entry.path.length > 0
+    && entry.mode === "100644" && entry.type === "blob"
+    && RAW_SHA256.test(entry.sha256 ?? "");
+}
+
+function parseControlIntegrityManifestFile(file) {
+  const value = file?.value;
+  if (!file?.ok || !hasExactKeys(value, ["schemaVersion", "current", "next"])
+    || value.schemaVersion !== CONTROL_INTEGRITY_SCHEMA_VERSION
+    || !Array.isArray(value.current) || value.current.length === 0
+    || value.current.some((entry) => !controlIntegrityEntryValid(entry))) {
+    return { ok: false };
+  }
+  const currentPaths = value.current.map((entry) => entry.path);
+  if (new Set(currentPaths).size !== currentPaths.length
+    || canonicalJson(currentPaths) !== canonicalJson([...currentPaths].sort())) {
+    return { ok: false };
+  }
+  if (value.next !== null) {
+    if (!hasExactKeys(value.next, ["changes"])
+      || !Array.isArray(value.next.changes) || value.next.changes.length === 0
+      || value.next.changes.length > 8
+      || value.next.changes.some((change) => !controlIntegrityEntryValid(
+        change,
+        CONTROL_INTEGRITY_CHANGE_KEYS,
+      ) || !["add", "modify", "delete"].includes(change.operation))) {
+      return { ok: false };
+    }
+    const changePaths = value.next.changes.map((change) => change.path);
+    if (new Set(changePaths).size !== changePaths.length
+      || canonicalJson(changePaths) !== canonicalJson([...changePaths].sort())) {
+      return { ok: false };
+    }
+  }
+  const canonicalBytes = Buffer.from(`${JSON.stringify(value, null, 2)}\n`, "utf8");
+  if (!file.bytes.equals(canonicalBytes)) return { ok: false };
+  return { ok: true, manifest: value, bytes: file.bytes };
+}
+
+async function controlIntegrityManifestAtRevision(run, repoRoot, revision) {
+  return parseControlIntegrityManifestFile(await gitJsonAtRevision(
+    run,
+    repoRoot,
+    revision,
+    CONTROL_INTEGRITY_MANIFEST_PATH,
+  ));
+}
+
+function exactModifiedPathSet(diff, expectedPaths) {
+  const paths = [...expectedPaths].sort();
+  return diff.ok && diff.records.length === paths.length
+    && canonicalJson(diff.records.map((entry) => entry.path).sort()) === canonicalJson(paths)
+    && diff.records.every((entry) => entry.status === "M"
+      && entry.oldMode === "100644" && entry.newMode === "100644");
+}
+
+function applyRegistryIntegrityChange(current, targetSha256) {
+  const entries = new Map(current.map((entry) => [entry.path, entry]));
+  entries.set(STAGE_APPROVAL_REGISTRY_PATH, {
+    path: STAGE_APPROVAL_REGISTRY_PATH,
+    mode: "100644",
+    type: "blob",
+    sha256: targetSha256,
+  });
+  return [...entries.values()].sort((left, right) => (
+    left.path < right.path ? -1 : left.path > right.path ? 1 : 0
+  ));
+}
+
+async function verifyRegistryRatchetPublicationBoundary({
+  run,
+  repoRoot,
+  prerequisiteMainRevision,
+  armMainRevision,
+  recordPublicationRevision,
+  mainPublicationRevision,
+  boundaryCode,
+}) {
+  const failBoundary = () => ({ ok: false, code: boundaryCode });
+  const armMainCommit = await commitParentsAtRevision(run, repoRoot, armMainRevision);
+  if (!armMainCommit.ok || armMainCommit.parents.length !== 2
+    || armMainCommit.parents[0] !== prerequisiteMainRevision) return failBoundary();
+  const armRevision = armMainCommit.parents[1];
+  const armCommit = await commitParentsAtRevision(run, repoRoot, armRevision);
+  const recordCommit = await commitParentsAtRevision(run, repoRoot, recordPublicationRevision);
+  if (!armCommit.ok || armCommit.parents.length !== 1
+    || armCommit.parents[0] !== prerequisiteMainRevision
+    || !recordCommit.ok || recordCommit.parents.length !== 1
+    || recordCommit.parents[0] !== armMainRevision) return failBoundary();
+
+  const [armDiff, armMergeDiff, consumeDiff, armTreeEqualsBranch] = await Promise.all([
+    rawGitDiffRecords(run, repoRoot, prerequisiteMainRevision, armRevision),
+    rawGitDiffRecords(run, repoRoot, prerequisiteMainRevision, armMainRevision),
+    rawGitDiffRecords(run, repoRoot, armMainRevision, recordPublicationRevision),
+    runGit(run, repoRoot, ["diff", "--quiet", armRevision, armMainRevision, "--"]),
+  ]);
+  if (!exactModifiedPathSet(armDiff, [CONTROL_INTEGRITY_MANIFEST_PATH])
+    || !exactModifiedPathSet(armMergeDiff, [CONTROL_INTEGRITY_MANIFEST_PATH])
+    || !exactModifiedPathSet(consumeDiff, [
+      CONTROL_INTEGRITY_MANIFEST_PATH,
+      STAGE_APPROVAL_REGISTRY_PATH,
+    ]) || !armTreeEqualsBranch.ok) return failBoundary();
+
+  const [baseManifest, armManifest, armMainManifest, consumeManifest,
+    baseRegistry, consumedRegistry] = await Promise.all([
+    controlIntegrityManifestAtRevision(run, repoRoot, prerequisiteMainRevision),
+    controlIntegrityManifestAtRevision(run, repoRoot, armRevision),
+    controlIntegrityManifestAtRevision(run, repoRoot, armMainRevision),
+    controlIntegrityManifestAtRevision(run, repoRoot, recordPublicationRevision),
+    trustedRegistrySnapshotAtRevision(run, repoRoot, prerequisiteMainRevision),
+    trustedRegistrySnapshotAtRevision(run, repoRoot, recordPublicationRevision),
+  ]);
+  if (!baseManifest.ok || !armManifest.ok || !armMainManifest.ok || !consumeManifest.ok
+    || !baseRegistry.ok || !baseRegistry.exists || !consumedRegistry.ok || !consumedRegistry.exists
+    || baseManifest.manifest.next !== null) return failBoundary();
+  const targetSha256 = crypto.createHash("sha256").update(consumedRegistry.bytes).digest("hex");
+  const baseRegistrySha256 = crypto.createHash("sha256").update(baseRegistry.bytes).digest("hex");
+  const baseEntry = baseManifest.manifest.current.find((entry) => (
+    entry.path === STAGE_APPROVAL_REGISTRY_PATH
+  ));
+  const baseRegistryHasRecords = baseRegistry.registry.preparationReviews.length !== 0
+    || baseRegistry.registry.stageApprovals.length !== 0;
+  if ((!baseEntry && baseRegistryHasRecords) || (baseEntry && !baseRegistryHasRecords)) {
+    return failBoundary();
+  }
+  if (baseManifest.manifest.current.length !== (baseEntry
+    ? CONTROL_INTEGRITY_ACTIVATED_PATH_COUNT
+    : CONTROL_INTEGRITY_BASELINE_PATH_COUNT)) return failBoundary();
+  if (baseEntry && baseEntry.sha256 !== baseRegistrySha256) return failBoundary();
+  const expectedOperation = baseEntry ? "modify" : "add";
+  if (expectedOperation === "modify" && baseRegistrySha256 === targetSha256) return failBoundary();
+  const expectedChange = {
+    operation: expectedOperation,
+    path: STAGE_APPROVAL_REGISTRY_PATH,
+    mode: "100644",
+    type: "blob",
+    sha256: targetSha256,
+  };
+  const expectedArmedManifest = {
+    schemaVersion: CONTROL_INTEGRITY_SCHEMA_VERSION,
+    current: baseManifest.manifest.current,
+    next: { changes: [expectedChange] },
+  };
+  const expectedConsumedManifest = {
+    schemaVersion: CONTROL_INTEGRITY_SCHEMA_VERSION,
+    current: applyRegistryIntegrityChange(baseManifest.manifest.current, targetSha256),
+    next: null,
+  };
+  if (canonicalJson(armManifest.manifest) !== canonicalJson(expectedArmedManifest)
+    || canonicalJson(armMainManifest.manifest) !== canonicalJson(expectedArmedManifest)
+    || canonicalJson(consumeManifest.manifest) !== canonicalJson(expectedConsumedManifest)) {
+    return failBoundary();
+  }
+
+  if (mainPublicationRevision !== null) {
+    const mainCommit = await commitParentsAtRevision(run, repoRoot, mainPublicationRevision);
+    if (!mainCommit.ok || mainCommit.parents.length !== 2
+      || mainCommit.parents[0] !== armMainRevision
+      || mainCommit.parents[1] !== recordPublicationRevision) return failBoundary();
+    const [mainDiff, mainTreeEqualsRecord, mainManifest, mainRegistry] = await Promise.all([
+      rawGitDiffRecords(run, repoRoot, armMainRevision, mainPublicationRevision),
+      runGit(run, repoRoot, ["diff", "--quiet", recordPublicationRevision, mainPublicationRevision, "--"]),
+      controlIntegrityManifestAtRevision(run, repoRoot, mainPublicationRevision),
+      trustedRegistrySnapshotAtRevision(run, repoRoot, mainPublicationRevision),
+    ]);
+    if (!exactModifiedPathSet(mainDiff, [
+      CONTROL_INTEGRITY_MANIFEST_PATH,
+      STAGE_APPROVAL_REGISTRY_PATH,
+    ]) || !mainTreeEqualsRecord.ok || !mainManifest.ok || !mainRegistry.ok || !mainRegistry.exists
+      || !mainManifest.bytes.equals(consumeManifest.bytes)
+      || !mainRegistry.bytes.equals(consumedRegistry.bytes)) return failBoundary();
+  }
+  return {
+    ok: true,
+    armRevision,
+    armMainRevision,
+    publicationRevision: mainPublicationRevision,
+    targetSha256,
+  };
+}
+
+async function deriveRegistryMainPublicationBoundary({
+  run,
+  repoRoot,
+  fetchedMainRevision,
+  publishedRef,
+  prerequisiteMainRevision,
+  recordPublicationRevision,
+  collectionName,
+  idKey,
+  recordId,
+  record,
+  orderCode,
+  boundaryCode,
+}) {
+  const history = await firstParentRevisions(run, repoRoot, fetchedMainRevision);
+  if (!history.ok) return history;
+  let publicationRevision = null;
+  for (const revision of history.revisions) {
+    const snapshot = await registryAtRevision(run, repoRoot, revision);
+    const matches = snapshot.registry?.[collectionName]?.filter((entry) => entry?.[idKey] === recordId) ?? [];
+    if (matches.length > 1) return { ok: false, code: orderCode };
+    if (matches.length === 1) {
+      if (canonicalJson(matches[0]) !== canonicalJson(record)) return { ok: false, code: orderCode };
+      publicationRevision = revision;
+      break;
+    }
+  }
+  const publicationPrMode = publicationRevision === null;
+  if (publicationPrMode && fetchedMainRevision === publishedRef) return { ok: true, published: false };
+  if (publicationRevision === prerequisiteMainRevision) return { ok: false, code: orderCode };
+  let armMainRevision = fetchedMainRevision;
+  if (!publicationPrMode) {
+    const publicationCommit = await commitParentsAtRevision(run, repoRoot, publicationRevision);
+    if (!publicationCommit.ok || publicationCommit.parents.length !== 2
+      || publicationCommit.parents[1] !== recordPublicationRevision) {
+      return { ok: false, code: boundaryCode };
+    }
+    [armMainRevision] = publicationCommit.parents;
+  }
+  const ratchet = await verifyRegistryRatchetPublicationBoundary({
+    run,
+    repoRoot,
+    prerequisiteMainRevision,
+    armMainRevision,
+    recordPublicationRevision,
+    mainPublicationRevision: publicationPrMode ? null : publicationRevision,
+    boundaryCode,
+  });
+  if (!ratchet.ok) return ratchet;
+  return {
+    ok: true,
+    published: !publicationPrMode,
+    publicationRevision: publicationPrMode ? null : publicationRevision,
+    armRevision: ratchet.armRevision,
+    armMainRevision,
+    targetSha256: ratchet.targetSha256,
+  };
+}
+
 async function deriveProposalPublicationBoundary({
   run,
   repoRoot,
@@ -839,6 +1087,7 @@ async function derivePreparationMainPublicationBoundary({
   run,
   repoRoot,
   fetchedMainRevision,
+  publishedRef,
   proposalPublicationRevision,
   preparationPublicationRevision,
   record,
@@ -849,67 +1098,20 @@ async function derivePreparationMainPublicationBoundary({
   ))) {
     return { ok: false, code: "PREPARATION_GATE_A_PUBLICATION_ORDER_INVALID" };
   }
-  const history = await firstParentRevisions(run, repoRoot, fetchedMainRevision);
-  if (!history.ok) return history;
-  let publicationRevision = null;
-  let publicationRecord = null;
-  for (const revision of history.revisions) {
-    const snapshot = await registryAtRevision(run, repoRoot, revision);
-    const matches = snapshot.registry?.preparationReviews?.filter((entry) => (
-      entry?.preparationReviewId === record.preparationReviewId
-    )) ?? [];
-    if (matches.length > 1) {
-      return { ok: false, code: "PREPARATION_GATE_A_PUBLICATION_ORDER_INVALID" };
-    }
-    if (matches.length === 1) {
-      publicationRevision = revision;
-      publicationRecord = matches[0];
-      break;
-    }
-  }
-  if (publicationRevision === null) return { ok: true, published: false };
-  if (publicationRevision === proposalPublicationRevision
-    || canonicalJson(publicationRecord) !== canonicalJson(record)) {
-    return { ok: false, code: "PREPARATION_GATE_A_PUBLICATION_ORDER_INVALID" };
-  }
-  const commit = await commitParentsAtRevision(run, repoRoot, publicationRevision);
-  if (!commit.ok || commit.parents.length !== 2
-    || commit.parents[0] !== proposalPublicationRevision
-    || commit.parents[1] !== preparationPublicationRevision) {
-    return { ok: false, code: "PREPARATION_GATE_A_PREPARATION_PUBLICATION_BOUNDARY_INVALID" };
-  }
-  const firstParentProposalAncestry = await runGit(run, repoRoot, [
-    "merge-base", "--is-ancestor", proposalPublicationRevision, commit.parents[0],
-  ]);
-  const firstParentSnapshot = await registryAtRevision(run, repoRoot, commit.parents[0]);
-  const firstParentContainsRecord = firstParentSnapshot.registry?.preparationReviews?.some((entry) => (
-    entry?.preparationReviewId === record.preparationReviewId
-  )) === true;
-  const mergedParentSnapshot = await registryAtRevision(run, repoRoot, commit.parents[1]);
-  const mergedParentContainsRecord = mergedParentSnapshot.registry?.preparationReviews?.filter((entry) => (
-    entry?.preparationReviewId === record.preparationReviewId
-      && canonicalJson(entry) === canonicalJson(record)
-  )).length === 1;
-  const introductionCommit = await commitParentsAtRevision(run, repoRoot, preparationPublicationRevision);
-  const proposalBeforeIntroduction = introductionCommit.ok && introductionCommit.parents.length === 1
-    && introductionCommit.parents[0] === proposalPublicationRevision;
-  const mergeDiff = await rawGitDiffRecords(
-    run, repoRoot, commit.parents[0], publicationRevision,
-  );
-  const exactRegistryMerge = mergeDiff.ok && mergeDiff.records.length === 1
-    && mergeDiff.records[0].path === STAGE_APPROVAL_REGISTRY_PATH
-    && mergeDiff.records[0].status === "M"
-    && mergeDiff.records[0].oldMode === "100644"
-    && mergeDiff.records[0].newMode === "100644";
-  const mergeTreeEqualsSecondParent = await runGit(run, repoRoot, [
-    "diff", "--quiet", commit.parents[1], publicationRevision, "--",
-  ]);
-  if (!firstParentProposalAncestry.ok || firstParentContainsRecord
-    || !mergedParentContainsRecord || !proposalBeforeIntroduction || !exactRegistryMerge
-    || !mergeTreeEqualsSecondParent.ok) {
-    return { ok: false, code: "PREPARATION_GATE_A_PREPARATION_PUBLICATION_BOUNDARY_INVALID" };
-  }
-  return { ok: true, published: true, publicationRevision };
+  return deriveRegistryMainPublicationBoundary({
+    run,
+    repoRoot,
+    fetchedMainRevision,
+    publishedRef,
+    prerequisiteMainRevision: proposalPublicationRevision,
+    recordPublicationRevision: preparationPublicationRevision,
+    collectionName: "preparationReviews",
+    idKey: "preparationReviewId",
+    recordId: record.preparationReviewId,
+    record,
+    orderCode: "PREPARATION_GATE_A_PUBLICATION_ORDER_INVALID",
+    boundaryCode: "PREPARATION_GATE_A_PREPARATION_PUBLICATION_BOUNDARY_INVALID",
+  });
 }
 
 async function deriveImplementationMainPublicationBoundary({
@@ -968,64 +1170,25 @@ async function deriveStageMainPublicationBoundary({
   run,
   repoRoot,
   fetchedMainRevision,
+  publishedRef,
   implementationMainPublicationRevision,
   stagePublicationRevision,
   record,
 }) {
-  const history = await firstParentRevisions(run, repoRoot, fetchedMainRevision);
-  if (!history.ok) return history;
-  let publicationRevision = null;
-  let publicationRecord = null;
-  for (const revision of history.revisions) {
-    const snapshot = await registryAtRevision(run, repoRoot, revision);
-    const matches = snapshot.registry?.stageApprovals?.filter((entry) => entry?.stageId === record.stageId) ?? [];
-    if (matches.length > 1) return { ok: false, code: "STAGE_MAIN_PUBLICATION_ORDER_INVALID" };
-    if (matches.length === 1) {
-      publicationRevision = revision;
-      publicationRecord = matches[0];
-      break;
-    }
-  }
-  if (publicationRevision === null) return { ok: true, published: false };
-  if (publicationRevision === implementationMainPublicationRevision
-    || canonicalJson(publicationRecord) !== canonicalJson(record)) {
-    return { ok: false, code: "STAGE_MAIN_PUBLICATION_ORDER_INVALID" };
-  }
-  const commit = await commitParentsAtRevision(run, repoRoot, publicationRevision);
-  if (!commit.ok || commit.parents.length !== 2
-    || commit.parents[0] !== implementationMainPublicationRevision
-    || commit.parents[1] !== stagePublicationRevision) {
-    return { ok: false, code: "STAGE_MAIN_PUBLICATION_BOUNDARY_INVALID" };
-  }
-  const implementationBeforeFirstParent = await runGit(run, repoRoot, [
-    "merge-base", "--is-ancestor", implementationMainPublicationRevision, commit.parents[0],
-  ]);
-  const firstParentSnapshot = await registryAtRevision(run, repoRoot, commit.parents[0]);
-  const secondParentSnapshot = await registryAtRevision(run, repoRoot, commit.parents[1]);
-  const firstParentContainsRecord = firstParentSnapshot.registry?.stageApprovals?.some((entry) => (
-    entry?.stageId === record.stageId
-  )) === true;
-  const secondParentContainsRecord = secondParentSnapshot.registry?.stageApprovals?.filter((entry) => (
-    entry?.stageId === record.stageId && canonicalJson(entry) === canonicalJson(record)
-  )).length === 1;
-  const introductionCommit = await commitParentsAtRevision(run, repoRoot, stagePublicationRevision);
-  const introductionParentIsImplementation = introductionCommit.ok
-    && introductionCommit.parents.length === 1
-    && introductionCommit.parents[0] === implementationMainPublicationRevision;
-  const mergeDiff = await rawGitDiffRecords(run, repoRoot, commit.parents[0], publicationRevision);
-  const exactRegistryMerge = mergeDiff.ok && mergeDiff.records.length === 1
-    && mergeDiff.records[0].path === STAGE_APPROVAL_REGISTRY_PATH
-    && mergeDiff.records[0].status === "M"
-    && mergeDiff.records[0].oldMode === "100644"
-    && mergeDiff.records[0].newMode === "100644";
-  const mergeTreeEqualsSecondParent = await runGit(run, repoRoot, [
-    "diff", "--quiet", commit.parents[1], publicationRevision, "--",
-  ]);
-  if (!implementationBeforeFirstParent.ok || firstParentContainsRecord || !secondParentContainsRecord
-    || !introductionParentIsImplementation || !exactRegistryMerge || !mergeTreeEqualsSecondParent.ok) {
-    return { ok: false, code: "STAGE_MAIN_PUBLICATION_BOUNDARY_INVALID" };
-  }
-  return { ok: true, published: true, publicationRevision };
+  return deriveRegistryMainPublicationBoundary({
+    run,
+    repoRoot,
+    fetchedMainRevision,
+    publishedRef,
+    prerequisiteMainRevision: implementationMainPublicationRevision,
+    recordPublicationRevision: stagePublicationRevision,
+    collectionName: "stageApprovals",
+    idKey: "stageId",
+    recordId: record.stageId,
+    record,
+    orderCode: "STAGE_MAIN_PUBLICATION_ORDER_INVALID",
+    boundaryCode: "STAGE_MAIN_PUBLICATION_BOUNDARY_INVALID",
+  });
 }
 
 /**
@@ -1089,6 +1252,7 @@ export async function verifyPreparationGateAProofFromGit({
     run,
     repoRoot,
     fetchedMainRevision,
+    publishedRef,
     proposalPublicationRevision: proposalPublication.publicationRevision,
     preparationPublicationRevision,
     record,
@@ -1252,6 +1416,7 @@ export async function verifyPreparationGateAProofFromGit({
     reviewerRegistrySha256: record.reviewerRegistrySha256,
     sourceFingerprint: replay.result.sourceFingerprint,
     proposalPublicationRevision: proposalPublication.publicationRevision,
+    preparationArmMainRevision: preparationMainPublication.armMainRevision ?? null,
     preparationMainPublicationRevision: preparationMainPublication.publicationRevision ?? null,
   });
 }
@@ -1457,37 +1622,18 @@ export async function verifyStageApprovalRegistryContinuity({
   });
 }
 
-async function registryOnlyPublicationCommit(run, repoRoot, revision, requiredAncestorRevision) {
-  const parents = await runGit(run, repoRoot, ["rev-list", "--parents", "-n", "1", revision]);
-  if (!parents.ok) return false;
-  const tokens = parents.stdout.trim().split(/\s+/);
-  if (tokens.length !== 2 || tokens[0] !== revision || !FULL_REVISION.test(tokens[1] ?? "")) return false;
-  const parentRevision = tokens[1];
-  if (parentRevision !== requiredAncestorRevision) return false;
-  const changed = await runGit(run, repoRoot, [
-    "diff-tree", "--no-commit-id", "--name-status", "-r", parentRevision, revision,
-  ]);
-  const lines = changed.ok ? changed.stdout.split(/\r?\n/).map((line) => line.trim()).filter(Boolean) : [];
-  if (lines.length !== 1 || !/^M\t/.test(lines[0])
-    || lines[0].slice(2) !== STAGE_APPROVAL_REGISTRY_PATH) return false;
-  const tree = await runGit(run, repoRoot, ["ls-tree", revision, "--", STAGE_APPROVAL_REGISTRY_PATH]);
-  return tree.ok && /^100644 blob [0-9a-f]{40}\t/.test(tree.stdout.trim())
-    && tree.stdout.trim().endsWith(`\t${STAGE_APPROVAL_REGISTRY_PATH}`);
-}
-
 async function exactSingleRecordPublication({
   run,
   repoRoot,
   revision,
-  requiredAncestorRevision,
+  requiredParentRevision,
   collectionName,
   idKey,
   recordId,
 }) {
-  if (!await registryOnlyPublicationCommit(run, repoRoot, revision, requiredAncestorRevision)) return false;
   const parents = await runGit(run, repoRoot, ["rev-list", "--parents", "-n", "1", revision]);
   const tokens = parents.ok ? parents.stdout.trim().split(/\s+/) : [];
-  if (tokens.length !== 2 || tokens[0] !== revision) return false;
+  if (tokens.length !== 2 || tokens[0] !== revision || tokens[1] !== requiredParentRevision) return false;
   const parent = await registryAtRevision(run, repoRoot, tokens[1]);
   const current = await registryAtRevision(run, repoRoot, revision);
   if (!parent.exists || !current.exists
@@ -1559,16 +1705,19 @@ export async function verifyPreparationReviewRegistryHistory({
   if (!gateAProof.ok || gateAProof.proofVerified !== true) {
     return fail(gateAProof.code ?? "PREPARATION_GATE_A_GIT_PROOF_INVALID");
   }
+  if (!FULL_REVISION.test(gateAProof.preparationArmMainRevision ?? "")) {
+    return fail("PREPARATION_GATE_A_PREPARATION_PUBLICATION_BOUNDARY_INVALID");
+  }
   if (fetchedMainRevision !== publishedRef
     && (publishedRef !== preparationPublicationRevision
-      || fetchedMainRevision !== gateAProof.proposalPublicationRevision)) {
+      || fetchedMainRevision !== gateAProof.preparationArmMainRevision)) {
     return fail("PREPARATION_REVIEW_PUBLICATION_SCOPE_INVALID");
   }
   if (!await exactSingleRecordPublication({
     run,
     repoRoot,
     revision: preparationPublicationRevision,
-    requiredAncestorRevision: gateAProof.proposalPublicationRevision,
+    requiredParentRevision: gateAProof.preparationArmMainRevision,
     collectionName: "preparationReviews",
     idKey: "preparationReviewId",
     recordId: preparationReviewId,
@@ -1588,6 +1737,7 @@ export async function verifyPreparationReviewRegistryHistory({
     preparationCandidatePublication: gateAProof.candidatePublication,
     preparationSourceFingerprint: gateAProof.sourceFingerprint,
     proposalPublicationRevision: gateAProof.proposalPublicationRevision,
+    preparationArmMainRevision: gateAProof.preparationArmMainRevision,
     preparationMainPublicationRevision: gateAProof.preparationMainPublicationRevision,
   });
 }
@@ -1672,30 +1822,34 @@ export async function verifyStageApprovalRegistryHistory({
     candidateBaseRevision: record.candidate?.baseRevision,
   });
   if (!implementationMainPublication.ok) return fail(implementationMainPublication.code);
-  if (stagePrMode
-    && (publishedRef !== stagePublicationRevision
-      || fetchedMainRevision !== implementationMainPublication.publicationRevision)) {
-    return fail("STAGE_APPROVAL_PUBLICATION_SCOPE_INVALID");
-  }
   const stageMainPublication = await deriveStageMainPublicationBoundary({
     run,
     repoRoot,
     fetchedMainRevision,
+    publishedRef,
     implementationMainPublicationRevision: implementationMainPublication.publicationRevision,
     stagePublicationRevision,
     record,
   });
   if (!stageMainPublication.ok) return fail(stageMainPublication.code);
+  if (!FULL_REVISION.test(stageMainPublication.armMainRevision ?? "")) {
+    return fail("STAGE_MAIN_PUBLICATION_BOUNDARY_INVALID");
+  }
+  if (stagePrMode
+    && (publishedRef !== stagePublicationRevision
+      || fetchedMainRevision !== stageMainPublication.armMainRevision)) {
+    return fail("STAGE_APPROVAL_PUBLICATION_SCOPE_INVALID");
+  }
   if (fetchedMainRevision === publishedRef && stageMainPublication.published !== true) {
     return fail("STAGE_MAIN_PUBLICATION_MISSING");
   }
   if (preparationPublicationRevision !== preparationHistory.preparationPublicationRevision
     || !await exactSingleRecordPublication({
-      run,
-      repoRoot,
-      revision: stagePublicationRevision,
-      requiredAncestorRevision: implementationMainPublication.publicationRevision,
-      collectionName: "stageApprovals",
+    run,
+    repoRoot,
+    revision: stagePublicationRevision,
+    requiredParentRevision: stageMainPublication.armMainRevision,
+    collectionName: "stageApprovals",
       idKey: "stageId",
       recordId: stageId,
     })) {
@@ -1761,6 +1915,7 @@ export async function verifyStageApprovalRegistryHistory({
     stagePublicationRevision,
     preparationMainPublicationRevision,
     implementationMainPublicationRevision: implementationMainPublication.publicationRevision,
+    stageArmMainRevision: stageMainPublication.armMainRevision,
     stageMainPublicationRevision: stageMainPublication.publicationRevision ?? null,
     publishedRef,
     preparationProofVerified: preparationHistory.preparationProofVerified === true,

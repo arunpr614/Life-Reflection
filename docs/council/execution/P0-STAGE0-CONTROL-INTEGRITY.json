@@ -71,13 +71,13 @@
       "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
       "mode": "100644",
       "type": "blob",
-      "sha256": "4566b745451107c402c5f86bfd8cf322c6804f38bf61d5de6b1b10f11d2a1db3"
+      "sha256": "6304d259916e9d14870fe3c2c75cb5fa6eaee6660d1f4e20c715e3171a74d545"
     },
     {
       "path": "docs/council/execution/releases/P0-P0-R0-STAGE0-STATE-CONTRACT.md",
       "mode": "100644",
       "type": "blob",
-      "sha256": "aa6de009855bc388e431c0fb981715ec89eee6386e702de0172dd45a1f083b91"
+      "sha256": "06d15713d63469bacaf25857b483f7ba7cfc3bfa8178ff856c10b1e5733f25f4"
     },
     {
       "path": "docs/product/PRODUCT-REQUIREMENTS.md",
@@ -203,13 +203,13 @@
       "path": "tools/P0-stage0-ci.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "855fa1bf36c3d3c93f0aa17a0208cac0273cc0ad05cd09972bf95238dd282cda"
+      "sha256": "b4a53f9b2c42483faa74f211d9f64873177735b8c6fab3e46c78ab9fd35f8e99"
     },
     {
       "path": "tools/P0-staged-actions.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "58a8708c44dce375dde0d1e541e2287f22cdf9ca06c3681ba758ab83654d6697"
+      "sha256": "fb9364036fc0fd114ae866d679471143bdc4b353c9199c13d1604202f4acaaa9"
     },
     {
       "path": "tools/P0-successor-control-review.mjs",
@@ -257,7 +257,7 @@
       "path": "tools/P0-test-staged-actions.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "26ec422cf11a741ceaccc35dfff2f9718ca9e22277ef584b405cf5c8a354b79d"
+      "sha256": "b06a2c4ddfb782bd2b6327f7911085ef2db4c7b611a2157ffb0f00d4682aa074"
     },
     {
       "path": "tools/P0-test-successor-control-review.mjs",
@@ -326,43 +326,5 @@
       "sha256": "e231adce514fb8631ec794e8d578d852fcd45629594201620d2e390e638d1fc7"
     }
   ],
-  "next": {
-    "changes": [
-      {
-        "operation": "modify",
-        "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "6304d259916e9d14870fe3c2c75cb5fa6eaee6660d1f4e20c715e3171a74d545"
-      },
-      {
-        "operation": "modify",
-        "path": "docs/council/execution/releases/P0-P0-R0-STAGE0-STATE-CONTRACT.md",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "06d15713d63469bacaf25857b483f7ba7cfc3bfa8178ff856c10b1e5733f25f4"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-stage0-ci.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "b4a53f9b2c42483faa74f211d9f64873177735b8c6fab3e46c78ab9fd35f8e99"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-staged-actions.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "fb9364036fc0fd114ae866d679471143bdc4b353c9199c13d1604202f4acaaa9"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-test-staged-actions.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "b06a2c4ddfb782bd2b6327f7911085ef2db4c7b611a2157ffb0f00d4682aa074"
-      }
-    ]
-  }
+  "next": null
 }
