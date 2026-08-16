@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import {
   BOUNDED_AUTHORITY_SOURCE_PATHS as SCANNER_BOUNDED_AUTHORITY_SOURCE_PATHS,
 } from "./P0-bounded-authority.mjs";
+import { P0_GATE_A_PROPOSAL_PROJECTION_PATHS } from "./P0-staged-actions.mjs";
 
 export const STAGE0_CI_SCHEMA_VERSION = "1.0.0";
 export const STAGE0_WORKFLOW_GUARD_PATH = ".github/workflows/P0-stage0-workflow-guard.yml";
@@ -98,6 +99,12 @@ export const CONTROL_INTEGRITY_PATHS = Object.freeze([
   "prototypes/calendar-ui/serve.mjs",
 ].filter((filePath, index, paths) => paths.indexOf(filePath) === index).sort(compareCodeUnits));
 
+const gateAProjectionControlOverlap = P0_GATE_A_PROPOSAL_PROJECTION_PATHS
+  .filter((filePath) => CONTROL_INTEGRITY_PATHS.includes(filePath));
+if (gateAProjectionControlOverlap.length !== 0) {
+  throw new Error(`P0_GATE_A_PROPOSAL_PROJECTION_CONTROL_OVERLAP:${gateAProjectionControlOverlap.join(",")}`);
+}
+
 const TEST_COMMANDS = Object.freeze([
   ["bounded_authority_fixtures", "node", ["tools/P0-bounded-authority.mjs", "--self-test"], {
     ok: true, code: "P0_BOUNDED_AUTHORITY_SELF_TEST_OK", cases: 1935, sourceCount: 17,
@@ -111,7 +118,7 @@ const TEST_COMMANDS = Object.freeze([
   }],
   ["wiki_fixtures", "node", ["tools/P0-test-wiki-trust.mjs"], { ok: true, cases: 30, helpWrites: 0 }],
   ["staged_action_fixtures", "node", ["tools/P0-test-staged-actions.mjs"], {
-    ok: true, code: "SELF_TEST_OK", cases: 190, productionActions: 0,
+    ok: true, code: "SELF_TEST_OK", cases: 192, productionActions: 0,
   }],
   ["stage_runner_fixtures", "node", ["tools/P0-test-stage-runner.mjs"], {
     ok: true, code: "SELF_TEST_OK", cases: 90, productionModules: 0,

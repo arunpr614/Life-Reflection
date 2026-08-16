@@ -56,10 +56,9 @@ const RAW_SHA256 = /^[0-9a-f]{64}$/;
 const OPAQUE_REFERENCE = /^[a-z][a-z0-9-]*:[A-Za-z0-9._/-]{4,}$/;
 const MANIFEST_PATH = "docs/project/PHASE1-ROADMAP-MANIFEST.json";
 const REVIEWER_REGISTRY_PATH = "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json";
-const PROPOSAL_PROJECTION_PATHS = Object.freeze([
+export const P0_GATE_A_PROPOSAL_PROJECTION_PATHS = Object.freeze([
   "docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json",
   "docs/project/PHASE1-ROADMAP-MANIFEST.json",
-  "docs/project/PHASE1-RELEASE-PLAN.md",
   "outputs/phase1/Life-in-Days-Phase1-Release-Plan.xlsx",
 ]);
 
@@ -805,14 +804,14 @@ async function deriveProposalPublicationBoundary({
   const mergeDiff = await rawGitDiffRecords(
     run, repoRoot, commit.parents[0], publicationRevision,
   );
-  const expectedMergePaths = [...artifactPaths, ...PROPOSAL_PROJECTION_PATHS].sort();
+  const expectedMergePaths = [...artifactPaths, ...P0_GATE_A_PROPOSAL_PROJECTION_PATHS].sort();
   const projectionShapeValid = projectionDiff.ok
     && projectionCommit.ok
     && projectionCommit.parents.length === 1
     && projectionCommit.parents[0] === candidateRevision
-    && projectionDiff.records.length === PROPOSAL_PROJECTION_PATHS.length
+    && projectionDiff.records.length === P0_GATE_A_PROPOSAL_PROJECTION_PATHS.length
     && canonicalJson(projectionDiff.records.map((entry) => entry.path).sort())
-      === canonicalJson([...PROPOSAL_PROJECTION_PATHS].sort())
+      === canonicalJson([...P0_GATE_A_PROPOSAL_PROJECTION_PATHS].sort())
     && projectionDiff.records.every((entry) => entry.newMode === "100644"
       && (entry.status === "A" ? entry.oldMode === "000000" : entry.oldMode === "100644"));
   const mergeShapeValid = mergeDiff.ok
