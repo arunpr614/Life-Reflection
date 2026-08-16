@@ -1,6 +1,6 @@
 # Life in Days — document index
 
-Updated: 2026-08-14
+Updated: 2026-08-16
 
 This is the single navigation point for the Life in Days product, design, architecture, delivery, research, and governance documents.
 
@@ -78,6 +78,11 @@ Current status: **G0 planning baseline complete. G1 is blocked on Arun's explici
 | [Calendar UI v11 prototype guide](../prototypes/calendar-ui/README-v11.md) | Local run instructions, Needs Date Review behavior, deliberate limits, and review artifacts. |
 | [Needs Date Review v11 council](prototypes/v11/COUNCIL-v11.md) | Approved Product, Design, and Project contract for PVA-006. |
 | [Needs Date Review v11 independent QA](../design-qa-v11.md) | Exact seven-file fingerprint, complete date-review/state/privacy/responsive/frozen-regression matrix, sixteen current-run PNGs, 0/0/0/0 findings, and Pass verdict. |
+| [Telegram Capture Companion prototype v12](prototypes/CALENDAR-UI-PROTOTYPE-v12.md) | Seventh remediation slice: synthetic Telegram authorization, media/caption validation, durable-progress outcomes, review acknowledgement, and bounded private handoffs. |
+| [Calendar UI v12 prototype guide](../prototypes/calendar-ui/README-v12.md) | Local run instructions, Telegram companion behavior, explicit Retry and privacy boundaries, deliberate limits, and review artifacts. |
+| [Telegram Capture Companion v12 council](prototypes/v12/COUNCIL-v12.md) | Approved Product, Design, and Project contract for PVA-007. |
+| [Telegram v12 fixture sheet](prototypes/v12/TELEGRAM-FIXTURES-v12.md) | Exact fictional T1–T7, authorization, media, caption, interruption, and handoff fixtures. |
+| [Telegram Capture Companion v12 independent QA](../design-qa-v12.md) | Exact eight-file UI fingerprint plus package check artifact, complete Council/frozen-regression matrix, 22 current-run PNGs, 0/0/0/0 findings, and Pass verdict. |
 
 ## Discovery and research record
 
