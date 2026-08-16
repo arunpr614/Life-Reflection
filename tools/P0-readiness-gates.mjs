@@ -35,7 +35,8 @@ export const P0_R0_SUBSTANTIVE_TASK_IDS = Object.freeze([
   "ENG-R0-001",
   "REL-R0-001",
 ]);
-export const TASK_PREPARATION_SCHEMA_VERSION = "1.0.0";
+export const TASK_PREPARATION_SCHEMA_VERSION = "1.1.0";
+export const P0_R0_GATE_A_PROPOSAL_AUTHOR_IDS = Object.freeze(["codex-primary-integrator-01"]);
 export const STAGE_EXECUTION_SCHEMA_VERSION = "1.0.0";
 export const STAGE_APPROVAL_REGISTRY_PATH = "docs/council/execution/P0-R0-STAGE-APPROVAL-REGISTRY.json";
 export const DELIVERY_TRANSITION_GATE_B_CONTRACT = Object.freeze({
@@ -1151,6 +1152,7 @@ export function preparationDossierPayload(input) {
     preparationReviewId: source.preparationReviewId ?? null,
     taskId: source.taskId ?? null,
     milestone: source.milestone ?? null,
+    taskContractSha256: source.taskContractSha256 ?? null,
     stageId: source.stageId ?? null,
     requestedScope: {
       scopeClass: source.requestedScope?.scopeClass ?? null,
@@ -1166,11 +1168,29 @@ export function preparationDossierPayload(input) {
     },
     dependencyIds: [...asArray(source.dependencyIds)].sort(),
     acceptanceScenarioIds: [...asArray(source.acceptanceScenarioIds)].sort(),
+    proposalAuthorIds: [...asArray(source.proposalAuthorIds)].sort(),
   };
 }
 
 export function computePreparationDossierDigest(input) {
-  return `sha256:${sha256(canonicalJson(preparationDossierPayload(input)))}`;
+  return sha256(canonicalJson(preparationDossierPayload(input)));
+}
+
+export function preparationProposalAuthorAttestationPayload(input) {
+  const source = asObject(input);
+  return {
+    preparationReviewId: source.preparationReviewId ?? null,
+    taskId: source.taskId ?? null,
+    stageId: source.stageId ?? null,
+    candidateRevision: source.candidateRevision ?? null,
+    dossierDigest: source.dossierDigest ?? null,
+    proposalAuthorIds: [...asArray(source.proposalAuthorIds)].sort(),
+    evidenceReference: source.evidenceReference ?? null,
+  };
+}
+
+export function computePreparationProposalAuthorAttestationDigest(input) {
+  return `sha256:${sha256(canonicalJson(preparationProposalAuthorAttestationPayload(input)))}`;
 }
 
 export function stageCouncilAttestationPayload(input) {
@@ -1295,19 +1315,23 @@ export function evaluateTaskPreparationGateA(input, context = {}) {
   addGate("PREP_SCHEMA", source.schemaVersion === TASK_PREPARATION_SCHEMA_VERSION
     && hasExactKeys(source, [
       "schemaVersion", "preparationReviewId", "taskId", "milestone", "stageId", "requestedScope",
+      "taskContractSha256",
       "candidate", "dependencyIds", "dependencyEvidence", "acceptanceScenarioIds", "proposalAuthorIds",
-      "artifactReviews", "council", "reviewerRegistry", "openDecisions", "specialistVetoes", "safety",
+      "proposalAuthorEvidence", "artifactReviews", "council", "reviewerRegistry", "openDecisions", "specialistVetoes", "safety",
     ]), "the Gate A proposal has an unknown or incomplete schema", "rebuild the exact preparation proposal schema");
   addGate("PREP_SCOPE_TASK", P0_R0_SUBSTANTIVE_TASK_IDS.includes(taskId) && (!isDeliveryTransitionStage || dedicatedDeliveryTransition),
     "Gate A names a historical, unknown, or out-of-scope task", "select one of the five substantive R0 tasks and bind the exact delivery-transition pair when using its suffix");
   addGate("PREP_STAGE_ID", STAGE_ID.test(source.stageId ?? "") && source.stageId.includes(taskId),
     "the immutable task-bound stage ID is missing or malformed", "use a P0-STAGE-* ID containing the exact task ID");
-  addGate("PREP_REVIEW_ID", PREPARATION_REVIEW_ID.test(source.preparationReviewId ?? ""),
-    "the preparation review ID is missing or malformed", "use a stable P0-PREP-* review ID");
+  addGate("PREP_REVIEW_ID", PREPARATION_REVIEW_ID.test(source.preparationReviewId ?? "")
+    && source.preparationReviewId.startsWith(`P0-PREP-${taskId}-`),
+  "the preparation review ID is missing, malformed, or bound to another task", "use a stable P0-PREP-* review ID containing the exact task ID");
   addGate("PREP_TASK_CONTRACT", expectedTask.taskId === taskId
     && expectedTask.milestone === source.milestone
     && sameStringSet(expectedTask.dependencyIds, source.dependencyIds)
-    && sameStringSet(expectedTask.acceptanceScenarioIds, source.acceptanceScenarioIds),
+    && sameStringSet(expectedTask.acceptanceScenarioIds, source.acceptanceScenarioIds)
+    && /^[0-9a-f]{64}$/.test(expectedTask.taskContractSha256 ?? "")
+    && source.taskContractSha256 === expectedTask.taskContractSha256,
   "the proposal differs from the trusted manifest task contract", "rebuild task, milestone, dependency, and scenario bindings from the manifest");
   addGate("PREP_SCOPE_ACTION", hasExactKeys(requestedScope, ["scopeClass", "actionClass"])
     && (isDeliveryTransitionStage
@@ -1323,7 +1347,10 @@ export function evaluateTaskPreparationGateA(input, context = {}) {
           scopeClass: requestedScope.scopeClass,
           actionClass: requestedScope.actionClass,
     })), "the intended later stage scope/action is neither task-owned nor the closed delivery-transition pair", "select one exact task pair or the dedicated delivery-control contract");
-  addGate("PREP_LOCAL_ONLY", source.safety?.authenticMediaAccessed === false
+  addGate("PREP_LOCAL_ONLY", hasExactKeys(source.safety, [
+    "authenticMediaAccessed", "privateNetworkAccessed", "externalMutationPerformed",
+  ])
+    && source.safety?.authenticMediaAccessed === false
     && source.safety?.privateNetworkAccessed === false
     && source.safety?.externalMutationPerformed === false,
   "Gate A evidence includes or permits a private, authentic, or external action", "use only local, public, fictional, and synthetic preparation evidence");
@@ -1342,6 +1369,7 @@ export function evaluateTaskPreparationGateA(input, context = {}) {
     && publication.candidateOnFetchedMain === true,
   "trusted Git facts do not prove the exact merged proposal candidate", "verify the full proposal diff and candidate bytes on fetched origin/main");
   addGate("PREP_ARTIFACT_SET", sameStringSet(Object.keys(artifacts), [...ARTIFACT_KINDS])
+    && sameStringSet(Object.keys(reviews), [...ARTIFACT_KINDS])
     && ARTIFACT_KINDS.every((kind) => {
       const artifact = asObject(artifacts[kind]);
       const basename = isNonemptyString(artifact.path) ? path.posix.basename(artifact.path) : "";
@@ -1349,10 +1377,31 @@ export function evaluateTaskPreparationGateA(input, context = {}) {
         && basename.startsWith("P0-")
         && basename.includes(taskId)
         && SHA256.test(artifact.sha256 ?? "")
-        && ["in-review", "approved", "not-applicable"].includes(artifact.contentState);
+        && artifact.contentState === "in-review";
     }), "the six proposal artifact bindings are missing, unsafe, or malformed", "bind exactly six P0-prefixed task artifacts with exact hashes");
   addGate("PREP_REVIEWER_REGISTRY", registryRecords.length > 0 && duplicateIds.size === 0,
     "the reviewer registry is empty or contains duplicate IDs", "use the canonical active reviewer registry");
+  const proposalAuthorEvidence = asObject(source.proposalAuthorEvidence);
+  const expectedProposalAuthorAttestationDigest = computePreparationProposalAuthorAttestationDigest({
+    preparationReviewId: source.preparationReviewId,
+    taskId,
+    stageId: source.stageId,
+    candidateRevision: candidate.revision,
+    dossierDigest: candidate.dossierDigest,
+    proposalAuthorIds,
+    evidenceReference: proposalAuthorEvidence.evidenceReference,
+  });
+  addGate("PREP_PROPOSAL_AUTHORS", canonicalJson(proposalAuthorIds) === canonicalJson(P0_R0_GATE_A_PROPOSAL_AUTHOR_IDS)
+    && proposalAuthorIds.every((reviewerId) => registryById.get(reviewerId)?.active === true
+      && registryRole(registryById.get(reviewerId)) === "implementation")
+    && hasExactKeys(proposalAuthorEvidence, [
+      "proposalAuthorIds", "candidateRevision", "evidenceReference", "attestationDigest",
+    ])
+    && canonicalJson(proposalAuthorEvidence.proposalAuthorIds) === canonicalJson(proposalAuthorIds)
+    && proposalAuthorEvidence.candidateRevision === candidate.revision
+    && isOpaqueReference(proposalAuthorEvidence.evidenceReference)
+    && proposalAuthorEvidence.attestationDigest === expectedProposalAuthorAttestationDigest,
+  "proposal authors are absent, duplicated, unregistered, stale, or unattested", "bind a nonempty unique active registered author set and canonical proposal-author attestation");
 
   const artifactReviewerIds = [];
   for (const kind of ARTIFACT_KINDS) {
@@ -1399,7 +1448,8 @@ export function evaluateTaskPreparationGateA(input, context = {}) {
   addGate("PREP_DEPENDENCIES", unique(dependencyIds)
     && dependencyEvidence.length === dependencyIds.length
     && dependencyIds.every((dependencyId) => dependencyEvidence.filter((record) => (
-      record?.dependencyId === dependencyId
+      hasExactKeys(record, ["dependencyId", "result", "evidenceReference"])
+        && record?.dependencyId === dependencyId
         && record?.result === "pass"
         && isOpaqueReference(record?.evidenceReference)
     )).length === 1), "dependency-entry evidence is incomplete or non-canonical", "record one passing opaque reference per canonical dependency");
@@ -1407,7 +1457,10 @@ export function evaluateTaskPreparationGateA(input, context = {}) {
     "the proposal retains an open decision", "resolve every open proposal decision");
   addGate("PREP_SPECIALIST_VETO", Array.isArray(source.specialistVetoes) && source.specialistVetoes.length === 0,
     "the proposal retains a specialist veto", "resolve every specialist veto");
-  addGate("PREP_COUNCIL", council.verdict === "ready-to-prepare"
+  addGate("PREP_COUNCIL", hasExactKeys(council, [
+    "verdict", "reviewedRevision", "dossierDigest", "unresolvedBlockers", "seatVerdicts",
+  ])
+    && council.verdict === "ready-to-prepare"
     && council.reviewedRevision === candidate.revision
     && council.dossierDigest === candidate.dossierDigest
     && Array.isArray(council.unresolvedBlockers)
@@ -1474,6 +1527,7 @@ export function evaluateTaskPreparationGateA(input, context = {}) {
       },
       candidateRevision: candidate.revision ?? null,
       dossierDigest: candidate.dossierDigest ?? null,
+      taskContractSha256: expectedTask.taskContractSha256 ?? null,
       preparationBounds: ["local", "public", "fictional", "synthetic"],
       privateActionsAllowed: false,
       externalMutationsAllowed: false,
@@ -1515,6 +1569,7 @@ export function evaluateStageExecutionGateB(input, context = {}) {
     deliveryTransitionStageId: stage.stageId,
   });
   const legacyAuthorizationGate = (code) => code === "TASK_EXECUTION_CONTRACT_CARDINALITY"
+    || code === "CANDIDATE_DOSSIER_DIGEST"
     || code === "COUNCIL_SCOPE_VERDICT"
     || code === "COUNCIL_CANDIDATE_BINDING"
     || code === "COUNCIL_SEAT_SET"
@@ -1559,6 +1614,13 @@ export function evaluateStageExecutionGateB(input, context = {}) {
   const preparationReviewSha256 = computePreparationReviewRecordSha256(preparationReview);
   const stageContextSha256 = computeStageApprovalContextSha256(stage);
   const stageApprovalSha256 = sha256(canonicalJson(stage));
+  const computedStageDossierDigest = computeDossierDigest({
+    taskId,
+    revision: candidate.revision ?? null,
+    baseRevision: candidate.baseRevision ?? null,
+    artifacts: candidate.artifacts,
+    taskFilesSha256: candidate.taskFilesSha256,
+  }).slice("sha256:".length);
 
   addGate("STAGE_GATE_B_BINDING", P0_R0_SUBSTANTIVE_TASK_IDS.includes(taskId)
     && stage.taskId === taskId
@@ -1616,6 +1678,8 @@ export function evaluateStageExecutionGateB(input, context = {}) {
       ))),
   "the delivery-transition suffix, scope/action pair, and code-owned module are not bound as one closed contract", "bind delivery-control/delivery-status-transition only to the exact delivery-transition suffix and p0.delivery-transition module");
   addGate("STAGE_CANDIDATE", stage.candidateRevision === candidate.revision
+    && SHA256.test(stage.dossierDigest ?? "")
+    && SHA256.test(candidate.dossierDigest ?? "")
     && stage.dossierDigest === candidate.dossierDigest
     && canonicalJson(stage.candidate) === canonicalJson(candidate)
     && canonicalJson(stage.artifactReviews) === canonicalJson(taskInput.artifactReviews)
@@ -1625,6 +1689,8 @@ export function evaluateStageExecutionGateB(input, context = {}) {
     && canonicalJson(stage.specialistVetoes) === canonicalJson(taskInput.specialistVetoes)
     && canonicalJson(stage.privateAuthority) === canonicalJson(taskInput.privateAuthority),
   "the stage does not bind the exact implementation/evidence candidate", "bind stage revision and dossier digest to the reviewed candidate");
+  addGate("STAGE_CANDIDATE_DOSSIER_DIGEST", stage.dossierDigest === computedStageDossierDigest,
+  "the staged dossier digest does not match the canonical candidate payload", "recompute the raw staged dossier digest from the exact candidate payload");
   addGate("STAGE_MODULE_CANDIDATE_BINDING", /^sha256:[0-9a-f]{64}$/.test(stage.stageDefinitionSha256 ?? "")
     && /^[a-z][a-z0-9.-]{2,63}$/.test(stage.moduleId ?? "")
     && /^sha256:[0-9a-f]{64}$/.test(stage.moduleSha256 ?? "")
@@ -1638,7 +1704,7 @@ export function evaluateStageExecutionGateB(input, context = {}) {
   "the reviewer registry or task owner-action state differs from the stage review context", "obtain fresh stage review after any reviewer or owner-action change");
   addGate("STAGE_PREPARATION_RECORD", hasExactKeys(preparationReview, [
     "preparationReviewId", "taskId", "stageId", "state", "scopeClass", "actionClass", "proposalCandidate",
-    "reviewerRegistrySha256", "councilSeatAttestations", "evidenceReference",
+    "gateAProof", "reviewerRegistrySha256", "councilSeatAttestations", "evidenceReference",
   ]) && preparationReview.preparationReviewId === stage.preparationReviewId
     && preparationReview.taskId === taskId
     && preparationReview.stageId === stage.stageId

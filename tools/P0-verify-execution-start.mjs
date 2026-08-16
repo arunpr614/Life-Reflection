@@ -16,6 +16,7 @@ import {
   TASK_FILE_DIFF_EXCLUSIONS,
   canonicalJson,
   classifyLocalSyntheticTaskFile,
+  computeDossierDigest,
   computeReviewerRegistrySha256,
   computeTaskContractSha256,
   computeTaskFilesSha256,
@@ -160,6 +161,10 @@ const messages = Object.freeze({
   TASK_SERIALIZABLE_RUNNER_REQUIRED: [
     "Legacy task-wide in-process execution is disabled.",
     "Use executeStageFromExactMain for one code-owned reviewed short callback, or the serializable stage runner for long or process work.",
+  ],
+  PREPARATION_GATE_A_PROOF_UNVERIFIED: [
+    "The accepted preparation record lacks an independently replayed Gate A proof.",
+    "Rebuild the preparation record from the exact proposal, then verify its manifest, reviewer, artifact, and publication facts from Git.",
   ],
   APPROVAL_PUBLICATION_INPUT_INVALID: [
     "Approval publication input is missing or malformed.",
@@ -1658,6 +1663,12 @@ async function verifyStageTerminalHistoryAtExactMainCore(request, options = {}) 
   if (history.registrySha256 !== continuity.registrySha256) {
     return fail("STAGE_REGISTRY_CONTINUITY_DIGEST_MISMATCH", "stage-terminal-history", { taskId });
   }
+  if (history.preparationProofVerified !== true
+    || history.preparationExpectedTask?.taskId !== taskId
+    || history.preparationExpectedTask?.taskContractSha256 !== history.record?.candidate?.taskContractSha256
+    || history.preparationCandidatePublication?.revision !== history.preparationReview?.proposalCandidate?.revision) {
+    return fail("PREPARATION_GATE_A_PROOF_UNVERIFIED", "stage-terminal-history", { taskId });
+  }
   const stage = history.record;
   const requestPredecessorHex = request.predecessorReceiptSha256?.slice("sha256:".length) ?? null;
   if (stage.taskId !== taskId
@@ -1732,6 +1743,12 @@ async function verifyStageGateBAtExactMainCore(request, options = {}) {
   if (history.registrySha256 !== continuity.registrySha256) {
     return fail("STAGE_REGISTRY_CONTINUITY_DIGEST_MISMATCH", "stage-gate-b", { taskId });
   }
+  if (history.preparationProofVerified !== true
+    || history.preparationExpectedTask?.taskId !== taskId
+    || history.preparationExpectedTask?.taskContractSha256 !== history.record?.candidate?.taskContractSha256
+    || history.preparationCandidatePublication?.revision !== history.preparationReview?.proposalCandidate?.revision) {
+    return fail("PREPARATION_GATE_A_PROOF_UNVERIFIED", "stage-gate-b", { taskId });
+  }
   const stage = history.record;
   const requestPredecessorHex = request.predecessorReceiptSha256?.slice("sha256:".length) ?? null;
   if (stage.taskId !== taskId
@@ -1758,7 +1775,8 @@ async function verifyStageGateBAtExactMainCore(request, options = {}) {
     return fail("TASK_CANDIDATE_REVISION_INVALID", "stage-gate-b", { taskId });
   }
 
-  const candidateResult = await deriveCandidatePublicationFacts({
+  const candidateFactsVerifier = options.deriveCandidatePublicationFacts ?? deriveCandidatePublicationFacts;
+  const candidateResult = await candidateFactsVerifier({
     repoRoot,
     run,
     taskId,
@@ -1825,6 +1843,16 @@ async function verifyStageGateBAtExactMainCore(request, options = {}) {
     return fail("TASK_REQUESTED_ACTION_MISMATCH", "stage-gate-b", { taskId });
   }
   if (candidatePublication.candidateTaskContractSha256 !== stage.candidate.taskContractSha256) {
+    return fail("TASK_CANDIDATE_TASK_CONTRACT_UNVERIFIED", "stage-gate-b", { taskId });
+  }
+  const currentManifestTask = oneManifestTask(documents.manifest, taskId);
+  const currentTaskContractSha256 = currentManifestTask === null
+    ? null
+    : computeTaskContractSha256(manifestTaskContract(currentManifestTask, taskId));
+  if (currentTaskContractSha256 === null
+    || currentTaskContractSha256 !== history.preparationExpectedTask.taskContractSha256
+    || currentTaskContractSha256 !== stage.candidate.taskContractSha256
+    || currentTaskContractSha256 !== candidatePublication.candidateTaskContractSha256) {
     return fail("TASK_CANDIDATE_TASK_CONTRACT_UNVERIFIED", "stage-gate-b", { taskId });
   }
   const candidateAncestorOfHead = candidatePublication.candidateOnFetchedMain === true;
@@ -1915,7 +1943,8 @@ async function verifyStageGateBAtExactMainCore(request, options = {}) {
     stage,
   });
   if (deadline === null) return fail("TASK_BOUNDED_ACTION_DEADLINE_EXCEEDED", "stage-gate-b", { taskId });
-  const finalExactMain = await verifyExactMainStillCurrent({ repoRoot, run, expectedRevision: exactMain.revision });
+  const finalExactMainVerifier = options.verifyExactMainStillCurrent ?? verifyExactMainStillCurrent;
+  const finalExactMain = await finalExactMainVerifier({ repoRoot, run, expectedRevision: exactMain.revision });
   if (!finalExactMain.ok) return finalExactMain;
   return pass("STAGE_GATE_B_READY", "stage-gate-b", {
     taskId,
@@ -2057,10 +2086,12 @@ async function selfTest() {
   };
   const manifestTask = {
     id: taskId,
+    milestone: "P0",
     description: "Fixture controls are ready.",
     requirementIds: ["FIX-REQ-001"],
     dependencies: ["AUD-001"],
     acceptanceEvidence: "fixture:acceptance",
+    taskDossier: { acceptanceScenarioIds: canonicalAcceptanceScenarioIds(taskId) },
   };
   const manifestDocument = { tasks: [manifestTask] };
   const changedManifestDocument = {
@@ -2531,6 +2562,19 @@ async function selfTest() {
     argumentSetId: "synthetic.v1",
     deadlineMs: MAX_SERIALIZABLE_STAGE_DEADLINE_MS,
   };
+  const stageCandidate = {
+    ...structuredClone(currentTaskApproval.candidate),
+    dossierDigest: null,
+    implementerIds: ["fixture-implementer"],
+    evidenceProducerIds: ["fixture-evidence-producer"],
+  };
+  stageCandidate.dossierDigest = computeDossierDigest({
+    taskId,
+    revision: stageCandidate.revision,
+    baseRevision: stageCandidate.baseRevision,
+    artifacts: stageCandidate.artifacts,
+    taskFilesSha256: stageCandidate.taskFilesSha256,
+  }).slice("sha256:".length);
   const stageRecord = {
     taskId,
     stageId,
@@ -2539,8 +2583,8 @@ async function selfTest() {
     idempotencyKey: stageRequest.idempotencyKey,
     predecessorReceiptSha256: null,
     candidateRevision,
-    dossierDigest: currentTaskApproval.candidate.dossierDigest,
-    candidate: structuredClone(currentTaskApproval.candidate),
+    dossierDigest: stageCandidate.dossierDigest,
+    candidate: stageCandidate,
     artifactReviews: { trustedStageMarker: true },
     designCoverage: { trustedStageMarker: true },
     dependencyEvidence: [{ trustedStageMarker: true }],
@@ -2554,11 +2598,32 @@ async function selfTest() {
     rollback: { snapshotReference: "rollback:synthetic-snapshot" },
     stageDefinitionSha256: `sha256:${sha256(canonicalJson(stageDefinition))}`,
     moduleId: "pc.synthetic",
-    moduleSha256: sha256(implementationBytes),
+    moduleSha256: `sha256:${sha256(implementationBytes)}`,
+  };
+  const preparationExpectedTask = {
+    taskId,
+    milestone: manifestTask.milestone,
+    dependencyIds: [...manifestTask.dependencies],
+    acceptanceScenarioIds: canonicalAcceptanceScenarioIds(taskId),
+    taskContractSha256,
   };
   const preparationReview = {
     preparationReviewId: stageRecord.preparationReviewId,
+    proposalCandidate: { revision: priorRevision },
     trustedPreparationMarker: true,
+  };
+  const verifiedStageHistory = {
+    ok: true,
+    record: structuredClone(stageRecord),
+    preparationReview: structuredClone(preparationReview),
+    preparationReviewSha256: stageRecord.preparationReviewSha256,
+    stageApprovalSha256: "3".repeat(64),
+    registrySha256: "4".repeat(64),
+    preparationPublicationRevision: priorRevision,
+    stagePublicationRevision: approvalRevision,
+    preparationProofVerified: true,
+    preparationExpectedTask: structuredClone(preparationExpectedTask),
+    preparationCandidatePublication: { revision: priorRevision },
   };
   let stageAdapterContext = null;
   let stageEvaluationSource = null;
@@ -2570,16 +2635,7 @@ async function selfTest() {
       code: "STAGE_REGISTRY_CONTINUITY_VALID",
       registrySha256: "4".repeat(64),
     }),
-    verifyStageHistory: async () => ({
-      ok: true,
-      record: structuredClone(stageRecord),
-      preparationReview: structuredClone(preparationReview),
-      preparationReviewSha256: stageRecord.preparationReviewSha256,
-      stageApprovalSha256: "3".repeat(64),
-      registrySha256: "4".repeat(64),
-      preparationPublicationRevision: priorRevision,
-      stagePublicationRevision: approvalRevision,
-    }),
+    verifyStageHistory: async () => structuredClone(verifiedStageHistory),
     readJson: async (_repoRoot, relativePath) => structuredClone(documents[relativePath]),
     loadEvaluationInput: async (context) => {
       stageAdapterContext = context;
@@ -2626,15 +2682,22 @@ async function selfTest() {
       code: "STAGE_REGISTRY_CONTINUITY_VALID",
       registrySha256: "4".repeat(64),
     }),
-    verifyStageHistory: async () => ({
+    verifyStageHistory: async () => structuredClone(verifiedStageHistory),
+  });
+  const mismatchedTerminalHistory = await verifyStageTerminalHistoryAtExactMainCore(stageRequest, {
+    exactMainResult: exactMain,
+    run: validFixture.run,
+    verifyStageRegistryContinuity: async () => ({
       ok: true,
-      record: structuredClone(stageRecord),
-      preparationReview: structuredClone(preparationReview),
-      preparationReviewSha256: stageRecord.preparationReviewSha256,
-      stageApprovalSha256: "3".repeat(64),
+      code: "STAGE_REGISTRY_CONTINUITY_VALID",
       registrySha256: "4".repeat(64),
-      preparationPublicationRevision: priorRevision,
-      stagePublicationRevision: approvalRevision,
+    }),
+    verifyStageHistory: async () => ({
+      ...structuredClone(verifiedStageHistory),
+      preparationExpectedTask: {
+        ...structuredClone(preparationExpectedTask),
+        taskContractSha256: "0".repeat(64),
+      },
     }),
   });
   if (!gateBAuthorization.ok
@@ -2647,6 +2710,7 @@ async function selfTest() {
     || gateBAuthorization.moduleSha256 !== stageRecord.moduleSha256
     || gateBAuthorization.deadlineAt !== "2026-08-15T16:00:00.000Z"
     || terminalHistory.code !== "STAGE_TERMINAL_HISTORY_VALID"
+    || mismatchedTerminalHistory.code !== "PREPARATION_GATE_A_PROOF_UNVERIFIED"
     || terminalHistory.stageDefinitionSha256 !== stageRecord.stageDefinitionSha256
     || terminalHistory.moduleSha256 !== stageRecord.moduleSha256) {
     throw new Error("Gate B immutable-stage/no-legacy-approval self-test failed");

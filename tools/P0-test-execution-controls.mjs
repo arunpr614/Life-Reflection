@@ -14,6 +14,7 @@ import {
   LOCAL_SYNTHETIC_CONTENT_POLICY,
   MILESTONE_SCOPE_ACTION_COMPATIBILITY,
   P0_R0_SCOPE_TASK_IDS,
+  P0_R0_GATE_A_PROPOSAL_AUTHOR_IDS,
   P0_R0_SUBSTANTIVE_TASK_IDS,
   READINESS_SCHEMA_VERSION,
   SCOPE_ACTION_COMPATIBILITY,
@@ -36,6 +37,7 @@ import {
   computeIdentitySetDigest,
   computePrivateAuthoritySha256,
   computePreparationDossierDigest,
+  computePreparationProposalAuthorAttestationDigest,
   computePreparationReviewRecordSha256,
   computeRefreshProtectionFingerprint,
   computeReviewerRegistrySha256,
@@ -300,6 +302,7 @@ function localFixture() {
       { reviewerId: "reviewer-qa", role: "qa", active: true },
       { reviewerId: "reviewer-project", role: "project", active: true },
       { reviewerId: "implementer-controls", role: "implementation", active: true },
+      { reviewerId: P0_R0_GATE_A_PROPOSAL_AUTHOR_IDS[0], role: "implementation", active: true },
       { reviewerId: "fixture-author-controls", role: "evidence-producer", active: true },
       {
         reviewerId: "fictional-owner-human",
@@ -2552,15 +2555,38 @@ assertNegative("PC-001-CTL-S01.media", "authentic-media access flag rejects", lo
 assertNegative("PC-001-CTL-S01.network", "private-network access flag rejects", localFixture,
   (fixture) => { fixture.safety.privateNetworkAccessed = true; }, ["PRIVATE_NETWORK_EXCLUSION"]);
 
-function preparationFixture({ deliveryTransition = false } = {}) {
-  const taskId = "SPK-R0-001";
+function preparationTaskContractSha256({ taskId, dependencyIds, acceptanceScenarioIds }) {
+  return computeTaskContractSha256({
+    taskId,
+    outcome: "Prove one fictional synthetic preparation contract.",
+    requirementIds: ["LID-SCP-001", "LID-OPS-001"],
+    dependencyIds,
+    acceptanceEvidence: "Synthetic preparation evidence.",
+    acceptanceScenarioIds,
+  });
+}
+
+function preparationFixture({
+  deliveryTransition = false,
+  taskId = "SPK-R0-001",
+  milestone = "R0",
+  candidateRevision = CANDIDATE_REVISION,
+  baseRevision = BASE_REVISION,
+  acceptanceScenarioIds = [`${taskId}-P-001`, `${taskId}-QA-001`],
+} = {}) {
   const stageId = deliveryTransition
-    ? "P0-STAGE-SPK-R0-001-STATUS-DELIVERY-TRANSITION"
-    : "P0-STAGE-SPK-R0-001-SYNTHETIC-001";
+    ? `P0-STAGE-${taskId}-STATUS-DELIVERY-TRANSITION`
+    : `P0-STAGE-${taskId}-SYNTHETIC-001`;
   const preparationReviewId = deliveryTransition
-    ? "P0-PREP-SPK-R0-001-STATUS-DELIVERY-TRANSITION"
-    : "P0-PREP-SPK-R0-001-SYNTHETIC-001";
+    ? `P0-PREP-${taskId}-STATUS-DELIVERY-TRANSITION`
+    : `P0-PREP-${taskId}-SYNTHETIC-001`;
   const base = localFixture();
+  const dependencyIds = ["PC-001"];
+  const taskContractSha256 = preparationTaskContractSha256({
+    taskId,
+    dependencyIds,
+    acceptanceScenarioIds,
+  });
   const artifacts = Object.fromEntries(ARTIFACT_KINDS.map((kind) => [kind, {
     path: `docs/work-items/${taskId}/P0-${taskId}-${kind}.md`,
     sha256: sha256(`fictional ${taskId} ${kind} proposal bytes\n`),
@@ -2570,30 +2596,37 @@ function preparationFixture({ deliveryTransition = false } = {}) {
     schemaVersion: TASK_PREPARATION_SCHEMA_VERSION,
     preparationReviewId,
     taskId,
-    milestone: "R0",
+    milestone,
+    taskContractSha256,
     stageId,
     requestedScope: {
       scopeClass: deliveryTransition ? DELIVERY_TRANSITION_GATE_B_CONTRACT.scopeClass : "local-synthetic",
       actionClass: deliveryTransition ? DELIVERY_TRANSITION_GATE_B_CONTRACT.actionClass : "synthetic-foundation",
     },
     candidate: {
-      revision: CANDIDATE_REVISION,
-      baseRevision: BASE_REVISION,
+      revision: candidateRevision,
+      baseRevision,
       dossierDigest: null,
       artifacts,
     },
-    dependencyIds: ["PC-001"],
+    dependencyIds,
     dependencyEvidence: [{
       dependencyId: "PC-001",
       result: "pass",
-      evidenceReference: "dependency:SPK-R0-001-PC-001",
+      evidenceReference: `dependency:${taskId}-PC-001`,
     }],
-    acceptanceScenarioIds: ["SPK-R0-001-P-001", "SPK-R0-001-QA-001"],
-    proposalAuthorIds: ["implementer-controls", "fixture-author-controls"],
+    acceptanceScenarioIds,
+    proposalAuthorIds: [...P0_R0_GATE_A_PROPOSAL_AUTHOR_IDS],
+    proposalAuthorEvidence: {
+      proposalAuthorIds: [...P0_R0_GATE_A_PROPOSAL_AUTHOR_IDS],
+      candidateRevision,
+      evidenceReference: `authors:${taskId}-proposal`,
+      attestationDigest: null,
+    },
     artifactReviews: {},
     council: {
       verdict: "ready-to-prepare",
-      reviewedRevision: CANDIDATE_REVISION,
+      reviewedRevision: candidateRevision,
       dossierDigest: null,
       unresolvedBlockers: [],
       seatVerdicts: {},
@@ -2608,13 +2641,22 @@ function preparationFixture({ deliveryTransition = false } = {}) {
     },
   };
   source.candidate.dossierDigest = computePreparationDossierDigest(source);
+  source.proposalAuthorEvidence.attestationDigest = computePreparationProposalAuthorAttestationDigest({
+    preparationReviewId,
+    taskId,
+    stageId,
+    candidateRevision: source.candidate.revision,
+    dossierDigest: source.candidate.dossierDigest,
+    proposalAuthorIds: source.proposalAuthorIds,
+    evidenceReference: source.proposalAuthorEvidence.evidenceReference,
+  });
   for (const kind of ARTIFACT_KINDS) {
     const role = roleByArtifact[kind];
     const review = {
       reviewerId: reviewerIdForRole(role),
       reviewerRole: role,
       decision: "approved",
-      reviewedRevision: CANDIDATE_REVISION,
+      reviewedRevision: candidateRevision,
       dossierDigest: source.candidate.dossierDigest,
       artifactSha256: artifacts[kind].sha256,
       evidenceReference: `review:${taskId}-${kind}-proposal`,
@@ -2645,7 +2687,7 @@ function preparationFixture({ deliveryTransition = false } = {}) {
       reviewerId: reviewerIdForRole(role),
       reviewerRole: role,
       verdict: "approve-preparation-candidate",
-      reviewedRevision: CANDIDATE_REVISION,
+      reviewedRevision: candidateRevision,
       dossierDigest: source.candidate.dossierDigest,
       preparationReviewId,
       stageId,
@@ -2674,13 +2716,14 @@ function preparationFixture({ deliveryTransition = false } = {}) {
     context: {
       expectedTask: {
         taskId,
-        milestone: "R0",
-        dependencyIds: ["PC-001"],
+        milestone,
+        dependencyIds,
         acceptanceScenarioIds: [...source.acceptanceScenarioIds],
+        taskContractSha256,
       },
       candidatePublication: {
-        revision: CANDIDATE_REVISION,
-        baseRevision: BASE_REVISION,
+        revision: candidateRevision,
+        baseRevision,
         bytesVerified: true,
         fullDiffVerified: true,
         candidateOnFetchedMain: true,
@@ -2697,6 +2740,83 @@ function assertPreparationNegative(name, mutate, expectedCode) {
   assert.equal(actual.executionAllowed, false, `${name}: Gate A created execution permission`);
   assert.ok(failedCodes(actual).includes(expectedCode), `${name}: missing ${expectedCode}; got ${failedCodes(actual).join(", ")}`);
   recordResult("PC-001-CTL-P04", name, "pass", { expectedCodes: [expectedCode] });
+}
+
+function resealPreparationFixture(fixture) {
+  const { source, context } = fixture;
+  source.candidate.dossierDigest = computePreparationDossierDigest(source);
+  source.proposalAuthorEvidence.proposalAuthorIds = [...source.proposalAuthorIds];
+  source.proposalAuthorEvidence.candidateRevision = source.candidate.revision;
+  source.proposalAuthorEvidence.attestationDigest = computePreparationProposalAuthorAttestationDigest({
+    preparationReviewId: source.preparationReviewId,
+    taskId: source.taskId,
+    stageId: source.stageId,
+    candidateRevision: source.candidate.revision,
+    dossierDigest: source.candidate.dossierDigest,
+    proposalAuthorIds: source.proposalAuthorIds,
+    evidenceReference: source.proposalAuthorEvidence.evidenceReference,
+  });
+  for (const kind of ARTIFACT_KINDS) {
+    const review = source.artifactReviews[kind];
+    review.reviewedRevision = source.candidate.revision;
+    review.dossierDigest = source.candidate.dossierDigest;
+    review.artifactSha256 = source.candidate.artifacts[kind].sha256;
+    review.attestationDigest = computeStageCouncilAttestationDigest({
+      gateKind: "gate-a-prepare",
+      preparationReviewId: source.preparationReviewId,
+      taskId: source.taskId,
+      stageId: source.stageId,
+      subject: `artifact:${kind}`,
+      decision: review.decision,
+      reviewerId: review.reviewerId,
+      reviewerRole: review.reviewerRole,
+      reviewedRevision: review.reviewedRevision,
+      dossierDigest: review.dossierDigest,
+      artifactSha256: review.artifactSha256,
+      scopeClass: source.requestedScope.scopeClass,
+      actionClass: source.requestedScope.actionClass,
+      evidenceReference: review.evidenceReference,
+    });
+  }
+  source.council.reviewedRevision = source.candidate.revision;
+  source.council.dossierDigest = source.candidate.dossierDigest;
+  for (const seat of COUNCIL_SEATS) {
+    const record = source.council.seatVerdicts[seat];
+    record.reviewedRevision = source.candidate.revision;
+    record.dossierDigest = source.candidate.dossierDigest;
+    record.preparationReviewId = source.preparationReviewId;
+    record.stageId = source.stageId;
+    record.attestationDigest = computeStageCouncilAttestationDigest({
+      gateKind: "gate-a-prepare",
+      preparationReviewId: source.preparationReviewId,
+      taskId: source.taskId,
+      stageId: source.stageId,
+      subject: `council:${seat}`,
+      decision: record.verdict,
+      reviewerId: record.reviewerId,
+      reviewerRole: record.reviewerRole,
+      reviewedRevision: record.reviewedRevision,
+      dossierDigest: record.dossierDigest,
+      scopeClass: source.requestedScope.scopeClass,
+      actionClass: source.requestedScope.actionClass,
+      evidenceReference: record.evidenceReference,
+    });
+  }
+  context.expectedTask = {
+    taskId: source.taskId,
+    milestone: source.milestone,
+    dependencyIds: [...source.dependencyIds],
+    acceptanceScenarioIds: [...source.acceptanceScenarioIds],
+    taskContractSha256: preparationTaskContractSha256({
+      taskId: source.taskId,
+      dependencyIds: source.dependencyIds,
+      acceptanceScenarioIds: source.acceptanceScenarioIds,
+    }),
+  };
+  source.taskContractSha256 = context.expectedTask.taskContractSha256;
+  context.candidatePublication.revision = source.candidate.revision;
+  context.candidatePublication.baseRevision = source.candidate.baseRevision;
+  return fixture;
 }
 
 assert.deepEqual(P0_R0_SCOPE_TASK_IDS, [
@@ -2747,10 +2867,133 @@ assertPreparationNegative("Gate A rejects external mutation", (source) => { sour
 assertPreparationNegative("Gate A rejects a missing Council seat", (source) => { delete source.council.seatVerdicts.qa; }, "PREP_COUNCIL");
 assertPreparationNegative("Gate A rejects a stale proposal candidate", (_source, context) => { context.candidatePublication.bytesVerified = false; }, "PREP_PUBLICATION");
 assertPreparationNegative("Gate A rejects a tampered seat attestation", (source) => { source.council.seatVerdicts.design.attestationDigest = `sha256:${"0".repeat(64)}`; }, "PREP_SEAT_DESIGN");
+assertPreparationNegative("Gate A rejects a task-mismatched preparation review ID", (source, context) => {
+  source.preparationReviewId = "P0-PREP-UX-R0-001-SYNTHETIC-001";
+  resealPreparationFixture({ source, context });
+}, "PREP_REVIEW_ID");
+assertPreparationNegative("Gate A rejects self-claimed approved proposal artifacts", (source) => {
+  source.candidate.artifacts.product.contentState = "approved";
+}, "PREP_ARTIFACT_SET");
+assertPreparationNegative("Gate A rejects an omitted code-owned proposal author", (source, context) => {
+  source.proposalAuthorIds = [];
+  resealPreparationFixture({ source, context });
+}, "PREP_PROPOSAL_AUTHORS");
+assertPreparationNegative("Gate A rejects an additional proposal author", (source, context) => {
+  source.proposalAuthorIds.push("implementer-controls");
+  resealPreparationFixture({ source, context });
+}, "PREP_PROPOSAL_AUTHORS");
+assertPreparationNegative("Gate A rejects a duplicated proposal author", (source, context) => {
+  source.proposalAuthorIds.push(P0_R0_GATE_A_PROPOSAL_AUTHOR_IDS[0]);
+  resealPreparationFixture({ source, context });
+}, "PREP_PROPOSAL_AUTHORS");
+assertPreparationNegative("Gate A rejects an unregistered code-owned proposal author", (source) => {
+  source.reviewerRegistry.reviewers = source.reviewerRegistry.reviewers.filter((reviewer) => (
+    reviewer.reviewerId !== P0_R0_GATE_A_PROPOSAL_AUTHOR_IDS[0]
+  ));
+}, "PREP_PROPOSAL_AUTHORS");
+assertPreparationNegative("Gate A rejects proposal-author Council overlap", (source, context) => {
+  source.council.seatVerdicts.product.reviewerId = P0_R0_GATE_A_PROPOSAL_AUTHOR_IDS[0];
+  source.council.seatVerdicts.product.reviewerRole = "implementation";
+  resealPreparationFixture({ source, context });
+}, "PREP_SEAT_INDEPENDENCE");
+assertPreparationNegative("Gate A rejects a nested execution authority safety claim", (source) => {
+  source.safety.executionAllowed = true;
+}, "PREP_LOCAL_ONLY");
+assertPreparationNegative("Gate A rejects a nested private authority safety claim", (source) => {
+  source.safety.privateActionsAllowed = true;
+}, "PREP_LOCAL_ONLY");
+assertPreparationNegative("Gate A rejects a nested Council execution claim", (source) => {
+  source.council.executionAllowed = true;
+}, "PREP_COUNCIL");
+assertPreparationNegative("Gate A rejects an extra artifact-review kind", (source) => {
+  source.artifactReviews.execution = {};
+}, "PREP_ARTIFACT_SET");
+assertPreparationNegative("Gate A rejects dependency-evidence sibling fields", (source) => {
+  source.dependencyEvidence[0].executionAllowed = true;
+}, "PREP_DEPENDENCIES");
 assertPreparationNegative("Gate A rejects historical PC-001", (source, context) => {
   source.taskId = "PC-001";
   context.expectedTask.taskId = "PC-001";
 }, "PREP_SCOPE_TASK");
+
+function gateAProofResult(evaluation) {
+  return {
+    preparationAllowed: evaluation.preparationAllowed,
+    executionAllowed: evaluation.executionAllowed,
+    decision: evaluation.decision,
+    blockers: clone(evaluation.blockers),
+    preparationBounds: [...evaluation.normalizedEvidence.preparationBounds],
+    privateActionsAllowed: evaluation.normalizedEvidence.privateActionsAllowed,
+    externalMutationsAllowed: evaluation.normalizedEvidence.externalMutationsAllowed,
+    taskContractSha256: evaluation.normalizedEvidence.taskContractSha256,
+    sourceFingerprint: evaluation.normalizedEvidence.sourceFingerprint,
+  };
+}
+
+function preparationReviewFromGateA(fixture) {
+  const { source, context } = fixture;
+  const evaluation = evaluateTaskPreparationGateA(source, context);
+  assert.equal(evaluation.preparationAllowed, true, failedCodes(evaluation).join(", "));
+  return {
+    preparationReviewId: source.preparationReviewId,
+    taskId: source.taskId,
+    stageId: source.stageId,
+    state: "accepted",
+    scopeClass: source.requestedScope.scopeClass,
+    actionClass: source.requestedScope.actionClass,
+    gateAProof: {
+      input: clone(source),
+      context: clone(context),
+      result: gateAProofResult(evaluation),
+    },
+    proposalCandidate: {
+      revision: source.candidate.revision,
+      baseRevision: source.candidate.baseRevision,
+      dossierDigest: source.candidate.dossierDigest,
+      artifactBindings: Object.fromEntries(ARTIFACT_KINDS.map((kind) => [kind, {
+        path: source.candidate.artifacts[kind].path,
+        sha256: source.candidate.artifacts[kind].sha256,
+      }])),
+    },
+    reviewerRegistrySha256: computeReviewerRegistrySha256(source.reviewerRegistry),
+    councilSeatAttestations: Object.fromEntries(COUNCIL_SEATS.map((seat) => [seat, {
+      ...clone(source.council.seatVerdicts[seat]),
+      scopeClass: source.requestedScope.scopeClass,
+      actionClass: source.requestedScope.actionClass,
+    }])),
+    evidenceReference: `preparation:${source.preparationReviewId}`,
+  };
+}
+
+function normalizeStageDossierBindings(fixture) {
+  const rawDossierDigest = computeDossierDigest({
+    taskId: fixture.taskId,
+    revision: fixture.candidate.revision,
+    baseRevision: fixture.candidate.baseRevision,
+    artifacts: fixture.candidate.artifacts,
+    taskFilesSha256: fixture.candidate.taskFilesSha256,
+  }).slice("sha256:".length);
+  fixture.candidate.dossierDigest = rawDossierDigest;
+  for (const kind of ARTIFACT_KINDS) {
+    const review = fixture.artifactReviews[kind];
+    review.dossierDigest = rawDossierDigest;
+    review.attestationDigest = computeAttestationDigest({
+      taskId: fixture.taskId,
+      subjectType: "artifact",
+      subject: kind,
+      decision: review.decision,
+      reviewerId: review.reviewerId,
+      reviewerRole: review.reviewerRole,
+      reviewedRevision: review.reviewedRevision,
+      dossierDigest: review.dossierDigest,
+      artifactSha256: review.artifactSha256,
+      evidenceReference: review.evidenceReference,
+      notApplicableRationale: review.notApplicableRationale,
+      specialistConcurrence: review.specialistConcurrence,
+    });
+  }
+  return fixture;
+}
 
 function stageGateBFixture({ deliveryTransition = false, taskId = "SPK-R0-001", milestone = "R0" } = {}) {
   const taskInput = retargetTaskFixture(localFixture, {
@@ -2779,6 +3022,7 @@ function stageGateBFixture({ deliveryTransition = false, taskId = "SPK-R0-001", 
     notApplicableRationale: null,
   };
   recomputeBindings(taskInput);
+  normalizeStageDossierBindings(taskInput);
   const stageId = deliveryTransition
     ? `P0-STAGE-${taskId}-STATUS-DELIVERY-TRANSITION`
     : `P0-STAGE-${taskId}-SYNTHETIC-001`;
@@ -2787,58 +3031,19 @@ function stageGateBFixture({ deliveryTransition = false, taskId = "SPK-R0-001", 
     : `P0-PREP-${taskId}-SYNTHETIC-001`;
   const proposalRevision = "d".repeat(40);
   const proposalBaseRevision = "e".repeat(40);
-  const proposalDossierDigest = sha256("synthetic Gate A proposal dossier");
-  const preparationReview = {
-    preparationReviewId,
-    taskId: taskInput.taskId,
-    stageId,
-    state: "accepted",
-    scopeClass: taskInput.requestedScope.scopeClass,
-    actionClass: taskInput.requestedScope.actionClass,
-    proposalCandidate: {
-      revision: proposalRevision,
-      baseRevision: proposalBaseRevision,
-      dossierDigest: proposalDossierDigest,
-      artifactBindings: Object.fromEntries(ARTIFACT_KINDS.map((kind) => [kind, {
-        path: taskInput.candidate.artifacts[kind].path,
-        sha256: taskInput.candidate.artifacts[kind].sha256,
-      }])),
-    },
-    reviewerRegistrySha256: computeReviewerRegistrySha256(taskInput.reviewerRegistry),
-    councilSeatAttestations: {},
-    evidenceReference: "preparation:SPK-R0-001-SYNTHETIC-001",
-  };
-  for (const seat of COUNCIL_SEATS) {
-    const role = roleBySeat[seat];
-    const record = {
-      reviewerId: reviewerIdForRole(role),
-      reviewerRole: role,
-      verdict: "approve-preparation-candidate",
-      reviewedRevision: proposalRevision,
-      dossierDigest: proposalDossierDigest,
-      preparationReviewId,
-      stageId,
-      scopeClass: taskInput.requestedScope.scopeClass,
-      actionClass: taskInput.requestedScope.actionClass,
-      evidenceReference: `seat:SPK-R0-001-${seat}-accepted-preparation`,
-      attestationDigest: null,
-    };
-    record.attestationDigest = computeStageCouncilAttestationDigest({
-      gateKind: "gate-a-prepare",
-      preparationReviewId,
-      taskId: taskInput.taskId,
-      stageId,
-      subject: `council:${seat}`,
-      decision: record.verdict,
-      reviewerId: record.reviewerId,
-      reviewerRole: record.reviewerRole,
-      reviewedRevision: record.reviewedRevision,
-      dossierDigest: record.dossierDigest,
-      scopeClass: record.scopeClass,
-      actionClass: record.actionClass,
-      evidenceReference: record.evidenceReference,
-    });
-    preparationReview.councilSeatAttestations[seat] = record;
+  const preparationTaskId = P0_R0_SUBSTANTIVE_TASK_IDS.includes(taskId) ? taskId : "SPK-R0-001";
+  const preparationMilestone = P0_R0_SUBSTANTIVE_TASK_IDS.includes(taskId) ? milestone : "R0";
+  const preparationReview = preparationReviewFromGateA(preparationFixture({
+    deliveryTransition,
+    taskId: preparationTaskId,
+    milestone: preparationMilestone,
+    candidateRevision: proposalRevision,
+    baseRevision: proposalBaseRevision,
+    acceptanceScenarioIds: [`${preparationTaskId}-QA-001`],
+  }));
+  if (preparationTaskId === taskId) {
+    assert.equal(preparationReview.preparationReviewId, preparationReviewId);
+    assert.equal(preparationReview.stageId, stageId);
   }
   const preparationReviewSha256 = computePreparationReviewRecordSha256(preparationReview);
   const stage = {
@@ -2985,6 +3190,45 @@ function assertStageNegative(name, mutate, expectedCode) {
   recordResult("PC-001-CTL-P05", name, "pass", { expectedCodes: [expectedCode] });
 }
 
+function resealStageDossierDigest(fixture, dossierDigest) {
+  const { source, context } = fixture;
+  source.taskInput.candidate.dossierDigest = dossierDigest;
+  for (const kind of ARTIFACT_KINDS) {
+    const review = source.taskInput.artifactReviews[kind];
+    review.dossierDigest = dossierDigest;
+    review.attestationDigest = computeAttestationDigest({
+      taskId: source.taskInput.taskId,
+      subjectType: "artifact",
+      subject: kind,
+      decision: review.decision,
+      reviewerId: review.reviewerId,
+      reviewerRole: review.reviewerRole,
+      reviewedRevision: review.reviewedRevision,
+      dossierDigest: review.dossierDigest,
+      artifactSha256: review.artifactSha256,
+      evidenceReference: review.evidenceReference,
+      notApplicableRationale: review.notApplicableRationale,
+      specialistConcurrence: review.specialistConcurrence,
+    });
+  }
+  source.stage.dossierDigest = dossierDigest;
+  source.stage.candidate.dossierDigest = dossierDigest;
+  source.stage.artifactReviews = clone(source.taskInput.artifactReviews);
+  source.stage.independentQa.dossierDigest = dossierDigest;
+  source.stage.stageCouncil.dossierDigest = dossierDigest;
+  const stageContextSha256 = computeStageApprovalContextSha256(source.stage);
+  for (const seat of COUNCIL_SEATS) {
+    const record = source.stage.stageCouncil.seatVerdicts[seat];
+    record.dossierDigest = dossierDigest;
+    record.stageContextSha256 = stageContextSha256;
+    record.attestationDigest = computeStageApprovalSeatAttestationDigest(record);
+  }
+  const stageApprovalSha256 = sha256(canonicalJson(source.stage));
+  context.taskEvaluationOptions.approvalPublication.publishedStageApprovalSha256 = stageApprovalSha256;
+  context.taskEvaluationOptions.approvalPublication.currentStageApprovalSha256 = stageApprovalSha256;
+  return fixture;
+}
+
 const stagePositive = stageGateBFixture();
 const directCompositeEvaluation = evaluateReadiness(stagePositive.source.taskInput, stagePositive.context.taskEvaluationOptions);
 assert.equal(directCompositeEvaluation.executionAllowed, false);
@@ -2996,7 +3240,27 @@ recordResult("PC-001-CTL-P05", "stage Gate B permits one exact pair on a composi
   decision: stagePositiveResult.decision,
   sourceFingerprint: stagePositiveResult.normalizedEvidence.sourceFingerprint,
 });
+
+assert.match(stagePositive.source.preparationReview.proposalCandidate.dossierDigest, /^[0-9a-f]{64}$/);
+recordResult("PC-001-CTL-P05", "staged Gate A and Gate B preparation digests use raw SHA-256", "pass");
+const legacyPrefixedFixture = singletonLocalFixture();
+const legacyPrefixedResult = evaluateReadiness(legacyPrefixedFixture, {
+  now: FIXED_NOW,
+  ...trustedFacts(legacyPrefixedFixture),
+});
+assert.match(legacyPrefixedFixture.candidate.dossierDigest, /^sha256:[0-9a-f]{64}$/);
+assert.equal(legacyPrefixedResult.executionAllowed, true, failedCodes(legacyPrefixedResult).join(", "));
+recordResult("PC-001-CTL-P05", "ordinary legacy evaluator retains its prefixed dossier digest contract", "pass");
 assertStageNegative("stage Gate B rejects an unknown envelope field", (source) => { source.stage.extraAction = "second"; }, "STAGE_SCHEMA");
+assertStageNegative("stage Gate B rejects a fully resealed wrong raw dossier digest", (source, context) => {
+  resealStageDossierDigest({ source, context }, "0".repeat(64));
+}, "STAGE_CANDIDATE_DOSSIER_DIGEST");
+assertStageNegative("stage Gate B rejects a prefixed staged dossier digest", (source, context) => {
+  resealStageDossierDigest({ source, context }, `sha256:${"0".repeat(64)}`);
+}, "STAGE_CANDIDATE");
+assertStageNegative("stage Gate B rejects a well-formed module digest absent from the candidate", (source) => {
+  source.stage.moduleSha256 = `sha256:${"0".repeat(64)}`;
+}, "STAGE_MODULE_CANDIDATE_BINDING");
 assertStageNegative("stage Gate B rejects a scope/action mismatch", (source) => { source.stage.actionClass = "private-system-read"; }, "STAGE_GATE_B_BINDING");
 assertStageNegative("stage Gate B rejects a missing predecessor receipt on sequence two", (source) => { source.stage.sequence = 2; }, "STAGE_PREPARATION_PREDECESSOR");
 assertStageNegative("stage Gate B rejects contributor-conflicted QA", (source) => { source.stage.independentQa.reviewerId = "implementer-controls"; source.stage.independentQa.reviewerRole = "implementation"; }, "STAGE_INDEPENDENT_QA");
