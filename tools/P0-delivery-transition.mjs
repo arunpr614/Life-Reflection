@@ -59,6 +59,10 @@ const LABEL_OPERATION_KEYS = Object.freeze(["surface", "remove", "add"]);
 const VERIFICATION_KEYS = Object.freeze(["immediateSnapshots", "quiescentSnapshots", "quiescenceIntervalMs"]);
 const FROZEN_PARITY_KEYS = Object.freeze(["ok", "taskCount", "snapshotSha256"]);
 const PREDECESSOR_VERIFICATION_KEYS = Object.freeze(["ok", "taskId", "stageId", "receiptSha256", "state"]);
+const OPERATION_CONTEXT_KEYS = Object.freeze([
+  "schemaVersion", "taskId", "stageId", "sourceRevision", "planDigest", "operationIndex",
+  "surface", "direction", "deadlineAt", "signal",
+]);
 const TASK_LOCK_KEYS = Object.freeze(["schemaVersion", "taskId", "planDigest", "ownerNonce"]);
 const DELIVERY_FORBIDDEN_SURFACES = Object.freeze([
   "issue-title",
@@ -812,28 +816,37 @@ function observationIsProtected(observation, plan) {
     && observation.protectedProjectDigest === plan.protectedProjectDigest;
 }
 
-async function executeTransitionOperation(adapter, taskId, operation) {
-  if (operation.surface === "project-status") return adapter.setProjectStatus(taskId, operation.from, operation.to);
-  if (operation.surface === "issue-state") return adapter.setIssueState(taskId, operation.from, operation.to);
-  if (operation.surface === "issue-status-label") return adapter.replaceStatusLabel(taskId, operation.remove, operation.add);
+async function executeTransitionOperation(adapter, taskId, operation, operationContext) {
+  if (operation.surface === "project-status") {
+    return adapter.setProjectStatus(taskId, operation.from, operation.to, operationContext);
+  }
+  if (operation.surface === "issue-state") {
+    return adapter.setIssueState(taskId, operation.from, operation.to, operationContext);
+  }
+  if (operation.surface === "issue-status-label") {
+    return adapter.replaceStatusLabel(taskId, operation.remove, operation.add, operationContext);
+  }
   throw new Error("forbidden operation");
 }
 
-async function trustedAuthorizationMatches(plan, adapter, clock, boundary) {
+function trustedClockMilliseconds(clock) {
+  try {
+    const trustedNow = clock();
+    return trustedNow instanceof Date ? trustedNow.getTime() : Number.NaN;
+  } catch {
+    return Number.NaN;
+  }
+}
+
+async function trustedAuthorizationSnapshot(plan, adapter, clock, boundary) {
   let authorization;
   try {
     authorization = await adapter.verifyAuthorization(plan, boundary);
   } catch {
-    return false;
+    return Object.freeze({ ok: false });
   }
-  let trustedNowMs;
-  try {
-    const trustedNow = clock();
-    trustedNowMs = trustedNow instanceof Date ? trustedNow.getTime() : Number.NaN;
-  } catch {
-    return false;
-  }
-  return validateAuthorization(authorization, {
+  const trustedNowMs = trustedClockMilliseconds(clock);
+  const matches = validateAuthorization(authorization, {
     taskId: plan.taskId,
     sourceRevision: plan.sourceRevision,
     targetStatus: plan.toStatus,
@@ -854,6 +867,16 @@ async function trustedAuthorizationMatches(plan, adapter, clock, boundary) {
     && authorization.predecessorReceiptSha256 === plan.predecessorReceiptSha256
     && authorization.rollbackSnapshotReference === plan.rollbackSnapshotReference
     && sha256(canonicalJson(stableAuthorization(authorization))) === plan.authorizationDigest;
+  if (!matches) return Object.freeze({ ok: false });
+  return Object.freeze({
+    ok: true,
+    deadlineAt: authorization.deadlineAt,
+    deadlineMs: Date.parse(authorization.deadlineAt),
+  });
+}
+
+async function trustedAuthorizationMatches(plan, adapter, clock, boundary) {
+  return (await trustedAuthorizationSnapshot(plan, adapter, clock, boundary)).ok;
 }
 
 async function predecessorStillValid(plan, adapter, boundary) {
@@ -904,15 +927,101 @@ function projectionMatchesForwardPrefix(rawProjection, plan, prefix) {
     && observed.observation.statusLabel === expectedStatusLabel;
 }
 
-async function operationBoundaryMatches({ plan, adapter, clock, boundary, expectedPrefix }) {
+async function operationBoundarySnapshot({ plan, adapter, clock, boundary, expectedPrefix }) {
   try {
-    if (await adapter.guardExactMain(plan.sourceRevision, boundary) !== true
-      || !await trustedAuthorizationMatches(plan, adapter, clock, boundary)
-      || !await predecessorStillValid(plan, adapter, boundary)
-      || !await frozenTaskParityMatches(plan, adapter, boundary)) return false;
-    return projectionMatchesForwardPrefix(await adapter.readProjection(plan.taskId), plan, expectedPrefix);
+    if (await adapter.guardExactMain(plan.sourceRevision, boundary) !== true) {
+      return Object.freeze({ ok: false });
+    }
+    const authorization = await trustedAuthorizationSnapshot(plan, adapter, clock, boundary);
+    const projectionMatches = authorization.ok
+      && await predecessorStillValid(plan, adapter, boundary)
+      && await frozenTaskParityMatches(plan, adapter, boundary)
+      && projectionMatchesForwardPrefix(await adapter.readProjection(plan.taskId), plan, expectedPrefix);
+    const finalNowMs = trustedClockMilliseconds(clock);
+    if (!authorization.ok
+      || !projectionMatches
+      || !Number.isFinite(finalNowMs)
+      || authorization.deadlineMs <= finalNowMs) {
+      return Object.freeze({ ok: false });
+    }
+    return authorization;
   } catch {
-    return false;
+    return Object.freeze({ ok: false });
+  }
+}
+
+async function operationBoundaryMatches(input) {
+  return (await operationBoundarySnapshot(input)).ok;
+}
+
+function operationExecutionContext({
+  plan,
+  planDigest,
+  operationIndex,
+  operation,
+  direction,
+  authorization,
+  controller,
+}) {
+  const context = Object.freeze({
+    schemaVersion: DELIVERY_TRANSITION_SCHEMA_VERSION,
+    taskId: plan.taskId,
+    stageId: plan.stageId,
+    sourceRevision: plan.sourceRevision,
+    planDigest,
+    operationIndex,
+    surface: operation.surface,
+    direction,
+    deadlineAt: authorization.deadlineAt,
+    signal: controller.signal,
+  });
+  if (Object.keys(context).sort().join("\0") !== [...OPERATION_CONTEXT_KEYS].sort().join("\0")) {
+    throw new Error("operation context shape invalid");
+  }
+  return context;
+}
+
+async function executeTransitionOperationWithinAuthority({
+  adapter,
+  plan,
+  planDigest,
+  operationIndex,
+  operation,
+  direction,
+  authorization,
+  clock,
+}) {
+  const startedAtMs = trustedClockMilliseconds(clock);
+  if (!Number.isFinite(startedAtMs) || authorization.deadlineMs <= startedAtMs) {
+    throw new Error("operation authority expired before invocation");
+  }
+  const controller = new AbortController();
+  const context = operationExecutionContext({
+    plan,
+    planDigest,
+    operationIndex,
+    operation,
+    direction,
+    authorization,
+    controller,
+  });
+  const remainingMs = authorization.deadlineMs - startedAtMs;
+  const timer = setTimeout(() => controller.abort("operation authority deadline elapsed"), Math.min(remainingMs, 2_147_483_647));
+  try {
+    const operationResult = await executeTransitionOperation(adapter, plan.taskId, operation, context);
+    const settledAtMs = trustedClockMilliseconds(clock);
+    if (!Number.isFinite(settledAtMs) || settledAtMs >= authorization.deadlineMs) {
+      if (!controller.signal.aborted) controller.abort("operation settled after authority deadline");
+      throw new Error("operation settled after authority deadline");
+    }
+    return operationResult;
+  } catch (error) {
+    if (trustedClockMilliseconds(clock) >= authorization.deadlineMs && !controller.signal.aborted) {
+      controller.abort("operation failed after authority deadline");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -1150,14 +1259,24 @@ async function recoverTransitionToPreimage({
         const mutatedPrefix = plan.rollbackOperations.length - index;
         const rolledBackPrefix = mutatedPrefix - 1;
         if (forwardPrefix === mutatedPrefix) {
-          if (!await operationBoundaryMatches({
+          const operationAuthorization = await operationBoundarySnapshot({
             plan,
             adapter,
             clock,
             boundary: `post-intent-rollback-${operation.surface}`,
             expectedPrefix: forwardPrefix,
-          })) throw new Error("resumed rollback post-intent boundary drift");
-          await executeTransitionOperation(adapter, plan.taskId, operation);
+          });
+          if (!operationAuthorization.ok) throw new Error("resumed rollback post-intent boundary drift");
+          await executeTransitionOperationWithinAuthority({
+            adapter,
+            plan,
+            planDigest,
+            operationIndex: index,
+            operation,
+            direction: "rollback",
+            authorization: operationAuthorization,
+            clock,
+          });
           if (!await operationBoundaryMatches({
             plan,
             adapter,
@@ -1197,14 +1316,24 @@ async function recoverTransitionToPreimage({
         await appendSagaEvent(sagaRoot, planDigest, {
           state: "rollback-intent", taskId: plan.taskId, operationIndex: index, surface: operation.surface,
         }, clock, sagaOperations);
-        if (!await operationBoundaryMatches({
+        const operationAuthorization = await operationBoundarySnapshot({
           plan,
           adapter,
           clock,
           boundary: `post-intent-rollback-${operation.surface}`,
           expectedPrefix: forwardPrefix,
-        })) throw new Error("rollback post-intent boundary drift");
-        await executeTransitionOperation(adapter, plan.taskId, operation);
+        });
+        if (!operationAuthorization.ok) throw new Error("rollback post-intent boundary drift");
+        await executeTransitionOperationWithinAuthority({
+          adapter,
+          plan,
+          planDigest,
+          operationIndex: index,
+          operation,
+          direction: "rollback",
+          authorization: operationAuthorization,
+          clock,
+        });
         const rolledBackPrefix = forwardPrefix - 1;
         if (!await operationBoundaryMatches({
           plan,
@@ -1386,14 +1515,24 @@ async function applyPlanCore(planEnvelope, adapter, {
       await appendSagaEvent(sagaRoot, planEnvelope.planDigest, {
         state: "operation-intent", taskId: plan.taskId, operationIndex: index, surface: operation.surface,
       }, clock, sagaOperations);
-      if (!await operationBoundaryMatches({
+      const operationAuthorization = await operationBoundarySnapshot({
         plan,
         adapter,
         clock,
         boundary: `post-intent-forward-${operation.surface}`,
         expectedPrefix: index,
-      })) throw new Error("forward post-intent boundary drift");
-      await executeTransitionOperation(adapter, plan.taskId, operation);
+      });
+      if (!operationAuthorization.ok) throw new Error("forward post-intent boundary drift");
+      await executeTransitionOperationWithinAuthority({
+        adapter,
+        plan,
+        planDigest: planEnvelope.planDigest,
+        operationIndex: index,
+        operation,
+        direction: "forward",
+        authorization: operationAuthorization,
+        clock,
+      });
       if (!await operationBoundaryMatches({
         plan,
         adapter,
@@ -1843,6 +1982,128 @@ async function selfTest() {
       || state.status !== "In progress"
       || intermediateWrites.join(",") !== "project-status") {
       throw new Error("intermediate projection drift case failed");
+    }
+    cases += 1;
+
+    const operationContextIsBound = (context, { direction, operationIndex, surface, deadlineAt }) => (
+      context !== null
+      && Object.isFrozen(context)
+      && Object.keys(context).sort().join("\0") === [...OPERATION_CONTEXT_KEYS].sort().join("\0")
+      && context.schemaVersion === DELIVERY_TRANSITION_SCHEMA_VERSION
+      && context.taskId === plan.plan.taskId
+      && context.stageId === plan.plan.stageId
+      && context.sourceRevision === plan.plan.sourceRevision
+      && context.planDigest === plan.planDigest
+      && context.operationIndex === operationIndex
+      && context.surface === surface
+      && context.direction === direction
+      && context.deadlineAt === deadlineAt
+      && context.signal instanceof AbortSignal
+    );
+
+    reset();
+    const forwardStraddleStartMs = Date.parse("2031-01-01T00:00:00.000Z");
+    const forwardStraddleDeadlineMs = forwardStraddleStartMs + 100;
+    const forwardStraddleDeadlineAt = new Date(forwardStraddleDeadlineMs).toISOString();
+    let forwardStraddleNowMs = forwardStraddleStartMs;
+    let forwardStraddleContext = null;
+    const forwardStraddleCalls = [];
+    const forwardStraddleSagaRoot = nextSagaRoot();
+    const forwardStraddleAdapter = {
+      ...adapter,
+      verifyAuthorization: async () => ({ ...authorization, deadlineAt: forwardStraddleDeadlineAt }),
+      setProjectStatus: async (taskId, from, to, context) => {
+        forwardStraddleCalls.push(`${context.direction}:project-status`);
+        forwardStraddleContext = context;
+        if (context.signal.aborted) throw new Error("operation signal aborted before invocation");
+        await Promise.resolve();
+        forwardStraddleNowMs = forwardStraddleDeadlineMs + 1;
+        return adapter.setProjectStatus(taskId, from, to);
+      },
+      setIssueState: async (_taskId, _from, _to, context) => {
+        forwardStraddleCalls.push(`${context.direction}:issue-state`);
+      },
+      replaceStatusLabel: async (_taskId, _remove, _add, context) => {
+        forwardStraddleCalls.push(`${context.direction}:issue-status-label`);
+      },
+    };
+    const forwardStraddle = await applyPlanCore(plan, forwardStraddleAdapter, {
+      sagaRoot: forwardStraddleSagaRoot,
+      clock: () => new Date(forwardStraddleNowMs),
+      quiescenceIntervalMs: 5,
+    });
+    const forwardStraddleReplay = await applyPlanCore(plan, forwardStraddleAdapter, {
+      sagaRoot: forwardStraddleSagaRoot,
+      clock: () => new Date(forwardStraddleNowMs),
+      quiescenceIntervalMs: 5,
+    });
+    if (forwardStraddle.code !== "TRANSITION_RECOVERY_REQUIRED"
+      || forwardStraddleReplay.code !== "TRANSITION_TASK_LOCKED"
+      || state.status !== "In progress"
+      || forwardStraddleCalls.join(",") !== "forward:project-status"
+      || !operationContextIsBound(forwardStraddleContext, {
+        direction: "forward",
+        operationIndex: 0,
+        surface: "project-status",
+        deadlineAt: forwardStraddleDeadlineAt,
+      })
+      || forwardStraddleContext.signal.aborted !== true) {
+      throw new Error("forward in-flight deadline straddle case failed");
+    }
+    cases += 1;
+
+    reset();
+    const rollbackStraddleStartMs = Date.parse("2031-01-02T00:00:00.000Z");
+    const rollbackStraddleDeadlineMs = rollbackStraddleStartMs + 100;
+    const rollbackStraddleDeadlineAt = new Date(rollbackStraddleDeadlineMs).toISOString();
+    let rollbackStraddleNowMs = rollbackStraddleStartMs;
+    let rollbackStraddleContext = null;
+    const rollbackStraddleCalls = [];
+    const rollbackStraddleSagaRoot = nextSagaRoot();
+    const rollbackStraddleAdapter = {
+      ...adapter,
+      verifyAuthorization: async () => ({ ...authorization, deadlineAt: rollbackStraddleDeadlineAt }),
+      setProjectStatus: async (taskId, from, to, context) => {
+        rollbackStraddleCalls.push(`${context.direction}:project-status`);
+        if (context.direction === "rollback") {
+          rollbackStraddleContext = context;
+          if (context.signal.aborted) throw new Error("rollback signal aborted before invocation");
+          await Promise.resolve();
+          rollbackStraddleNowMs = rollbackStraddleDeadlineMs + 1;
+        }
+        return adapter.setProjectStatus(taskId, from, to);
+      },
+      setIssueState: async (_taskId, _from, _to, context) => {
+        rollbackStraddleCalls.push(`${context.direction}:issue-state`);
+        throw new Error("synthetic forward failure before rollback straddle");
+      },
+      replaceStatusLabel: async (_taskId, _remove, _add, context) => {
+        rollbackStraddleCalls.push(`${context.direction}:issue-status-label`);
+      },
+    };
+    const rollbackStraddle = await applyPlanCore(plan, rollbackStraddleAdapter, {
+      sagaRoot: rollbackStraddleSagaRoot,
+      clock: () => new Date(rollbackStraddleNowMs),
+      quiescenceIntervalMs: 5,
+    });
+    const rollbackStraddleReplay = await applyPlanCore(plan, rollbackStraddleAdapter, {
+      sagaRoot: rollbackStraddleSagaRoot,
+      clock: () => new Date(rollbackStraddleNowMs),
+      quiescenceIntervalMs: 5,
+    });
+    if (rollbackStraddle.code !== "TRANSITION_RECOVERY_REQUIRED"
+      || rollbackStraddleReplay.code !== "TRANSITION_TASK_LOCKED"
+      || state.status !== "Next"
+      || rollbackStraddleCalls.join(",")
+        !== "forward:project-status,forward:issue-state,rollback:project-status"
+      || !operationContextIsBound(rollbackStraddleContext, {
+        direction: "rollback",
+        operationIndex: 2,
+        surface: "project-status",
+        deadlineAt: rollbackStraddleDeadlineAt,
+      })
+      || rollbackStraddleContext.signal.aborted !== true) {
+      throw new Error("rollback in-flight deadline straddle case failed");
     }
     cases += 1;
 

@@ -96,6 +96,6 @@ assert.equal(result.status, 0, result.stderr);
 const report = JSON.parse(result.stdout);
 assert.equal(report.ok, true);
 assert.equal(report.code, "SELF_TEST_OK");
-assert.equal(report.cases, 86);
+assert.equal(report.cases, 90);
 assert.equal(report.productionModules, 0);
 console.log(JSON.stringify(report));

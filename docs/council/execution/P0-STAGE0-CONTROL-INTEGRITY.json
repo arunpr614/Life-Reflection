@@ -155,7 +155,7 @@
       "path": "tools/P0-delivery-transition.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "2f71d406982f79cc03259cecaacf66bb80682baabbd5f290d0af4ce3b8bef3fe"
+      "sha256": "c29d0f4451fd76a5954f79ac2bdfabbe0466ef5a284a4f9c1a20b74ac4558a2c"
     },
     {
       "path": "tools/P0-exact-main.mjs",
@@ -197,13 +197,13 @@
       "path": "tools/P0-stage-runner.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "55526419a1d921b63dc0527d84f7a1b420d04ff1bb3571a6c63758ea53272146"
+      "sha256": "f73c2a22a029597b8c0c8af0022b1c536c2a4bea3b73ddae9e9db2eeab0eb2f6"
     },
     {
       "path": "tools/P0-stage0-ci.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "f1b85ecfb7a7f45b89a80f99c475cbfe2da7c5646445a2801e85ff683ce29380"
+      "sha256": "84764bd1be4c77bba4ee094bb71c79cb8f27bce88a972235ba68e1f15fabf25f"
     },
     {
       "path": "tools/P0-staged-actions.mjs",
@@ -227,7 +227,7 @@
       "path": "tools/P0-test-delivery-transition.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "146738702406a777c39ef4282360f623dadf6300fddf5cacc387f8e99e159909"
+      "sha256": "63a3267c974ec45f299a4dba89f037264eaf714062331b60033ff7fc9d31e8e3"
     },
     {
       "path": "tools/P0-test-execution-controls.mjs",
@@ -251,7 +251,7 @@
       "path": "tools/P0-test-stage-runner.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "fb9ae9e6366447cbd22a455e96d25db2ddf655e921c669676100eff251fa4af4"
+      "sha256": "66f163861827197d1ce13d05be8d27cd0ea9f04c45900ca072bf00145a488a9f"
     },
     {
       "path": "tools/P0-test-staged-actions.mjs",

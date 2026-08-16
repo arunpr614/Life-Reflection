@@ -1148,7 +1148,7 @@ async function executeResolvedStage({
   authorize = verifyStageGateBAtExactMain,
   verifyOutcome = verifyReviewedStageOutcome,
   spawnProcess = spawn,
-  clock = () => new Date(),
+  clock = primordialClock,
   quiescenceIntervalMs = QUIESCENCE_INTERVAL_MS,
   appendJournalEvent = appendEvent,
   syncEventFile = syncRegularFile,
@@ -1623,17 +1623,30 @@ async function executeResolvedStage({
     await persistLockRecord();
 
     const authorizationStillValid = async () => {
-      const nowMs = PRIMORDIAL_DATE_GET_TIME(clock());
-      if (nowMs >= deadlineAt) return false;
+      let preNowMs;
+      try {
+        preNowMs = PRIMORDIAL_DATE_GET_TIME(clock());
+      } catch {
+        return false;
+      }
+      if (!Number.isFinite(preNowMs) || preNowMs >= deadlineAt) return false;
       let refreshed;
       try {
         refreshed = await authorize(request);
       } catch {
         return false;
       }
+      let postNowMs;
+      try {
+        postNowMs = PRIMORDIAL_DATE_GET_TIME(clock());
+      } catch {
+        return false;
+      }
       return validateAuthorization(refreshed, request, definition)
         && sameAuthorization(authorization, refreshed)
-        && PRIMORDIAL_DATE_PARSE(refreshed.deadlineAt) > nowMs;
+        && Number.isFinite(postNowMs)
+        && postNowMs < deadlineAt
+        && PRIMORDIAL_DATE_PARSE(refreshed.deadlineAt) > postNowMs;
     };
     const verificationDigests = {
       immediateVerificationSha256: null,
@@ -2244,17 +2257,30 @@ async function executeResolvedCallbackStage({
     }
 
     const authorizationStillValid = async () => {
-      const nowMs = PRIMORDIAL_DATE_GET_TIME(clock());
-      if (nowMs >= deadlineAt) return false;
+      let preNowMs;
+      try {
+        preNowMs = PRIMORDIAL_DATE_GET_TIME(clock());
+      } catch {
+        return false;
+      }
+      if (!Number.isFinite(preNowMs) || preNowMs >= deadlineAt) return false;
       let refreshed;
       try {
         refreshed = await authorize(request);
       } catch {
         return false;
       }
+      let postNowMs;
+      try {
+        postNowMs = PRIMORDIAL_DATE_GET_TIME(clock());
+      } catch {
+        return false;
+      }
       return validateAuthorization(refreshed, request, definition)
         && sameAuthorization(authorization, refreshed)
-        && PRIMORDIAL_DATE_PARSE(refreshed.deadlineAt) > nowMs;
+        && Number.isFinite(postNowMs)
+        && postNowMs < deadlineAt
+        && PRIMORDIAL_DATE_PARSE(refreshed.deadlineAt) > postNowMs;
     };
     if (!await authorizationStillValid()) {
       callbackContext.controller.abort("callback-authority-invalidated");
@@ -3313,6 +3339,80 @@ async function selfTest() {
     }
     cases += 1;
 
+    const serialRefreshStraddleDefinition = definitionFor({ suffix: "REFRESH-DEADLINE-STRADDLE" });
+    const serialRefreshStraddleEntry = await entryFor(serialRefreshStraddleDefinition, successName);
+    const serialRefreshStraddleRuntimeRoot = path.join(root, "serial-refresh-deadline-straddle-runtime");
+    let serialRefreshNowMs = Date.now();
+    const serialRefreshAuthorization = authorizationFor(serialRefreshStraddleDefinition, {
+      moduleSha256: serialRefreshStraddleEntry.moduleSha256,
+      deadlineAt: new Date(serialRefreshNowMs + 30_000).toISOString(),
+    });
+    let serialRefreshAuthorizationCalls = 0;
+    let serialRefreshSpawnCount = 0;
+    const serialRefreshStraddle = await executeFixture(
+      serialRefreshStraddleDefinition,
+      serialRefreshStraddleEntry,
+      {
+        runtimeRoot: serialRefreshStraddleRuntimeRoot,
+        clock: () => new Date(serialRefreshNowMs),
+        authorize: async () => {
+          serialRefreshAuthorizationCalls += 1;
+          if (serialRefreshAuthorizationCalls === 4) {
+            await Promise.resolve();
+            serialRefreshNowMs += 6_000;
+            return {
+              ...serialRefreshAuthorization,
+              deadlineAt: new Date(serialRefreshNowMs + 60_000).toISOString(),
+            };
+          }
+          return serialRefreshAuthorization;
+        },
+        spawnProcess: (...args) => {
+          serialRefreshSpawnCount += 1;
+          return spawn(...args);
+        },
+      },
+    );
+    const serialRefreshStraddleKey = safeRuntimeSegment(`${serialRefreshStraddleDefinition.taskId}\0${serialRefreshStraddleDefinition.stageId}\0${serialRefreshStraddleDefinition.idempotencyKey}`);
+    const serialRefreshStraddleEvents = await readEvents(path.join(
+      serialRefreshStraddleRuntimeRoot,
+      serialRefreshStraddleKey,
+      "events",
+    ));
+    if (serialRefreshStraddle.code !== "STAGE_POST_ACTION_VERIFICATION_INVALID"
+      || serialRefreshAuthorizationCalls !== 4
+      || serialRefreshSpawnCount !== 1
+      || serialRefreshStraddleEvents.map((event) => event.state).join(",") !== "running,verification-pending,recovery-required"
+      || serialRefreshStraddleEvents.some((event) => event.state === "verified-complete")) {
+      throw new Error("serializable post-refresh fixed-deadline straddle case failed");
+    }
+    cases += 1;
+
+    const serialRefreshStraddleReplay = await executeFixture(
+      serialRefreshStraddleDefinition,
+      serialRefreshStraddleEntry,
+      {
+        runtimeRoot: serialRefreshStraddleRuntimeRoot,
+        authorization: serialRefreshAuthorization,
+        clock: () => new Date(serialRefreshNowMs),
+        spawnProcess: (...args) => {
+          serialRefreshSpawnCount += 1;
+          return spawn(...args);
+        },
+      },
+    );
+    const serialRefreshReplayEvents = await readEvents(path.join(
+      serialRefreshStraddleRuntimeRoot,
+      serialRefreshStraddleKey,
+      "events",
+    ));
+    if (serialRefreshStraddleReplay.code !== "STAGE_RECOVERY_REQUIRED"
+      || serialRefreshSpawnCount !== 1
+      || serialRefreshReplayEvents.some((event) => event.state === "verified-complete")) {
+      throw new Error("serializable post-refresh fixed-deadline replay case failed");
+    }
+    cases += 1;
+
     const verificationDriftDefinition = definitionFor({ suffix: "QUIESCENT-OUTCOME-DRIFT" });
     const verificationDrift = await executeFixture(verificationDriftDefinition, moduleEntry, {
       verifyOutcome: async (request) => ({
@@ -3834,6 +3934,84 @@ async function selfTest() {
       || sourceDriftSignal?.aborted !== true
       || sourceDriftSignal?.reason !== "callback-authority-invalidated") {
       throw new Error("callback post-settlement source movement case failed");
+    }
+    cases += 1;
+
+    const callbackRefreshStraddleDefinition = definitionFor({
+      suffix: "CALLBACK-REFRESH-DEADLINE-STRADDLE",
+      moduleId: "eng.callback-refresh-straddle",
+      argumentSetId: "callback-refresh-straddle.v1",
+    });
+    const callbackRefreshStraddleEntry = await callbackEntryFor(callbackRefreshStraddleDefinition);
+    const callbackRefreshStraddleRuntimeRoot = path.join(root, "callback-refresh-deadline-straddle-runtime");
+    let callbackRefreshNowMs = Date.now();
+    const callbackRefreshAuthorization = authorizationFor(callbackRefreshStraddleDefinition, {
+      moduleSha256: callbackRefreshStraddleEntry.moduleSha256,
+      deadlineAt: new Date(callbackRefreshNowMs + 30_000).toISOString(),
+    });
+    let callbackRefreshAuthorizationCalls = 0;
+    let callbackRefreshExecutions = 0;
+    const callbackRefreshStraddle = await executeCallbackFixture(
+      callbackRefreshStraddleDefinition,
+      callbackRefreshStraddleEntry,
+      async (context) => {
+        callbackRefreshExecutions += 1;
+        return callbackCompletionFor(callbackRefreshStraddleDefinition, context);
+      },
+      {
+        runtimeRoot: callbackRefreshStraddleRuntimeRoot,
+        clock: () => new Date(callbackRefreshNowMs),
+        authorize: async () => {
+          callbackRefreshAuthorizationCalls += 1;
+          if (callbackRefreshAuthorizationCalls === 4) {
+            await Promise.resolve();
+            callbackRefreshNowMs += 6_000;
+            return {
+              ...callbackRefreshAuthorization,
+              deadlineAt: new Date(callbackRefreshNowMs + 60_000).toISOString(),
+            };
+          }
+          return callbackRefreshAuthorization;
+        },
+      },
+    );
+    const callbackRefreshStraddleKey = safeRuntimeSegment(`${callbackRefreshStraddleDefinition.taskId}\0${callbackRefreshStraddleDefinition.stageId}\0${callbackRefreshStraddleDefinition.idempotencyKey}`);
+    const callbackRefreshStraddleEvents = await readEvents(path.join(
+      callbackRefreshStraddleRuntimeRoot,
+      callbackRefreshStraddleKey,
+      "events",
+    ));
+    if (callbackRefreshStraddle.code !== "STAGE_POST_ACTION_VERIFICATION_INVALID"
+      || callbackRefreshAuthorizationCalls !== 4
+      || callbackRefreshExecutions !== 1
+      || callbackRefreshStraddleEvents.map((event) => event.state).join(",") !== "running,recovery-required"
+      || callbackRefreshStraddleEvents.some((event) => event.state === "verified-complete")) {
+      throw new Error("callback post-refresh fixed-deadline straddle case failed");
+    }
+    cases += 1;
+
+    const callbackRefreshStraddleReplay = await executeCallbackFixture(
+      callbackRefreshStraddleDefinition,
+      callbackRefreshStraddleEntry,
+      async () => {
+        callbackRefreshExecutions += 1;
+        return null;
+      },
+      {
+        runtimeRoot: callbackRefreshStraddleRuntimeRoot,
+        authorization: callbackRefreshAuthorization,
+        clock: () => new Date(callbackRefreshNowMs),
+      },
+    );
+    const callbackRefreshReplayEvents = await readEvents(path.join(
+      callbackRefreshStraddleRuntimeRoot,
+      callbackRefreshStraddleKey,
+      "events",
+    ));
+    if (callbackRefreshStraddleReplay.code !== "STAGE_RECOVERY_REQUIRED"
+      || callbackRefreshExecutions !== 1
+      || callbackRefreshReplayEvents.some((event) => event.state === "verified-complete")) {
+      throw new Error("callback post-refresh fixed-deadline replay case failed");
     }
     cases += 1;
 

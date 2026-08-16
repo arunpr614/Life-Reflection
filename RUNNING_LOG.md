@@ -951,3 +951,29 @@ Next, freeze the corrective child as one new commit, run two clean exact-head fu
 ### Self-critique
 
 These are pre-commit local/public control results, not a merge approval or milestone-completion claim. The final candidate digest and review context do not exist until the child is committed; every prior f421-bound packet, suite digest, and seat is superseded.
+<!-- P0-RUNNING-LOG-EVENT:{"authorId":"codex-primary-integrator-01","bodySha256":"541f0aaa0ccac81cc253f80fe29efcbda6cf154cad3827c43eb98224cc8e621c","eventId":"P0-STAGE0-DEADLINE-STRADDLE-20260816-001","eventType":"qa","evidenceReference":"local-evidence:stage0-deadline-straddle-repair","parentRevision":"53467b1a46bfdcf620bb157bb630247935b97be2","previousByteLength":89107,"previousSha256":"b4a46e1d2357cb5f3ba550d7752841eea166b86f5c44dfe36191d51da6f02de1","recordedAt":"2026-08-16T06:41:30+05:30","schemaVersion":"1.0.0"} -->
+## 2026-08-16 06:41 IST — Exact-head deadline holds repaired before refreeze
+
+### Exact-head review outcome
+
+Exact-head Product review accepted only normal publication of commit `53467b1a46bfdcf620bb157bb630247935b97be2`, while fresh Architecture and QA reviews held that revision. Architecture found that both runner lanes sampled time before an awaited authorization refresh, allowing a refresh that settled after the fixed deadline to reach a terminal success boundary. QA found the corresponding delivery-transition risk: an external operation could begin while authorized, settle after the deadline, and rely only on post-effect recovery.
+
+Commit `53467b1a46bfdcf620bb157bb630247935b97be2` remains a preserved held intermediate. PR #70 remains draft. Its successful local and repository checks are evidence for that exact revision only and are not approvals for the next child.
+
+### Bounded corrective repair
+
+- Both serial and callback post-action authorization helpers now sample trusted time again after every awaited refresh. The immutable lane deadline cannot be extended by a later refreshed deadline. Deterministic straddle fixtures cross the fixed deadline, enter durable recovery, record no `verified-complete`, and replay without a second action.
+- Every forward and rollback delivery adapter call now receives a frozen exact identity, deadline, and `AbortSignal` context. The runtime installs the timer before invocation, awaits actual settlement under the task lock, and cannot report success when settlement occurs at or after the captured deadline. Cancellation is cooperative and is not treated as proof that a remote mutation did not commit; a straddle remains recovery-required with its lock pinned.
+- Independent focused rechecks approved the runner and delivery repairs. Runner fixtures pass 90 cases with zero production modules; delivery fixtures pass 96 cases with apply disabled.
+- The protected CI contract now expects those exact counts and still passes 209 cases. The base-owned integrity inventory remains 54 exact regular `100644` entries with `next:null`.
+- Frozen repair hashes are runner `f73c2a22a029597b8c0c8af0022b1c536c2a4bea3b73ddae9e9db2eeab0eb2f6`, runner wrapper `66f163861827197d1ce13d05be8d27cd0ea9f04c45900ca072bf00145a488a9f`, delivery `c29d0f4451fd76a5954f79ac2bdfabbe0466ef5a284a4f9c1a20b74ac4558a2c`, delivery wrapper `63a3267c974ec45f299a4dba89f037264eaf714062331b60033ff7fc9d31e8e3`, CI `84764bd1be4c77bba4ee094bb71c79cb8f27bce88a972235ba68e1f15fabf25f`, and integrity manifest `b8d5efa0b797d94a70c1c07e4417c884218965e2fbc6b49407124a7c38046dac`.
+
+### Authority, state, and next action
+
+This append and the corrective files are public/local Stage 0 evidence only. They create no task approval, preparation review, stage approval, owner-action satisfaction, execution permission, private access, R0 action, delivery mutation, deployment, acceptance, production claim, or R1-R10 effect. Current truth remains 58 Incomplete; 45 Hold plus 13 Historical non-authorizing; zero Ready; zero execution-allowed. Production action, module, callback, and outcome-verifier maps remain empty, and delivery apply remains disabled.
+
+Next, freeze these repairs as one normal single-parent child of `53467b1a46bfdcf620bb157bb630247935b97be2`, rerun structural, freeze, history, sync, and two full clean exact-head suites, push normally, and obtain five fresh exact-head seats plus final adversarial and repository checks. Every review or digest bound to `53467…` is superseded for that later child.
+
+### Self-critique
+
+Green CI on a held SHA did not prove the missing deadline-straddle behavior. The new fixtures close the observed boundaries, but they remain pre-commit evidence until the child is committed and independently reverified. Cooperative cancellation cannot prove remote noncommit, so the transition contract truthfully requires recovery and retains its lock after an uncertain in-flight effect.

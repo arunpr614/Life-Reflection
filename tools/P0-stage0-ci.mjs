@@ -114,10 +114,10 @@ const TEST_COMMANDS = Object.freeze([
     ok: true, code: "SELF_TEST_OK", cases: 101, productionActions: 0,
   }],
   ["stage_runner_fixtures", "node", ["tools/P0-test-stage-runner.mjs"], {
-    ok: true, code: "SELF_TEST_OK", cases: 86, productionModules: 0,
+    ok: true, code: "SELF_TEST_OK", cases: 90, productionModules: 0,
   }],
   ["delivery_transition_fixtures", "node", ["tools/P0-test-delivery-transition.mjs"], {
-    ok: true, code: "SELF_TEST_OK", cases: 94, applyEnabled: false,
+    ok: true, code: "SELF_TEST_OK", cases: 96, applyEnabled: false,
   }],
   ["execution_start_fixtures", "node", ["tools/P0-verify-execution-start.mjs", "--self-test"], {
     ok: true, code: "SELF_TEST_OK", cases: 66,
