@@ -326,5 +326,43 @@
       "sha256": "e231adce514fb8631ec794e8d578d852fcd45629594201620d2e390e638d1fc7"
     }
   ],
-  "next": null
+  "next": {
+    "changes": [
+      {
+        "operation": "modify",
+        "path": "docs/INDEX.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "cd9cb73a85f9fbe9fbc6c923896768922f6a5b467e3d5ad15bc2d8a59df779d8"
+      },
+      {
+        "operation": "modify",
+        "path": "docs/council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "72e1f48e083143dfee3d1b5636b757c257b9cc0a8779af64fb344db618851bc7"
+      },
+      {
+        "operation": "modify",
+        "path": "docs/project/PHASE1-GITHUB-PROJECT-SYNC.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "a82a78b071e7f3bec01deb9d44e6414f86c5841f69f439d0004b028992392d1c"
+      },
+      {
+        "operation": "modify",
+        "path": "docs/project/PROJECT-TRACKER.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "8e01e51829a44049e363a6988b08ec960e809080832e0874028703f174ada128"
+      },
+      {
+        "operation": "modify",
+        "path": "tools/P0-test-execution-controls.mjs",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "1429313d32647a10811901e05595fbadce5020e28440f33e41b41c47741319a4"
+      }
+    ]
+  }
 }
