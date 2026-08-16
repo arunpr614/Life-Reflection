@@ -2485,14 +2485,42 @@ if (fs.existsSync(registerPath)) {
   assert.equal(register.tasks?.length, 58, "R01 baseline task count changed");
   assert.equal(register.tasks?.filter((task) => task.artifactReadiness === "Incomplete").length, 58, "R01 baseline readiness changed");
   assert.equal(register.tasks?.filter((task) => task.executionAllowed === true).length, 0, "R01 baseline permission changed");
-  assert.equal(register.summary?.artifactStateCounts?.draft, 342, "R01 Draft artifact count changed");
-  assert.equal(register.summary?.artifactStateCounts?.["in-review"], 6, "R01 In-review artifact count changed");
-  recordResult("PC-001-CTL-R01", "live 58/348 all-Hold planning baseline", "pass", {
+  const proposalPacketTaskIds = new Set(["PC-001", ...P0_R0_SUBSTANTIVE_TASK_IDS]);
+  const observedArtifactStateCounts = { draft: 0, "in-review": 0 };
+  const inReviewTaskIds = [];
+  for (const task of register.tasks) {
+    assert.deepEqual(
+      Object.keys(task.artifacts ?? {}).sort(),
+      [...ARTIFACT_KINDS].sort(),
+      `${task.taskId} artifact packet changed`,
+    );
+    const packetStates = [...new Set(ARTIFACT_KINDS.map((kind) => task.artifacts[kind]?.contentState))];
+    assert.equal(packetStates.length, 1, `${task.taskId} artifact packet is not homogeneous`);
+    const [packetState] = packetStates;
+    assert(["draft", "in-review"].includes(packetState), `${task.taskId} artifact packet state changed`);
+    if (packetState === "in-review") {
+      assert(proposalPacketTaskIds.has(task.taskId), `${task.taskId} cannot publish an in-review proposal packet`);
+      inReviewTaskIds.push(task.taskId);
+    }
+    observedArtifactStateCounts[packetState] += ARTIFACT_KINDS.length;
+  }
+  assert(inReviewTaskIds.includes("PC-001"), "PC-001 planning packet left In-review");
+  assert.equal(observedArtifactStateCounts.draft + observedArtifactStateCounts["in-review"], 348,
+    "R01 artifact packet count changed");
+  assert.equal(register.summary?.artifactStateCounts?.draft, observedArtifactStateCounts.draft,
+    "R01 Draft artifact summary changed");
+  assert.equal(register.summary?.artifactStateCounts?.["in-review"], observedArtifactStateCounts["in-review"],
+    "R01 In-review artifact summary changed");
+  for (const state of ["missing", "approved", "blocked", "not-applicable"]) {
+    assert.equal(register.summary?.artifactStateCounts?.[state], 0, `R01 ${state} artifact count changed`);
+  }
+  recordResult("PC-001-CTL-R01", "live 58/348 all-Hold proposal-packet projection", "pass", {
     tasks: 58,
     incomplete: 58,
     executionAllowed: 0,
-    draft: 342,
-    inReview: 6,
+    draft: observedArtifactStateCounts.draft,
+    inReview: observedArtifactStateCounts["in-review"],
+    inReviewTaskIds: inReviewTaskIds.sort(),
   });
 }
 
