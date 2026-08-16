@@ -977,3 +977,38 @@ Next, freeze these repairs as one normal single-parent child of `53467b1a46bfdcf
 ### Self-critique
 
 Green CI on a held SHA did not prove the missing deadline-straddle behavior. The new fixtures close the observed boundaries, but they remain pre-commit evidence until the child is committed and independently reverified. Cooperative cancellation cannot prove remote noncommit, so the transition contract truthfully requires recovery and retains its lock after an uncertain in-flight effect.
+<!-- P0-RUNNING-LOG-EVENT:{"authorId":"codex-primary-integrator-01","bodySha256":"5d9253dad260ef11a79afb58bbfac4922f0fb571c27b2ee5f31e5d5945306625","eventId":"P0-R0-STAGE0-CLOSURE-R0-ENTRY-20260816-001","eventType":"terminal-recap","evidenceReference":"github-pr:70","parentRevision":"6b8b70b72148241a22afc97f517c6bf180610893","previousByteLength":93582,"previousSha256":"fc10c8e7173300d6578fab46a015ef3bfbfc9d0ee04c058642bbc8b92482e567","recordedAt":"2026-08-16T09:37:27+05:30","schemaVersion":"1.0.0"} -->
+## 2026-08-16 09:37 IST — Stage 0 closed and first R0 Gate A audit opened
+
+**Entry author:** AI agent (Codex) · **Triggered by:** continuation of the active bounded P0/R0 Goal after exact Stage 0 source, projection, and Wiki closure.
+
+### Planned since last entry
+
+The prior entry recorded the final pre-commit deadline-straddle repair and required a new immutable candidate, exact-head CI, five-seat review, normal merge, successor publication, projection reconciliation, and Wiki publication before any R0 preparation. Those steps are now complete. This recap is the required pre-candidate evidence bridge into Stage 1; it is not a task approval or a status transition.
+
+### Done
+
+- Published the complete inert Stage 0 control candidate through normal PR #70 and exact merge lineage, then published the five-seat successor review through PR #71.
+- Corrected the historical Wiki provenance statement through the base-owned two-PR integrity ratchet: PR #72 recorded the exact-byte arm and PR #73 consumed it. Current source main is `6b8b70b72148241a22afc97f517c6bf180610893`.
+- Reverified the merged control plane twice with suite definition `sha256:e940334fc7e7fceead2871c75e91a7f09c03e09e47cef3452e1f737d8732ad8e` and merged-main result `sha256:9c213f36cafb4eaf6854ecfd869f252b09bc12e423c878679d4317d333621591`.
+- Confirmed successor-review, running-log, bounded-authority, structural, generated-tracking, control-integrity, and frozen-scope trust with zero findings. The integrity inventory is 54 exact entries with `next:null`.
+- Reconciled live GitHub delivery metadata without a new task or status mutation. Two separate sanitized verifications were byte-identical at SHA-256 `225a9184e0d97e9ac8724f51ddb5759b338390c095a5b76d27149406a9a7dd59`: 58 issue tasks, Status 40 Backlog / 4 Next / 1 In progress / 13 Done, zero managed-field mismatches, and frozen projection/live parity 50/50.
+- Published Wiki commit `10c23505ea7f33a8cb03e36b977f310d8cb4abc4` normally from exact source `6b8b70b7…`. Two candidates and a fresh clone were byte-identical: 462 pages, 456/456 source coverage, tree SHA-256 `ba7073f7275937b2fa82aea91893bc6b9d61103683c2d692b2f1e31a6e0b2566`, Page Audit SHA-256 `77924d6ffe29ac4841cf51e3083360aa51457c5585ad7c0b4c5586520c3521f9`, and zero added/deleted pages or trust findings.
+- Re-entered the owner-pinned Phase1 worktree on a fresh no-upstream `codex/*` branch at exact merged `origin/main`; the protected identity, canonical remote, clean-state, attached-branch, and exact-main checks passed.
+
+### Current truth and authority boundary
+
+- All 58 tasks remain Incomplete; execution decisions remain 45 Hold plus 13 Historical non-authorizing; zero tasks are Ready and zero are execution-allowed.
+- `AUD-001`, `PC-001`, and `PRD-R0-001` retain historical planning/audit Done status without implementation authority. The five substantive R0 tasks remain unexecuted.
+- The 50 R1-R10 tasks and 300 artifacts still match the activation freeze at `sha256:0f1e213e666309a2338a965434b4644c17bb37c6285d7e799278ab033c7257b1` with zero execution permission.
+- Production action, module, callback, and outcome-verifier maps remain empty; the delivery apply surface remains disabled. No private system, credential, authentic content, R0 runtime, deployment, restore, rollback, acceptance, or production action occurred.
+- `P0-OA-001` and `R0-OA-001` remain unsatisfied and block every private-host lane. `R0-OA-002` is not due unless a material provider, terms, paid-account, or recurring-cost choice is actually implicated.
+- The separate Project UI audit directly verified filters, layouts, visible fields, grouping, 58 filtered issue tasks, and blank R10 dates. The selected Start/Target bar-driver setting remains continuity-supported but was not freshly observed in an authenticated private UI.
+
+### Next action
+
+Audit the exact current `SPK-R0-001` six-artifact proposal, task contract, requirement bindings, dependencies, owner-action state, and Gate A inputs. Resolve its existing scope/action-cardinality defect inside the fixed 58-task model without adding a roadmap task or touching R1-R10. Freeze one public/local proposal candidate and obtain five distinct exact-candidate Council seats before any local synthetic preparation. Gate A, if later accepted, may authorize only fictional/local preparation; it cannot authorize private access or execution.
+
+### Self-critique
+
+Stage 0 closure is strong control evidence, not product evidence. The private Project bar-driver selection lacks a fresh authenticated visual observation, and no R0 task can borrow that inference as execution evidence. The next lane must not translate historical In-progress status, clean CI, or an empty allowlist into readiness.
