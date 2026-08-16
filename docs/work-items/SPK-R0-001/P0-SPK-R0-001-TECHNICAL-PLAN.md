@@ -179,7 +179,7 @@ A later private or deployment proposal must re-enter its own exact authority, ow
 ## Gate sequence and stop conditions
 
 1. Review and merge exactly the six `in-review` SPK proposal artifacts through the controlled C1/C2 proposal history.
-2. Publish and verify the registry-only accepted preparation record for `P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION` if and only if Gate A passes with five independent seats.
+2. If and only if Gate A passes with five independent seats, publish the protected preparation record through the exact ratchet: manifest-only `A` directly parents proposal merge `M` and arms `next` with the sole inventory operation `add` while protected `current` remains at cardinality 54; `AM=[M,A]` with tree `A`; `P` directly parents `AM`, changes exactly the registry plus manifest, consumes the armed registry hash into `current` at cardinality 55, and clears `next`; then `PM=[AM,P]` with tree `P` publishes and verifies that consumed tree from exact main. The obsolete direct `P` child of `M` and `PM=[M,P]` topology is invalid.
 3. Prepare one exact local-synthetic implementation/evidence candidate beneath the accepted preparation boundary; it is eligible for bounded candidate QA but is not authorized for task-stage invocation.
 4. Run independent local-synthetic candidate QA within the accepted Gate A preparation boundary, then obtain exact-candidate five-seat Gate B review for `P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION`. That QA produces pre-review evidence; it is not a task-stage invocation.
 5. Only a separately published, immutable Gate B stage may be invoked through the guarded exact-main runtime. Its receipt supports only the bounded synthetic claim.

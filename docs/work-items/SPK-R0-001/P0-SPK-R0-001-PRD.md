@@ -37,6 +37,8 @@ This Gate A proposal selects only the first task-owned pair, `local-synthetic / 
 
 In this proposal, **candidate preparation** means authoring the exact code, fixtures, verifier, and evidence contract and running only the independent local/public/fictional/synthetic QA needed to review that immutable candidate. **Task-stage execution** means invoking the approved module as the governed `SPK-R0-001` stage through the exact-main runtime. Gate A may permit the first activity; only Gate B may permit the second. Repository generation, review, CI, and normal guarded publication are control-plane governance operations, not a task-stage invocation or evidence that the task action ran.
 
+Durable preparation permission also requires the complete protected publication chain. The proposal merge `M`, manifest-only arm commit and merge `A/AM`, and an unmerged consume commit `P` are all non-authorizing governance states. Only `P` directly parenting `AM`, consuming the exact armed registry hash into the protected inventory and clearing `next`, followed by the exact normal merge `PM=[AM,P]` and successful exact-main history replay, may establish `preparationAllowed=true`. A direct `P` child of `M`, `PM=[M,P]`, a stale or cancelled arm, or an unmerged record remains Hold.
+
 The task's second, private-bearing pair and every live-host acceptance fact remain outside this stage. Therefore, even a later successful synthetic-foundation receipt would not complete `SPK-R0-001`, satisfy live-host acceptance, change its `In progress` Roadmap status, or authorize a private probe.
 
 ## Deterministic synthetic-foundation outcome
