@@ -1560,6 +1560,11 @@ export async function verifyPreparationReviewRegistryHistory({
   if (!gateAProof.ok || gateAProof.proofVerified !== true) {
     return fail(gateAProof.code ?? "PREPARATION_GATE_A_GIT_PROOF_INVALID");
   }
+  if (fetchedMainRevision !== publishedRef
+    && (publishedRef !== preparationPublicationRevision
+      || fetchedMainRevision !== gateAProof.proposalPublicationRevision)) {
+    return fail("PREPARATION_REVIEW_PUBLICATION_SCOPE_INVALID");
+  }
   if (!await exactSingleRecordPublication({
     run,
     repoRoot,
@@ -1616,13 +1621,14 @@ export async function verifyStageApprovalRegistryHistory({
   if (preparationReviewRecordDigest(preparationReview) !== record.preparationReviewSha256) {
     return fail("STAGE_APPROVAL_PREPARATION_BINDING_INVALID");
   }
+  const stagePrMode = fetchedMainRevision !== publishedRef;
   const preparationHistory = await verifyPreparationReviewRegistryHistory({
     repoRoot,
     run,
-    publishedRef,
+    publishedRef: stagePrMode ? fetchedMainRevision : publishedRef,
     fetchedMainRevision,
     preparationReviewId: record.preparationReviewId,
-    continuity,
+    continuity: stagePrMode ? null : continuity,
   });
   if (!preparationHistory.ok) return preparationHistory;
   const proposalRevision = preparationReview.proposalCandidate.revision;
@@ -1667,6 +1673,11 @@ export async function verifyStageApprovalRegistryHistory({
     candidateBaseRevision: record.candidate?.baseRevision,
   });
   if (!implementationMainPublication.ok) return fail(implementationMainPublication.code);
+  if (stagePrMode
+    && (publishedRef !== stagePublicationRevision
+      || fetchedMainRevision !== implementationMainPublication.publicationRevision)) {
+    return fail("STAGE_APPROVAL_PUBLICATION_SCOPE_INVALID");
+  }
   const stageMainPublication = await deriveStageMainPublicationBoundary({
     run,
     repoRoot,

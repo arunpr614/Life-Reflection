@@ -1022,6 +1022,48 @@ function stageRegistryFixture() {
   };
 }
 
+function fixtureWithLinearChild(fixture, revision, parentRevision, registry) {
+  const registryBytes = Buffer.from(`${JSON.stringify(registry, null, 2)}\n`);
+  return async (command, args, options = {}) => {
+    if (args[0] === "show" && args[1] === `${revision}:${STAGE_APPROVAL_REGISTRY_PATH}`) {
+      return {
+        ok: true,
+        status: 0,
+        stdout: options.encoding === null ? registryBytes : registryBytes.toString("utf8"),
+      };
+    }
+    if (args[0] === "ls-tree" && args[1] === revision
+      && args.at(-1) === STAGE_APPROVAL_REGISTRY_PATH) {
+      return fixture.run(command, [args[0], parentRevision, ...args.slice(2)], options);
+    }
+    if (args[0] === "merge-base" && args[1] === "--is-ancestor" && args[3] === revision) {
+      return fixture.run(command, [...args.slice(0, 3), parentRevision], options);
+    }
+    if (args[0] === "rev-list" && args.includes("--ancestry-path")
+      && args.at(-1).endsWith(`..${revision}`)) {
+      const parentArgs = [...args];
+      parentArgs[parentArgs.length - 1] = args.at(-1).replace(revision, parentRevision);
+      const result = await fixture.run(command, parentArgs, options);
+      return result.ok
+        ? { ...result, stdout: `${result.stdout.trimEnd()}\n${revision} ${parentRevision}\n` }
+        : result;
+    }
+    if (args[0] === "rev-list" && args.includes("--first-parent")
+      && args.at(-1).endsWith(`..${revision}`)) {
+      const parentArgs = [...args];
+      parentArgs[parentArgs.length - 1] = args.at(-1).replace(revision, parentRevision);
+      const result = await fixture.run(command, parentArgs, options);
+      return result.ok
+        ? { ...result, stdout: `${result.stdout.trimEnd()}\n${revision}\n` }
+        : result;
+    }
+    if (args[0] === "rev-list" && args[1] === "--parents" && args.at(-1) === revision) {
+      return { ok: true, status: 0, stdout: `${revision} ${parentRevision}\n` };
+    }
+    return fixture.run(command, args, options);
+  };
+}
+
 const registryFixture = stageRegistryFixture();
 
 function resealPreparationReview(record) {
@@ -2341,6 +2383,74 @@ for (const boundaryKey of ["implementationMainPublicationRevision", "stageMainPu
     run,
     publishedRef: fixture.stagePublicationRevision,
     fetchedMainRevision: fixture.implementationMainPublicationRevision,
+    stageId: fixture.stage.stageId,
+  }), "STAGE_APPROVAL_PUBLICATION_SCOPE_INVALID");
+}
+
+{
+  const fixture = stageRegistryFixture();
+  const extraPrHead = "5".repeat(40);
+  expectCode(await verifyPreparationReviewRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run: fixtureWithLinearChild(
+      fixture,
+      extraPrHead,
+      fixture.preparationPublicationRevision,
+      fixture.prepared,
+    ),
+    publishedRef: extraPrHead,
+    fetchedMainRevision: fixture.proposalMainPublicationRevision,
+    preparationReviewId: fixture.preparationReview.preparationReviewId,
+  }), "PREPARATION_REVIEW_PUBLICATION_SCOPE_INVALID");
+}
+
+{
+  const fixture = stageRegistryFixture();
+  const advancedFetchedMain = "6".repeat(40);
+  expectCode(await verifyPreparationReviewRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run: fixtureWithLinearChild(
+      fixture,
+      advancedFetchedMain,
+      fixture.proposalMainPublicationRevision,
+      fixture.empty,
+    ),
+    publishedRef: fixture.preparationPublicationRevision,
+    fetchedMainRevision: advancedFetchedMain,
+    preparationReviewId: fixture.preparationReview.preparationReviewId,
+  }), "PREPARATION_REVIEW_PUBLICATION_SCOPE_INVALID");
+}
+
+{
+  const fixture = stageRegistryFixture();
+  const extraPrHead = "5".repeat(40);
+  expectCode(await verifyStageApprovalRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run: fixtureWithLinearChild(
+      fixture,
+      extraPrHead,
+      fixture.stagePublicationRevision,
+      fixture.published,
+    ),
+    publishedRef: extraPrHead,
+    fetchedMainRevision: fixture.implementationMainPublicationRevision,
+    stageId: fixture.stage.stageId,
+  }), "STAGE_APPROVAL_PUBLICATION_SCOPE_INVALID");
+}
+
+{
+  const fixture = stageRegistryFixture();
+  const advancedFetchedMain = "6".repeat(40);
+  expectCode(await verifyStageApprovalRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run: fixtureWithLinearChild(
+      fixture,
+      advancedFetchedMain,
+      fixture.implementationMainPublicationRevision,
+      fixture.prepared,
+    ),
+    publishedRef: fixture.stagePublicationRevision,
+    fetchedMainRevision: advancedFetchedMain,
     stageId: fixture.stage.stageId,
   }), "STAGE_APPROVAL_PUBLICATION_SCOPE_INVALID");
 }
