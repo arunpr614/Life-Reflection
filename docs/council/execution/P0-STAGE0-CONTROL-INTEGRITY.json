@@ -23,7 +23,7 @@
       "path": "docs/INDEX.md",
       "mode": "100644",
       "type": "blob",
-      "sha256": "88e4ce207d3ce9ebb43a8440725a312f0ea1fc0a8a17f83c5cb813a3d86a733a"
+      "sha256": "cd9cb73a85f9fbe9fbc6c923896768922f6a5b467e3d5ad15bc2d8a59df779d8"
     },
     {
       "path": "docs/council/PHASE1-COUNCIL-DECISION-RECORD.md",
@@ -59,7 +59,7 @@
       "path": "docs/council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md",
       "mode": "100644",
       "type": "blob",
-      "sha256": "e11488cb99d5763fc43dac81adca23e6210ae1b13c587b00c1feaab12cffb0be"
+      "sha256": "72e1f48e083143dfee3d1b5636b757c257b9cc0a8779af64fb344db618851bc7"
     },
     {
       "path": "docs/council/execution/P0-PHASE1-EXECUTION-DECISIONS.md",
@@ -89,7 +89,7 @@
       "path": "docs/project/PHASE1-GITHUB-PROJECT-SYNC.md",
       "mode": "100644",
       "type": "blob",
-      "sha256": "fbe2e1d2ad7a0958a4eeaa7bf9534e465e53880b4d2d5130f357fc9e09c9f32b"
+      "sha256": "a82a78b071e7f3bec01deb9d44e6414f86c5841f69f439d0004b028992392d1c"
     },
     {
       "path": "docs/project/PHASE1-RELEASE-PLAN.md",
@@ -101,7 +101,7 @@
       "path": "docs/project/PROJECT-TRACKER.md",
       "mode": "100644",
       "type": "blob",
-      "sha256": "c131c141d9745edfaf67a9807c0de6a727b6a57d910928a2c2398afba1c45e92"
+      "sha256": "8e01e51829a44049e363a6988b08ec960e809080832e0874028703f174ada128"
     },
     {
       "path": "prototypes/calendar-ui/app-v10.js",
@@ -233,7 +233,7 @@
       "path": "tools/P0-test-execution-controls.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "d9f78875d9c452a9990183c1cb461c497bfb46502664521790f3a71e5f519454"
+      "sha256": "1429313d32647a10811901e05595fbadce5020e28440f33e41b41c47741319a4"
     },
     {
       "path": "tools/P0-test-r1-r10-freeze.mjs",
@@ -326,43 +326,5 @@
       "sha256": "e231adce514fb8631ec794e8d578d852fcd45629594201620d2e390e638d1fc7"
     }
   ],
-  "next": {
-    "changes": [
-      {
-        "operation": "modify",
-        "path": "docs/INDEX.md",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "cd9cb73a85f9fbe9fbc6c923896768922f6a5b467e3d5ad15bc2d8a59df779d8"
-      },
-      {
-        "operation": "modify",
-        "path": "docs/council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "72e1f48e083143dfee3d1b5636b757c257b9cc0a8779af64fb344db618851bc7"
-      },
-      {
-        "operation": "modify",
-        "path": "docs/project/PHASE1-GITHUB-PROJECT-SYNC.md",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "a82a78b071e7f3bec01deb9d44e6414f86c5841f69f439d0004b028992392d1c"
-      },
-      {
-        "operation": "modify",
-        "path": "docs/project/PROJECT-TRACKER.md",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "8e01e51829a44049e363a6988b08ec960e809080832e0874028703f174ada128"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-test-execution-controls.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "1429313d32647a10811901e05595fbadce5020e28440f33e41b41c47741319a4"
-      }
-    ]
-  }
+  "next": null
 }
