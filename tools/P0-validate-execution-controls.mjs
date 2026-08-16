@@ -429,20 +429,24 @@ if (stageRegistryHeadInspectionOk && stageRegistryTrackedAtHead && fullCommitPat
       repoRoot,
       run: stageHistoryRun,
       publishedRef: headRevision,
+      fetchedMainRevision,
       preparationReviewId: record.preparationReviewId,
       continuity,
     });
-    check(history.ok, `GOV-STAGE-017: ${record.preparationReviewId ?? "unknown preparation"} history is invalid (${history.code})`);
+    check(history.ok && history.preparationProofVerified === true,
+      `GOV-STAGE-017: ${record.preparationReviewId ?? "unknown preparation"} history or Gate A replay proof is invalid (${history.code})`);
   }
   for (const record of stageApprovals) {
     const history = await verifyStageApprovalRegistryHistory({
       repoRoot,
       run: stageHistoryRun,
       publishedRef: headRevision,
+      fetchedMainRevision,
       stageId: record.stageId,
       continuity,
     });
-    check(history.ok, `GOV-STAGE-018: ${record.stageId ?? "unknown stage"} history is invalid (${history.code})`);
+    check(history.ok && history.preparationProofVerified === true,
+      `GOV-STAGE-018: ${record.stageId ?? "unknown stage"} history or Gate A replay proof is invalid (${history.code})`);
   }
 } else if (stageRegistryHeadInspectionOk) {
   const bootstrapStats = fs.lstatSync(path.join(repoRoot, stageApprovalRegistryPath));

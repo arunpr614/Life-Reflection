@@ -3,16 +3,23 @@ import {
   ARTIFACT_KINDS,
   COUNCIL_SEATS,
   DELIVERY_TRANSITION_GATE_B_CONTRACT,
+  P0_R0_GATE_A_PROPOSAL_AUTHOR_IDS,
   P0_R0_SCOPE_TASK_IDS,
   P0_R0_SUBSTANTIVE_TASK_IDS,
   SCOPE_ACTION_COMPATIBILITY,
   STAGE_APPROVAL_REGISTRY_PATH,
   STAGE_EXECUTION_SCHEMA_VERSION,
   STAGE_LIFECYCLE_STATES,
+  TASK_PREPARATION_SCHEMA_VERSION,
   TASK_EXECUTION_CONTRACT,
   TERMINAL_STAGE_STATES,
+  computeTaskContractSha256,
+  computeReviewerRegistrySha256,
+  evaluateTaskPreparationGateA,
   isDedicatedDeliveryTransitionScopeAction,
+  parseArtifactControlMarkers,
 } from "./P0-readiness-gates.mjs";
+import { acceptanceScenarioIdsFor } from "./P0-build-task-readiness-input.mjs";
 import {
   canonicalJson,
   hasExactKeys,
@@ -30,6 +37,7 @@ export {
 export const STAGED_ACTION_SCHEMA_VERSION = "1.0.0";
 export const STAGE_APPROVAL_REGISTRY_SOURCE_BASE_REVISION = "2dc4d05cdeca8cb9aeacf393076f6c6f946ff62b";
 export const STAGE_APPROVAL_REGISTRY_BOOTSTRAP_PARENT_REVISION = "43c5ccb772bd5e4cabc52d73aa40c35ed999dbb7";
+export const P0_R0_GATE_A_MINIMUM_BASE_REVISION = "9eb923475421fe566a8d24d89fe09c42f26d2158";
 const TASK_SET = new Set(P0_R0_SUBSTANTIVE_TASK_IDS);
 const HISTORICAL_TASK_IDS = Object.freeze(P0_R0_SCOPE_TASK_IDS.filter((taskId) => !TASK_SET.has(taskId)));
 const TERMINAL_STATE_SET = new Set(TERMINAL_STAGE_STATES);
@@ -45,6 +53,15 @@ const MIN_STAGE_DEADLINE_MS = 1_000;
 export const MAX_SERIALIZABLE_STAGE_DEADLINE_MS = 4 * 60 * 60 * 1_000;
 const PREPARATION_REVIEW_ID = /^P0-PREP-[A-Z0-9]+(?:-[A-Z0-9]+)+$/;
 const RAW_SHA256 = /^[0-9a-f]{64}$/;
+const OPAQUE_REFERENCE = /^[a-z][a-z0-9-]*:[A-Za-z0-9._/-]{4,}$/;
+const MANIFEST_PATH = "docs/project/PHASE1-ROADMAP-MANIFEST.json";
+const REVIEWER_REGISTRY_PATH = "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json";
+const PROPOSAL_PROJECTION_PATHS = Object.freeze([
+  "docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json",
+  "docs/project/PHASE1-ROADMAP-MANIFEST.json",
+  "docs/project/PHASE1-RELEASE-PLAN.md",
+  "outputs/phase1/Life-in-Days-Phase1-Release-Plan.xlsx",
+]);
 
 const DEFINITION_KEYS = Object.freeze([
   "schemaVersion",
@@ -133,10 +150,23 @@ export const PREPARATION_REVIEW_RECORD_KEYS = Object.freeze([
   "state",
   "scopeClass",
   "actionClass",
+  "gateAProof",
   "proposalCandidate",
   "reviewerRegistrySha256",
   "councilSeatAttestations",
   "evidenceReference",
+]);
+const GATE_A_PROOF_KEYS = Object.freeze(["input", "context", "result"]);
+const GATE_A_CONTEXT_KEYS = Object.freeze(["expectedTask", "candidatePublication"]);
+const GATE_A_EXPECTED_TASK_KEYS = Object.freeze([
+  "taskId", "milestone", "dependencyIds", "acceptanceScenarioIds", "taskContractSha256",
+]);
+const GATE_A_CANDIDATE_PUBLICATION_KEYS = Object.freeze([
+  "revision", "baseRevision", "bytesVerified", "fullDiffVerified", "candidateOnFetchedMain",
+]);
+const GATE_A_RESULT_KEYS = Object.freeze([
+  "preparationAllowed", "executionAllowed", "decision", "blockers", "preparationBounds",
+  "privateActionsAllowed", "externalMutationsAllowed", "taskContractSha256", "sourceFingerprint",
 ]);
 const PROPOSAL_CANDIDATE_KEYS = Object.freeze([
   "revision", "baseRevision", "dossierDigest", "artifactBindings",
@@ -228,6 +258,30 @@ function sameStrings(left, right) {
     && left.every((value, index) => value === right[index]);
 }
 
+function isOpaqueReference(value) {
+  return typeof value === "string"
+    && OPAQUE_REFERENCE.test(value)
+    && !value.includes("://")
+    && !value.split(":", 2)[1]?.startsWith("/")
+    && !value.includes("..")
+    && !/(?:pending|unknown|tbd|placeholder)/i.test(value);
+}
+
+function proposalAuthorTrailerValid(message) {
+  if (typeof message !== "string") return false;
+  const expected = `P0-Proposal-Author-Id: ${P0_R0_GATE_A_PROPOSAL_AUTHOR_IDS[0]}`;
+  const lines = message.replace(/\r\n/g, "\n").split("\n");
+  while (lines.at(-1) === "") lines.pop();
+  const authorLikeLines = lines.filter((line) => /^\s*p0-proposal-author-id\s*[:=]/i.test(line));
+  const paragraphs = lines.join("\n").split(/\n[\t ]*\n+/);
+  const finalParagraph = paragraphs.at(-1)?.split("\n") ?? [];
+  return authorLikeLines.length === 1
+    && authorLikeLines[0] === expected
+    && paragraphs.length >= 2
+    && finalParagraph.length === 1
+    && finalParagraph[0] === expected;
+}
+
 function artifactBindingsValid(bindings) {
   return isPlainRecord(bindings)
     && Object.keys(bindings).length === ARTIFACT_KINDS.length
@@ -247,11 +301,90 @@ function seatSetValid(seats, seatKeys) {
       && typeof seats[seat].evidenceReference === "string");
 }
 
+function gateAResultProof(evaluation) {
+  return {
+    preparationAllowed: evaluation?.preparationAllowed === true,
+    executionAllowed: evaluation?.executionAllowed === true,
+    decision: evaluation?.decision ?? null,
+    blockers: Array.isArray(evaluation?.blockers) ? structuredClone(evaluation.blockers) : null,
+    preparationBounds: Array.isArray(evaluation?.normalizedEvidence?.preparationBounds)
+      ? [...evaluation.normalizedEvidence.preparationBounds]
+      : null,
+    privateActionsAllowed: evaluation?.normalizedEvidence?.privateActionsAllowed ?? null,
+    externalMutationsAllowed: evaluation?.normalizedEvidence?.externalMutationsAllowed ?? null,
+    taskContractSha256: evaluation?.normalizedEvidence?.taskContractSha256 ?? null,
+    sourceFingerprint: evaluation?.normalizedEvidence?.sourceFingerprint ?? null,
+  };
+}
+
+function reducedProposalCandidate(input) {
+  return {
+    revision: input?.candidate?.revision ?? null,
+    baseRevision: input?.candidate?.baseRevision ?? null,
+    dossierDigest: input?.candidate?.dossierDigest ?? null,
+    artifactBindings: Object.fromEntries(ARTIFACT_KINDS.map((kind) => [kind, {
+      path: input?.candidate?.artifacts?.[kind]?.path ?? null,
+      sha256: input?.candidate?.artifacts?.[kind]?.sha256 ?? null,
+    }])),
+  };
+}
+
+function reducedPreparationSeats(input) {
+  return Object.fromEntries(COUNCIL_SEATS.map((seat) => [seat, {
+    ...(input?.council?.seatVerdicts?.[seat] ?? {}),
+    scopeClass: input?.requestedScope?.scopeClass ?? null,
+    actionClass: input?.requestedScope?.actionClass ?? null,
+  }]));
+}
+
+function gateAProofShapeValid(proof) {
+  return hasExactKeys(proof, GATE_A_PROOF_KEYS)
+    && hasExactKeys(proof.context, GATE_A_CONTEXT_KEYS)
+    && hasExactKeys(proof.context.expectedTask, GATE_A_EXPECTED_TASK_KEYS)
+    && hasExactKeys(proof.context.candidatePublication, GATE_A_CANDIDATE_PUBLICATION_KEYS)
+    && hasExactKeys(proof.result, GATE_A_RESULT_KEYS)
+    && proof.input?.schemaVersion === TASK_PREPARATION_SCHEMA_VERSION;
+}
+
+function replayPreparationGateA(record, context = record?.gateAProof?.context) {
+  const proof = record?.gateAProof;
+  if (!gateAProofShapeValid(proof)
+    || !hasExactKeys(context, GATE_A_CONTEXT_KEYS)
+    || !hasExactKeys(context.expectedTask, GATE_A_EXPECTED_TASK_KEYS)
+    || !hasExactKeys(context.candidatePublication, GATE_A_CANDIDATE_PUBLICATION_KEYS)) {
+    return fail("PREPARATION_REVIEW_GATE_A_PROOF_INVALID");
+  }
+  let evaluation;
+  try {
+    evaluation = evaluateTaskPreparationGateA(proof.input, context);
+  } catch {
+    return fail("PREPARATION_REVIEW_GATE_A_REPLAY_FAILED");
+  }
+  const result = gateAResultProof(evaluation);
+  if (evaluation.preparationAllowed !== true
+    || evaluation.executionAllowed !== false
+    || evaluation.decision !== "Ready to prepare — Gate A"
+    || !Array.isArray(evaluation.blockers)
+    || evaluation.blockers.length !== 0
+    || canonicalJson(evaluation.normalizedEvidence?.preparationBounds) !== canonicalJson([
+      "local", "public", "fictional", "synthetic",
+    ])
+    || evaluation.normalizedEvidence?.privateActionsAllowed !== false
+    || evaluation.normalizedEvidence?.externalMutationsAllowed !== false
+    || canonicalJson(result) !== canonicalJson(proof.result)) {
+    return fail("PREPARATION_REVIEW_GATE_A_REPLAY_DENIED");
+  }
+  return pass("PREPARATION_REVIEW_GATE_A_REPLAY_VALID", { evaluation, result });
+}
+
 function validatePreparationReviewRecord(record) {
   const candidate = record?.proposalCandidate;
+  const proof = record?.gateAProof;
+  const input = proof?.input;
   if (!hasExactKeys(record, PREPARATION_REVIEW_RECORD_KEYS)
     || !stageTaskIsAllowlisted(record.taskId, record.stageId, record.scopeClass, record.actionClass)
     || !PREPARATION_REVIEW_ID.test(record.preparationReviewId ?? "")
+    || !record.preparationReviewId.startsWith(`P0-PREP-${record.taskId}-`)
     || !STAGE_ID.test(record.stageId ?? "")
     || !record.stageId.startsWith(`P0-STAGE-${record.taskId}-`)
     || record.state !== "accepted"
@@ -264,8 +397,21 @@ function validatePreparationReviewRecord(record) {
     || !artifactBindingsValid(candidate.artifactBindings)
     || !RAW_SHA256.test(record.reviewerRegistrySha256 ?? "")
     || !seatSetValid(record.councilSeatAttestations, PREPARATION_SEAT_KEYS)
-    || typeof record.evidenceReference !== "string") {
+    || !isOpaqueReference(record.evidenceReference)
+    || !gateAProofShapeValid(proof)) {
     return fail("PREPARATION_REVIEW_RECORD_INVALID");
+  }
+  const replay = replayPreparationGateA(record);
+  if (!replay.ok) return replay;
+  if (record.preparationReviewId !== input.preparationReviewId
+    || record.taskId !== input.taskId
+    || record.stageId !== input.stageId
+    || record.scopeClass !== input.requestedScope?.scopeClass
+    || record.actionClass !== input.requestedScope?.actionClass
+    || canonicalJson(record.proposalCandidate) !== canonicalJson(reducedProposalCandidate(input))
+    || record.reviewerRegistrySha256 !== computeReviewerRegistrySha256(input.reviewerRegistry)
+    || canonicalJson(record.councilSeatAttestations) !== canonicalJson(reducedPreparationSeats(input))) {
+    return fail("PREPARATION_REVIEW_GATE_A_TOP_LEVEL_MISMATCH");
   }
   for (const seat of COUNCIL_SEATS) {
     const attestation = record.councilSeatAttestations[seat];
@@ -334,6 +480,7 @@ function validateStageApprovalRecord(record) {
     || !hasExactKeys(candidate, STAGE_CANDIDATE_KEYS)
     || candidate.revision !== record.candidateRevision
     || candidate.dossierDigest !== record.dossierDigest
+    || !RAW_SHA256.test(candidate.dossierDigest ?? "")
     || !FULL_REVISION.test(candidate.baseRevision ?? "")
     || candidate.baseRevision === candidate.revision
     || !RAW_SHA256.test(candidate.taskContractSha256 ?? "")
@@ -482,6 +629,632 @@ async function runGit(run, repoRoot, args, encoding = "utf8") {
   } catch {
     return { ok: false, stdout: encoding === null ? Buffer.alloc(0) : "" };
   }
+}
+
+async function gitTreeEntryAtRevision(run, repoRoot, revision, relativePath) {
+  const tree = await runGit(run, repoRoot, ["ls-tree", revision, "--", relativePath]);
+  if (!tree.ok) return { ok: false, code: "PREPARATION_GATE_A_GIT_FILE_UNAVAILABLE" };
+  if (tree.stdout.trim() === "") return { ok: true, exists: false };
+  const match = tree.stdout.trim().match(/^(\d{6})\s+(\w+)\s+([0-9a-f]{40,64})\t(.+)$/);
+  if (!match || match[4] !== relativePath) {
+    return { ok: false, code: "PREPARATION_GATE_A_GIT_FILE_TYPE_INVALID" };
+  }
+  return { ok: true, exists: true, gitMode: match[1], gitType: match[2], objectId: match[3] };
+}
+
+async function gitFileAtRevision(run, repoRoot, revision, relativePath) {
+  const shown = await runGit(run, repoRoot, ["show", `${revision}:${relativePath}`], null);
+  const tree = await gitTreeEntryAtRevision(run, repoRoot, revision, relativePath);
+  if (!shown.ok || !tree.ok || !tree.exists) {
+    return { ok: false, code: "PREPARATION_GATE_A_GIT_FILE_UNAVAILABLE" };
+  }
+  if (tree.gitMode !== "100644" || tree.gitType !== "blob") {
+    return { ok: false, code: "PREPARATION_GATE_A_GIT_FILE_TYPE_INVALID" };
+  }
+  return { ...tree, bytes: shown.stdout };
+}
+
+async function gitJsonAtRevision(run, repoRoot, revision, relativePath) {
+  const file = await gitFileAtRevision(run, repoRoot, revision, relativePath);
+  if (!file.ok) return file;
+  try {
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(file.bytes);
+    return {
+      ...file,
+      value: parseJsonWithoutDuplicateKeys(text, `${revision}:${relativePath}`),
+    };
+  } catch {
+    return { ok: false, code: "PREPARATION_GATE_A_GIT_JSON_INVALID" };
+  }
+}
+
+function gateATaskSnapshot(manifest, taskId) {
+  const taskMatches = Array.isArray(manifest?.tasks)
+    ? manifest.tasks.filter((task) => task?.id === taskId)
+    : [];
+  if (taskMatches.length !== 1) return null;
+  const task = taskMatches[0];
+  const canonicalAcceptanceScenarioIds = acceptanceScenarioIdsFor(task.id);
+  const artifactPaths = Object.fromEntries(ARTIFACT_KINDS.map((kind) => [
+    kind,
+    task.taskDossier?.artifacts?.[kind]?.path ?? null,
+  ]));
+  if (!Array.isArray(task.dependencies)
+    || !Array.isArray(task.requirementIds)
+    || task.requirementIds.length === 0
+    || !(typeof task.description === "string" || typeof task.outcome === "string")
+    || task.acceptanceEvidence === null || task.acceptanceEvidence === undefined
+    || canonicalJson(task.taskDossier?.acceptanceScenarioIds) !== canonicalJson(canonicalAcceptanceScenarioIds)
+    || Object.values(artifactPaths).some((artifactPath) => typeof artifactPath !== "string")) {
+    return null;
+  }
+  const taskContractSha256 = computeTaskContractSha256({
+    taskId: task.id,
+    outcome: task.description ?? task.outcome,
+    requirementIds: task.requirementIds,
+    dependencyIds: task.dependencies,
+    acceptanceEvidence: task.acceptanceEvidence,
+    acceptanceScenarioIds: canonicalAcceptanceScenarioIds,
+  });
+  return {
+    expectedTask: {
+      taskId: task.id,
+      milestone: task.milestone,
+      dependencyIds: task.dependencies,
+      acceptanceScenarioIds: canonicalAcceptanceScenarioIds,
+      taskContractSha256,
+    },
+    artifactPaths,
+  };
+}
+
+async function commitParentsAtRevision(run, repoRoot, revision) {
+  const result = await runGit(run, repoRoot, ["rev-list", "--parents", "-n", "1", revision]);
+  const tokens = result.ok ? result.stdout.trim().split(/\s+/) : [];
+  if (tokens.length < 2 || tokens[0] !== revision
+    || tokens.some((token) => !FULL_REVISION.test(token))) {
+    return { ok: false, code: "PREPARATION_GATE_A_PUBLICATION_HISTORY_INVALID" };
+  }
+  return { ok: true, parents: tokens.slice(1) };
+}
+
+async function firstParentRevisions(run, repoRoot, tipRevision) {
+  const ancestry = await runGit(run, repoRoot, [
+    "merge-base", "--is-ancestor", P0_R0_GATE_A_MINIMUM_BASE_REVISION, tipRevision,
+  ]);
+  const history = await runGit(run, repoRoot, [
+    "rev-list", "--first-parent", "--reverse",
+    `${P0_R0_GATE_A_MINIMUM_BASE_REVISION}..${tipRevision}`,
+  ]);
+  const revisions = history.ok
+    ? history.stdout.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+    : [];
+  if (!ancestry.ok || !history.ok || revisions.some((revision) => !FULL_REVISION.test(revision))) {
+    return { ok: false, code: "PREPARATION_GATE_A_PUBLICATION_HISTORY_INVALID" };
+  }
+  return { ok: true, revisions };
+}
+
+async function rawGitDiffRecords(run, repoRoot, fromRevision, toRevision) {
+  const rawDiff = await runGit(run, repoRoot, [
+    "diff", "--raw", "--no-abbrev", "--no-ext-diff", "--no-renames", "-z",
+    fromRevision, toRevision, "--",
+  ], null);
+  const rawTokens = rawDiff.ok ? rawDiff.stdout.toString("utf8").split("\0") : [];
+  if (rawTokens.at(-1) === "") rawTokens.pop();
+  const records = [];
+  if (rawTokens.length % 2 === 0) {
+    for (let index = 0; index < rawTokens.length; index += 2) {
+      const match = rawTokens[index].match(
+        /^:(\d{6}) (\d{6}) ([0-9a-f]{40,64}) ([0-9a-f]{40,64}) ([AM])$/,
+      );
+      if (!match) return { ok: false, records: [] };
+      records.push({
+        oldMode: match[1],
+        newMode: match[2],
+        oldObjectId: match[3],
+        newObjectId: match[4],
+        status: match[5],
+        path: rawTokens[index + 1],
+      });
+    }
+  }
+  return { ok: rawDiff.ok, records };
+}
+
+async function deriveProposalPublicationBoundary({
+  run,
+  repoRoot,
+  fetchedMainRevision,
+  candidateRevision,
+  candidateBaseRevision,
+  artifactPaths,
+}) {
+  const history = await firstParentRevisions(run, repoRoot, fetchedMainRevision);
+  if (!history.ok) return history;
+  let publicationRevision = null;
+  for (const revision of history.revisions) {
+    const containsCandidate = await runGit(run, repoRoot, [
+      "merge-base", "--is-ancestor", candidateRevision, revision,
+    ]);
+    if (containsCandidate.ok) {
+      publicationRevision = revision;
+      break;
+    }
+  }
+  if (publicationRevision === null) {
+    return { ok: false, code: "PREPARATION_GATE_A_PROPOSAL_UNPUBLISHED" };
+  }
+  const commit = await commitParentsAtRevision(run, repoRoot, publicationRevision);
+  if (!commit.ok || commit.parents.length !== 2) {
+    return { ok: false, code: "PREPARATION_GATE_A_PROPOSAL_PUBLICATION_BOUNDARY_INVALID" };
+  }
+  const firstParentContainsCandidate = await runGit(run, repoRoot, [
+    "merge-base", "--is-ancestor", candidateRevision, commit.parents[0],
+  ]);
+  const baseOnFirstParent = await runGit(run, repoRoot, [
+    "merge-base", "--is-ancestor", candidateBaseRevision, commit.parents[0],
+  ]);
+  const projectionCommit = await commitParentsAtRevision(run, repoRoot, commit.parents[1]);
+  const candidateBeforeProjection = await runGit(run, repoRoot, [
+    "merge-base", "--is-ancestor", candidateRevision, commit.parents[1],
+  ]);
+  const projectionDiff = await rawGitDiffRecords(
+    run, repoRoot, candidateRevision, commit.parents[1],
+  );
+  const mergeDiff = await rawGitDiffRecords(
+    run, repoRoot, commit.parents[0], publicationRevision,
+  );
+  const expectedMergePaths = [...artifactPaths, ...PROPOSAL_PROJECTION_PATHS].sort();
+  const projectionShapeValid = projectionDiff.ok
+    && projectionCommit.ok
+    && projectionCommit.parents.length === 1
+    && projectionCommit.parents[0] === candidateRevision
+    && projectionDiff.records.length === PROPOSAL_PROJECTION_PATHS.length
+    && canonicalJson(projectionDiff.records.map((entry) => entry.path).sort())
+      === canonicalJson([...PROPOSAL_PROJECTION_PATHS].sort())
+    && projectionDiff.records.every((entry) => entry.newMode === "100644"
+      && (entry.status === "A" ? entry.oldMode === "000000" : entry.oldMode === "100644"));
+  const mergeShapeValid = mergeDiff.ok
+    && mergeDiff.records.length === expectedMergePaths.length
+    && canonicalJson(mergeDiff.records.map((entry) => entry.path).sort())
+      === canonicalJson(expectedMergePaths)
+    && mergeDiff.records.every((entry) => entry.newMode === "100644"
+      && (entry.status === "A" ? entry.oldMode === "000000" : entry.oldMode === "100644"));
+  const mergeTreeEqualsSecondParent = await runGit(run, repoRoot, [
+    "diff", "--quiet", commit.parents[1], publicationRevision, "--",
+  ]);
+  if (commit.parents[0] !== candidateBaseRevision
+    || firstParentContainsCandidate.ok || !baseOnFirstParent.ok || !candidateBeforeProjection.ok
+    || !projectionShapeValid || !mergeShapeValid || !mergeTreeEqualsSecondParent.ok) {
+    return { ok: false, code: "PREPARATION_GATE_A_PROPOSAL_PUBLICATION_BOUNDARY_INVALID" };
+  }
+  return {
+    ok: true,
+    publicationRevision,
+    firstParentRevision: commit.parents[0],
+  };
+}
+
+async function derivePreparationMainPublicationBoundary({
+  run,
+  repoRoot,
+  fetchedMainRevision,
+  proposalPublicationRevision,
+  preparationPublicationRevision,
+  record,
+}) {
+  const baseline = await registryAtRevision(run, repoRoot, P0_R0_GATE_A_MINIMUM_BASE_REVISION);
+  if (baseline.registry?.preparationReviews?.some((entry) => (
+    entry?.preparationReviewId === record.preparationReviewId
+  ))) {
+    return { ok: false, code: "PREPARATION_GATE_A_PUBLICATION_ORDER_INVALID" };
+  }
+  const history = await firstParentRevisions(run, repoRoot, fetchedMainRevision);
+  if (!history.ok) return history;
+  let publicationRevision = null;
+  let publicationRecord = null;
+  for (const revision of history.revisions) {
+    const snapshot = await registryAtRevision(run, repoRoot, revision);
+    const matches = snapshot.registry?.preparationReviews?.filter((entry) => (
+      entry?.preparationReviewId === record.preparationReviewId
+    )) ?? [];
+    if (matches.length > 1) {
+      return { ok: false, code: "PREPARATION_GATE_A_PUBLICATION_ORDER_INVALID" };
+    }
+    if (matches.length === 1) {
+      publicationRevision = revision;
+      publicationRecord = matches[0];
+      break;
+    }
+  }
+  if (publicationRevision === null) return { ok: true, published: false };
+  if (publicationRevision === proposalPublicationRevision
+    || canonicalJson(publicationRecord) !== canonicalJson(record)) {
+    return { ok: false, code: "PREPARATION_GATE_A_PUBLICATION_ORDER_INVALID" };
+  }
+  const commit = await commitParentsAtRevision(run, repoRoot, publicationRevision);
+  if (!commit.ok || commit.parents.length !== 2
+    || commit.parents[0] !== proposalPublicationRevision
+    || commit.parents[1] !== preparationPublicationRevision) {
+    return { ok: false, code: "PREPARATION_GATE_A_PREPARATION_PUBLICATION_BOUNDARY_INVALID" };
+  }
+  const firstParentProposalAncestry = await runGit(run, repoRoot, [
+    "merge-base", "--is-ancestor", proposalPublicationRevision, commit.parents[0],
+  ]);
+  const firstParentSnapshot = await registryAtRevision(run, repoRoot, commit.parents[0]);
+  const firstParentContainsRecord = firstParentSnapshot.registry?.preparationReviews?.some((entry) => (
+    entry?.preparationReviewId === record.preparationReviewId
+  )) === true;
+  const mergedParentSnapshot = await registryAtRevision(run, repoRoot, commit.parents[1]);
+  const mergedParentContainsRecord = mergedParentSnapshot.registry?.preparationReviews?.filter((entry) => (
+    entry?.preparationReviewId === record.preparationReviewId
+      && canonicalJson(entry) === canonicalJson(record)
+  )).length === 1;
+  const introductionCommit = await commitParentsAtRevision(run, repoRoot, preparationPublicationRevision);
+  const proposalBeforeIntroduction = introductionCommit.ok && introductionCommit.parents.length === 1
+    && introductionCommit.parents[0] === proposalPublicationRevision;
+  const mergeDiff = await rawGitDiffRecords(
+    run, repoRoot, commit.parents[0], publicationRevision,
+  );
+  const exactRegistryMerge = mergeDiff.ok && mergeDiff.records.length === 1
+    && mergeDiff.records[0].path === STAGE_APPROVAL_REGISTRY_PATH
+    && mergeDiff.records[0].status === "M"
+    && mergeDiff.records[0].oldMode === "100644"
+    && mergeDiff.records[0].newMode === "100644";
+  const mergeTreeEqualsSecondParent = await runGit(run, repoRoot, [
+    "diff", "--quiet", commit.parents[1], publicationRevision, "--",
+  ]);
+  if (!firstParentProposalAncestry.ok || firstParentContainsRecord
+    || !mergedParentContainsRecord || !proposalBeforeIntroduction || !exactRegistryMerge
+    || !mergeTreeEqualsSecondParent.ok) {
+    return { ok: false, code: "PREPARATION_GATE_A_PREPARATION_PUBLICATION_BOUNDARY_INVALID" };
+  }
+  return { ok: true, published: true, publicationRevision };
+}
+
+async function deriveImplementationMainPublicationBoundary({
+  run,
+  repoRoot,
+  fetchedMainRevision,
+  preparationMainPublicationRevision,
+  candidateRevision,
+  candidateBaseRevision,
+}) {
+  if (candidateBaseRevision !== preparationMainPublicationRevision) {
+    return { ok: false, code: "STAGE_IMPLEMENTATION_PREPARATION_BASE_INVALID" };
+  }
+  const candidateCommit = await commitParentsAtRevision(run, repoRoot, candidateRevision);
+  if (!candidateCommit.ok || candidateCommit.parents.length !== 1
+    || candidateCommit.parents[0] !== preparationMainPublicationRevision) {
+    return { ok: false, code: "STAGE_IMPLEMENTATION_PREPARATION_BASE_INVALID" };
+  }
+  const history = await firstParentRevisions(run, repoRoot, fetchedMainRevision);
+  if (!history.ok) return history;
+  let publicationRevision = null;
+  for (const revision of history.revisions) {
+    const containsCandidate = await runGit(run, repoRoot, [
+      "merge-base", "--is-ancestor", candidateRevision, revision,
+    ]);
+    if (containsCandidate.ok) {
+      publicationRevision = revision;
+      break;
+    }
+  }
+  if (publicationRevision === null) {
+    return { ok: false, code: "STAGE_IMPLEMENTATION_UNPUBLISHED" };
+  }
+  const commit = await commitParentsAtRevision(run, repoRoot, publicationRevision);
+  if (!commit.ok || commit.parents.length !== 2
+    || commit.parents[0] !== preparationMainPublicationRevision
+    || commit.parents[1] !== candidateRevision) {
+    return { ok: false, code: "STAGE_IMPLEMENTATION_PUBLICATION_BOUNDARY_INVALID" };
+  }
+  const preparationBeforeFirstParent = await runGit(run, repoRoot, [
+    "merge-base", "--is-ancestor", preparationMainPublicationRevision, commit.parents[0],
+  ]);
+  const candidateBeforeFirstParent = await runGit(run, repoRoot, [
+    "merge-base", "--is-ancestor", candidateRevision, commit.parents[0],
+  ]);
+  const mergeTreeEqualsCandidate = await runGit(run, repoRoot, [
+    "diff", "--quiet", candidateRevision, publicationRevision, "--",
+  ]);
+  if (!preparationBeforeFirstParent.ok || candidateBeforeFirstParent.ok || !mergeTreeEqualsCandidate.ok) {
+    return { ok: false, code: "STAGE_IMPLEMENTATION_PUBLICATION_BOUNDARY_INVALID" };
+  }
+  return { ok: true, publicationRevision };
+}
+
+async function deriveStageMainPublicationBoundary({
+  run,
+  repoRoot,
+  fetchedMainRevision,
+  implementationMainPublicationRevision,
+  stagePublicationRevision,
+  record,
+}) {
+  const history = await firstParentRevisions(run, repoRoot, fetchedMainRevision);
+  if (!history.ok) return history;
+  let publicationRevision = null;
+  let publicationRecord = null;
+  for (const revision of history.revisions) {
+    const snapshot = await registryAtRevision(run, repoRoot, revision);
+    const matches = snapshot.registry?.stageApprovals?.filter((entry) => entry?.stageId === record.stageId) ?? [];
+    if (matches.length > 1) return { ok: false, code: "STAGE_MAIN_PUBLICATION_ORDER_INVALID" };
+    if (matches.length === 1) {
+      publicationRevision = revision;
+      publicationRecord = matches[0];
+      break;
+    }
+  }
+  if (publicationRevision === null) return { ok: true, published: false };
+  if (publicationRevision === implementationMainPublicationRevision
+    || canonicalJson(publicationRecord) !== canonicalJson(record)) {
+    return { ok: false, code: "STAGE_MAIN_PUBLICATION_ORDER_INVALID" };
+  }
+  const commit = await commitParentsAtRevision(run, repoRoot, publicationRevision);
+  if (!commit.ok || commit.parents.length !== 2
+    || commit.parents[0] !== implementationMainPublicationRevision
+    || commit.parents[1] !== stagePublicationRevision) {
+    return { ok: false, code: "STAGE_MAIN_PUBLICATION_BOUNDARY_INVALID" };
+  }
+  const implementationBeforeFirstParent = await runGit(run, repoRoot, [
+    "merge-base", "--is-ancestor", implementationMainPublicationRevision, commit.parents[0],
+  ]);
+  const firstParentSnapshot = await registryAtRevision(run, repoRoot, commit.parents[0]);
+  const secondParentSnapshot = await registryAtRevision(run, repoRoot, commit.parents[1]);
+  const firstParentContainsRecord = firstParentSnapshot.registry?.stageApprovals?.some((entry) => (
+    entry?.stageId === record.stageId
+  )) === true;
+  const secondParentContainsRecord = secondParentSnapshot.registry?.stageApprovals?.filter((entry) => (
+    entry?.stageId === record.stageId && canonicalJson(entry) === canonicalJson(record)
+  )).length === 1;
+  const introductionCommit = await commitParentsAtRevision(run, repoRoot, stagePublicationRevision);
+  const introductionParentIsImplementation = introductionCommit.ok
+    && introductionCommit.parents.length === 1
+    && introductionCommit.parents[0] === implementationMainPublicationRevision;
+  const mergeDiff = await rawGitDiffRecords(run, repoRoot, commit.parents[0], publicationRevision);
+  const exactRegistryMerge = mergeDiff.ok && mergeDiff.records.length === 1
+    && mergeDiff.records[0].path === STAGE_APPROVAL_REGISTRY_PATH
+    && mergeDiff.records[0].status === "M"
+    && mergeDiff.records[0].oldMode === "100644"
+    && mergeDiff.records[0].newMode === "100644";
+  const mergeTreeEqualsSecondParent = await runGit(run, repoRoot, [
+    "diff", "--quiet", commit.parents[1], publicationRevision, "--",
+  ]);
+  if (!implementationBeforeFirstParent.ok || firstParentContainsRecord || !secondParentContainsRecord
+    || !introductionParentIsImplementation || !exactRegistryMerge || !mergeTreeEqualsSecondParent.ok) {
+    return { ok: false, code: "STAGE_MAIN_PUBLICATION_BOUNDARY_INVALID" };
+  }
+  return { ok: true, published: true, publicationRevision };
+}
+
+/**
+ * Rebuild the Gate A context from immutable Git evidence and replay the exact
+ * evaluator. Embedded context is never accepted as publication or task truth.
+ */
+export async function verifyPreparationGateAProofFromGit({
+  repoRoot,
+  run,
+  publishedRef,
+  fetchedMainRevision = publishedRef,
+  preparationPublicationRevision,
+  record,
+} = {}) {
+  if (typeof repoRoot !== "string" || typeof run !== "function"
+    || !FULL_REVISION.test(publishedRef ?? "")
+    || !FULL_REVISION.test(fetchedMainRevision ?? "")
+    || !FULL_REVISION.test(preparationPublicationRevision ?? "")) {
+    return fail("PREPARATION_GATE_A_GIT_INPUT_INVALID");
+  }
+  const structural = validatePreparationReviewRecord(record);
+  if (!structural.ok) return fail(structural.code);
+  const proof = record.gateAProof;
+  const input = proof.input;
+  const candidate = input.candidate;
+
+  const parent = await runGit(run, repoRoot, ["rev-list", "--parents", "-n", "1", candidate.revision]);
+  const parentTokens = parent.ok ? parent.stdout.trim().split(/\s+/) : [];
+  if (parentTokens.length !== 2
+    || parentTokens[0] !== candidate.revision
+    || parentTokens[1] !== candidate.baseRevision) {
+    return fail("PREPARATION_GATE_A_PROPOSAL_PARENT_INVALID");
+  }
+  const proposalMessage = await runGit(run, repoRoot, [
+    "show", "-s", "--format=%B", candidate.revision,
+  ]);
+  if (!proposalMessage.ok
+    || !proposalAuthorTrailerValid(proposalMessage.stdout)
+    || canonicalJson(input.proposalAuthorIds) !== canonicalJson(P0_R0_GATE_A_PROPOSAL_AUTHOR_IDS)) {
+    return fail("PREPARATION_GATE_A_PROPOSAL_AUTHOR_TRAILER_INVALID");
+  }
+  const fetchedMainAncestry = await runGit(run, repoRoot, [
+    "merge-base", "--is-ancestor", candidate.revision, fetchedMainRevision,
+  ]);
+  const baselineAncestry = await runGit(run, repoRoot, [
+    "merge-base", "--is-ancestor", P0_R0_GATE_A_MINIMUM_BASE_REVISION, candidate.baseRevision,
+  ]);
+  if (!fetchedMainAncestry.ok || !baselineAncestry.ok) {
+    return fail("PREPARATION_GATE_A_PROPOSAL_UNPUBLISHED");
+  }
+  const proposalPublication = await deriveProposalPublicationBoundary({
+    run,
+    repoRoot,
+    fetchedMainRevision,
+    candidateRevision: candidate.revision,
+    candidateBaseRevision: candidate.baseRevision,
+    artifactPaths: ARTIFACT_KINDS.map((kind) => candidate.artifacts[kind].path),
+  });
+  if (!proposalPublication.ok) return fail(proposalPublication.code);
+  const preparationMainPublication = await derivePreparationMainPublicationBoundary({
+    run,
+    repoRoot,
+    fetchedMainRevision,
+    proposalPublicationRevision: proposalPublication.publicationRevision,
+    preparationPublicationRevision,
+    record,
+  });
+  if (!preparationMainPublication.ok) return fail(preparationMainPublication.code);
+  if (fetchedMainRevision === publishedRef && preparationMainPublication.published !== true) {
+    return fail("PREPARATION_GATE_A_PREPARATION_UNPUBLISHED");
+  }
+
+  const artifactPaths = ARTIFACT_KINDS.map((kind) => candidate.artifacts[kind].path);
+  if (new Set(artifactPaths).size !== ARTIFACT_KINDS.length) {
+    return fail("PREPARATION_GATE_A_ARTIFACT_SET_INVALID");
+  }
+  const rawDiff = await runGit(run, repoRoot, [
+    "diff", "--raw", "--no-abbrev", "--no-ext-diff", "--no-renames", "-z",
+    candidate.baseRevision, candidate.revision, "--",
+  ], null);
+  const rawTokens = rawDiff.ok ? rawDiff.stdout.toString("utf8").split("\0") : [];
+  if (rawTokens.at(-1) === "") rawTokens.pop();
+  const rawRecords = [];
+  if (rawTokens.length % 2 === 0) {
+    for (let index = 0; index < rawTokens.length; index += 2) {
+      const match = rawTokens[index].match(
+        /^:(\d{6}) (\d{6}) ([0-9a-f]{40,64}) ([0-9a-f]{40,64}) ([AM])$/,
+      );
+      if (!match) {
+        rawRecords.length = 0;
+        break;
+      }
+      rawRecords.push({
+        oldMode: match[1],
+        newMode: match[2],
+        oldObjectId: match[3],
+        newObjectId: match[4],
+        status: match[5],
+        path: rawTokens[index + 1],
+      });
+    }
+  }
+  if (!rawDiff.ok || rawRecords.length !== ARTIFACT_KINDS.length
+    || canonicalJson(rawRecords.map((entry) => entry.path).sort()) !== canonicalJson([...artifactPaths].sort())
+    || rawRecords.some((entry) => entry.newMode !== "100644"
+      || (entry.status === "A" ? entry.oldMode !== "000000" : entry.oldMode !== "100644"))) {
+    return fail("PREPARATION_GATE_A_PROPOSAL_DIFF_INVALID");
+  }
+
+  for (const kind of ARTIFACT_KINDS) {
+    const artifact = candidate.artifacts[kind];
+    const diffRecord = rawRecords.find((entry) => entry.path === artifact.path);
+    const baseTree = await gitTreeEntryAtRevision(run, repoRoot, candidate.baseRevision, artifact.path);
+    const file = await gitFileAtRevision(run, repoRoot, candidate.revision, artifact.path);
+    const baseSemanticsValid = diffRecord?.status === "A"
+      ? baseTree.ok && !baseTree.exists
+      : baseTree.ok && baseTree.exists && baseTree.gitMode === "100644" && baseTree.gitType === "blob"
+        && baseTree.objectId === diffRecord?.oldObjectId;
+    if (!diffRecord || !baseSemanticsValid || !file.ok
+      || file.objectId !== diffRecord.newObjectId
+      || crypto.createHash("sha256").update(file.bytes).digest("hex") !== artifact.sha256) {
+      return fail("PREPARATION_GATE_A_ARTIFACT_BYTES_INVALID", { artifactKind: kind });
+    }
+    let markdown;
+    try {
+      markdown = new TextDecoder("utf-8", { fatal: true }).decode(file.bytes);
+    } catch {
+      return fail("PREPARATION_GATE_A_ARTIFACT_BYTES_INVALID", { artifactKind: kind });
+    }
+    const markers = parseArtifactControlMarkers(markdown, {
+      taskId: record.taskId,
+      artifactKind: kind,
+      artifactState: artifact.contentState,
+    });
+    if (!markers.valid || !publicTextBytesAreSafe(markdown)) {
+      return fail("PREPARATION_GATE_A_ARTIFACT_MARKERS_INVALID", { artifactKind: kind });
+    }
+    const continuityRevisions = new Set([
+      proposalPublication.publicationRevision,
+      preparationPublicationRevision,
+      publishedRef,
+    ]);
+    for (const revision of continuityRevisions) {
+      const currentFile = await gitFileAtRevision(run, repoRoot, revision, artifact.path);
+      if (!currentFile.ok
+        || !currentFile.bytes.equals(file.bytes)
+        || crypto.createHash("sha256").update(currentFile.bytes).digest("hex") !== artifact.sha256) {
+        return fail("PREPARATION_GATE_A_ARTIFACT_CONTINUITY_INVALID", {
+          artifactKind: kind,
+          revision,
+        });
+      }
+    }
+  }
+
+  const candidateManifest = await gitJsonAtRevision(run, repoRoot, candidate.revision, MANIFEST_PATH);
+  const proposalPublicationManifest = await gitJsonAtRevision(
+    run, repoRoot, proposalPublication.publicationRevision, MANIFEST_PATH,
+  );
+  const publicationManifest = await gitJsonAtRevision(
+    run, repoRoot, preparationPublicationRevision, MANIFEST_PATH,
+  );
+  const currentManifest = await gitJsonAtRevision(run, repoRoot, publishedRef, MANIFEST_PATH);
+  const candidateReviewerRegistry = await gitJsonAtRevision(
+    run, repoRoot, candidate.revision, REVIEWER_REGISTRY_PATH,
+  );
+  const publicationReviewerRegistry = await gitJsonAtRevision(
+    run, repoRoot, preparationPublicationRevision, REVIEWER_REGISTRY_PATH,
+  );
+  const currentReviewerRegistry = await gitJsonAtRevision(
+    run, repoRoot, publishedRef, REVIEWER_REGISTRY_PATH,
+  );
+  if (!candidateManifest.ok || !proposalPublicationManifest.ok || !publicationManifest.ok || !currentManifest.ok
+    || !candidateReviewerRegistry.ok
+    || !publicationReviewerRegistry.ok || !currentReviewerRegistry.ok) {
+    return fail(!candidateManifest.ok || !proposalPublicationManifest.ok || !publicationManifest.ok || !currentManifest.ok
+      ? "PREPARATION_GATE_A_MANIFEST_UNAVAILABLE"
+      : "PREPARATION_GATE_A_REVIEWER_REGISTRY_UNAVAILABLE");
+  }
+  const candidateTask = gateATaskSnapshot(candidateManifest.value, record.taskId);
+  const proposalPublicationTask = gateATaskSnapshot(proposalPublicationManifest.value, record.taskId);
+  const publicationTask = gateATaskSnapshot(publicationManifest.value, record.taskId);
+  const currentTask = gateATaskSnapshot(currentManifest.value, record.taskId);
+  if (candidateTask === null || proposalPublicationTask === null
+    || publicationTask === null || currentTask === null
+    || canonicalJson(candidateTask) !== canonicalJson(proposalPublicationTask)
+    || canonicalJson(proposalPublicationTask) !== canonicalJson(publicationTask)
+    || canonicalJson(publicationTask) !== canonicalJson(currentTask)) {
+    return fail("PREPARATION_GATE_A_EXPECTED_TASK_INVALID");
+  }
+  const expectedTask = candidateTask.expectedTask;
+  if (ARTIFACT_KINDS.some((kind) => candidate.artifacts[kind].path !== candidateTask.artifactPaths[kind])) {
+    return fail("PREPARATION_GATE_A_ARTIFACT_PATH_INVALID");
+  }
+  const candidatePublication = {
+    revision: candidate.revision,
+    baseRevision: candidate.baseRevision,
+    bytesVerified: true,
+    fullDiffVerified: true,
+    candidateOnFetchedMain: true,
+  };
+  const derivedContext = { expectedTask, candidatePublication };
+  if (!hasExactKeys(expectedTask, GATE_A_EXPECTED_TASK_KEYS)
+    || !Array.isArray(expectedTask.dependencyIds)
+    || !Array.isArray(expectedTask.acceptanceScenarioIds)
+    || canonicalJson(proof.context) !== canonicalJson(derivedContext)) {
+    return fail("PREPARATION_GATE_A_EXPECTED_CONTEXT_MISMATCH");
+  }
+  if (!candidateReviewerRegistry.bytes.equals(publicationReviewerRegistry.bytes)
+    || !publicationReviewerRegistry.bytes.equals(currentReviewerRegistry.bytes)
+    || canonicalJson(input.reviewerRegistry) !== canonicalJson(currentReviewerRegistry.value)
+    || record.reviewerRegistrySha256 !== computeReviewerRegistrySha256(currentReviewerRegistry.value)) {
+    return fail("PREPARATION_GATE_A_REVIEWER_REGISTRY_MISMATCH");
+  }
+  const replay = replayPreparationGateA(record, derivedContext);
+  if (!replay.ok) return fail(replay.code);
+  return pass("PREPARATION_GATE_A_GIT_PROOF_VALID", {
+    proofVerified: true,
+    taskId: record.taskId,
+    stageId: record.stageId,
+    preparationReviewId: record.preparationReviewId,
+    expectedTask,
+    candidatePublication,
+    reviewerRegistrySha256: record.reviewerRegistrySha256,
+    sourceFingerprint: replay.result.sourceFingerprint,
+    proposalPublicationRevision: proposalPublication.publicationRevision,
+    preparationMainPublicationRevision: preparationMainPublication.publicationRevision ?? null,
+  });
 }
 
 async function registryAtRevision(run, repoRoot, revision) {
@@ -685,16 +1458,13 @@ export async function verifyStageApprovalRegistryContinuity({
   });
 }
 
-async function registryOnlyPublicationCommit(run, repoRoot, revision, candidateRevision) {
+async function registryOnlyPublicationCommit(run, repoRoot, revision, requiredAncestorRevision) {
   const parents = await runGit(run, repoRoot, ["rev-list", "--parents", "-n", "1", revision]);
   if (!parents.ok) return false;
   const tokens = parents.stdout.trim().split(/\s+/);
   if (tokens.length !== 2 || tokens[0] !== revision || !FULL_REVISION.test(tokens[1] ?? "")) return false;
   const parentRevision = tokens[1];
-  const candidateBeforeParent = await runGit(run, repoRoot, [
-    "merge-base", "--is-ancestor", candidateRevision, parentRevision,
-  ]);
-  if (!candidateBeforeParent.ok && parentRevision !== candidateRevision) return false;
+  if (parentRevision !== requiredAncestorRevision) return false;
   const changed = await runGit(run, repoRoot, [
     "diff-tree", "--no-commit-id", "--name-status", "-r", parentRevision, revision,
   ]);
@@ -710,12 +1480,12 @@ async function exactSingleRecordPublication({
   run,
   repoRoot,
   revision,
-  candidateRevision,
+  requiredAncestorRevision,
   collectionName,
   idKey,
   recordId,
 }) {
-  if (!await registryOnlyPublicationCommit(run, repoRoot, revision, candidateRevision)) return false;
+  if (!await registryOnlyPublicationCommit(run, repoRoot, revision, requiredAncestorRevision)) return false;
   const parents = await runGit(run, repoRoot, ["rev-list", "--parents", "-n", "1", revision]);
   const tokens = parents.ok ? parents.stdout.trim().split(/\s+/) : [];
   if (tokens.length !== 2 || tokens[0] !== revision) return false;
@@ -736,11 +1506,13 @@ export async function verifyPreparationReviewRegistryHistory({
   repoRoot,
   run,
   publishedRef,
+  fetchedMainRevision = publishedRef,
   preparationReviewId,
   continuity = null,
 } = {}) {
   if (typeof repoRoot !== "string" || typeof run !== "function"
-    || !FULL_REVISION.test(publishedRef ?? "") || !PREPARATION_REVIEW_ID.test(preparationReviewId ?? "")) {
+    || !FULL_REVISION.test(publishedRef ?? "") || !FULL_REVISION.test(fetchedMainRevision ?? "")
+    || !PREPARATION_REVIEW_ID.test(preparationReviewId ?? "")) {
     return fail("PREPARATION_REVIEW_HISTORY_INPUT_INVALID");
   }
   const published = await registryAtRevision(run, repoRoot, publishedRef);
@@ -777,11 +1549,22 @@ export async function verifyPreparationReviewRegistryHistory({
   if (!publication.exists || canonicalJson(publicationRecord) !== canonicalJson(record)) {
     return fail("PREPARATION_REVIEW_HISTORY_REWRITE");
   }
+  const gateAProof = await verifyPreparationGateAProofFromGit({
+    repoRoot,
+    run,
+    publishedRef,
+    fetchedMainRevision,
+    preparationPublicationRevision,
+    record,
+  });
+  if (!gateAProof.ok || gateAProof.proofVerified !== true) {
+    return fail(gateAProof.code ?? "PREPARATION_GATE_A_GIT_PROOF_INVALID");
+  }
   if (!await exactSingleRecordPublication({
     run,
     repoRoot,
     revision: preparationPublicationRevision,
-    candidateRevision: proposalRevision,
+    requiredAncestorRevision: gateAProof.proposalPublicationRevision,
     collectionName: "preparationReviews",
     idKey: "preparationReviewId",
     recordId: preparationReviewId,
@@ -795,6 +1578,13 @@ export async function verifyPreparationReviewRegistryHistory({
     registrySha256: crypto.createHash("sha256").update(published.bytes).digest("hex"),
     preparationPublicationRevision,
     publishedRef,
+    preparationProofVerified: true,
+    preparationExpectedTask: gateAProof.expectedTask,
+    preparationTaskContractSha256: gateAProof.expectedTask.taskContractSha256,
+    preparationCandidatePublication: gateAProof.candidatePublication,
+    preparationSourceFingerprint: gateAProof.sourceFingerprint,
+    proposalPublicationRevision: gateAProof.proposalPublicationRevision,
+    preparationMainPublicationRevision: gateAProof.preparationMainPublicationRevision,
   });
 }
 
@@ -803,11 +1593,13 @@ export async function verifyStageApprovalRegistryHistory({
   repoRoot,
   run,
   publishedRef,
+  fetchedMainRevision = publishedRef,
   stageId,
   continuity = null,
 } = {}) {
   if (typeof repoRoot !== "string" || typeof run !== "function"
-    || !FULL_REVISION.test(publishedRef ?? "") || !STAGE_ID.test(stageId ?? "")) {
+    || !FULL_REVISION.test(publishedRef ?? "") || !FULL_REVISION.test(fetchedMainRevision ?? "")
+    || !STAGE_ID.test(stageId ?? "")) {
     return fail("STAGE_APPROVAL_HISTORY_INPUT_INVALID");
   }
   const published = await registryAtRevision(run, repoRoot, publishedRef);
@@ -828,6 +1620,7 @@ export async function verifyStageApprovalRegistryHistory({
     repoRoot,
     run,
     publishedRef,
+    fetchedMainRevision,
     preparationReviewId: record.preparationReviewId,
     continuity,
   });
@@ -861,12 +1654,37 @@ export async function verifyStageApprovalRegistryHistory({
   const stagePublication = await registryAtRevision(run, repoRoot, stagePublicationRevision);
   const publishedStageRecord = stagePublication.registry?.stageApprovals.find((entry) => entry.stageId === stageId);
   if (canonicalJson(publishedStageRecord) !== canonicalJson(record)) return fail("STAGE_APPROVAL_HISTORY_REWRITE");
+  const preparationMainPublicationRevision = preparationHistory.preparationMainPublicationRevision;
+  if (!FULL_REVISION.test(preparationMainPublicationRevision ?? "")) {
+    return fail("STAGE_PREPARATION_MAIN_PUBLICATION_MISSING");
+  }
+  const implementationMainPublication = await deriveImplementationMainPublicationBoundary({
+    run,
+    repoRoot,
+    fetchedMainRevision,
+    preparationMainPublicationRevision,
+    candidateRevision: record.candidateRevision,
+    candidateBaseRevision: record.candidate?.baseRevision,
+  });
+  if (!implementationMainPublication.ok) return fail(implementationMainPublication.code);
+  const stageMainPublication = await deriveStageMainPublicationBoundary({
+    run,
+    repoRoot,
+    fetchedMainRevision,
+    implementationMainPublicationRevision: implementationMainPublication.publicationRevision,
+    stagePublicationRevision,
+    record,
+  });
+  if (!stageMainPublication.ok) return fail(stageMainPublication.code);
+  if (fetchedMainRevision === publishedRef && stageMainPublication.published !== true) {
+    return fail("STAGE_MAIN_PUBLICATION_MISSING");
+  }
   if (preparationPublicationRevision !== preparationHistory.preparationPublicationRevision
     || !await exactSingleRecordPublication({
       run,
       repoRoot,
       revision: stagePublicationRevision,
-      candidateRevision: record.candidateRevision,
+      requiredAncestorRevision: implementationMainPublication.publicationRevision,
       collectionName: "stageApprovals",
       idKey: "stageId",
       recordId: stageId,
@@ -874,14 +1692,43 @@ export async function verifyStageApprovalRegistryHistory({
     return fail("STAGE_APPROVAL_PUBLICATION_SCOPE_INVALID");
   }
   const preparationBeforeCandidate = await runGit(run, repoRoot, [
-    "merge-base", "--is-ancestor", preparationPublicationRevision, record.candidateRevision,
+    "merge-base", "--is-ancestor", preparationMainPublicationRevision, record.candidateRevision,
   ]);
   const candidateBeforeStage = await runGit(run, repoRoot, [
-    "merge-base", "--is-ancestor", record.candidateRevision, stagePublicationRevision,
+    "merge-base", "--is-ancestor", implementationMainPublication.publicationRevision, stagePublicationRevision,
   ]);
   const stageCandidateRegistry = await registryAtRevision(run, repoRoot, record.candidateRevision);
+  const implementationManifest = await gitJsonAtRevision(run, repoRoot, record.candidateRevision, MANIFEST_PATH);
+  const implementationMainManifest = await gitJsonAtRevision(
+    run, repoRoot, implementationMainPublication.publicationRevision, MANIFEST_PATH,
+  );
+  const stagePublicationManifest = await gitJsonAtRevision(run, repoRoot, stagePublicationRevision, MANIFEST_PATH);
+  const currentManifest = await gitJsonAtRevision(run, repoRoot, publishedRef, MANIFEST_PATH);
+  const expectedTask = preparationHistory.preparationExpectedTask;
+  const implementationTask = implementationManifest.ok
+    ? gateATaskSnapshot(implementationManifest.value, record.taskId)?.expectedTask ?? null
+    : null;
+  const implementationMainTask = implementationMainManifest.ok
+    ? gateATaskSnapshot(implementationMainManifest.value, record.taskId)?.expectedTask ?? null
+    : null;
+  const stagePublicationTask = stagePublicationManifest.ok
+    ? gateATaskSnapshot(stagePublicationManifest.value, record.taskId)?.expectedTask ?? null
+    : null;
+  const currentTask = currentManifest.ok
+    ? gateATaskSnapshot(currentManifest.value, record.taskId)?.expectedTask ?? null
+    : null;
+  if (expectedTask === null
+    || implementationTask === null || implementationMainTask === null
+    || stagePublicationTask === null || currentTask === null
+    || canonicalJson(implementationTask) !== canonicalJson(expectedTask)
+    || canonicalJson(implementationMainTask) !== canonicalJson(expectedTask)
+    || canonicalJson(stagePublicationTask) !== canonicalJson(expectedTask)
+    || canonicalJson(currentTask) !== canonicalJson(expectedTask)
+    || record.candidate?.taskContractSha256 !== expectedTask.taskContractSha256) {
+    return fail("PREPARATION_GATE_A_EXPECTED_TASK_INVALID");
+  }
   if (!preparationBeforeCandidate.ok || !candidateBeforeStage.ok
-    || preparationPublicationRevision === record.candidateRevision
+    || preparationMainPublicationRevision === record.candidateRevision
     || record.candidateRevision === stagePublicationRevision
     || !stageCandidateRegistry.exists
     || !validateStageApprovalRegistry(stageCandidateRegistry.registry).ok
@@ -902,7 +1749,15 @@ export async function verifyStageApprovalRegistryHistory({
     registrySha256: crypto.createHash("sha256").update(published.bytes).digest("hex"),
     preparationPublicationRevision,
     stagePublicationRevision,
+    preparationMainPublicationRevision,
+    implementationMainPublicationRevision: implementationMainPublication.publicationRevision,
+    stageMainPublicationRevision: stageMainPublication.publicationRevision ?? null,
     publishedRef,
+    preparationProofVerified: preparationHistory.preparationProofVerified === true,
+    preparationExpectedTask: preparationHistory.preparationExpectedTask,
+    preparationTaskContractSha256: preparationHistory.preparationTaskContractSha256,
+    preparationCandidatePublication: preparationHistory.preparationCandidatePublication,
+    preparationSourceFingerprint: preparationHistory.preparationSourceFingerprint,
   });
 }
 
@@ -962,7 +1817,7 @@ export function validateGateAPreparationDecision(decision) {
     return fail("GATE_A_DECISION_INVALID");
   }
   if (!TASK_SET.has(decision.taskId)) return fail("GATE_A_TASK_NOT_ALLOWLISTED");
-  if (!FULL_REVISION.test(decision.candidateRevision) || !SHA256_DIGEST.test(decision.dossierDigest)) {
+  if (!FULL_REVISION.test(decision.candidateRevision) || !RAW_SHA256.test(decision.dossierDigest)) {
     return fail("GATE_A_BINDING_INVALID");
   }
   if (typeof decision.preparationAllowed !== "boolean") return fail("GATE_A_DECISION_INVALID");

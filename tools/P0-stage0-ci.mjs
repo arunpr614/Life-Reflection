@@ -102,7 +102,7 @@ const TEST_COMMANDS = Object.freeze([
   ["bounded_authority_fixtures", "node", ["tools/P0-bounded-authority.mjs", "--self-test"], {
     ok: true, code: "P0_BOUNDED_AUTHORITY_SELF_TEST_OK", cases: 1935, sourceCount: 17,
   }],
-  ["readiness", "node", ["tools/P0-test-execution-controls.mjs"], { passed: 386, failed: 0 }],
+  ["readiness", "node", ["tools/P0-test-execution-controls.mjs"], { passed: 403, failed: 0 }],
   ["historical_control_review", "node", ["tools/P0-test-control-review-trust.mjs"], { assertions: 35, failed: 0 }],
   ["successor_control_review_fixtures", "node", ["tools/P0-test-successor-control-review.mjs"], { failed: 0 }],
   ["running_log_fixtures", "node", ["tools/P0-test-running-log-trust.mjs"], { failed: 0 }],
@@ -111,7 +111,7 @@ const TEST_COMMANDS = Object.freeze([
   }],
   ["wiki_fixtures", "node", ["tools/P0-test-wiki-trust.mjs"], { ok: true, cases: 30, helpWrites: 0 }],
   ["staged_action_fixtures", "node", ["tools/P0-test-staged-actions.mjs"], {
-    ok: true, code: "SELF_TEST_OK", cases: 101, productionActions: 0,
+    ok: true, code: "SELF_TEST_OK", cases: 186, productionActions: 0,
   }],
   ["stage_runner_fixtures", "node", ["tools/P0-test-stage-runner.mjs"], {
     ok: true, code: "SELF_TEST_OK", cases: 90, productionModules: 0,
