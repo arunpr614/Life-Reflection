@@ -1012,3 +1012,54 @@ Preserve `SPK-R0-001`'s intentional direct two-pair task-wide cardinality Hold a
 ### Self-critique
 
 Stage 0 closure is strong control evidence, not product evidence. The private Project bar-driver selection lacks a fresh authenticated visual observation, and no R0 task can borrow that inference as execution evidence. The staged schema exists, but a reduced preparation record is not yet sufficient proof that the full Gate A evaluator passed; that trust gap must be repaired before the registry becomes nonempty. Historical In-progress status, clean CI, or an empty allowlist cannot substitute for readiness.
+<!-- P0-RUNNING-LOG-EVENT:{"authorId":"codex-primary-integrator-01","bodySha256":"012e34c54c6bee8047bd8bd774cfea7562eebb1a2b01ef40be732fe6130e7900","eventId":"P0-R0-SPK-PROJECTION-BASELINE-CONSUME-RECAP-20260816-001","eventType":"terminal-recap","evidenceReference":"github-pr:83","parentRevision":"8f9f4bac91d681d28a5d224d786364bfc0dc0b8b","previousByteLength":99231,"previousSha256":"ff6c4a0a54090278571f1d289d1aaf95ad93095fe953522d50f2bef45f75c01f","recordedAt":"2026-08-16T23:13:00+05:30","schemaVersion":"1.0.0"} -->
+## 2026-08-16 23:13 IST — SPK projection baseline repair consumed; proposal rebuild is next
+
+**Entry author:** AI agent (Codex) · **Triggered by:** the owner's direct resume instruction after the protected projection consume was paused.
+
+### Planned since last entry
+
+The prior trusted entry required the Gate A replay gap to be repaired before any SPK preparation record, followed by one exact six-artifact public/local proposal and five exact-candidate Council seats. This recap closes the intervening control/projection repair wave and records the next pre-candidate intent. It is evidence only; it is not Gate A acceptance, Gate B authority, a preparation record, or a task/status transition.
+
+### Done
+
+- PR #79 merged the Gate A replay, canonical dossier-digest, full-proposal re-evaluation, and exact publication-topology repair at `338014c129ac2d64317aeb31ec6017ba3473ec36`.
+- PRs #80 and #81 armed and consumed the exact projection-topology repair, advancing main to `540b456b90f9317d53744e38f69213bca538bee3` without creating a preparation review or execution permission.
+- A six-artifact `SPK-R0-001` proposal was built and independently reviewed on preserved commit `775312ba142cff4b37523ba3889ed85f9e73f00a`. Its corresponding three-file C2 projection truthfully produced 336 Draft and 12 In-review artifacts, 58 Incomplete tasks, zero Ready tasks, and zero execution-allowed tasks; the canonical workbook passed complete structural and 20-render visual review.
+- That truthful C2 exposed a protected stale oracle: the prior test and four current-facing surfaces treated the historical 342 Draft / 6 In-review Stage 0 state as permanently fixed. The old proposal lineage was held before publication.
+- PR #82 armed the independently reviewed five-target phase-aware projection repair and merged at `c5f641fb4fc00efd6fb51e1e0a79d38e0a8c2082`.
+- After the owner resumed the paused work, exact consume head `97274a451a76638b10d626d6a569977611ca2977` passed the clean two-pass Stage 0 suite: definition `sha256:e940334fc7e7fceead2871c75e91a7f09c03e09e47cef3452e1f737d8732ad8e`, local result `sha256:10e6148ef5678b2b89fb023c9f6c1d1ffe2cf97abc62b2b9cec2e1225b4f306c`.
+- PR #83 received independent Git-object, semantic, exact-PR, and adversarial GO results. Push/PR exact-head suites and the base-owned consume guard passed; the GitHub suite result was `sha256:f602f8f6607f1457edbfbbbe4024c1413a5445f8dbc3f0dae8f630154a0f4c88`.
+- PR #83 merged normally at `8f9f4bac91d681d28a5d224d786364bfc0dc0b8b`, with exact parents `c5f641fb4fc00efd6fb51e1e0a79d38e0a8c2082` and `97274a451a76638b10d626d6a569977611ca2977`. Its merge tree matches the reviewed head, its scope is exactly the five armed targets plus the consumed 54-entry integrity manifest, and `next` is null.
+- Exact merged main then passed the complete local two-pass Stage 0 suite with the same definition and result `sha256:a30a862f912b7b2e8e4fe8b17af952be77df802d5c91a22d04a2d7686534da48`; the post-merge GitHub exact-main check also completed successfully.
+
+### Preserved work and publication state
+
+- The earlier six-artifact proposal commit and its uncommitted three-file projection are preserved as reviewed source material only. They must not be pushed from their obsolete base; both candidate layers must be reconstructed from fresh main.
+- A human-readable pause recap remains uncommitted in a separate retained worktree. It has no canonical event marker and is not part of trusted or published history; preserve it, but do not stage, transplant, amend, or delete it.
+- The committed main projections remain at the pre-proposal 342 Draft / 6 In-review baseline. The roadmap remains 40 Backlog / 4 Next / 1 In progress / 13 Done. The canonical workbook and live Wiki were not refreshed by the held proposal or PRs #82–#83; live Wiki remains at `10c23505ea7f33a8cb03e36b977f310d8cb4abc4` until a later exact-main publication wave.
+
+### Current truth and authority boundary
+
+- All 58 tasks remain Incomplete; zero are Ready and zero are execution-allowed. The 50 R1-R10 tasks and 300 artifacts remain frozen with zero execution permission.
+- Production action, module, callback, and outcome-verifier maps remain empty; delivery apply remains disabled. No preparation review, stage approval, private-system access, authentic content, R0 runtime, delivery/status mutation, deployment, restore, rollback, acceptance, release, production action, Project mutation, or Wiki mutation occurred in this repair wave.
+- `P0-OA-001` and `R0-OA-001` remain unsatisfied and continue to block every private-host lane. The only next candidate is public/local/fictional/synthetic.
+
+### State snapshot
+
+- **Current source:** exact merged main `8f9f4bac91d681d28a5d224d786364bfc0dc0b8b` from PR #83.
+- **Recap branch:** `codex/r0-spk-running-log-recap-20260816-8f9f4ba`, created clean from that exact source. Its one-path normal pull request will be the durable non-self-referential evidence channel for this append.
+- **Working state:** the recap branch was clean before this append; the obsolete proposal and unmarked pause-tail worktrees remain separately preserved and must stay untouched.
+- **Runtime/deployment:** no R0 runtime or deployment exists; deployment remains `Unknown — private read authority pending`.
+- **Next milestone:** merge this canonical one-path recap, then rebuild the six-artifact SPK proposal as a fresh direct child of the resulting main.
+
+### Current remaining to-do
+
+1. From fresh main after this recap merges, recreate the exact six protected `SPK-R0-001` proposal artifacts as one direct-child C1 commit; do not include projections or reuse the obsolete proposal commit identity.
+2. Regenerate only the exact task-artifact register, roadmap manifest, and canonical workbook as C2; require 336 Draft / 12 In-review, 58 Incomplete, zero Ready, zero execution-allowed, complete workbook structural/formula/link/R10 checks, and all 20 visual renders.
+3. Run clean two-pass Stage 0 CI, public-safety and frozen-scope checks, independent Product/Architecture/QA/adversarial review, then publish the bounded proposal through a normal expected-head PR.
+4. Only after the proposal is merged may five distinct registered seats evaluate and publish the exact Gate A preparation record. Gate A, if accepted, may authorize only the named fictional/local candidate preparation; Gate B and all private owner actions remain separate.
+
+### Self-critique
+
+The first proposal audit should have exercised the protected readiness oracle against its generated C2 before treating the lineage as publishable. Holding that lineage avoided a false merge, but forced a five-target arm/consume repair and now requires a fresh proposal rebuild. The unmarked pause text is useful human evidence but cannot be treated as canonical merely because it preserved prior bytes; event provenance, prefix binding, privacy, and body digest are all mandatory.
