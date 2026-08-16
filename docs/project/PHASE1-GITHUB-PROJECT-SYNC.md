@@ -46,7 +46,7 @@ The apply created no issue or Project item, changed no issue state/status/label/
 
 Wiki publication is separate from issue/Project parity. Wiki commit `25f438faa2adc57d42f62ef139a9f615de57af99` was pushed normally from two byte-identical builds of the same merged source. A fresh clone was clean, contained exactly 456 generated files, and matched the build byte-for-byte. `Page-Audit.md` has SHA-256 `e0799bf18967e9c264547f729de4daf6e8a84d7ca8582d24a9ad0a1304b8a8b7`, identifies source `0694e7ad548d15132171d7c910ce35d8bc05a4bc`, maps all 450 Markdown sources exactly once, and records zero preserved live-only pages.
 
-This evidence establishes local/public control publication and planning-surface parity only. All 58 dossiers remain Incomplete, all 342 non-PC artifacts remain Draft, all six PC-001 artifacts remain In review, and zero tasks are Ready or execution-authorized. No R0 implementation, private-system read, authentic-media access, credential use, deployment, release, or production operation occurred.
+This evidence establishes local/public control publication and planning-surface parity only. At exact source `0694e7ad548d15132171d7c910ce35d8bc05a4bc`, all 58 dossiers were Incomplete, all 342 non-PC artifacts were Draft, all six PC-001 artifacts were In review, and zero tasks were Ready or execution-authorized. This is a dated reconciliation snapshot, not a claim about current artifact counts. No R0 implementation, private-system read, authentic-media access, credential use, deployment, release, or production operation occurred.
 
 ## Decision
 
