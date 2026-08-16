@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { executeStageFromExactMain } from "./P0-stage-runner.mjs";
+import {
+  executeStageFromExactMain,
+  runSerializableStageFromExactMain,
+} from "./P0-stage-runner.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 let directCallbackExecutions = 0;
@@ -54,6 +57,36 @@ const accessorResult = await executeStageFromExactMain(accessorRequest);
 assert.equal(accessorResult.code, "STAGE_CALLBACK_REQUEST_SHAPE_INVALID");
 assert.equal(accessorReads, 0);
 
+const serialRequest = {
+  taskId: "ENG-R0-001",
+  scopeClass: "local-synthetic",
+  actionClass: "synthetic-foundation",
+  stageId: "P0-STAGE-ENG-R0-001-FOCUSED-SERIAL-SURFACE",
+  predecessorReceiptSha256: null,
+  idempotencyKey: "P0-IDEMP-ENG-R0-001-FOCUSED-SERIAL-SURFACE-001",
+};
+const mutableSerialRequest = { ...serialRequest };
+const capturedSerialResult = runSerializableStageFromExactMain(mutableSerialRequest);
+mutableSerialRequest.taskId = "REL-R0-001";
+mutableSerialRequest.stageId = "P0-STAGE-REL-R0-001-MUTATED-AFTER-YIELD";
+const capturedSerial = await capturedSerialResult;
+assert.equal(capturedSerial.code, "STAGE_ACTION_NOT_REVIEWED");
+assert.equal(capturedSerial.taskId, serialRequest.taskId);
+assert.equal(capturedSerial.stageId, serialRequest.stageId);
+
+let serialAccessorReads = 0;
+const serialAccessorRequest = { ...serialRequest };
+Object.defineProperty(serialAccessorRequest, "stageId", {
+  enumerable: true,
+  get() {
+    serialAccessorReads += 1;
+    return serialRequest.stageId;
+  },
+});
+const serialAccessorResult = await runSerializableStageFromExactMain(serialAccessorRequest);
+assert.equal(serialAccessorResult.code, "STAGE_REQUEST_SHAPE_INVALID");
+assert.equal(serialAccessorReads, 0);
+
 const result = spawnSync(process.execPath, ["tools/P0-stage-runner.mjs", "--self-test"], {
   cwd: repoRoot,
   encoding: "utf8",
@@ -63,6 +96,6 @@ assert.equal(result.status, 0, result.stderr);
 const report = JSON.parse(result.stdout);
 assert.equal(report.ok, true);
 assert.equal(report.code, "SELF_TEST_OK");
-assert.equal(report.cases, 78);
+assert.equal(report.cases, 86);
 assert.equal(report.productionModules, 0);
 console.log(JSON.stringify(report));

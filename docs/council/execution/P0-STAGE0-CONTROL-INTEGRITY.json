@@ -8,6 +8,102 @@
       "sha256": "b30ab0281ab56742136c6b2cd53e7d2a85657ffb8d214dce2e5279c0dbeec062"
     },
     {
+      "path": "AGENTS.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "aac18c9ee735ebcfc51193cef8cb850331c6e158ef44a012841db731857bb574"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "82120e27ead79f6e7f6ead23f5b769112b01ca1ebaf14b490e860d8ced47c840"
+    },
+    {
+      "path": "docs/INDEX.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "6bd35d4b73bf0d27b2a38c2ddf3b272cb02b615db96993cb54c50372e2653ad0"
+    },
+    {
+      "path": "docs/council/PHASE1-COUNCIL-DECISION-RECORD.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "58b1b0e4aa651f7b50d1a6bff2ce3c22a0d940d38a5909875d32a8dea2841ae6"
+    },
+    {
+      "path": "docs/council/PRODUCT-COUNCIL-CHARTER.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "052361bf7716943883f7d052385079eafd9f24b4c0afb68aadf680425cdc57da"
+    },
+    {
+      "path": "docs/council/PRODUCT-COUNCIL.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "31fc122673e8540275ebe25891de64f595b6463d5fc4b0711bc6171152c48a5f"
+    },
+    {
+      "path": "docs/council/agents/P0-QA-LEAD.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "ed73d0eb6f44ee187cce315834006b92ff106b0111114b18496cb940a2e911f6"
+    },
+    {
+      "path": "docs/council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "a9aae7ba49da6ab9de0dea5763059fdbebbfc0460958dccd0d27bbb54abb06fe"
+    },
+    {
+      "path": "docs/council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "e11488cb99d5763fc43dac81adca23e6210ae1b13c587b00c1feaab12cffb0be"
+    },
+    {
+      "path": "docs/council/execution/P0-PHASE1-EXECUTION-DECISIONS.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "a4d7f502ca09bcc5c3f5e7d22ed4729da75210301031bc8a62269ad57efa1855"
+    },
+    {
+      "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "b2861176b67077f2be5c9bf637ed6bad033be4fd7d5bd55438f9c1346971f58e"
+    },
+    {
+      "path": "docs/council/execution/releases/P0-P0-R0-STAGE0-STATE-CONTRACT.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "aa6de009855bc388e431c0fb981715ec89eee6386e702de0172dd45a1f083b91"
+    },
+    {
+      "path": "docs/product/PRODUCT-REQUIREMENTS.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "afcc9b1d05a7f0f691d69179d0770d8a39d0f39a2e8e03b8ab216967d32eb54b"
+    },
+    {
+      "path": "docs/project/PHASE1-GITHUB-PROJECT-SYNC.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "fbe2e1d2ad7a0958a4eeaa7bf9534e465e53880b4d2d5130f357fc9e09c9f32b"
+    },
+    {
+      "path": "docs/project/PHASE1-RELEASE-PLAN.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "fd07f7e6423704a77dcccf7507299d935eca7f5431c5e3e06cc609bf4475deaf"
+    },
+    {
+      "path": "docs/project/PROJECT-TRACKER.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha256": "c131c141d9745edfaf67a9807c0de6a727b6a57d910928a2c2398afba1c45e92"
+    },
+    {
       "path": "prototypes/calendar-ui/app-v10.js",
       "mode": "100644",
       "type": "blob",
@@ -35,7 +131,7 @@
       "path": "tools/P0-bounded-authority.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "f01bc8c7de9aacc0852216d88041a8982f2ad41d38b6ce9f5e5b084cf1023932"
+      "sha256": "8b8646d93334661d407c67afd7d8d40aed569425af25b90fb95c980a697fc85d"
     },
     {
       "path": "tools/P0-build-task-readiness-input.mjs",
@@ -59,7 +155,7 @@
       "path": "tools/P0-delivery-transition.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "d722d7793646af7541cf2424dda4d6b44d24a537770e75e62d5759da015b494e"
+      "sha256": "2f71d406982f79cc03259cecaacf66bb80682baabbd5f290d0af4ce3b8bef3fe"
     },
     {
       "path": "tools/P0-exact-main.mjs",
@@ -101,25 +197,25 @@
       "path": "tools/P0-stage-runner.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "eeaa43da23027bf854a21b9b125a0af4d8b9ee1f469f5d1464c62ae5f88bf77f"
+      "sha256": "55526419a1d921b63dc0527d84f7a1b420d04ff1bb3571a6c63758ea53272146"
     },
     {
       "path": "tools/P0-stage0-ci.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "2bbb52f2190f791d7f4b6fbde17a84ffb5ddc447ba235d043b9affb78abbe83c"
+      "sha256": "f1b85ecfb7a7f45b89a80f99c475cbfe2da7c5646445a2801e85ff683ce29380"
     },
     {
       "path": "tools/P0-staged-actions.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "9fd58d2d82809066e0233fcffc7fca57a5ff4ad86441df81e7ce7a1a92312061"
+      "sha256": "28e3d528f147c27b490a72cbec14c0a41705fa68db5607a09ecc465d5ad6ced5"
     },
     {
       "path": "tools/P0-successor-control-review.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "3a7b45e1e1609ae1942e32dc9de8c94dfc0bad0bf81e42961c9e2d8812ec2b57"
+      "sha256": "944e753eecdaa096463449b0b4bbbed9b6d46e41436b38d65c0ce91706729814"
     },
     {
       "path": "tools/P0-test-control-review-trust.mjs",
@@ -131,7 +227,7 @@
       "path": "tools/P0-test-delivery-transition.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "cd46846f88a139babcd57facfab2b792a105b963aeb303576ae0c6a7925bb5ad"
+      "sha256": "146738702406a777c39ef4282360f623dadf6300fddf5cacc387f8e99e159909"
     },
     {
       "path": "tools/P0-test-execution-controls.mjs",
@@ -155,19 +251,19 @@
       "path": "tools/P0-test-stage-runner.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "5302411e230bb100b3b65d0619b8d32e27861b681988263b7d18ce97ff534c2a"
+      "sha256": "fb9ae9e6366447cbd22a455e96d25db2ddf655e921c669676100eff251fa4af4"
     },
     {
       "path": "tools/P0-test-staged-actions.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "7bb4f591acc636b2029e2e6d34635fe776bb1be287776869d63c3534c08a6224"
+      "sha256": "86c6e6d191ac48abbb0b08e78b63f95fad5b8f50674943e4f1b5785d6ebd5d77"
     },
     {
       "path": "tools/P0-test-successor-control-review.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "40a4822469096482cf4677f73dd4f7decaa53ea591210f19841011e7124742e3"
+      "sha256": "c23ab23a2c12851ef927dd8d1f9505556da2c440ef69d9d124bf2338bf284fc1"
     },
     {
       "path": "tools/P0-test-wiki-trust.mjs",
@@ -185,7 +281,7 @@
       "path": "tools/P0-verify-execution-start.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "92563ee7af576d5bab2797632f3a30be2c6074e76c0bd667fec03915c4198444"
+      "sha256": "526cdc2b0631c8f2f1a8c4f39937928dfe77108bd6c89d264a4191f795a53872"
     },
     {
       "path": "tools/P0-verify-generated-tracking.mjs",

@@ -4,23 +4,30 @@ import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
   appendFileSync,
+  lstatSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
   rmSync,
-  statSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  BOUNDED_AUTHORITY_SOURCE_PATHS as SCANNER_BOUNDED_AUTHORITY_SOURCE_PATHS,
+} from "./P0-bounded-authority.mjs";
 
 export const STAGE0_CI_SCHEMA_VERSION = "1.0.0";
 export const STAGE0_WORKFLOW_GUARD_PATH = ".github/workflows/P0-stage0-workflow-guard.yml";
 export const STAGE0_PROTECTED_WORKFLOW_PATH = ".github/workflows/prototype-syntax.yml";
 export const STAGE0_CONTROL_INTEGRITY_PATH = "docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json";
 export const STAGE0_PROTECTED_WORKFLOW_SHA256 = "b30ab0281ab56742136c6b2cd53e7d2a85657ffb8d214dce2e5279c0dbeec062";
-const STAGE0_WORKFLOW_GUARD_SHA256 = "b6502694ae48f9d7ac4fbd96f12438eb2b3a458df1fbd3f1ba5ff1490616c65e";
+const STAGE0_WORKFLOW_GUARD_SHA256 = "355b856d69e5f78aaf6f58b23a1d848690b2ee8b2ee031e321ce047865831445";
 const MODULE_REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+function compareCodeUnits(left, right) {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
 
 export const CONTROL_TOOL_PATHS = Object.freeze([
   "tools/P0-append-only-trust.mjs",
@@ -59,17 +66,41 @@ export const CONTROL_TOOL_PATHS = Object.freeze([
   "tools/sync_phase1_github.mjs",
 ]);
 
+// This is an independent, closed copy of the semantic scanner's source
+// boundary. The CI contract compares the two exact sets before it trusts either
+// one, and the base-owned workflow carries the same immutable set.
+export const CONTROL_AUTHORITY_SOURCE_PATHS = Object.freeze([
+  "AGENTS.md",
+  "README.md",
+  "docs/INDEX.md",
+  "docs/council/PHASE1-COUNCIL-DECISION-RECORD.md",
+  "docs/council/PRODUCT-COUNCIL-CHARTER.md",
+  "docs/council/PRODUCT-COUNCIL.md",
+  "docs/council/agents/P0-QA-LEAD.md",
+  "docs/council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md",
+  "docs/council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md",
+  "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
+  "docs/council/execution/P0-PHASE1-EXECUTION-DECISIONS.md",
+  "docs/council/execution/releases/P0-P0-R0-STAGE0-STATE-CONTRACT.md",
+  "docs/product/PRODUCT-REQUIREMENTS.md",
+  "docs/project/PHASE1-GITHUB-PROJECT-SYNC.md",
+  "docs/project/PHASE1-RELEASE-PLAN.md",
+  "docs/project/PROJECT-TRACKER.md",
+  "tools/generate_phase1_roadmap_manifest.mjs",
+]);
+
 export const CONTROL_INTEGRITY_PATHS = Object.freeze([
   ...CONTROL_TOOL_PATHS,
+  ...CONTROL_AUTHORITY_SOURCE_PATHS,
   STAGE0_PROTECTED_WORKFLOW_PATH,
   "prototypes/calendar-ui/app-v10.js",
   "prototypes/calendar-ui/package.json",
   "prototypes/calendar-ui/serve.mjs",
-].sort());
+].filter((filePath, index, paths) => paths.indexOf(filePath) === index).sort(compareCodeUnits));
 
 const TEST_COMMANDS = Object.freeze([
   ["bounded_authority_fixtures", "node", ["tools/P0-bounded-authority.mjs", "--self-test"], {
-    ok: true, code: "P0_BOUNDED_AUTHORITY_SELF_TEST_OK", cases: 15, sourceCount: 17,
+    ok: true, code: "P0_BOUNDED_AUTHORITY_SELF_TEST_OK", cases: 1935, sourceCount: 17,
   }],
   ["readiness", "node", ["tools/P0-test-execution-controls.mjs"], { passed: 386, failed: 0 }],
   ["historical_control_review", "node", ["tools/P0-test-control-review-trust.mjs"], { assertions: 35, failed: 0 }],
@@ -80,22 +111,22 @@ const TEST_COMMANDS = Object.freeze([
   }],
   ["wiki_fixtures", "node", ["tools/P0-test-wiki-trust.mjs"], { ok: true, cases: 30, helpWrites: 0 }],
   ["staged_action_fixtures", "node", ["tools/P0-test-staged-actions.mjs"], {
-    ok: true, code: "SELF_TEST_OK", cases: 100, productionActions: 0,
+    ok: true, code: "SELF_TEST_OK", cases: 101, productionActions: 0,
   }],
   ["stage_runner_fixtures", "node", ["tools/P0-test-stage-runner.mjs"], {
-    ok: true, code: "SELF_TEST_OK", cases: 78, productionModules: 0,
+    ok: true, code: "SELF_TEST_OK", cases: 86, productionModules: 0,
   }],
   ["delivery_transition_fixtures", "node", ["tools/P0-test-delivery-transition.mjs"], {
-    ok: true, code: "SELF_TEST_OK", cases: 78, applyEnabled: false,
+    ok: true, code: "SELF_TEST_OK", cases: 94, applyEnabled: false,
   }],
   ["execution_start_fixtures", "node", ["tools/P0-verify-execution-start.mjs", "--self-test"], {
-    ok: true, code: "SELF_TEST_OK", cases: 65,
+    ok: true, code: "SELF_TEST_OK", cases: 66,
   }],
   ["github_sync_fixtures", "node", ["tools/sync_phase1_github.mjs", "--self-test"], {
     ok: true, cases: 56, mutableProjectFieldCount: 16,
   }],
   ["stage0_ci_contract_fixtures", "node", ["tools/P0-stage0-ci.mjs", "--self-test"], {
-    ok: true, code: "P0_STAGE0_CI_SELF_TEST_OK", cases: 98,
+    ok: true, code: "P0_STAGE0_CI_SELF_TEST_OK", cases: 209,
   }],
 ]);
 
@@ -176,16 +207,65 @@ function containsExpected(actual, expected) {
 }
 
 export function validateToolInventory(actualPaths, expectedPaths = CONTROL_TOOL_PATHS) {
-  const actual = [...actualPaths].sort();
-  const expected = [...expectedPaths].sort();
+  const actual = [...actualPaths].sort(compareCodeUnits);
+  const expected = [...expectedPaths].sort(compareCodeUnits);
   const findings = [];
   if (canonicalJson(actual) !== canonicalJson(expected)) findings.push("CI_TOOL_INVENTORY_DRIFT");
   return Object.freeze({ ok: findings.length === 0, findings });
 }
 
+function exactPathSet(value) {
+  if (!Array.isArray(value)
+    || value.some((filePath) => typeof filePath !== "string" || filePath.length === 0)
+    || new Set(value).size !== value.length) return null;
+  return [...value].sort(compareCodeUnits);
+}
+
+export function validateAuthoritySourcePathSet(actualPaths) {
+  const actual = exactPathSet(actualPaths);
+  const expected = exactPathSet(CONTROL_AUTHORITY_SOURCE_PATHS);
+  const findings = [];
+  if (actual === null || canonicalJson(actual) !== canonicalJson(expected)) {
+    findings.push("CI_BOUNDED_AUTHORITY_SOURCE_PATH_SET_INVALID");
+  }
+  return Object.freeze({ ok: findings.length === 0, findings });
+}
+
+export function validateControlIntegrityDefinition({
+  scannerPaths = SCANNER_BOUNDED_AUTHORITY_SOURCE_PATHS,
+  integrityPaths = CONTROL_INTEGRITY_PATHS,
+} = {}) {
+  const findings = [];
+  if (!validateAuthoritySourcePathSet(scannerPaths).ok) {
+    findings.push("CI_BOUNDED_AUTHORITY_SCANNER_PATH_SET_DRIFT");
+  }
+  const actualIntegrity = exactPathSet(integrityPaths);
+  const expectedIntegrity = exactPathSet([
+    ...new Set([
+      ...CONTROL_TOOL_PATHS,
+      ...CONTROL_AUTHORITY_SOURCE_PATHS,
+      STAGE0_PROTECTED_WORKFLOW_PATH,
+      "prototypes/calendar-ui/app-v10.js",
+      "prototypes/calendar-ui/package.json",
+      "prototypes/calendar-ui/serve.mjs",
+    ]),
+  ]);
+  if (actualIntegrity === null || canonicalJson(actualIntegrity) !== canonicalJson(expectedIntegrity)) {
+    findings.push("CI_CONTROL_INTEGRITY_PATH_SET_INVALID");
+  }
+  if (actualIntegrity === null
+    || CONTROL_AUTHORITY_SOURCE_PATHS.some((filePath) => !actualIntegrity.includes(filePath))) {
+    findings.push("CI_CONTROL_INTEGRITY_AUTHORITY_SOURCE_SUBSET_INVALID");
+  }
+  if (CONTROL_AUTHORITY_SOURCE_PATHS.length !== 17 || expectedIntegrity?.length !== 54) {
+    findings.push("CI_CONTROL_INTEGRITY_EXPECTED_CARDINALITY_INVALID");
+  }
+  return Object.freeze({ ok: findings.length === 0, findings: [...new Set(findings)] });
+}
+
 const CONTROL_INTEGRITY_SCHEMA_VERSION = "1.0.0";
 const CONTROL_INTEGRITY_MAX_CHANGES = 8;
-const CONTROL_INTEGRITY_MODES = new Set(["100644", "100755"]);
+const CONTROL_INTEGRITY_MODES = new Set(["100644"]);
 const CONTROL_INTEGRITY_SHA256 = /^[0-9a-f]{64}$/;
 
 function exactObjectKeys(value, keys) {
@@ -213,8 +293,16 @@ function parseControlIntegrityEntry(value, label) {
 
 function assertControlIntegritySortedUnique(entries, label) {
   const paths = entries.map((entry) => entry.path);
-  if (new Set(paths).size !== paths.length || canonicalJson(paths) !== canonicalJson([...paths].sort())) {
+  if (new Set(paths).size !== paths.length
+    || canonicalJson(paths) !== canonicalJson([...paths].sort(compareCodeUnits))) {
     throw new Error(`CI_CONTROL_INTEGRITY_${label}_NOT_SORTED_UNIQUE`);
+  }
+}
+
+function assertAuthoritySourceSubset(entries, label) {
+  const paths = new Set(entries.map((entry) => entry.path));
+  if (CONTROL_AUTHORITY_SOURCE_PATHS.some((filePath) => !paths.has(filePath))) {
+    throw new Error(`CI_CONTROL_INTEGRITY_${label}_AUTHORITY_SOURCE_SET_INVALID`);
   }
 }
 
@@ -288,13 +376,16 @@ export function validateControlIntegrityManifest(source) {
   }
 }
 
-export function validateControlIntegrityCurrent(source, observed, expectedPaths = CONTROL_INTEGRITY_PATHS) {
+export function validateControlIntegrityCurrent(source, observed) {
   try {
+    const definition = validateControlIntegrityDefinition();
+    if (!definition.ok) throw new Error(definition.findings[0]);
     const manifest = parseControlIntegrityManifest(source, "CURRENT");
     const paths = manifest.current.map((entry) => entry.path);
-    if (canonicalJson(paths) !== canonicalJson([...expectedPaths].sort())) {
+    if (canonicalJson(paths) !== canonicalJson(CONTROL_INTEGRITY_PATHS)) {
       throw new Error("CI_CONTROL_INTEGRITY_CURRENT_PATH_SET_INVALID");
     }
+    assertAuthoritySourceSubset(manifest.current, "CURRENT");
     assertControlIntegrityObserved(manifest.current, observed, "CURRENT");
     return Object.freeze({ ok: true, findings: [], manifest });
   } catch (error) {
@@ -313,7 +404,7 @@ function applyControlIntegrityChanges(current, changes) {
       sha256: change.sha256,
     });
   }
-  return [...entries.values()].sort((left, right) => left.path.localeCompare(right.path));
+  return [...entries.values()].sort((left, right) => compareCodeUnits(left.path, right.path));
 }
 
 function assertControlIntegrityObserved(inventory, observed, label) {
@@ -336,10 +427,14 @@ export function validateControlIntegrityTransition({
   headObserved,
 }) {
   try {
+    const definition = validateControlIntegrityDefinition();
+    if (!definition.ok) throw new Error(definition.findings[0]);
     const base = parseControlIntegrityManifest(baseSource, "BASE");
     const head = parseControlIntegrityManifest(headSource, "HEAD");
+    assertAuthoritySourceSubset(base.current, "BASE");
+    assertAuthoritySourceSubset(head.current, "HEAD");
     if (!Array.isArray(changedPaths) || new Set(changedPaths).size !== changedPaths.length
-      || canonicalJson(changedPaths) !== canonicalJson([...changedPaths].sort())) {
+      || canonicalJson(changedPaths) !== canonicalJson([...changedPaths].sort(compareCodeUnits))) {
       throw new Error("CI_CONTROL_INTEGRITY_CHANGED_PATHS_INVALID");
     }
     assertControlIntegrityObserved(base.current, baseObserved, "BASE_CURRENT");
@@ -376,7 +471,7 @@ export function validateControlIntegrityTransition({
       } else {
         const applied = applyControlIntegrityChanges(base.current, base.next.changes);
         const expectedPaths = [STAGE0_CONTROL_INTEGRITY_PATH,
-          ...base.next.changes.map((change) => change.path)].sort();
+          ...base.next.changes.map((change) => change.path)].sort(compareCodeUnits);
         if (canonicalJson(head.current) !== canonicalJson(applied)
           || canonicalJson(changedPaths) !== canonicalJson(expectedPaths)) {
           throw new Error("CI_CONTROL_INTEGRITY_CONSUME_INVALID");
@@ -458,6 +553,24 @@ export function validateWorkflowGuardContract(source) {
   const findings = [];
   if (typeof source !== "string") {
     return Object.freeze({ ok: false, findings: ["CI_WORKFLOW_GUARD_SOURCE_ABSENT"] });
+  }
+  const authorityBlock = source.match(
+    /const AUTHORITY_SOURCE_PATHS = new Set\(\[\n([\s\S]*?)\n\s{12}\]\);/u,
+  );
+  let inlineAuthorityPaths = null;
+  if (authorityBlock) {
+    try {
+      inlineAuthorityPaths = authorityBlock[1].split("\n").map((line) => {
+        const match = line.match(/^\s{14}("(?:[^"\\]|\\.)*"),$/u);
+        if (!match) throw new Error("invalid path literal");
+        return JSON.parse(match[1]);
+      });
+    } catch {
+      inlineAuthorityPaths = null;
+    }
+  }
+  if (!validateAuthoritySourcePathSet(inlineAuthorityPaths).ok) {
+    findings.push("CI_WORKFLOW_GUARD_AUTHORITY_SOURCE_PATH_SET_INVALID");
   }
   if (sha256(source) !== STAGE0_WORKFLOW_GUARD_SHA256) findings.push("CI_WORKFLOW_GUARD_CLOSED_CONTRACT_DRIFT");
   if (!/^on:\n  pull_request_target:\n/m.test(source)) findings.push("CI_WORKFLOW_GUARD_TRIGGER_INVALID");
@@ -686,14 +799,57 @@ function stage0SelfTest() {
     "false",
   )).ok, "guard exact-byte comparison neutralization");
 
-  const fixtureEntry = {
-    path: "tools/P0-staged-actions.mjs",
+  expect(CONTROL_TOOL_PATHS.length === 34
+    && CONTROL_TOOL_PATHS.every((filePath) => filePath.startsWith("tools/")),
+  "control-tool inventory remains tool-only");
+  expect(CONTROL_AUTHORITY_SOURCE_PATHS.length === 17
+    && validateAuthoritySourcePathSet(CONTROL_AUTHORITY_SOURCE_PATHS).ok,
+  "frozen authority-source path set");
+  expect(validateAuthoritySourcePathSet(SCANNER_BOUNDED_AUTHORITY_SOURCE_PATHS).ok,
+    "semantic scanner authority-source path set equality");
+  expect(validateControlIntegrityDefinition().ok
+    && CONTROL_INTEGRITY_PATHS.length === 54,
+  "closed control-integrity definition");
+  const caseNearPath = (filePath) => `${filePath[0] === filePath[0].toUpperCase()
+    ? filePath[0].toLowerCase() : filePath[0].toUpperCase()}${filePath.slice(1)}`;
+  for (const authorityPath of CONTROL_AUTHORITY_SOURCE_PATHS) {
+    expect(!validateAuthoritySourcePathSet(
+      CONTROL_AUTHORITY_SOURCE_PATHS.filter((filePath) => filePath !== authorityPath),
+    ).ok, `authority-source omission rejected: ${authorityPath}`);
+    expect(!validateAuthoritySourcePathSet([
+      ...CONTROL_AUTHORITY_SOURCE_PATHS,
+      `${authorityPath}.extra`,
+    ]).ok, `authority-source extra rejected: ${authorityPath}`);
+    expect(!validateAuthoritySourcePathSet(CONTROL_AUTHORITY_SOURCE_PATHS.map((filePath) => (
+      filePath === authorityPath ? `${filePath}.renamed` : filePath
+    ))).ok, `authority-source rename rejected: ${authorityPath}`);
+    expect(!validateAuthoritySourcePathSet(CONTROL_AUTHORITY_SOURCE_PATHS.map((filePath) => (
+      filePath === authorityPath ? caseNearPath(filePath) : filePath
+    ))).ok, `authority-source case-nearmiss rejected: ${authorityPath}`);
+    expect(!validateControlIntegrityDefinition({
+      integrityPaths: CONTROL_INTEGRITY_PATHS.filter((filePath) => filePath !== authorityPath),
+    }).ok, `authority source required in manifest definition: ${authorityPath}`);
+  }
+  expect(!validateControlIntegrityDefinition({
+    scannerPaths: [...SCANNER_BOUNDED_AUTHORITY_SOURCE_PATHS, "docs/product/EXTRA-AUTHORITY.md"],
+  }).ok, "scanner authority-source extra rejected");
+  expect(!validateControlIntegrityDefinition({
+    integrityPaths: [...CONTROL_INTEGRITY_PATHS, "docs/product/EXTRA-AUTHORITY.md"],
+  }).ok, "control-integrity definition extra rejected");
+
+  const fixtureCurrent = CONTROL_INTEGRITY_PATHS.map((filePath) => ({
+    path: filePath,
     mode: "100644",
     type: "blob",
-    sha256: "1".repeat(64),
-  };
+    sha256: sha256(`fixture:${filePath}`),
+  }));
+  const fixtureEntry = fixtureCurrent.find((entry) => entry.path === "tools/P0-staged-actions.mjs");
   const modifiedEntry = { ...fixtureEntry, sha256: "2".repeat(64) };
   const executableEntry = { ...fixtureEntry, mode: "100755" };
+  const replaceFixtureEntry = (entries, replacement) => entries.map((entry) => (
+    entry.path === replacement.path ? replacement : entry
+  ));
+  const modifiedCurrent = replaceFixtureEntry(fixtureCurrent, modifiedEntry);
   const fixtureObserved = (entries) => Object.fromEntries(entries.map((entry) => [entry.path, {
     mode: entry.mode,
     type: entry.type,
@@ -701,17 +857,17 @@ function stage0SelfTest() {
   }]));
   const clearManifest = {
     schemaVersion: CONTROL_INTEGRITY_SCHEMA_VERSION,
-    current: [fixtureEntry],
+    current: fixtureCurrent,
     next: null,
   };
   const armedManifest = {
     schemaVersion: CONTROL_INTEGRITY_SCHEMA_VERSION,
-    current: [fixtureEntry],
+    current: fixtureCurrent,
     next: { changes: [{ operation: "modify", ...modifiedEntry }] },
   };
   const consumedManifest = {
     schemaVersion: CONTROL_INTEGRITY_SCHEMA_VERSION,
-    current: [modifiedEntry],
+    current: modifiedCurrent,
     next: null,
   };
   const clearSource = renderControlIntegrityManifest(clearManifest);
@@ -720,6 +876,31 @@ function stage0SelfTest() {
   const baseObserved = fixtureObserved(clearManifest.current);
   const modifiedObserved = fixtureObserved(consumedManifest.current);
   expect(validateControlIntegrityManifest(clearSource).ok, "valid clear control-integrity manifest");
+  expect(validateControlIntegrityCurrent(clearSource, baseObserved).ok,
+    "exact 54-path current control-integrity inventory");
+  const missingAuthorityCurrent = fixtureCurrent.filter((entry) => entry.path !== "README.md");
+  const missingAuthoritySource = renderControlIntegrityManifest({
+    ...clearManifest,
+    current: missingAuthorityCurrent,
+  });
+  expect(!validateControlIntegrityCurrent(
+    missingAuthoritySource,
+    fixtureObserved(missingAuthorityCurrent),
+  ).ok, "manifest authority-source omission rejected");
+  expect(!validateControlIntegrityTransition({
+    baseSource: missingAuthoritySource,
+    headSource: clearSource,
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH],
+    baseObserved: fixtureObserved(missingAuthorityCurrent),
+    headObserved: baseObserved,
+  }).ok, "base authority-source disagreement rejected");
+  expect(!validateControlIntegrityTransition({
+    baseSource: clearSource,
+    headSource: missingAuthoritySource,
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, "README.md"].sort(compareCodeUnits),
+    baseObserved,
+    headObserved: fixtureObserved(missingAuthorityCurrent),
+  }).ok, "head authority-source disagreement rejected");
   expect(!validateControlIntegrityManifest(clearSource.trimEnd()).ok, "noncanonical control-integrity manifest");
   expect(!validateControlIntegrityManifest(renderControlIntegrityManifest({
     ...clearManifest,
@@ -733,6 +914,16 @@ function stage0SelfTest() {
     ...clearManifest,
     next: { changes: [{ operation: "delete", ...modifiedEntry }] },
   })).ok, "delete preimage mismatch");
+  for (const [label, invalidEntry] of [
+    ["symlink", { ...fixtureEntry, mode: "120000" }],
+    ["submodule", { ...fixtureEntry, mode: "160000", type: "commit" }],
+    ["executable", { ...fixtureEntry, mode: "100755" }],
+  ]) {
+    expect(!validateControlIntegrityManifest(renderControlIntegrityManifest({
+      ...clearManifest,
+      current: replaceFixtureEntry(fixtureCurrent, invalidEntry),
+    })).ok, `${label} control entry rejected`);
+  }
   expect(!validateControlIntegrityManifest(renderControlIntegrityManifest({
     ...clearManifest,
     next: { changes: [{
@@ -770,6 +961,41 @@ function stage0SelfTest() {
     baseObserved,
     headObserved: baseObserved,
   }).ok, "clear base permits unrelated PR");
+  for (const [label, changedPaths, clearHeadObserved] of [
+    ["ordinary controlled modify", [fixtureEntry.path], fixtureObserved(replaceFixtureEntry(
+      fixtureCurrent, { ...fixtureEntry, sha256: "9".repeat(64) },
+    ))],
+    ["ordinary controlled delete", [fixtureEntry.path], fixtureObserved(
+      fixtureCurrent.filter((entry) => entry.path !== fixtureEntry.path),
+    )],
+    ["ordinary controlled mode change", [fixtureEntry.path], fixtureObserved(replaceFixtureEntry(
+      fixtureCurrent, { ...fixtureEntry, mode: "100755" },
+    ))],
+    ["ordinary controlled type change", [fixtureEntry.path], fixtureObserved(replaceFixtureEntry(
+      fixtureCurrent, { ...fixtureEntry, type: "tree" },
+    ))],
+    ["ordinary controlled rename", [fixtureEntry.path, "docs/product/ordinary-renamed.md"], fixtureObserved(
+      fixtureCurrent.filter((entry) => entry.path !== fixtureEntry.path),
+    )],
+  ]) {
+    expect(!validateControlIntegrityTransition({
+      baseSource: clearSource,
+      headSource: clearSource,
+      changedPaths: changedPaths.sort(compareCodeUnits),
+      baseObserved,
+      headObserved: clearHeadObserved,
+    }).ok, `${label} rejected`);
+  }
+  expect(!validateControlIntegrityTransition({
+    baseSource: clearSource,
+    headSource: clearSource,
+    changedPaths: ["README.md", "tools/P0-bounded-authority.mjs"].sort(compareCodeUnits),
+    baseObserved,
+    headObserved: fixtureObserved(fixtureCurrent.map((entry) => (
+      ["README.md", "tools/P0-bounded-authority.mjs"].includes(entry.path)
+        ? { ...entry, sha256: sha256(`unratcheted:${entry.path}`) } : entry
+    ))),
+  }).ok, "scanner and authority source co-change without ratchet rejected");
   expect(validateControlIntegrityTransition({
     baseSource: clearSource,
     headSource: armedSource,
@@ -780,7 +1006,7 @@ function stage0SelfTest() {
   expect(!validateControlIntegrityTransition({
     baseSource: clearSource,
     headSource: armedSource,
-    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(),
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(compareCodeUnits),
     baseObserved,
     headObserved: modifiedObserved,
   }).ok, "arm cannot change target in same PR");
@@ -798,10 +1024,17 @@ function stage0SelfTest() {
     baseObserved,
     headObserved: baseObserved,
   }).transition === "cancelled", "manifest-only cancellation");
+  expect(!validateControlIntegrityTransition({
+    baseSource: armedSource,
+    headSource: clearSource,
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(compareCodeUnits),
+    baseObserved,
+    headObserved: baseObserved,
+  }).ok, "cancellation cannot change target");
   expect(validateControlIntegrityTransition({
     baseSource: armedSource,
     headSource: consumedSource,
-    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(),
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(compareCodeUnits),
     baseObserved,
     headObserved: modifiedObserved,
   }).transition === "consumed", "exact full consumption");
@@ -815,52 +1048,102 @@ function stage0SelfTest() {
   expect(!validateControlIntegrityTransition({
     baseSource: armedSource,
     headSource: consumedSource,
-    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, "docs/product/extra.md", fixtureEntry.path].sort(),
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, "docs/product/extra.md", fixtureEntry.path]
+      .sort(compareCodeUnits),
     baseObserved,
     headObserved: modifiedObserved,
   }).ok, "extra consumption path rejected");
   expect(!validateControlIntegrityTransition({
     baseSource: clearSource,
     headSource: consumedSource,
-    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(),
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(compareCodeUnits),
     baseObserved,
     headObserved: modifiedObserved,
   }).ok, "unarmed replay rejected");
   expect(!validateControlIntegrityTransition({
     baseSource: armedSource,
     headSource: consumedSource,
-    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(),
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(compareCodeUnits),
     baseObserved,
-    headObserved: fixtureObserved([{ ...modifiedEntry, sha256: "4".repeat(64) }]),
+    headObserved: fixtureObserved(replaceFixtureEntry(modifiedCurrent, {
+      ...modifiedEntry,
+      sha256: "4".repeat(64),
+    })),
   }).ok, "target byte mismatch rejected");
+  const wrongHashEntry = { ...modifiedEntry, sha256: "6".repeat(64) };
+  const wrongHashConsumedSource = renderControlIntegrityManifest({
+    ...clearManifest,
+    current: replaceFixtureEntry(fixtureCurrent, wrongHashEntry),
+  });
+  expect(!validateControlIntegrityTransition({
+    baseSource: armedSource,
+    headSource: wrongHashConsumedSource,
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(compareCodeUnits),
+    baseObserved,
+    headObserved: fixtureObserved(replaceFixtureEntry(fixtureCurrent, wrongHashEntry)),
+  }).ok, "armed target manifest hash mismatch rejected");
+  expect(!validateControlIntegrityTransition({
+    baseSource: armedSource,
+    headSource: consumedSource,
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(compareCodeUnits),
+    baseObserved: fixtureObserved(replaceFixtureEntry(fixtureCurrent, {
+      ...fixtureEntry,
+      sha256: "7".repeat(64),
+    })),
+    headObserved: modifiedObserved,
+  }).ok, "stale armed-base preimage rejected");
+  const disagreeingHeadSource = renderControlIntegrityManifest({
+    ...clearManifest,
+    current: replaceFixtureEntry(fixtureCurrent, {
+      ...fixtureEntry,
+      sha256: "8".repeat(64),
+    }),
+  });
+  expect(!validateControlIntegrityTransition({
+    baseSource: clearSource,
+    headSource: disagreeingHeadSource,
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(compareCodeUnits),
+    baseObserved,
+    headObserved: fixtureObserved(replaceFixtureEntry(fixtureCurrent, {
+      ...fixtureEntry,
+      sha256: "8".repeat(64),
+    })),
+  }).ok, "unarmed base-head manifest disagreement rejected");
   const armedModeSource = renderControlIntegrityManifest({
     ...clearManifest,
     next: { changes: [{ operation: "modify", ...executableEntry }] },
   });
   const consumedModeSource = renderControlIntegrityManifest({
     ...clearManifest,
-    current: [executableEntry],
+    current: replaceFixtureEntry(fixtureCurrent, executableEntry),
   });
-  expect(validateControlIntegrityTransition({
-    baseSource: armedModeSource,
-    headSource: consumedModeSource,
-    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(),
-    baseObserved,
-    headObserved: fixtureObserved([executableEntry]),
-  }).transition === "consumed", "exact mode change consumed");
+  expect(!validateControlIntegrityManifest(armedModeSource).ok, "executable allowance rejected");
   expect(!validateControlIntegrityTransition({
     baseSource: armedModeSource,
     headSource: consumedModeSource,
-    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(),
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(compareCodeUnits),
     baseObserved,
-    headObserved: baseObserved,
-  }).ok, "mode mismatch rejected");
+    headObserved: fixtureObserved(replaceFixtureEntry(fixtureCurrent, executableEntry)),
+  }).ok, "executable transition rejected");
   expect(!validateControlIntegrityTransition({
     baseSource: armedSource,
     headSource: consumedSource,
-    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(),
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(compareCodeUnits),
     baseObserved,
-    headObserved: { [fixtureEntry.path]: { mode: "100644", type: "tree", sha256: modifiedEntry.sha256 } },
+    headObserved: fixtureObserved(replaceFixtureEntry(modifiedCurrent, {
+      ...modifiedEntry,
+      mode: "100755",
+    })),
+  }).ok, "observed executable mode rejected");
+  expect(!validateControlIntegrityTransition({
+    baseSource: armedSource,
+    headSource: consumedSource,
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(compareCodeUnits),
+    baseObserved,
+    headObserved: fixtureObserved(replaceFixtureEntry(modifiedCurrent, {
+      ...modifiedEntry,
+      type: "tree",
+    })),
   }).ok, "type mismatch rejected");
   const addedEntry = {
     path: "tools/P0-new-control.mjs",
@@ -872,16 +1155,17 @@ function stage0SelfTest() {
     ...clearManifest,
     next: { changes: [{ operation: "add", ...addedEntry }] },
   });
-  const addedCurrent = [addedEntry, fixtureEntry].sort((left, right) => left.path.localeCompare(right.path));
+  const addedCurrent = [...fixtureCurrent, addedEntry]
+    .sort((left, right) => compareCodeUnits(left.path, right.path));
   expect(validateControlIntegrityTransition({
     baseSource: armedAddSource,
     headSource: renderControlIntegrityManifest({ ...clearManifest, current: addedCurrent }),
-    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, addedEntry.path].sort(),
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, addedEntry.path].sort(compareCodeUnits),
     baseObserved,
     headObserved: fixtureObserved(addedCurrent),
   }).transition === "consumed", "closed-namespace addition consumed");
-  const retainedEntry = { ...fixtureEntry, path: "tools/P0-stage0-ci.mjs", sha256: "5".repeat(64) };
-  const deleteCurrent = [retainedEntry, fixtureEntry].sort((left, right) => left.path.localeCompare(right.path));
+  const deleteCurrent = fixtureCurrent;
+  const deletedCurrent = fixtureCurrent.filter((entry) => entry.path !== fixtureEntry.path);
   const armedDeleteSource = renderControlIntegrityManifest({
     ...clearManifest,
     current: deleteCurrent,
@@ -889,11 +1173,60 @@ function stage0SelfTest() {
   });
   expect(validateControlIntegrityTransition({
     baseSource: armedDeleteSource,
-    headSource: renderControlIntegrityManifest({ ...clearManifest, current: [retainedEntry] }),
-    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(),
+    headSource: renderControlIntegrityManifest({ ...clearManifest, current: deletedCurrent }),
+    changedPaths: [STAGE0_CONTROL_INTEGRITY_PATH, fixtureEntry.path].sort(compareCodeUnits),
     baseObserved: fixtureObserved(deleteCurrent),
-    headObserved: fixtureObserved([retainedEntry]),
+    headObserved: fixtureObserved(deletedCurrent),
   }).transition === "consumed", "exact deletion consumed");
+  const mixedCaseBaseCurrent = CONTROL_INTEGRITY_PATHS.map((filePath) => ({
+    path: filePath,
+    mode: "100644",
+    type: "blob",
+    sha256: sha256(`mixed-base:${filePath}`),
+  }));
+  const mixedAdd = {
+    operation: "add",
+    path: "tools/P0-Z-code-unit-order.mjs",
+    mode: "100644",
+    type: "blob",
+    sha256: sha256("mixed-add"),
+  };
+  const mixedModify = {
+    operation: "modify",
+    ...mixedCaseBaseCurrent.find((entry) => entry.path === "tools/P0-stage0-ci.mjs"),
+    sha256: sha256("mixed-modify"),
+  };
+  const mixedDelete = {
+    operation: "delete",
+    ...mixedCaseBaseCurrent.find((entry) => entry.path === "tools/P0-content-safety.mjs"),
+  };
+  const mixedChanges = [mixedAdd, mixedModify, mixedDelete]
+    .sort((left, right) => compareCodeUnits(left.path, right.path));
+  const mixedApplied = applyControlIntegrityChanges(mixedCaseBaseCurrent, mixedChanges);
+  const mixedArmedSource = renderControlIntegrityManifest({
+    schemaVersion: CONTROL_INTEGRITY_SCHEMA_VERSION,
+    current: mixedCaseBaseCurrent,
+    next: { changes: mixedChanges },
+  });
+  const mixedHeadSource = renderControlIntegrityManifest({
+    schemaVersion: CONTROL_INTEGRITY_SCHEMA_VERSION,
+    current: mixedApplied,
+    next: null,
+  });
+  const parsedMixedHead = validateControlIntegrityManifest(mixedHeadSource);
+  expect(parsedMixedHead.ok
+    && canonicalJson(parsedMixedHead.manifest.current) === canonicalJson(mixedApplied),
+  "mixed-case canonical head equals applied inventory");
+  expect(validateControlIntegrityTransition({
+    baseSource: mixedArmedSource,
+    headSource: mixedHeadSource,
+    changedPaths: [
+      STAGE0_CONTROL_INTEGRITY_PATH,
+      ...mixedChanges.map((change) => change.path),
+    ].sort(compareCodeUnits),
+    baseObserved: fixtureObserved(mixedCaseBaseCurrent),
+    headObserved: fixtureObserved(mixedApplied),
+  }).transition === "consumed", "mixed-case add-modify-delete arm-to-consume transition");
   expect(!validateControlIntegrityTransition({
     baseSource: clearSource,
     headSource: clearSource,
@@ -1064,13 +1397,13 @@ function actualToolPaths(repoRoot) {
   return readdirSync(path.join(repoRoot, "tools"), { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith(".mjs"))
     .map((entry) => `tools/${entry.name}`)
-    .sort();
+    .sort(compareCodeUnits);
 }
 
 function localControlIntegrityObserved(repoRoot, filePaths = CONTROL_INTEGRITY_PATHS) {
   return Object.fromEntries(filePaths.map((filePath) => {
     const absolutePath = path.join(repoRoot, filePath);
-    const metadata = statSync(absolutePath);
+    const metadata = lstatSync(absolutePath);
     if (!metadata.isFile()) throw new Error(`P0_STAGE0_CI_CONTROL_PATH_INVALID:${filePath}`);
     return [filePath, {
       mode: (metadata.mode & 0o111) === 0 ? "100644" : "100755",
@@ -1124,6 +1457,8 @@ function main() {
   const suiteDefinition = {
     schemaVersion: STAGE0_CI_SCHEMA_VERSION,
     toolPaths: CONTROL_TOOL_PATHS,
+    authoritySourcePaths: CONTROL_AUTHORITY_SOURCE_PATHS,
+    controlIntegrityPaths: CONTROL_INTEGRITY_PATHS,
     resultIds: commandIds(),
     passCount: 2,
     workflowContracts: [

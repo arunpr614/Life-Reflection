@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { constants as fsConstants } from "node:fs";
 import { lstat, mkdir, mkdtemp, open, readdir, readFile, rmdir, rm, symlink, unlink } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -49,7 +50,7 @@ const PUBLIC_APPLY_KEYS = Object.freeze(["reviewedPlanDigest"]);
 const PLAN_KEYS = Object.freeze([
   "schemaVersion", "mode", "taskId", "sourceRevision", "freezeSnapshotSha256", "stageId", "scopeClass", "actionClass", "candidateRevision",
   "preparationReviewId", "preparationReviewSha256", "stageApprovalSha256", "registrySha256",
-  "stageDefinitionSha256", "moduleId", "moduleSha256", "gateKind", "gateDecision", "fromStatus", "toStatus", "preimageDigest", "targetSnapshotDigest",
+  "stageDefinitionSha256", "moduleId", "moduleSha256", "gateKind", "gateDecision", "predecessorReceiptSha256", "fromStatus", "toStatus", "preimageDigest", "targetSnapshotDigest",
   "protectedIssueDigest", "protectedProjectDigest", "authorizationDigest", "rollbackSnapshotReference", "recoveryPlanDigest",
   "operations", "rollbackOperations", "verification", "forbiddenSurfaces",
 ]);
@@ -57,6 +58,7 @@ const OPERATION_KEYS = Object.freeze(["surface", "from", "to"]);
 const LABEL_OPERATION_KEYS = Object.freeze(["surface", "remove", "add"]);
 const VERIFICATION_KEYS = Object.freeze(["immediateSnapshots", "quiescentSnapshots", "quiescenceIntervalMs"]);
 const FROZEN_PARITY_KEYS = Object.freeze(["ok", "taskCount", "snapshotSha256"]);
+const PREDECESSOR_VERIFICATION_KEYS = Object.freeze(["ok", "taskId", "stageId", "receiptSha256", "state"]);
 const TASK_LOCK_KEYS = Object.freeze(["schemaVersion", "taskId", "planDigest", "ownerNonce"]);
 const DELIVERY_FORBIDDEN_SURFACES = Object.freeze([
   "issue-title",
@@ -96,6 +98,7 @@ const SAGA_EVENT_EXTRA_KEYS = Object.freeze({
 });
 const QUIESCENCE_INTERVAL_MS = 1_000;
 const MAX_SAGA_EVENT_BYTES = 64 * 1024;
+const VERIFICATION_BOUNDARIES = Object.freeze(["immediate", "quiescent-1", "quiescent-2"]);
 
 function sha256(value) {
   return `sha256:${crypto.createHash("sha256").update(value).digest("hex")}`;
@@ -121,7 +124,7 @@ function rollbackSnapshotReferenceIsValid(value) {
     && publicTextBytesAreSafe(value);
 }
 
-function validateAuthorization(authorization, input) {
+function validateAuthorization(authorization, input, trustedNowMs = Date.now()) {
   const expectedGate = {
     Next: {
       scope: "stage-gate-b",
@@ -172,7 +175,9 @@ function validateAuthorization(authorization, input) {
     && /^[0-9a-f]{64}$/.test(authorization.registrySha256 ?? "")
     && SHA256_DIGEST.test(authorization.gateSourceFingerprint ?? "")
     && rollbackSnapshotReferenceIsValid(authorization.rollbackSnapshotReference)
-    && Number.isFinite(Date.parse(authorization.deadlineAt ?? ""));
+    && Number.isFinite(trustedNowMs)
+    && Number.isFinite(Date.parse(authorization.deadlineAt ?? ""))
+    && Date.parse(authorization.deadlineAt) > trustedNowMs;
 }
 
 function stableAuthorization(authorization) {
@@ -296,6 +301,7 @@ export function createDeliveryTransitionDryRun(input) {
     moduleSha256: input.authorization.moduleSha256,
     gateKind: input.authorization.gateKind,
     gateDecision: input.authorization.gateDecision,
+    predecessorReceiptSha256: input.authorization.predecessorReceiptSha256,
     fromStatus: preimage.snapshot.taskStatus,
     toStatus: input.targetStatus,
     preimageDigest: preimage.snapshotDigest,
@@ -344,6 +350,8 @@ function planIsStructurallyBound(planEnvelope) {
     && SHA256_DIGEST.test(plan.moduleSha256 ?? "")
     && ["execute", "accept"].includes(plan.gateKind)
     && ["Ready to execute — Gate B", "Ready to accept — Gate B"].includes(plan.gateDecision)
+    && (plan.predecessorReceiptSha256 === null
+      || SHA256_DIGEST.test(plan.predecessorReceiptSha256 ?? ""))
     && SHA256_DIGEST.test(plan.preimageDigest ?? "")
     && SHA256_DIGEST.test(plan.targetSnapshotDigest ?? "")
     && SHA256_DIGEST.test(plan.protectedIssueDigest ?? "")
@@ -598,12 +606,112 @@ async function readSagaEvents(sagaRoot, planDigest) {
   return events;
 }
 
-async function appendSagaEvent(sagaRoot, planDigest, event, clock) {
+class SagaAppendDurabilityUncertainError extends Error {
+  constructor(cause) {
+    super("saga append durability is uncertain", { cause });
+    this.name = "SagaAppendDurabilityUncertainError";
+  }
+}
+
+class SagaLifecycleInvalidError extends Error {
+  constructor() {
+    super("saga lifecycle is invalid");
+    this.name = "SagaLifecycleInvalidError";
+  }
+}
+
+const DEFAULT_SAGA_APPEND_OPERATIONS = Object.freeze({
+  ensureDurableDirectory,
+  lstat,
+  open,
+  readSagaEvents,
+  syncDirectory,
+});
+
+function statIsPinnedRegularFile(metadata) {
+  return metadata?.isFile() === true
+    && metadata.isSymbolicLink() === false
+    && (metadata.nlink === 1 || metadata.nlink === 1n);
+}
+
+function sameFileIdentity(left, right) {
+  return left !== undefined
+    && right !== undefined
+    && left.dev === right.dev
+    && left.ino === right.ino;
+}
+
+function sagaChainEquals(events, expectedEvents) {
+  return events.length === expectedEvents.length
+    && canonicalJson(events) === canonicalJson(expectedEvents);
+}
+
+async function proveExactDurableSagaTail({
+  operations,
+  directory,
+  filePath,
+  createdIdentity,
+  expectedBytes,
+  existing,
+  envelope,
+  sagaRoot,
+  planDigest,
+}) {
+  const pathMetadata = await operations.lstat(filePath, { bigint: true });
+  if (!statIsPinnedRegularFile(pathMetadata) || !sameFileIdentity(pathMetadata, createdIdentity)) {
+    throw new Error("saga tail path identity changed");
+  }
+  const verifyHandle = await operations.open(
+    filePath,
+    fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW,
+  );
+  try {
+    const openedMetadata = await verifyHandle.stat({ bigint: true });
+    if (!statIsPinnedRegularFile(openedMetadata)
+      || !sameFileIdentity(openedMetadata, createdIdentity)
+      || !sameFileIdentity(openedMetadata, pathMetadata)) {
+      throw new Error("saga tail open identity changed");
+    }
+    const rereadBytes = await verifyHandle.readFile();
+    if (!rereadBytes.equals(expectedBytes)) throw new Error("saga tail bytes differ");
+    await verifyHandle.sync();
+    const syncedMetadata = await verifyHandle.stat({ bigint: true });
+    if (!sameFileIdentity(syncedMetadata, createdIdentity)) throw new Error("saga tail inode changed during fsync");
+  } finally {
+    await verifyHandle.close();
+  }
+
+  const expectedEvents = [...existing, envelope];
+  const firstChain = await operations.readSagaEvents(sagaRoot, planDigest);
+  const firstPathMetadata = await operations.lstat(filePath, { bigint: true });
+  if (!sagaChainEquals(firstChain, expectedEvents)
+    || !statIsPinnedRegularFile(firstPathMetadata)
+    || !sameFileIdentity(firstPathMetadata, createdIdentity)) {
+    throw new Error("saga chain did not acquire exact durable tail");
+  }
+  await operations.syncDirectory(directory);
+  const secondChain = await operations.readSagaEvents(sagaRoot, planDigest);
+  const secondPathMetadata = await operations.lstat(filePath, { bigint: true });
+  if (!sagaChainEquals(secondChain, firstChain)
+    || !sagaChainEquals(secondChain, expectedEvents)
+    || !statIsPinnedRegularFile(secondPathMetadata)
+    || !sameFileIdentity(secondPathMetadata, createdIdentity)) {
+    throw new Error("saga chain changed across directory fsync");
+  }
+}
+
+async function appendSagaEvent(
+  sagaRoot,
+  planDigest,
+  event,
+  clock,
+  operations = DEFAULT_SAGA_APPEND_OPERATIONS,
+) {
   if (!SAGA_STATES.has(event.state)) throw new Error("saga state invalid");
   const directory = sagaDirectory(sagaRoot, planDigest);
-  await ensureDurableDirectory(sagaRoot);
-  await ensureDurableDirectory(directory);
-  const existing = await readSagaEvents(sagaRoot, planDigest);
+  await operations.ensureDurableDirectory(sagaRoot);
+  await operations.ensureDurableDirectory(directory);
+  const existing = await operations.readSagaEvents(sagaRoot, planDigest);
   const sequence = existing.length + 1;
   const payload = {
     schemaVersion: DELIVERY_TRANSITION_SCHEMA_VERSION,
@@ -615,15 +723,40 @@ async function appendSagaEvent(sagaRoot, planDigest, event, clock) {
   const envelope = { ...payload, eventSha256: sha256(canonicalJson(payload)) };
   if (!sagaEventShapeValid(envelope)) throw new Error("saga event shape invalid");
   const filePath = path.join(directory, `${String(sequence).padStart(4, "0")}-${event.state}.json`);
-  const handle = await open(filePath, "wx", 0o600);
+  const expectedBytes = Buffer.from(`${canonicalJson(envelope)}\n`, "utf8");
+  let handle = await operations.open(filePath, "wx", 0o600);
+  let createdIdentity;
   try {
-    await handle.writeFile(`${canonicalJson(envelope)}\n`, "utf8");
+    createdIdentity = await handle.stat({ bigint: true });
+    if (!statIsPinnedRegularFile(createdIdentity)) throw new Error("new saga tail is not a regular single-link file");
+    await handle.writeFile(expectedBytes);
     await handle.sync();
-  } finally {
     await handle.close();
+    handle = null;
+    const visibleMetadata = await operations.lstat(filePath, { bigint: true });
+    if (!statIsPinnedRegularFile(visibleMetadata)
+      || !sameFileIdentity(visibleMetadata, createdIdentity)) throw new Error("new saga tail path identity changed");
+    await operations.syncDirectory(directory);
+    return envelope;
+  } catch (error) {
+    if (handle !== null) await handle.close().catch(() => {});
+    try {
+      await proveExactDurableSagaTail({
+        operations,
+        directory,
+        filePath,
+        createdIdentity,
+        expectedBytes,
+        existing,
+        envelope,
+        sagaRoot,
+        planDigest,
+      });
+      return envelope;
+    } catch (proofError) {
+      throw new SagaAppendDurabilityUncertainError(new AggregateError([error, proofError]));
+    }
   }
-  await syncDirectory(directory);
-  return envelope;
 }
 
 function appliedSagaHistoryIsValid(events, plan) {
@@ -659,14 +792,13 @@ function appliedSagaHistoryIsValid(events, plan) {
 }
 
 function rolledBackSagaHistoryIsValid(events, plan) {
-  const tail = events.slice(-4);
+  const tail = events.slice(-5);
   if (!events.some((event) => event.state === "recovery-start")
     || tail.map((event) => event.state).join("\0")
-      !== ["verification-complete", "verification-complete", "verification-complete", "rolled-back"].join("\0")) {
+      !== ["verification-pending", "verification-complete", "verification-complete", "verification-complete", "rolled-back"].join("\0")) {
     return false;
   }
-  const boundaries = ["immediate", "quiescent-1", "quiescent-2"];
-  return tail.slice(0, 3).every((event, index) => event.boundary === boundaries[index]
+  return tail.slice(1, 4).every((event, index) => event.boundary === VERIFICATION_BOUNDARIES[index]
     && event.snapshotDigest === plan.preimageDigest
     && event.protectedIssueDigest === plan.protectedIssueDigest
     && event.protectedProjectDigest === plan.protectedProjectDigest
@@ -680,13 +812,6 @@ function observationIsProtected(observation, plan) {
     && observation.protectedProjectDigest === plan.protectedProjectDigest;
 }
 
-function operationSide(observation, operation) {
-  if (operation.surface === "project-status") return observation.projectStatus;
-  if (operation.surface === "issue-state") return observation.issueState;
-  if (operation.surface === "issue-status-label") return observation.statusLabel;
-  return null;
-}
-
 async function executeTransitionOperation(adapter, taskId, operation) {
   if (operation.surface === "project-status") return adapter.setProjectStatus(taskId, operation.from, operation.to);
   if (operation.surface === "issue-state") return adapter.setIssueState(taskId, operation.from, operation.to);
@@ -694,10 +819,17 @@ async function executeTransitionOperation(adapter, taskId, operation) {
   throw new Error("forbidden operation");
 }
 
-async function trustedAuthorizationMatches(plan, adapter) {
+async function trustedAuthorizationMatches(plan, adapter, clock, boundary) {
   let authorization;
   try {
-    authorization = await adapter.verifyAuthorization(plan);
+    authorization = await adapter.verifyAuthorization(plan, boundary);
+  } catch {
+    return false;
+  }
+  let trustedNowMs;
+  try {
+    const trustedNow = clock();
+    trustedNowMs = trustedNow instanceof Date ? trustedNow.getTime() : Number.NaN;
   } catch {
     return false;
   }
@@ -705,7 +837,7 @@ async function trustedAuthorizationMatches(plan, adapter) {
     taskId: plan.taskId,
     sourceRevision: plan.sourceRevision,
     targetStatus: plan.toStatus,
-  })
+  }, trustedNowMs)
     && authorization.stageId === plan.stageId
     && authorization.scopeClass === plan.scopeClass
     && authorization.actionClass === plan.actionClass
@@ -719,8 +851,29 @@ async function trustedAuthorizationMatches(plan, adapter) {
     && authorization.moduleSha256 === plan.moduleSha256
     && authorization.gateKind === plan.gateKind
     && authorization.gateDecision === plan.gateDecision
+    && authorization.predecessorReceiptSha256 === plan.predecessorReceiptSha256
     && authorization.rollbackSnapshotReference === plan.rollbackSnapshotReference
     && sha256(canonicalJson(stableAuthorization(authorization))) === plan.authorizationDigest;
+}
+
+async function predecessorStillValid(plan, adapter, boundary) {
+  if (plan.predecessorReceiptSha256 === null) return true;
+  let verification;
+  try {
+    verification = await adapter.verifyPredecessor({
+      taskId: plan.taskId,
+      stageId: plan.stageId,
+      receiptSha256: plan.predecessorReceiptSha256,
+    }, boundary);
+  } catch {
+    return false;
+  }
+  return hasExactKeys(verification, PREDECESSOR_VERIFICATION_KEYS)
+    && verification.ok === true
+    && verification.taskId === plan.taskId
+    && verification.stageId === plan.stageId
+    && verification.receiptSha256 === plan.predecessorReceiptSha256
+    && verification.state === "verified-complete";
 }
 
 async function frozenTaskParityMatches(plan, adapter, boundary) {
@@ -737,20 +890,226 @@ async function frozenTaskParityMatches(plan, adapter, boundary) {
     && parity.snapshotSha256 === FROZEN_SNAPSHOT_SHA256;
 }
 
+function projectionMatchesForwardPrefix(rawProjection, plan, prefix) {
+  if (!Number.isSafeInteger(prefix) || prefix < 0 || prefix > plan.operations.length) return false;
+  const observed = buildProjectionTransitionObservation(rawProjection);
+  if (!observed.ok || !observationIsProtected(observed.observation, plan)) return false;
+  const expectedTaskStatus = prefix >= 1 ? plan.toStatus : plan.fromStatus;
+  const expectedProjectStatus = prefix >= 1 ? plan.toStatus : plan.fromStatus;
+  const expectedIssueState = prefix >= 2 ? issueStateFor(plan.toStatus) : issueStateFor(plan.fromStatus);
+  const expectedStatusLabel = prefix >= 3 ? statusLabelFor(plan.toStatus) : statusLabelFor(plan.fromStatus);
+  return rawProjection.taskStatus === expectedTaskStatus
+    && observed.observation.projectStatus === expectedProjectStatus
+    && observed.observation.issueState === expectedIssueState
+    && observed.observation.statusLabel === expectedStatusLabel;
+}
+
+async function operationBoundaryMatches({ plan, adapter, clock, boundary, expectedPrefix }) {
+  try {
+    if (await adapter.guardExactMain(plan.sourceRevision, boundary) !== true
+      || !await trustedAuthorizationMatches(plan, adapter, clock, boundary)
+      || !await predecessorStillValid(plan, adapter, boundary)
+      || !await frozenTaskParityMatches(plan, adapter, boundary)) return false;
+    return projectionMatchesForwardPrefix(await adapter.readProjection(plan.taskId), plan, expectedPrefix);
+  } catch {
+    return false;
+  }
+}
+
+function sagaLifecycleIsStrict(events, plan) {
+  if (events.length === 0) return Object.freeze({
+    phase: "empty",
+    prefixes: new Set([0]),
+    recoveryStarted: false,
+    rollbackIntentIndex: null,
+    lastRollbackIndex: -1,
+    verificationIndex: 0,
+    terminal: null,
+  });
+  let phase = "forward";
+  let prefixes = new Set([0]);
+  let nextForwardIndex = 0;
+  let forwardIntentIndex = null;
+  let recoveryStarted = false;
+  let rollbackIntentIndex = null;
+  let lastRollbackIndex = -1;
+  let verificationIndex = 0;
+  let verificationEventDigests = [];
+  let terminal = null;
+
+  for (const [eventIndex, event] of events.entries()) {
+    if (event.taskId !== plan.taskId || terminal !== null) return null;
+    if (eventIndex === 0) {
+      if (event.state !== "declared") return null;
+      continue;
+    }
+    if (event.state === "declared") return null;
+
+    if (event.state === "operation-intent") {
+      const operation = plan.operations[event.operationIndex];
+      if (phase !== "forward"
+        || recoveryStarted
+        || forwardIntentIndex !== null
+        || event.operationIndex !== nextForwardIndex
+        || operation?.surface !== event.surface
+        || prefixes.size !== 1
+        || !prefixes.has(nextForwardIndex)) return null;
+      forwardIntentIndex = event.operationIndex;
+      prefixes = new Set([event.operationIndex, event.operationIndex + 1]);
+      continue;
+    }
+    if (event.state === "operation-complete") {
+      const operation = plan.operations[event.operationIndex];
+      if (phase !== "forward"
+        || recoveryStarted
+        || forwardIntentIndex !== event.operationIndex
+        || operation?.surface !== event.surface
+        || !prefixes.has(event.operationIndex + 1)) return null;
+      prefixes = new Set([event.operationIndex + 1]);
+      forwardIntentIndex = null;
+      nextForwardIndex += 1;
+      continue;
+    }
+    if (event.state === "recovery-start") {
+      if (recoveryStarted || !["forward", "forward-verification"].includes(phase)) return null;
+      recoveryStarted = true;
+      phase = "recovery-rollback";
+      verificationIndex = 0;
+      verificationEventDigests = [];
+      continue;
+    }
+    if (event.state === "rollback-intent") {
+      const operation = plan.rollbackOperations[event.operationIndex];
+      const mutatedPrefix = plan.rollbackOperations.length - event.operationIndex;
+      if (!recoveryStarted
+        || phase !== "recovery-rollback"
+        || rollbackIntentIndex !== null
+        || event.operationIndex <= lastRollbackIndex
+        || operation?.surface !== event.surface
+        || !prefixes.has(mutatedPrefix)) return null;
+      rollbackIntentIndex = event.operationIndex;
+      prefixes = new Set([mutatedPrefix, mutatedPrefix - 1]);
+      continue;
+    }
+    if (event.state === "rollback-complete") {
+      const operation = plan.rollbackOperations[event.operationIndex];
+      const mutatedPrefix = plan.rollbackOperations.length - event.operationIndex;
+      if (!recoveryStarted
+        || phase !== "recovery-rollback"
+        || rollbackIntentIndex !== event.operationIndex
+        || operation?.surface !== event.surface
+        || !prefixes.has(mutatedPrefix - 1)) return null;
+      prefixes = new Set([mutatedPrefix - 1]);
+      rollbackIntentIndex = null;
+      lastRollbackIndex = event.operationIndex;
+      continue;
+    }
+    if (event.state === "verification-pending") {
+      if (phase === "forward") {
+        if (recoveryStarted
+          || forwardIntentIndex !== null
+          || nextForwardIndex !== plan.operations.length
+          || prefixes.size !== 1
+          || !prefixes.has(plan.operations.length)) return null;
+        phase = "forward-verification";
+      } else if (phase === "recovery-rollback") {
+        if (!recoveryStarted || rollbackIntentIndex !== null || !prefixes.has(0)) return null;
+        prefixes = new Set([0]);
+        phase = "recovery-verification";
+      } else {
+        return null;
+      }
+      verificationIndex = 0;
+      verificationEventDigests = [];
+      continue;
+    }
+    if (event.state === "verification-complete") {
+      const expectedPrefix = phase === "forward-verification"
+        ? plan.operations.length
+        : phase === "recovery-verification" ? 0 : null;
+      const expectedSnapshotDigest = expectedPrefix === plan.operations.length
+        ? plan.targetSnapshotDigest
+        : plan.preimageDigest;
+      if (expectedPrefix === null
+        || event.boundary !== VERIFICATION_BOUNDARIES[verificationIndex]
+        || event.snapshotDigest !== expectedSnapshotDigest
+        || event.protectedIssueDigest !== plan.protectedIssueDigest
+        || event.protectedProjectDigest !== plan.protectedProjectDigest
+        || event.authorizationDigest !== plan.authorizationDigest
+        || !prefixes.has(expectedPrefix)) return null;
+      verificationEventDigests.push(event.eventSha256);
+      verificationIndex += 1;
+      continue;
+    }
+    if (event.state === "applied-verified") {
+      if (phase !== "forward-verification"
+        || verificationIndex !== VERIFICATION_BOUNDARIES.length
+        || event.verificationReceiptsSha256
+          !== sha256(canonicalJson(verificationEventDigests))) return null;
+      terminal = event.state;
+      continue;
+    }
+    if (event.state === "rolled-back") {
+      if (phase !== "recovery-verification"
+        || verificationIndex !== VERIFICATION_BOUNDARIES.length
+        || !prefixes.has(0)) return null;
+      terminal = event.state;
+      continue;
+    }
+    if (event.state === "recovery-required") {
+      if (!recoveryStarted
+        || !["recovery-rollback", "recovery-verification"].includes(phase)) return null;
+      terminal = event.state;
+      continue;
+    }
+    return null;
+  }
+  return Object.freeze({
+    phase,
+    prefixes,
+    recoveryStarted,
+    rollbackIntentIndex,
+    lastRollbackIndex,
+    verificationIndex,
+    terminal,
+  });
+}
+
+async function canonicalForwardPrefix(plan, adapter, allowedPrefixes) {
+  let rawProjection;
+  try {
+    rawProjection = await adapter.readProjection(plan.taskId);
+  } catch {
+    return null;
+  }
+  for (const prefix of [...allowedPrefixes].sort((left, right) => left - right)) {
+    if (projectionMatchesForwardPrefix(rawProjection, plan, prefix)) return prefix;
+  }
+  return null;
+}
+
 async function verifyRollbackProjectionAtBoundaries({
   plan,
   adapter,
+  clock,
   quiescenceIntervalMs,
+  startIndex = 0,
   onVerified = async () => {},
 }) {
-  for (const [index, boundary] of ["immediate", "quiescent-1", "quiescent-2"].entries()) {
+  for (let index = startIndex; index < VERIFICATION_BOUNDARIES.length; index += 1) {
+    const boundary = VERIFICATION_BOUNDARIES[index];
     if (index > 0) await delay(quiescenceIntervalMs);
-    if (!await frozenTaskParityMatches(plan, adapter, `rollback-${boundary}`)) return false;
+    if (!await operationBoundaryMatches({
+      plan, adapter, clock, boundary: `rollback-${boundary}-pre-verifier`, expectedPrefix: 0,
+    })) return false;
     const verified = buildProjectionSnapshot(await adapter.readProjection(plan.taskId));
     if (!verified.ok
       || verified.snapshotDigest !== plan.preimageDigest
       || verified.snapshot.protectedIssueDigest !== plan.protectedIssueDigest
       || verified.snapshot.protectedProjectDigest !== plan.protectedProjectDigest) return false;
+    if (!await operationBoundaryMatches({
+      plan, adapter, clock, boundary: `rollback-${boundary}-post-verifier`, expectedPrefix: 0,
+    })) return false;
     await onVerified(boundary, verified);
   }
   return true;
@@ -762,38 +1121,119 @@ async function recoverTransitionToPreimage({
   sagaRoot,
   clock,
   quiescenceIntervalMs = QUIESCENCE_INTERVAL_MS,
+  sagaOperations = DEFAULT_SAGA_APPEND_OPERATIONS,
 }) {
   const { plan, planDigest } = planEnvelope;
+  let recoveryDeclared = false;
   try {
+    let recoveryEvents = await sagaOperations.readSagaEvents(sagaRoot, planDigest);
+    let lifecycle = sagaLifecycleIsStrict(recoveryEvents, plan);
+    if (lifecycle === null || lifecycle.terminal !== null) throw new SagaLifecycleInvalidError();
+    if (!lifecycle.recoveryStarted) {
+      await appendSagaEvent(
+        sagaRoot, planDigest, { state: "recovery-start", taskId: plan.taskId }, clock, sagaOperations,
+      );
+      recoveryEvents = await sagaOperations.readSagaEvents(sagaRoot, planDigest);
+      lifecycle = sagaLifecycleIsStrict(recoveryEvents, plan);
+      if (lifecycle === null || !lifecycle.recoveryStarted) throw new SagaLifecycleInvalidError();
+    }
+    recoveryDeclared = true;
     if (!await frozenTaskParityMatches(plan, adapter, "recovery-start")) throw new Error("frozen task parity drift");
-    await appendSagaEvent(sagaRoot, planDigest, { state: "recovery-start", taskId: plan.taskId }, clock);
-    for (const [index, operation] of plan.rollbackOperations.entries()) {
-      if (!await frozenTaskParityMatches(plan, adapter, `pre-rollback-${operation.surface}`)) {
-        throw new Error("frozen task parity drift");
+    let forwardPrefix = await canonicalForwardPrefix(plan, adapter, lifecycle.prefixes);
+    if (forwardPrefix === null) throw new Error("unknown partial state");
+    let rollbackVerificationStartIndex = 0;
+    if (lifecycle.phase === "recovery-rollback") {
+      let nextRollbackIndex = lifecycle.lastRollbackIndex + 1;
+      if (lifecycle.rollbackIntentIndex !== null) {
+        const index = lifecycle.rollbackIntentIndex;
+        const operation = plan.rollbackOperations[index];
+        const mutatedPrefix = plan.rollbackOperations.length - index;
+        const rolledBackPrefix = mutatedPrefix - 1;
+        if (forwardPrefix === mutatedPrefix) {
+          if (!await operationBoundaryMatches({
+            plan,
+            adapter,
+            clock,
+            boundary: `post-intent-rollback-${operation.surface}`,
+            expectedPrefix: forwardPrefix,
+          })) throw new Error("resumed rollback post-intent boundary drift");
+          await executeTransitionOperation(adapter, plan.taskId, operation);
+          if (!await operationBoundaryMatches({
+            plan,
+            adapter,
+            clock,
+            boundary: `post-effect-rollback-${operation.surface}`,
+            expectedPrefix: rolledBackPrefix,
+          })) throw new Error("resumed rollback post-effect boundary drift");
+        } else if (forwardPrefix === rolledBackPrefix) {
+          if (!await operationBoundaryMatches({
+            plan,
+            adapter,
+            clock,
+            boundary: `post-effect-rollback-${operation.surface}`,
+            expectedPrefix: rolledBackPrefix,
+          })) throw new Error("resumed rollback completion boundary drift");
+        } else {
+          throw new Error("resumed rollback projection is not intent-bound");
+        }
+        await appendSagaEvent(sagaRoot, planDigest, {
+          state: "rollback-complete", taskId: plan.taskId, operationIndex: index, surface: operation.surface,
+        }, clock, sagaOperations);
+        forwardPrefix = rolledBackPrefix;
+        nextRollbackIndex = index + 1;
       }
-      const rawProjection = await adapter.readProjection(plan.taskId);
-      const observed = buildProjectionTransitionObservation(rawProjection);
-      if (!observed.ok || !observationIsProtected(observed.observation, plan)) throw new Error("protected drift");
-      const currentSide = operationSide(observed.observation, operation);
-      const rollbackFrom = operation.surface === "issue-status-label" ? operation.remove : operation.from;
-      const rollbackTo = operation.surface === "issue-status-label" ? operation.add : operation.to;
-      if (currentSide === rollbackTo) continue;
-      if (currentSide !== rollbackFrom) throw new Error("unknown partial state");
-      await appendSagaEvent(sagaRoot, planDigest, {
-        state: "rollback-intent", taskId: plan.taskId, operationIndex: index, surface: operation.surface,
-      }, clock);
-      await executeTransitionOperation(adapter, plan.taskId, operation);
-      await appendSagaEvent(sagaRoot, planDigest, {
-        state: "rollback-complete", taskId: plan.taskId, operationIndex: index, surface: operation.surface,
-      }, clock);
-      if (!await frozenTaskParityMatches(plan, adapter, `post-rollback-${operation.surface}`)) {
-        throw new Error("frozen task parity drift");
+      for (let index = nextRollbackIndex; index < plan.rollbackOperations.length; index += 1) {
+        const operation = plan.rollbackOperations[index];
+        const mutatedPrefix = plan.rollbackOperations.length - index;
+        if (forwardPrefix < mutatedPrefix) continue;
+        if (forwardPrefix !== mutatedPrefix
+          || !await operationBoundaryMatches({
+            plan,
+            adapter,
+            clock,
+            boundary: `pre-intent-rollback-${operation.surface}`,
+            expectedPrefix: forwardPrefix,
+          })) throw new Error("rollback pre-intent boundary drift");
+        await appendSagaEvent(sagaRoot, planDigest, {
+          state: "rollback-intent", taskId: plan.taskId, operationIndex: index, surface: operation.surface,
+        }, clock, sagaOperations);
+        if (!await operationBoundaryMatches({
+          plan,
+          adapter,
+          clock,
+          boundary: `post-intent-rollback-${operation.surface}`,
+          expectedPrefix: forwardPrefix,
+        })) throw new Error("rollback post-intent boundary drift");
+        await executeTransitionOperation(adapter, plan.taskId, operation);
+        const rolledBackPrefix = forwardPrefix - 1;
+        if (!await operationBoundaryMatches({
+          plan,
+          adapter,
+          clock,
+          boundary: `post-effect-rollback-${operation.surface}`,
+          expectedPrefix: rolledBackPrefix,
+        })) throw new Error("rollback post-effect boundary drift");
+        await appendSagaEvent(sagaRoot, planDigest, {
+          state: "rollback-complete", taskId: plan.taskId, operationIndex: index, surface: operation.surface,
+        }, clock, sagaOperations);
+        forwardPrefix = rolledBackPrefix;
       }
+      if (forwardPrefix !== 0) throw new Error("rollback prefix incomplete");
+      await appendSagaEvent(
+        sagaRoot, planDigest, { state: "verification-pending", taskId: plan.taskId }, clock, sagaOperations,
+      );
+    } else if (lifecycle.phase === "recovery-verification") {
+      if (forwardPrefix !== 0) throw new Error("rollback verification prefix invalid");
+      rollbackVerificationStartIndex = lifecycle.verificationIndex;
+    } else {
+      throw new SagaLifecycleInvalidError();
     }
     const rollbackVerified = await verifyRollbackProjectionAtBoundaries({
       plan,
       adapter,
+      clock,
       quiescenceIntervalMs,
+      startIndex: rollbackVerificationStartIndex,
       onVerified: async (boundary, verified) => appendSagaEvent(sagaRoot, planDigest, {
         state: "verification-complete",
         taskId: plan.taskId,
@@ -802,13 +1242,28 @@ async function recoverTransitionToPreimage({
         protectedIssueDigest: verified.snapshot.protectedIssueDigest,
         protectedProjectDigest: verified.snapshot.protectedProjectDigest,
         authorizationDigest: plan.authorizationDigest,
-      }, clock),
+      }, clock, sagaOperations),
     });
     if (!rollbackVerified) throw new Error("rollback mismatch");
-    await appendSagaEvent(sagaRoot, planDigest, { state: "rolled-back", taskId: plan.taskId }, clock);
+    if (!await operationBoundaryMatches({
+      plan, adapter, clock, boundary: "rollback-terminal", expectedPrefix: 0,
+    })) throw new Error("rollback terminal boundary drift");
+    await appendSagaEvent(
+      sagaRoot, planDigest, { state: "rolled-back", taskId: plan.taskId }, clock, sagaOperations,
+    );
     return result(false, "TRANSITION_ROLLED_BACK", { taskId: plan.taskId, planDigest });
-  } catch {
-    await appendSagaEvent(sagaRoot, planDigest, { state: "recovery-required", taskId: plan.taskId }, clock).catch(() => {});
+  } catch (error) {
+    if (error instanceof SagaAppendDurabilityUncertainError
+      || error instanceof SagaLifecycleInvalidError) throw error;
+    if (recoveryDeclared) {
+      try {
+        await appendSagaEvent(
+          sagaRoot, planDigest, { state: "recovery-required", taskId: plan.taskId }, clock, sagaOperations,
+        );
+      } catch (appendError) {
+        if (appendError instanceof SagaAppendDurabilityUncertainError) throw appendError;
+      }
+    }
     return result(false, "TRANSITION_RECOVERY_REQUIRED", { taskId: plan.taskId, planDigest });
   }
 }
@@ -817,6 +1272,7 @@ async function applyPlanCore(planEnvelope, adapter, {
   sagaRoot,
   clock = () => new Date(),
   quiescenceIntervalMs = QUIESCENCE_INTERVAL_MS,
+  sagaOperations = DEFAULT_SAGA_APPEND_OPERATIONS,
 } = {}) {
   if (!planIsStructurallyBound(planEnvelope)) return result(false, "TRANSITION_REVIEWED_PLAN_INVALID");
   const plan = planEnvelope.plan;
@@ -825,6 +1281,7 @@ async function applyPlanCore(planEnvelope, adapter, {
     "setProjectStatus", "setIssueState", "replaceStatusLabel",
   ];
   if (!requiredMethods.every((name) => typeof adapter?.[name] === "function")
+    || (plan.predecessorReceiptSha256 !== null && typeof adapter?.verifyPredecessor !== "function")
     || typeof sagaRoot !== "string"
     || !path.isAbsolute(sagaRoot)
     || path.resolve(sagaRoot) === path.parse(path.resolve(sagaRoot)).root) {
@@ -849,20 +1306,35 @@ async function applyPlanCore(planEnvelope, adapter, {
       planDigest: planEnvelope.planDigest,
     });
   };
+  const failStuck = () => result(false, "TRANSITION_RECOVERY_REQUIRED", {
+    taskId: plan.taskId,
+    planDigest: planEnvelope.planDigest,
+  });
+  const recoverSafely = async () => {
+    try {
+      return await recoverTransitionToPreimage({
+        planEnvelope, adapter, sagaRoot, clock, quiescenceIntervalMs, sagaOperations,
+      });
+    } catch (error) {
+      if (error instanceof SagaAppendDurabilityUncertainError
+        || error instanceof SagaLifecycleInvalidError) return failStuck();
+      throw error;
+    }
+  };
   let sagaEvents;
   try {
     sagaEvents = await readSagaEvents(sagaRoot, planEnvelope.planDigest);
   } catch {
     return result(false, "TRANSITION_SAGA_INVALID", { taskId: plan.taskId });
   }
+  const sagaLifecycle = sagaLifecycleIsStrict(sagaEvents, plan);
+  if (sagaLifecycle === null || sagaLifecycle.terminal === "recovery-required") return failStuck();
   const terminal = sagaEvents.at(-1)?.state;
   if (terminal === "applied-verified") {
-    const verified = buildProjectionSnapshot(await adapter.readProjection(plan.taskId));
     if (appliedSagaHistoryIsValid(sagaEvents, plan)
-      && await adapter.guardExactMain(plan.sourceRevision, "replay") === true
-      && await trustedAuthorizationMatches(plan, adapter)
-      && await frozenTaskParityMatches(plan, adapter, "applied-replay")
-      && verified.ok && verified.snapshotDigest === plan.targetSnapshotDigest) {
+      && await operationBoundaryMatches({
+        plan, adapter, clock, boundary: "applied-replay", expectedPrefix: plan.operations.length,
+      })) {
       return finishTerminal(result(true, "TRANSITION_ALREADY_APPLIED_VERIFIED", {
         taskId: plan.taskId, sourceRevision: plan.sourceRevision, planDigest: planEnvelope.planDigest,
       }));
@@ -871,9 +1343,10 @@ async function applyPlanCore(planEnvelope, adapter, {
   }
   if (terminal === "rolled-back") {
     const replayVerified = rolledBackSagaHistoryIsValid(sagaEvents, plan)
-      && await adapter.guardExactMain(plan.sourceRevision, "rollback-replay") === true
-      && await frozenTaskParityMatches(plan, adapter, "rolled-back-replay")
-      && await verifyRollbackProjectionAtBoundaries({ plan, adapter, quiescenceIntervalMs });
+      && await operationBoundaryMatches({
+        plan, adapter, clock, boundary: "rolled-back-replay", expectedPrefix: 0,
+      })
+      && await verifyRollbackProjectionAtBoundaries({ plan, adapter, clock, quiescenceIntervalMs });
     if (replayVerified) {
       return finishTerminal(result(false, "TRANSITION_ALREADY_ROLLED_BACK", {
         taskId: plan.taskId, planDigest: planEnvelope.planDigest,
@@ -884,52 +1357,67 @@ async function applyPlanCore(planEnvelope, adapter, {
     });
   }
   if (sagaEvents.length > 0) {
-    return finishTerminal(await recoverTransitionToPreimage({
-      planEnvelope, adapter, sagaRoot, clock, quiescenceIntervalMs,
-    }));
+    return finishTerminal(await recoverSafely());
   }
   try {
-    await appendSagaEvent(sagaRoot, planEnvelope.planDigest, { state: "declared", taskId: plan.taskId }, clock);
-  } catch {
-    return result(false, "TRANSITION_SAGA_CONFLICT", { taskId: plan.taskId });
+    await appendSagaEvent(
+      sagaRoot, planEnvelope.planDigest, { state: "declared", taskId: plan.taskId }, clock, sagaOperations,
+    );
+  } catch (error) {
+    return error instanceof SagaAppendDurabilityUncertainError
+      ? failStuck()
+      : result(false, "TRANSITION_SAGA_CONFLICT", { taskId: plan.taskId });
   }
-  if (await adapter.guardExactMain(plan.sourceRevision, "pre-apply") !== true
-    || !await trustedAuthorizationMatches(plan, adapter)) {
-    return finishTerminal(await recoverTransitionToPreimage({
-      planEnvelope, adapter, sagaRoot, clock, quiescenceIntervalMs,
-    }));
-  }
-  const current = buildProjectionSnapshot(await adapter.readProjection(plan.taskId));
-  if (!current.ok || current.snapshotDigest !== plan.preimageDigest
-    || !await frozenTaskParityMatches(plan, adapter, "pre-first-operation")) {
-    return finishTerminal(await recoverTransitionToPreimage({
-      planEnvelope, adapter, sagaRoot, clock, quiescenceIntervalMs,
-    }));
+  if (!await operationBoundaryMatches({
+    plan, adapter, clock, boundary: "pre-apply", expectedPrefix: 0,
+  })) {
+    return finishTerminal(await recoverSafely());
   }
 
   try {
     for (const [index, operation] of plan.operations.entries()) {
-      if (await adapter.guardExactMain(plan.sourceRevision, `pre-${operation.surface}`) !== true
-        || !await trustedAuthorizationMatches(plan, adapter)
-        || !await frozenTaskParityMatches(plan, adapter, `pre-${operation.surface}`)) throw new Error("authority drift");
+      if (!await operationBoundaryMatches({
+        plan,
+        adapter,
+        clock,
+        boundary: `pre-intent-forward-${operation.surface}`,
+        expectedPrefix: index,
+      })) throw new Error("forward pre-intent boundary drift");
       await appendSagaEvent(sagaRoot, planEnvelope.planDigest, {
         state: "operation-intent", taskId: plan.taskId, operationIndex: index, surface: operation.surface,
-      }, clock);
+      }, clock, sagaOperations);
+      if (!await operationBoundaryMatches({
+        plan,
+        adapter,
+        clock,
+        boundary: `post-intent-forward-${operation.surface}`,
+        expectedPrefix: index,
+      })) throw new Error("forward post-intent boundary drift");
       await executeTransitionOperation(adapter, plan.taskId, operation);
+      if (!await operationBoundaryMatches({
+        plan,
+        adapter,
+        clock,
+        boundary: `post-effect-forward-${operation.surface}`,
+        expectedPrefix: index + 1,
+      })) throw new Error("forward post-effect boundary drift");
       await appendSagaEvent(sagaRoot, planEnvelope.planDigest, {
         state: "operation-complete", taskId: plan.taskId, operationIndex: index, surface: operation.surface,
-      }, clock);
-      if (!await frozenTaskParityMatches(plan, adapter, `post-${operation.surface}`)) {
-        throw new Error("frozen task parity drift");
-      }
+      }, clock, sagaOperations);
     }
-    await appendSagaEvent(sagaRoot, planEnvelope.planDigest, { state: "verification-pending", taskId: plan.taskId }, clock);
+    await appendSagaEvent(
+      sagaRoot, planEnvelope.planDigest, { state: "verification-pending", taskId: plan.taskId }, clock, sagaOperations,
+    );
     const verificationReceipts = [];
     for (const [index, boundary] of ["immediate", "quiescent-1", "quiescent-2"].entries()) {
       if (index > 0) await delay(quiescenceIntervalMs);
-      if (await adapter.guardExactMain(plan.sourceRevision, boundary) !== true
-        || !await trustedAuthorizationMatches(plan, adapter)
-        || !await frozenTaskParityMatches(plan, adapter, boundary)) throw new Error("verification authority drift");
+      if (!await operationBoundaryMatches({
+        plan,
+        adapter,
+        clock,
+        boundary: `${boundary}-pre-verifier`,
+        expectedPrefix: plan.operations.length,
+      })) throw new Error("verification authority drift");
       const verified = buildProjectionSnapshot(await adapter.readProjection(plan.taskId));
       if (!verified.ok
         || verified.snapshotDigest !== plan.targetSnapshotDigest
@@ -937,6 +1425,13 @@ async function applyPlanCore(planEnvelope, adapter, {
         || verified.snapshot.protectedProjectDigest !== plan.protectedProjectDigest) {
         throw new Error("verification projection drift");
       }
+      if (!await operationBoundaryMatches({
+        plan,
+        adapter,
+        clock,
+        boundary: `${boundary}-post-verifier`,
+        expectedPrefix: plan.operations.length,
+      })) throw new Error("post-verification authority drift");
       verificationReceipts.push(await appendSagaEvent(sagaRoot, planEnvelope.planDigest, {
         state: "verification-complete",
         taskId: plan.taskId,
@@ -945,22 +1440,28 @@ async function applyPlanCore(planEnvelope, adapter, {
         protectedIssueDigest: verified.snapshot.protectedIssueDigest,
         protectedProjectDigest: verified.snapshot.protectedProjectDigest,
         authorizationDigest: plan.authorizationDigest,
-      }, clock));
+      }, clock, sagaOperations));
     }
+    if (!await operationBoundaryMatches({
+      plan,
+      adapter,
+      clock,
+      boundary: "applied-terminal",
+      expectedPrefix: plan.operations.length,
+    })) throw new Error("applied terminal boundary drift");
     await appendSagaEvent(sagaRoot, planEnvelope.planDigest, {
       state: "applied-verified",
       taskId: plan.taskId,
       verificationReceiptsSha256: sha256(canonicalJson(verificationReceipts.map((event) => event.eventSha256))),
-    }, clock);
+    }, clock, sagaOperations);
     return finishTerminal(result(true, "TRANSITION_APPLIED_VERIFIED", {
       taskId: plan.taskId,
       sourceRevision: plan.sourceRevision,
       planDigest: planEnvelope.planDigest,
     }));
-  } catch {
-    return finishTerminal(await recoverTransitionToPreimage({
-      planEnvelope, adapter, sagaRoot, clock, quiescenceIntervalMs,
-    }));
+  } catch (error) {
+    if (error instanceof SagaAppendDurabilityUncertainError) return failStuck();
+    return finishTerminal(await recoverSafely());
   }
 }
 
@@ -1023,7 +1524,7 @@ async function selfTest() {
       preparationReviewId: "P0-PREP-UX-R0-001-DELIVERY-TRANSITION",
       preparationReviewSha256: "e".repeat(64),
       gateKind: "execute",
-      predecessorReceiptSha256: null,
+      predecessorReceiptSha256: `sha256:${"9".repeat(64)}`,
       idempotencyKey: "P0-IDEMP-UX-R0-001-DELIVERY-TRANSITION-001",
       stageApprovalSha256: "f".repeat(64),
       registrySha256: "1".repeat(64),
@@ -1054,6 +1555,69 @@ async function selfTest() {
     let cases = 0;
     let sagaIndex = 0;
     const nextSagaRoot = () => path.join(root, `saga-${++sagaIndex}`);
+    const sagaAppendFault = ({ sagaRoot, planDigest, eventState, phase, makeProofFail = false }) => {
+      let armed = true;
+      let faultThrown = false;
+      let targetFile = null;
+      let postFaultChainReads = 0;
+      let postFaultDirectorySyncs = 0;
+      return {
+        faultObserved: () => faultThrown,
+        proofChainReads: () => postFaultChainReads,
+        proofDirectorySyncs: () => postFaultDirectorySyncs,
+        operations: {
+          ...DEFAULT_SAGA_APPEND_OPERATIONS,
+          open: async (candidate, flags, mode) => {
+            const handle = await open(candidate, flags, mode);
+            if (!armed
+              || flags !== "wx"
+              || !path.basename(candidate).endsWith(`-${eventState}.json`)) return handle;
+            targetFile = candidate;
+            if (phase !== "file-sync") return handle;
+            return new Proxy(handle, {
+              get(target, property) {
+                if (property === "sync") {
+                  return async () => {
+                    await target.sync();
+                    if (armed) {
+                      armed = false;
+                      faultThrown = true;
+                      throw new Error("synthetic write-complete file-sync uncertainty");
+                    }
+                  };
+                }
+                const value = target[property];
+                return typeof value === "function" ? value.bind(target) : value;
+              },
+            });
+          },
+          lstat: async (candidate, options) => {
+            if (makeProofFail && faultThrown && candidate === targetFile) {
+              throw new Error("synthetic unreadable tail proof");
+            }
+            return lstat(candidate, options);
+          },
+          readSagaEvents: async (...args) => {
+            if (faultThrown) postFaultChainReads += 1;
+            return readSagaEvents(...args);
+          },
+          syncDirectory: async (candidate) => {
+            await syncDirectory(candidate);
+            if (faultThrown && candidate === sagaDirectory(sagaRoot, planDigest)) {
+              postFaultDirectorySyncs += 1;
+            }
+            if (armed
+              && phase === "directory-sync"
+              && targetFile !== null
+              && candidate === sagaDirectory(sagaRoot, planDigest)) {
+              armed = false;
+              faultThrown = true;
+              throw new Error("synthetic write-complete directory-sync uncertainty");
+            }
+          },
+        },
+      };
+    };
     const observedDirectory = path.join(root, "concurrent-observed-directory");
     const observedParent = path.dirname(observedDirectory);
     const durabilityTrace = [];
@@ -1094,6 +1658,14 @@ async function selfTest() {
     const plan = createDeliveryTransitionDryRun(input);
     if (!plan.ok || !planIsStructurallyBound(plan)) throw new Error("positive dry-run case failed");
     cases += 1;
+    const expiredDryRun = createDeliveryTransitionDryRun({
+      ...input,
+      authorization: { ...authorization, deadlineAt: new Date(Date.now() - 1).toISOString() },
+    });
+    if (expiredDryRun.code !== "TRANSITION_GATE_B_AUTHORIZATION_INVALID") {
+      throw new Error("expired dry-run authorization case failed");
+    }
+    cases += 1;
     const methods = [];
     const boundaries = [];
     let positiveSagaRoot = null;
@@ -1101,6 +1673,13 @@ async function selfTest() {
     const adapter = {
       guardExactMain: async (_revision, boundary) => { boundaries.push({ boundary, at: Date.now() }); return true; },
       verifyAuthorization: async () => ({ ...authorization, deadlineAt: new Date(Date.now() + 30_000).toISOString() }),
+      verifyPredecessor: async ({ taskId, stageId, receiptSha256 }) => ({
+        ok: true,
+        taskId,
+        stageId,
+        receiptSha256,
+        state: "verified-complete",
+      }),
       verifyFrozenTaskParity: async () => ({
         ok: true,
         taskCount: 50,
@@ -1129,6 +1708,28 @@ async function selfTest() {
         methods.push("issue-status-label");
       },
     };
+    const { verifyPredecessor: _omittedPredecessorVerifier, ...adapterWithoutPredecessor } = adapter;
+    const missingPredecessorVerifier = await applyPlanCore(plan, adapterWithoutPredecessor, {
+      sagaRoot: nextSagaRoot(), quiescenceIntervalMs: 5,
+    });
+    if (missingPredecessorVerifier.code !== "TRANSITION_ADAPTER_INVALID") {
+      throw new Error("missing predecessor verifier case failed");
+    }
+    cases += 1;
+    const mismatchedPredecessor = await applyPlanCore(plan, {
+      ...adapter,
+      verifyPredecessor: async ({ taskId, stageId }) => ({
+        ok: true,
+        taskId,
+        stageId,
+        receiptSha256: `sha256:${"0".repeat(64)}`,
+        state: "verified-complete",
+      }),
+    }, { sagaRoot: nextSagaRoot(), quiescenceIntervalMs: 5 });
+    if (mismatchedPredecessor.code !== "TRANSITION_RECOVERY_REQUIRED") {
+      throw new Error("mismatched predecessor receipt case failed");
+    }
+    cases += 1;
     positiveSagaRoot = nextSagaRoot();
     const applied = await applyPlanCore(plan, adapter, { sagaRoot: positiveSagaRoot, quiescenceIntervalMs: 5 });
     if (applied.code !== "TRANSITION_APPLIED_VERIFIED" || methods.join(",") !== "project-status,issue-state,issue-status-label") {
@@ -1145,13 +1746,104 @@ async function selfTest() {
     }
     cases += 1;
     cases += 1;
-    const quiescentBoundaries = boundaries.filter(({ boundary }) => boundary.startsWith("quiescent"));
+    const quiescentBoundaries = boundaries.filter(({ boundary }) => /^quiescent-[12]-pre-verifier$/.test(boundary));
     if (quiescentBoundaries.length !== 2 || quiescentBoundaries[1].at - quiescentBoundaries[0].at < 4) {
       throw new Error("timed quiescence case failed");
     }
     cases += 1;
     const replay = await applyPlanCore(plan, adapter, { sagaRoot: positiveSagaRoot, quiescenceIntervalMs: 5 });
     if (replay.code !== "TRANSITION_ALREADY_APPLIED_VERIFIED") throw new Error("applied saga replay case failed");
+    cases += 1;
+
+    reset();
+    let expiredIntentWrites = 0;
+    let intentAuthorityExpired = false;
+    const trustedIntentNow = new Date("2030-01-01T00:00:00.000Z");
+    const expiredDuringIntent = await applyPlanCore(plan, {
+      ...adapter,
+      verifyAuthorization: async (_candidatePlan, boundary) => {
+        if (boundary === "post-intent-forward-project-status") intentAuthorityExpired = true;
+        return {
+          ...authorization,
+          deadlineAt: new Date(trustedIntentNow.getTime()
+            + (intentAuthorityExpired ? 0 : 30_000)).toISOString(),
+        };
+      },
+      setProjectStatus: async () => { expiredIntentWrites += 1; },
+      setIssueState: async () => { expiredIntentWrites += 1; },
+      replaceStatusLabel: async () => { expiredIntentWrites += 1; },
+    }, {
+      sagaRoot: nextSagaRoot(),
+      clock: () => new Date(trustedIntentNow),
+      quiescenceIntervalMs: 5,
+    });
+    if (expiredDuringIntent.code !== "TRANSITION_RECOVERY_REQUIRED" || expiredIntentWrites !== 0) {
+      throw new Error("expiry-during-intent case failed");
+    }
+    cases += 1;
+
+    reset();
+    let revokedIntentWrites = 0;
+    let intentAuthorityRevoked = false;
+    const revokedDuringIntent = await applyPlanCore(plan, {
+      ...adapter,
+      verifyAuthorization: async (_candidatePlan, boundary) => {
+        if (boundary === "post-intent-forward-project-status") intentAuthorityRevoked = true;
+        return {
+          ...authorization,
+          ok: !intentAuthorityRevoked,
+          deadlineAt: new Date(Date.now() + 30_000).toISOString(),
+        };
+      },
+      setProjectStatus: async () => { revokedIntentWrites += 1; },
+      setIssueState: async () => { revokedIntentWrites += 1; },
+      replaceStatusLabel: async () => { revokedIntentWrites += 1; },
+    }, { sagaRoot: nextSagaRoot(), quiescenceIntervalMs: 5 });
+    if (revokedDuringIntent.code !== "TRANSITION_RECOVERY_REQUIRED" || revokedIntentWrites !== 0) {
+      throw new Error("revocation-during-intent case failed");
+    }
+    cases += 1;
+
+    reset();
+    let activeIntermediateBoundary = null;
+    const intermediateWrites = [];
+    const intermediateProjectionDrift = await applyPlanCore(plan, {
+      ...adapter,
+      guardExactMain: async (_revision, boundary) => {
+        activeIntermediateBoundary = boundary;
+        return true;
+      },
+      readProjection: async () => {
+        const currentProjection = projection();
+        if (activeIntermediateBoundary === "post-intent-forward-issue-state") {
+          return {
+            ...currentProjection,
+            issue: {
+              ...currentProjection.issue,
+              body: "synthetic protected intermediate drift",
+            },
+          };
+        }
+        return currentProjection;
+      },
+      setProjectStatus: async (...args) => {
+        intermediateWrites.push("project-status");
+        return adapter.setProjectStatus(...args);
+      },
+      setIssueState: async (...args) => {
+        intermediateWrites.push("issue-state");
+        return adapter.setIssueState(...args);
+      },
+      replaceStatusLabel: async (...args) => {
+        intermediateWrites.push("issue-status-label");
+        return adapter.replaceStatusLabel(...args);
+      },
+    }, { sagaRoot: nextSagaRoot(), quiescenceIntervalMs: 5 });
+    if (intermediateProjectionDrift.code !== "TRANSITION_RECOVERY_REQUIRED"
+      || state.status !== "In progress"
+      || intermediateWrites.join(",") !== "project-status") {
+      throw new Error("intermediate projection drift case failed");
+    }
     cases += 1;
 
     reset();
@@ -1285,7 +1977,7 @@ async function selfTest() {
       sagaRoot: nextSagaRoot(),
       quiescenceIntervalMs: 5,
     });
-    if (rollbackReferenceDenied.code !== "TRANSITION_ROLLED_BACK"
+    if (rollbackReferenceDenied.code !== "TRANSITION_RECOVERY_REQUIRED"
       || methods.length !== methodsBeforeRollbackReferenceAttack) {
       throw new Error("rollback snapshot authorization binding case failed");
     }
@@ -1314,8 +2006,8 @@ async function selfTest() {
     const parityDriftAfterFirstOperation = await applyPlanCore(plan, {
       ...adapter,
       verifyFrozenTaskParity: async (_snapshotSha256, boundary) => ({
-        ok: boundary !== "post-project-status",
-        taskCount: boundary === "post-project-status" ? 49 : 50,
+        ok: boundary !== "post-effect-forward-project-status",
+        taskCount: boundary === "post-effect-forward-project-status" ? 49 : 50,
         snapshotSha256: FROZEN_SNAPSHOT_SHA256,
       }),
       setProjectStatus: async (...args) => {
@@ -1348,12 +2040,14 @@ async function selfTest() {
 
     reset();
     const rollbackSagaRoot = nextSagaRoot();
-    const rollbackReadTimes = [];
+    const rollbackBoundaryTimes = [];
     const rolledBack = await applyPlanCore(plan, {
       ...adapter,
-      readProjection: async () => {
-        rollbackReadTimes.push(Date.now());
-        return projection();
+      guardExactMain: async (_revision, boundary) => {
+        if (/^rollback-(?:immediate|quiescent-[12])-pre-verifier$/.test(boundary)) {
+          rollbackBoundaryTimes.push(Date.now());
+        }
+        return true;
       },
       setIssueState: async () => { throw new Error("synthetic partial failure"); },
     }, { sagaRoot: rollbackSagaRoot, quiescenceIntervalMs: 5 });
@@ -1362,11 +2056,10 @@ async function selfTest() {
     }
     cases += 1;
     const rollbackSaga = await readSagaEvents(rollbackSagaRoot, plan.planDigest);
-    const rollbackVerificationTimes = rollbackReadTimes.slice(-3);
     if (!rolledBackSagaHistoryIsValid(rollbackSaga, plan.plan)
-      || rollbackVerificationTimes.length !== 3
-      || rollbackVerificationTimes[1] - rollbackVerificationTimes[0] < 4
-      || rollbackVerificationTimes[2] - rollbackVerificationTimes[1] < 4) {
+      || rollbackBoundaryTimes.length !== 3
+      || rollbackBoundaryTimes[1] - rollbackBoundaryTimes[0] < 4
+      || rollbackBoundaryTimes[2] - rollbackBoundaryTimes[1] < 4) {
       throw new Error("timed rollback verification case failed");
     }
     cases += 1;
@@ -1389,6 +2082,103 @@ async function selfTest() {
     }, { sagaRoot: rollbackSagaRoot, quiescenceIntervalMs: 5 });
     if (rolledBackReplayDrift.code !== "TRANSITION_RECOVERY_REQUIRED") {
       throw new Error("rolled-back replay drift case failed");
+    }
+    cases += 1;
+
+    for (const phase of ["file-sync", "directory-sync"]) {
+      reset();
+      const faultSagaRoot = nextSagaRoot();
+      const fault = sagaAppendFault({
+        sagaRoot: faultSagaRoot,
+        planDigest: plan.planDigest,
+        eventState: "operation-complete",
+        phase,
+      });
+      const faultApplied = await applyPlanCore(plan, adapter, {
+        sagaRoot: faultSagaRoot,
+        quiescenceIntervalMs: 5,
+        sagaOperations: fault.operations,
+      });
+      const faultSaga = await readSagaEvents(faultSagaRoot, plan.planDigest);
+      if (faultApplied.code !== "TRANSITION_APPLIED_VERIFIED"
+        || !fault.faultObserved()
+        || fault.proofChainReads() < 2
+        || fault.proofDirectorySyncs() < 1
+        || state.status !== "In progress"
+        || !appliedSagaHistoryIsValid(faultSaga, plan.plan)) {
+        throw new Error(`forward ${phase} tail-proof case failed`);
+      }
+      cases += 1;
+    }
+
+    for (const phase of ["file-sync", "directory-sync"]) {
+      reset();
+      const faultSagaRoot = nextSagaRoot();
+      const fault = sagaAppendFault({
+        sagaRoot: faultSagaRoot,
+        planDigest: plan.planDigest,
+        eventState: "rollback-complete",
+        phase,
+      });
+      const faultRolledBack = await applyPlanCore(plan, {
+        ...adapter,
+        setIssueState: async () => { throw new Error("synthetic partial failure"); },
+      }, {
+        sagaRoot: faultSagaRoot,
+        quiescenceIntervalMs: 5,
+        sagaOperations: fault.operations,
+      });
+      const faultSaga = await readSagaEvents(faultSagaRoot, plan.planDigest);
+      if (faultRolledBack.code !== "TRANSITION_ROLLED_BACK"
+        || !fault.faultObserved()
+        || fault.proofChainReads() < 2
+        || fault.proofDirectorySyncs() < 1
+        || state.status !== "Next"
+        || !rolledBackSagaHistoryIsValid(faultSaga, plan.plan)) {
+        throw new Error(`rollback ${phase} tail-proof case failed`);
+      }
+      cases += 1;
+    }
+
+    reset();
+    const unprovableSagaRoot = nextSagaRoot();
+    const unprovableFault = sagaAppendFault({
+      sagaRoot: unprovableSagaRoot,
+      planDigest: plan.planDigest,
+      eventState: "operation-complete",
+      phase: "file-sync",
+      makeProofFail: true,
+    });
+    let unprovableWrites = 0;
+    const unprovableAppend = await applyPlanCore(plan, {
+      ...adapter,
+      setProjectStatus: async (...args) => {
+        unprovableWrites += 1;
+        return adapter.setProjectStatus(...args);
+      },
+      setIssueState: async (...args) => {
+        unprovableWrites += 1;
+        return adapter.setIssueState(...args);
+      },
+      replaceStatusLabel: async (...args) => {
+        unprovableWrites += 1;
+        return adapter.replaceStatusLabel(...args);
+      },
+    }, {
+      sagaRoot: unprovableSagaRoot,
+      quiescenceIntervalMs: 5,
+      sagaOperations: unprovableFault.operations,
+    });
+    const unprovableReplay = await applyPlanCore(plan, adapter, {
+      sagaRoot: unprovableSagaRoot,
+      quiescenceIntervalMs: 5,
+    });
+    if (unprovableAppend.code !== "TRANSITION_RECOVERY_REQUIRED"
+      || !unprovableFault.faultObserved()
+      || unprovableWrites !== 1
+      || state.status !== "In progress"
+      || unprovableReplay.code !== "TRANSITION_TASK_LOCKED") {
+      throw new Error("unprovable post-effect tail pin case failed");
     }
     cases += 1;
 
@@ -1435,6 +2225,92 @@ async function selfTest() {
     const resumed = await applyPlanCore(plan, adapter, { sagaRoot: resumeSagaRoot, quiescenceIntervalMs: 5 });
     if (resumed.code !== "TRANSITION_ROLLED_BACK" || state.status !== "Next") throw new Error("persisted saga recovery case failed");
     cases += 1;
+
+    const rollbackVerificationEvent = (boundary) => ({
+      state: "verification-complete",
+      taskId: plan.plan.taskId,
+      boundary,
+      snapshotDigest: plan.plan.preimageDigest,
+      protectedIssueDigest: plan.plan.protectedIssueDigest,
+      protectedProjectDigest: plan.plan.protectedProjectDigest,
+      authorizationDigest: plan.plan.authorizationDigest,
+    });
+    const otherTaskId = DELIVERY_TRANSITION_GATE_B_CONTRACT.taskIds.find((taskId) => taskId !== plan.plan.taskId);
+    const illegalSagaCases = [
+      ["rollback-before-recovery", [
+        { state: "declared", taskId: plan.plan.taskId },
+        {
+          state: "rollback-intent",
+          taskId: plan.plan.taskId,
+          operationIndex: 2,
+          surface: "project-status",
+        },
+      ]],
+      ["forward-after-recovery", [
+        { state: "declared", taskId: plan.plan.taskId },
+        { state: "recovery-start", taskId: plan.plan.taskId },
+        {
+          state: "operation-intent",
+          taskId: plan.plan.taskId,
+          operationIndex: 0,
+          surface: "project-status",
+        },
+      ]],
+      ["verification-without-pending", [
+        { state: "declared", taskId: plan.plan.taskId },
+        rollbackVerificationEvent("immediate"),
+      ]],
+      ["mismatched-task", [
+        { state: "declared", taskId: otherTaskId },
+      ]],
+      ["post-terminal-append", [
+        { state: "declared", taskId: plan.plan.taskId },
+        { state: "recovery-start", taskId: plan.plan.taskId },
+        { state: "verification-pending", taskId: plan.plan.taskId },
+        ...VERIFICATION_BOUNDARIES.map(rollbackVerificationEvent),
+        { state: "rolled-back", taskId: plan.plan.taskId },
+        { state: "recovery-required", taskId: plan.plan.taskId },
+      ]],
+    ];
+    for (const [caseName, illegalEvents] of illegalSagaCases) {
+      reset();
+      const illegalSagaRoot = nextSagaRoot();
+      for (const illegalEvent of illegalEvents) {
+        await appendSagaEvent(illegalSagaRoot, plan.planDigest, illegalEvent, () => new Date());
+      }
+      let illegalExternalCalls = 0;
+      const noCallAdapter = {
+        guardExactMain: async () => { illegalExternalCalls += 1; return true; },
+        verifyAuthorization: async () => {
+          illegalExternalCalls += 1;
+          return { ...authorization, deadlineAt: new Date(Date.now() + 30_000).toISOString() };
+        },
+        verifyPredecessor: async ({ taskId, stageId, receiptSha256 }) => {
+          illegalExternalCalls += 1;
+          return { ok: true, taskId, stageId, receiptSha256, state: "verified-complete" };
+        },
+        verifyFrozenTaskParity: async () => {
+          illegalExternalCalls += 1;
+          return { ok: true, taskCount: 50, snapshotSha256: FROZEN_SNAPSHOT_SHA256 };
+        },
+        readProjection: async () => { illegalExternalCalls += 1; return projection(); },
+        setProjectStatus: async () => { illegalExternalCalls += 1; },
+        setIssueState: async () => { illegalExternalCalls += 1; },
+        replaceStatusLabel: async () => { illegalExternalCalls += 1; },
+      };
+      const denied = await applyPlanCore(plan, noCallAdapter, {
+        sagaRoot: illegalSagaRoot, quiescenceIntervalMs: 5,
+      });
+      const pinnedReplay = await applyPlanCore(plan, noCallAdapter, {
+        sagaRoot: illegalSagaRoot, quiescenceIntervalMs: 5,
+      });
+      if (denied.code !== "TRANSITION_RECOVERY_REQUIRED"
+        || pinnedReplay.code !== "TRANSITION_TASK_LOCKED"
+        || illegalExternalCalls !== 0) {
+        throw new Error(`strict illegal saga case failed: ${caseName}`);
+      }
+      cases += 1;
+    }
 
     reset();
     const sourceMismatch = createDeliveryTransitionDryRun({ ...input, sourceTaskStatus: "In progress" });

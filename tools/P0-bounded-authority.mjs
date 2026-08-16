@@ -55,10 +55,164 @@ const BROAD_CURRENT_AUTHORITY_PATTERNS = Object.freeze([
   /\*\*Scope:\*\*\s+P0\s+and\s+R0[–-]R9/iu,
 ]);
 
+const FORBIDDEN_AUTHORITY_SURFACE_SOURCE = String.raw`(?:` + [
+  String.raw`(?:all\s+)?R0(?:\s+(?:actions?|work|execution|implementation))?`,
+  String.raw`private(?:-system|\s+host)?\s+(?:access|reads?)`,
+  String.raw`authentic(?:-|\s+)content\s+admission`,
+  String.raw`deployments?`,
+  String.raw`production(?:\s+(?:deployments?|rollouts?))?`,
+  String.raw`releases?`,
+  String.raw`acceptance`,
+].join("|") + String.raw`)`;
+const FORBIDDEN_AUTHORITY_SURFACE_GROUP_SOURCE =
+  String.raw`(?:${FORBIDDEN_AUTHORITY_SURFACE_SOURCE})(?:\s+(?:and|or)\s+(?:${FORBIDDEN_AUTHORITY_SURFACE_SOURCE}))*`;
+const AUTHORITY_ACTOR_SOURCE = String.raw`(?:` + [
+  String.raw`we`,
+  String.raw`(?:the\s+)?(?:product\s+)?owner`,
+  String.raw`(?:the\s+)?council`,
+  String.raw`(?:the\s+)?(?:active|current)\s+(?:bounded\s+)?Goal`,
+  String.raw`current\s+(?:execution\s+)?authorit(?:y|ization)`,
+].join("|") + String.raw`)`;
+const DELEGATED_AUTHORITY_ACTOR_SOURCE =
+  String.raw`(?:(?:the\s+)?council|(?:the\s+)?(?:product\s+)?owner)`;
+const AUTHORITY_PERMISSION_NOUN_SOURCE = String.raw`(?:authority|authorization|permission|approval)`;
+const AUTHORITY_POSITIVE_STATE_SOURCE =
+  String.raw`(?:authorized|permitted|allowed|approved|cleared|greenlit|enabled)`;
+const AUTHORITY_ACTION_SOURCE = String.raw`(?:` + [
+  String.raw`proceed`,
+  String.raw`start`,
+  String.raw`begin`,
+  String.raw`commence`,
+  String.raw`continue`,
+  String.raw`deploy`,
+  String.raw`implement`,
+  String.raw`execute`,
+  String.raw`release`,
+  String.raw`accept`,
+  String.raw`admit`,
+  String.raw`access`,
+  String.raw`activate`,
+  String.raw`roll\s*out`,
+  String.raw`be\s+implemented`,
+  String.raw`be\s+deployed`,
+  String.raw`be\s+released`,
+  String.raw`be\s+accepted`,
+].join("|") + String.raw`)`;
+const AUTHORITY_OPERATION_TARGET_SOURCE =
+  String.raw`(?:${FORBIDDEN_AUTHORITY_SURFACE_GROUP_SOURCE}|deploy|roll\s*out)`;
+const positiveAuthorityPattern = (source) => new RegExp(source, "giu");
+
+// These are grammar families, not phrase signatures: each requires a forbidden
+// surface or operation and an affirmative permission/start/deploy predicate.
 const POSITIVE_CURRENT_AUTHORITY_PATTERNS = Object.freeze([
-  /\bcurrent\s+(?:execution\s+)?authorit(?:y|ization)\s+(?:permits?|allows?|authorizes?|includes?|reaches|grants?)\s+(?:all\s+)?(?:R0(?:\s+(?:actions?|work|execution|implementation))?|private(?:-system|\s+host)?\s+(?:access|reads?)|deployment|authentic-content\s+admission|acceptance|release|production)/iu,
-  /\b(?:R0\s+(?:actions?|work|execution|implementation)|private(?:-system|\s+host)?\s+(?:access|reads?)|deployment|authentic-content\s+admission|acceptance|release|production)\s+(?:is|are)\s+(?:now|currently|presently)\s+(?:authorized|permitted|allowed)\b/iu,
-  /\b(?:the\s+)?(?:active|current)\s+(?:bounded\s+)?Goal\s+(?:permits?|allows?|authorizes?|grants?)\s+(?:all\s+)?(?:R0(?:\s+(?:actions?|work|execution|implementation))?|private(?:-system|\s+host)?\s+(?:access|reads?)|deployment|authentic-content\s+admission|acceptance|release|production)/iu,
+  positiveAuthorityPattern(String.raw`\b${FORBIDDEN_AUTHORITY_SURFACE_GROUP_SOURCE}\s+(?:is|are|has\s+been|have\s+been|remains?|remain)\s+(?:(?:now|currently|presently|actively)\s+)?${AUTHORITY_POSITIVE_STATE_SOURCE}\b`),
+  positiveAuthorityPattern(String.raw`\b${FORBIDDEN_AUTHORITY_SURFACE_GROUP_SOURCE}\s+(?:(?:now|currently|presently)\s+)?${AUTHORITY_POSITIVE_STATE_SOURCE}\b(?=\s*(?:[.!?;]|$))`),
+  positiveAuthorityPattern(String.raw`\b${FORBIDDEN_AUTHORITY_SURFACE_GROUP_SOURCE}\s+(?:may|can)\s+(?:now\s+)?${AUTHORITY_ACTION_SOURCE}(?:\s+(?:now|immediately))?\b`),
+  positiveAuthorityPattern(String.raw`\b${FORBIDDEN_AUTHORITY_SURFACE_GROUP_SOURCE}\s+(?:has|have)\s+(?:(?:current|active)\s+)?${AUTHORITY_PERMISSION_NOUN_SOURCE}(?:\s+(?:to|for)\s+${AUTHORITY_ACTION_SOURCE})?\b`),
+  positiveAuthorityPattern(String.raw`\b${FORBIDDEN_AUTHORITY_SURFACE_GROUP_SOURCE}\s+(?:is|are)\s+free\s+to\s+${AUTHORITY_ACTION_SOURCE}\b`),
+  positiveAuthorityPattern(String.raw`\b${FORBIDDEN_AUTHORITY_SURFACE_GROUP_SOURCE}\s+(?:is|are)\s+granted\s+${AUTHORITY_PERMISSION_NOUN_SOURCE}(?:\s+(?:to|for)\s+${AUTHORITY_ACTION_SOURCE})?\b`),
+  positiveAuthorityPattern(String.raw`\b${AUTHORITY_PERMISSION_NOUN_SOURCE}\s+(?:to|for)\s+${AUTHORITY_OPERATION_TARGET_SOURCE}\s+(?:is|are|has\s+been|have\s+been|remains?|remain)\s+(?:(?:now|currently|presently)\s+)?(?:active|granted|${AUTHORITY_POSITIVE_STATE_SOURCE})\b`),
+  positiveAuthorityPattern(String.raw`\b${AUTHORITY_ACTOR_SOURCE}\s+(?:(?:now|currently|presently)\s+)?(?:authorizes?|authorized|permits?|permitted|allows?|allowed|approves?|approved|clears?|cleared|greenlights?|greenlit|covers?|covered|empowers?|empowered|enables?|enabled|grants?|granted|includes?|included|reaches|reached)\s+${FORBIDDEN_AUTHORITY_SURFACE_GROUP_SOURCE}\b`),
+  positiveAuthorityPattern(String.raw`\b${AUTHORITY_ACTOR_SOURCE}\s+(?:has|have)\s+(?:now\s+)?(?:authorized|permitted|allowed|approved|cleared|greenlit|empowered)\s+${FORBIDDEN_AUTHORITY_SURFACE_GROUP_SOURCE}\b`),
+  positiveAuthorityPattern(String.raw`\b${AUTHORITY_ACTOR_SOURCE}\s+(?:grants?|gives?|confers?)\s+(?:current\s+)?${AUTHORITY_PERMISSION_NOUN_SOURCE}\s+(?:to|for)\s+${AUTHORITY_OPERATION_TARGET_SOURCE}\b`),
+  positiveAuthorityPattern(String.raw`\b${AUTHORITY_ACTOR_SOURCE}\s+(?:has|have)\s+(?:current\s+)?${AUTHORITY_PERMISSION_NOUN_SOURCE}\s+(?:to|for)\s+${AUTHORITY_ACTION_SOURCE}\b`),
+  positiveAuthorityPattern(String.raw`\b${AUTHORITY_ACTOR_SOURCE}\s+(?:(?:is|are|has\s+been|have\s+been)\s+)?(?:authorized|permitted|allowed|approved|empowered|cleared|greenlit)\s+to\s+${AUTHORITY_ACTION_SOURCE}\b`),
+  positiveAuthorityPattern(String.raw`\b${AUTHORITY_ACTOR_SOURCE}\s+(?:may|can)\s+(?:now\s+)?(?:deploy|roll\s*out|release)\b`),
+  positiveAuthorityPattern(String.raw`\b${AUTHORITY_ACTOR_SOURCE}\s+(?:may|can)\s+(?:now\s+)?(?:begin|start|commence|implement|proceed(?:\s+with)?)\s+${FORBIDDEN_AUTHORITY_SURFACE_GROUP_SOURCE}\b`),
+  positiveAuthorityPattern(String.raw`\b${AUTHORITY_ACTOR_SOURCE}\s+(?:(?:now|currently|presently)\s+)?(?:authorizes?|authorized|permits?|permitted|allows?|allowed|approves?|approved|clears?|cleared|empowers?|empowered|enables?|enabled)\s+${DELEGATED_AUTHORITY_ACTOR_SOURCE}\s+to\s+${AUTHORITY_ACTION_SOURCE}\b`),
+  positiveAuthorityPattern(String.raw`\b${AUTHORITY_PERMISSION_NOUN_SOURCE}\s+(?:now\s+)?(?:(?:has|have)\s+been\s+|(?:is|are)\s+)?(?:granted|given|issued|provided|available|exists?)\s+(?:to|for)\s+${AUTHORITY_OPERATION_TARGET_SOURCE}\b`),
+  positiveAuthorityPattern(String.raw`\b${FORBIDDEN_AUTHORITY_SURFACE_GROUP_SOURCE}\s+(?:is|are|remains?|remain)\s+(?:(?:now|currently|presently)\s+)?(?:ready\s+to\s+${AUTHORITY_ACTION_SOURCE}|open|unlocked)\b`),
+  positiveAuthorityPattern(String.raw`\b${FORBIDDEN_AUTHORITY_SURFACE_GROUP_SOURCE}\s+(?:has|have)\s+(?:the\s+)?go-ahead\b`),
+  positiveAuthorityPattern(String.raw`\bno\s+(?:further|additional)\s+${AUTHORITY_PERMISSION_NOUN_SOURCE}\s+(?:is|are)\s+required\s+(?:to|for)\s+${AUTHORITY_OPERATION_TARGET_SOURCE}\b`),
+  positiveAuthorityPattern(String.raw`\bnothing\s+(?:now\s+)?(?:prevents?|blocks?|prohibits?)\s+${AUTHORITY_OPERATION_TARGET_SOURCE}\b`),
+  positiveAuthorityPattern(String.raw`\b(?:the\s+)?(?:exact\s+)?Gate\s+B\s+(?:is|has\s+been)\s+(?:waived|deemed\s+satisfied)\s+(?:to|for)\s+${AUTHORITY_OPERATION_TARGET_SOURCE}\b`),
+  positiveAuthorityPattern(String.raw`\b${FORBIDDEN_AUTHORITY_SURFACE_GROUP_SOURCE}\s+(?:is|are)\s+exempt\s+from\s+(?:the\s+)?(?:exact\s+)?Gate\s+B\b`),
+  positiveAuthorityPattern(String.raw`\b${AUTHORITY_ACTOR_SOURCE}\s+(?:is|are|has\s+been|have\s+been)\s+(?:now\s+)?${AUTHORITY_POSITIVE_STATE_SOURCE}\s+for\s+${FORBIDDEN_AUTHORITY_SURFACE_GROUP_SOURCE}\b`),
+  positiveAuthorityPattern(String.raw`\b${AUTHORITY_ACTOR_SOURCE}\s+(?:may|can)\s+(?:now\s+)?access\s+(?:the\s+)?private(?:-system|\s+system|\s+host)\b`),
+]);
+
+const SAFE_HISTORICAL_AUTHORITY_CONTEXT =
+  /^(?:\s|[-*>|]|\d+[.)])*(?:historically|previously|formerly)\b|\bunder\s+(?:an?\s+|the\s+)?(?:historical|prior|superseded|former)\s+(?:goal|plan|policy|authorization|authority)\b/iu;
+const SAFE_CONDITIONAL_AUTHORITY_CONTEXT =
+  /\b(?:if|once|when|after)\s+(?:the\s+)?exact\s+(?:stage\s+)?Gate\s+[AB]\s+(?:passes|has\s+passed|is\s+satisfied|has\s+been\s+satisfied|is\s+accepted|has\s+been\s+accepted)\b|\bonly\s+(?:if|after|once|when)\s+(?:the\s+)?exact\s+(?:stage\s+)?Gate\s+[AB]\s+(?:passes|has\s+passed|is\s+satisfied|has\s+been\s+satisfied|is\s+accepted|has\s+been\s+accepted)\b/iu;
+
+const BOUNDED_AUTHORITY_ADVERSARIAL_CLAIMS = Object.freeze([
+  "R0 implementation may proceed now.",
+  "R0 implementation is authorized.",
+  "We authorize R0 implementation and deployment.",
+  "The council can deploy to production.",
+  "Deployment and production are permitted.",
+  "All R0 work has authority to proceed.",
+  "Private-system access is allowed.",
+  "R0 work may start immediately.",
+  "Production may proceed now.",
+  "Deployment may start immediately.",
+  "Private-system access can begin.",
+  "R0 execution can now proceed.",
+  "The owner grants authority for deployment.",
+  "The council has approved production deployment.",
+  "R0 work is approved.",
+  "R0 implementation has permission to start.",
+  "Private host reads can start now.",
+  "Authentic-content admission can proceed.",
+  "Release may proceed immediately.",
+  "Acceptance is now approved.",
+  "We can begin R0 implementation.",
+  "Production rollout has permission to begin.",
+  "R0 implementation can proceed now.",
+  "R0 implementation can start immediately.",
+  "Private-system access may proceed.",
+  "Production may now begin.",
+  "The council may deploy to production.",
+  "R0 implementation is approved.",
+  "Deployment has been authorized.",
+  "Private host reads have current authority.",
+  "The owner grants deployment authority.",
+  "The council has authority to deploy.",
+  "The Product Owner has authorized deployment.",
+  "Authorization for R0 implementation is active.",
+  "Permission to deploy is granted.",
+  "R0 implementation is cleared.",
+  "R0 implementation is greenlit.",
+  "R0 implementation is free to proceed.",
+  "R0 implementation may commence.",
+  "R0 implementation can be implemented now.",
+  "Deployments authorized.",
+  "Private host access has been authorized.",
+  "Private host access remains authorized.",
+  "The active Goal covers R0 implementation.",
+  "The active Goal empowers R0 implementation.",
+  "The council is authorized to deploy.",
+  "The council is empowered to deploy.",
+  "The council authorized to deploy.",
+  "Current authority covers R0 implementation.",
+  "The Product Owner empowered the council to deploy.",
+  "The active Goal enables R0 execution.",
+  "The Product Owner authorizes the council to implement.",
+  "The owner allows the council to release.",
+  "The active Goal enabled R0 work.",
+  "The council permits the owner to deploy.",
+  "The Product Owner cleared the council to implement.",
+  "The active Goal empowers the council to deploy.",
+  "The owner enables the council to execute.",
+  "The council authorized the owner to release.",
+  "Authority has been granted for deployment.",
+  "Approval has been given for R0 implementation.",
+  "Permission now exists to deploy.",
+  "Production is ready to proceed.",
+  "R0 work has the go-ahead.",
+  "Private access is open.",
+  "Private access is unlocked.",
+  "No further approval is required for deployment.",
+  "Nothing prevents deployment.",
+  "Gate B is waived for deployment.",
+  "Gate B is deemed satisfied for deployment.",
+  "Deployment is exempt from Gate B.",
+  "We are authorized for R0 implementation.",
+  "We may access the private system.",
+  "The Owner authorizes the council to deploy.",
+  "The Owner empowers the council to deploy.",
+  "The Owner permits the council to deploy.",
 ]);
 
 const DECISION_CURRENT_STAGE0_CLAUSE =
@@ -72,12 +226,6 @@ const DECISION_OWNER_REACTIVATION_CLAUSE =
 const DECISION_NO_PRESENT_AUTHORITY_CLAUSE =
   "Nothing in this decision presently authorizes R0 implementation, private-system access, deployment, authentic-content admission, acceptance, release, or production; every named human-only act retains its separate authority gate.";
 
-const FORBIDDEN_PRESENT_AUTHORITY_TERMS =
-  /(?:R0\s+implementation|private-system\s+access|deployment|authentic-content\s+admission|acceptance|release|production)/iu;
-const AUTHORITY_CLAIM_TERMS = /(?:authoriz|permit|authority)/iu;
-const AUTHORITY_NEGATION_TERMS =
-  /(?:\bno\b|\bnot\b|\bnothing\b|\bnever\b|\bcannot\b|\bprohibit|\bblocked\b|\bretain(?:s|ed)?\b|\brequires?\b|\bonly\s+through\b)/iu;
-
 function sourceTextIsSafe(value) {
   return typeof value === "string"
     && value.length > 0
@@ -88,14 +236,36 @@ function normalizedProse(value) {
   return value.replace(/\s+/gu, " ").trim();
 }
 
-function hasPositiveForbiddenAuthorityClaim(value) {
+function authorityClauses(value) {
   return value
-    .split(/(?<=[.!?;])\s+|\n+/u)
+    .split(/\n+|(?<=[.!?;])\s+|,\s+(?:and|or)\s+|(?:,\s*)?\b(?:but|however|yet|nevertheless|whereas)\b(?:,\s*)?/iu)
     .map((part) => part.trim())
-    .filter(Boolean)
-    .some((part) => FORBIDDEN_PRESENT_AUTHORITY_TERMS.test(part)
-      && AUTHORITY_CLAIM_TERMS.test(part)
-      && !AUTHORITY_NEGATION_TERMS.test(part));
+    .filter(Boolean);
+}
+
+function matchHasBoundNegation(clause, match) {
+  const prefix = clause.slice(0, match.index);
+  return /(?:^|[\s([{:|])(?:no|not|never|neither|nor)(?:\s+even)?\s*$/iu.test(prefix);
+}
+
+function matchIsGenericReleaseRule(clause, match) {
+  if (!/^releases?\b/iu.test(match[0])) return false;
+  return /(?:^|[\s([{:|])(?:a|first)\s*$/iu.test(clause.slice(0, match.index));
+}
+
+function hasPositivePresentAuthorityClaim(value) {
+  return authorityClauses(value).some((clause) => {
+    if (SAFE_HISTORICAL_AUTHORITY_CONTEXT.test(clause)) return false;
+    for (const pattern of POSITIVE_CURRENT_AUTHORITY_PATTERNS) {
+      for (const match of clause.matchAll(pattern)) {
+        if (matchHasBoundNegation(clause, match)) continue;
+        if (matchIsGenericReleaseRule(clause, match)) continue;
+        if (SAFE_CONDITIONAL_AUTHORITY_CONTEXT.test(clause)) continue;
+        return true;
+      }
+    }
+    return false;
+  });
 }
 
 export function validateBoundedAuthoritySources(sourceByPath) {
@@ -121,7 +291,7 @@ export function validateBoundedAuthoritySources(sourceByPath) {
       && BROAD_CURRENT_AUTHORITY_PATTERNS.some((pattern) => pattern.test(source))) {
       findings.push(`BOUNDED_AUTHORITY_BROAD_DELEGATION:${filePath}`);
     }
-    if (POSITIVE_CURRENT_AUTHORITY_PATTERNS.some((pattern) => pattern.test(source))) {
+    if (hasPositivePresentAuthorityClaim(source)) {
       findings.push(`BOUNDED_AUTHORITY_PRESENT_AUTHORITY_CLAIM:${filePath}`);
     }
   }
@@ -150,7 +320,7 @@ export function validateBoundedAuthoritySources(sourceByPath) {
     || !normalizedDecisionText.includes(DECISION_OWNER_REACTIVATION_CLAUSE)
     || !normalizedDecisionText.includes(DECISION_NO_PRESENT_AUTHORITY_CLAUSE)
     || BROAD_CURRENT_AUTHORITY_PATTERNS.some((pattern) => pattern.test(decisionText))
-    || hasPositiveForbiddenAuthorityClaim(decisionText)) {
+    || hasPositivePresentAuthorityClaim(decisionText)) {
     findings.push("BOUNDED_AUTHORITY_DECISION_016_INVALID");
   }
 
@@ -224,14 +394,14 @@ function selfTest() {
     .some((finding) => finding.startsWith("BOUNDED_AUTHORITY_BROAD_DELEGATION:")),
   "broad current delegation fails");
 
-  expect(BOUNDED_AUTHORITY_SOURCE_PATHS.every((filePath) => {
-    const positive = {
-      ...valid,
-      [filePath]: `${valid[filePath]}\nCurrent authority permits deployment and production.\n`,
-    };
-    return validateBoundedAuthoritySources(positive).findings
-      .includes(`BOUNDED_AUTHORITY_PRESENT_AUTHORITY_CLAIM:${filePath}`);
-  }), "positive current authority fails in every active source");
+  for (const claim of BOUNDED_AUTHORITY_ADVERSARIAL_CLAIMS) {
+    for (const filePath of BOUNDED_AUTHORITY_SOURCE_PATHS) {
+      const positive = { ...valid, [filePath]: `${valid[filePath]}\n${claim}\n` };
+      expect(validateBoundedAuthoritySources(positive).findings
+        .includes(`BOUNDED_AUTHORITY_PRESENT_AUTHORITY_CLAIM:${filePath}`),
+      `positive current authority claim fails in ${filePath}: ${claim}`);
+    }
+  }
 
   const positiveAuthoritySynonyms = Object.freeze([
     "Current authority permits all R0 actions.",
@@ -246,6 +416,64 @@ function selfTest() {
     return validateBoundedAuthoritySources(positive).findings
       .includes("BOUNDED_AUTHORITY_PRESENT_AUTHORITY_CLAIM:README.md");
   }), "positive current authority synonyms fail");
+
+  const safeAuthorityContexts = Object.freeze([
+    "Historically, R0 implementation is authorized under the superseded plan.",
+    "If exact Gate B passes, R0 implementation may proceed now.",
+    "Deployment is authorized only if exact Gate B passes.",
+    "R0 implementation may not proceed now.",
+    "R0 implementation is not authorized.",
+    "The owner does not grant authority for deployment.",
+    "No production rollout has permission to begin.",
+    "The council has not approved production deployment.",
+    "Permission to deploy is not granted.",
+    "The active Goal does not cover R0 implementation.",
+    "The council may not deploy to production.",
+    "Private host reads do not have current authority.",
+    "The Product Owner did not empower the council to deploy.",
+    "Historically, the Product Owner empowered the council to deploy.",
+    "If exact Gate B passes, the Product Owner empowers the council to deploy.",
+    "Authority has not been granted for deployment.",
+    "Approval has not been given for R0 implementation.",
+    "Permission does not exist to deploy.",
+    "Production is not ready to proceed.",
+    "R0 work has no go-ahead.",
+    "Private access is closed.",
+    "Further approval is required for deployment.",
+    "Something prevents deployment.",
+    "Gate B is not waived for deployment.",
+    "Gate B has not been deemed satisfied for deployment.",
+    "Deployment is not exempt from Gate B.",
+    "We are not authorized for R0 implementation.",
+    "We may not access the private system.",
+    "Historically, authority has been granted for deployment.",
+    "If exact Gate B passes, authority has been granted for deployment.",
+  ]);
+  for (const claim of safeAuthorityContexts) {
+    for (const filePath of BOUNDED_AUTHORITY_SOURCE_PATHS) {
+      const safe = { ...valid, [filePath]: `${valid[filePath]}\n${claim}\n` };
+      expect(validateBoundedAuthoritySources(safe).ok,
+        `historical, conditional, or negated authority remains safe in ${filePath}: ${claim}`);
+    }
+  }
+
+  const siblingClauseShields = Object.freeze([
+    "R0 implementation is not authorized, but deployment and production are permitted.",
+    "If exact Gate B passes, R0 may proceed, and production is authorized now.",
+    "If exact Gate B passes, R0 may proceed, and production is currently authorized.",
+    "If exact Gate B passes, the Product Owner empowers the council to deploy, and the active Goal enables R0 execution.",
+    "If exact Gate B passes, authority has been granted for deployment, and deployment is exempt from Gate B.",
+    "Historically, authority has been granted for deployment, but no further approval is required for R0 implementation.",
+    "Historically, R0 implementation was authorized, but production is currently authorized.",
+  ]);
+  for (const shield of siblingClauseShields) {
+    for (const filePath of BOUNDED_AUTHORITY_SOURCE_PATHS) {
+      const shielded = { ...valid, [filePath]: `${valid[filePath]}\n${shield}\n` };
+      expect(validateBoundedAuthoritySources(shielded).findings
+        .includes(`BOUNDED_AUTHORITY_PRESENT_AUTHORITY_CLAIM:${filePath}`),
+      `safe context cannot shield a positive sibling clause in ${filePath}: ${shield}`);
+    }
+  }
 
   const noFreeze = { ...valid, [BOUNDED_AUTHORITY_SOURCE_PATHS[2]]: "Current R0 authority only.\n" };
   expect(validateBoundedAuthoritySources(noFreeze).findings

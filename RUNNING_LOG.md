@@ -926,3 +926,28 @@ Any frozen-50 delta, unexpected task/path, stale source, skipped or stale CI, Co
 - **Council:** preparation may continue under binding amendments; Product and Design exact-candidate Holds remain until the completed immutable candidate proves them.
 - **Next action:** implement the deterministic freeze verifier and public activation-context artifact, then build the Stage 0 controls from pure trust primitives upward before changing shared projections.
 - **Self-critique:** opening the draft establishes a review channel but does not make the snapshot self-validating or the control plane trustworthy. The current workflow is still the legacy workflow, the Wiki builder remains broken, and no new Stage 0 assertion has passed yet.
+<!-- P0-RUNNING-LOG-EVENT:{"authorId":"codex-primary-integrator-01","bodySha256":"8a8b5cb87fbb6f8b697dfd8b4f7b468615babc2b7732e8f672d82613599ee59b","eventId":"P0-STAGE0-CORRECTIVE-REFREEZE-20260816-001","eventType":"qa","evidenceReference":"local-evidence:stage0-corrective-precommit","parentRevision":"f421431cd60a3db8e43911304d69ce7d2a3a71df","previousByteLength":85328,"previousSha256":"3d374855b011327d34a20440a4ca8ba33625c21e4ea470d52a5768653532234e","recordedAt":"2026-08-16T05:02:30+05:30","schemaVersion":"1.0.0"} -->
+## 2026-08-16 05:02 IST — Stage 0 corrective review and candidate refreeze
+
+### Why the prior candidate was held
+
+Exact-head review of `f421431cd60a3db8e43911304d69ce7d2a3a71df` found publication-order comparator defects plus serial-runner and delivery-transition freshness, durability, lifecycle, and bounded-authority enforcement gaps. That revision remains preserved as a held intermediate. The repairs below are a normal single-parent corrective child; no history was rewritten.
+
+### Corrective scope and verification
+
+- Successor-review derivation and the base-owned control ratchet now use one explicit code-unit path order, including mixed-case publication and consume fixtures.
+- All 17 active bounded-authority sources are an exact subset of the base-owned 54-entry integrity inventory. An ordinary PR cannot change their bytes, path, mode, or type; a later legitimate edit requires the separate exact-byte arm and consume sequence plus the semantic scanner.
+- The serializable lane captures immutable request identity, supports reviewed stages up to four hours while retaining the five-minute callback cap, revalidates predecessor, exact-main Gate B, and deadlines at the launch boundary, and pins locks on unproven post-start journal tails.
+- The delivery-transition lane revalidates exact-main authority, deadline, predecessor, frozen scope, and exact projection around each external boundary; uncertain saga tails fail stuck; a strict task-bound automaton rejects illegal hash-valid histories before any adapter call.
+- Current focused evidence passes: bounded authority 1,935 checks across 17 sources; readiness 386; historical trust 35; successor and running-log fixtures with zero failures; freeze 58; Wiki 30; staged actions 101; serial runner 86; delivery transition 94; exact-start 66; sync 56; CI contract 209; generated tracking 352; structural validation; exact 50-task/300-artifact freeze parity; and the 54-entry control-integrity inventory with no mismatches.
+- The reviewed workbook, manifest, register, release plan, and frozen R1-R10 task semantics remain unchanged by this corrective child.
+
+### Authority and next action
+
+This entry is evidence only. It changes no task contract, dossier, Gate A, Gate B, owner action, status, issue or Project value, permission, or execution decision. Current truth remains 58 Incomplete; 45 Hold plus 13 Historical non-authorizing; zero Ready; zero execution-allowed. Production actions, modules, callbacks, outcome verifiers, stage approvals, and delivery apply remain empty or disabled.
+
+Next, freeze the corrective child as one new commit, run two clean exact-head full suites, push normally, obtain five fresh exact-head seats plus independent adversarial review and required repository checks, and only then decide whether the draft PR may become mergeable. No R0 implementation, private access, authentic-content use, deployment, release, production, issue, Project, or Wiki mutation is authorized.
+
+### Self-critique
+
+These are pre-commit local/public control results, not a merge approval or milestone-completion claim. The final candidate digest and review context do not exist until the child is committed; every prior f421-bound packet, suite digest, and seat is superseded.

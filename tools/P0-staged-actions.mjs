@@ -39,9 +39,10 @@ const STAGE_ID = /^P0-STAGE-[A-Z0-9]+(?:-[A-Z0-9]+){2,}-[A-Z0-9][A-Z0-9-]{2,63}$
 const IDEMPOTENCY_KEY = /^P0-IDEMP-[A-Za-z0-9][A-Za-z0-9._:-]{15,111}$/;
 const CLOSED_IDENTIFIER = /^[a-z][a-z0-9.-]{2,63}$/;
 const MIN_STAGE_DEADLINE_MS = 1_000;
-// The exact-main authorization guard is capped at five minutes. A longer stage
-// requires a separate closed supervisor design rather than a larger field.
-const MAX_STAGE_DEADLINE_MS = 5 * 60 * 1_000;
+// Serializable reviewed children may cover the bounded four-hour recovery
+// drill target. The in-process callback lane enforces its separate five-minute
+// cap at invocation and never inherits this longer process-lane ceiling.
+export const MAX_SERIALIZABLE_STAGE_DEADLINE_MS = 4 * 60 * 60 * 1_000;
 const PREPARATION_REVIEW_ID = /^P0-PREP-[A-Z0-9]+(?:-[A-Z0-9]+)+$/;
 const RAW_SHA256 = /^[0-9a-f]{64}$/;
 
@@ -936,7 +937,7 @@ export function validateStagedActionDefinition(definition) {
   }
   if (!Number.isSafeInteger(definition.deadlineMs)
     || definition.deadlineMs < MIN_STAGE_DEADLINE_MS
-    || definition.deadlineMs > MAX_STAGE_DEADLINE_MS) {
+    || definition.deadlineMs > MAX_SERIALIZABLE_STAGE_DEADLINE_MS) {
     return fail("STAGE_DEADLINE_INVALID");
   }
   if (definition.predecessor !== null) {

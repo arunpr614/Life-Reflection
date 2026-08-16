@@ -97,7 +97,8 @@ const EVIDENCE_REFERENCE_PATTERN = /^(?:github-pr|github-check|commit|review|loc
 const CHANGE_TYPES = Object.freeze(["add", "modify", "delete", "type-change"]);
 
 const withoutKey = (value, key) => Object.fromEntries(Object.entries(value ?? {}).filter(([entry]) => entry !== key));
-const canonicalSort = (left, right) => canonicalJson(left).localeCompare(canonicalJson(right));
+const compareCodePointStrings = (left, right) => left < right ? -1 : left > right ? 1 : 0;
+const canonicalSort = (left, right) => compareCodePointStrings(canonicalJson(left), canonicalJson(right));
 
 export function computeSuccessorGenesisPayloadSha256(genesis) {
   return sha256(canonicalJson(withoutKey(genesis, "genesisPayloadSha256")));
@@ -179,7 +180,7 @@ export function deriveSuccessorChangedFiles(repoRoot, baseRevision, candidateRev
       candidate: sideFromEntry(candidateEntry),
     });
   }
-  return records.sort((left, right) => left.path.localeCompare(right.path));
+  return records.sort((left, right) => compareCodePointStrings(left.path, right.path));
 }
 
 function validFileSide(side) {
@@ -295,7 +296,8 @@ export function successorControlReviewFindings({
   add(Array.isArray(candidate?.changedFiles) && candidate.changedFiles.length > 0
     && candidate.changedFiles.every(validChangedFile)
     && new Set(candidate.changedFiles.map((entry) => entry.path)).size === candidate.changedFiles.length
-    && candidate.changedFiles.every((entry, index, array) => index === 0 || array[index - 1].path < entry.path),
+    && candidate.changedFiles.every((entry, index, array) => index === 0
+      || compareCodePointStrings(array[index - 1].path, entry.path) < 0),
   "SUCCESSOR_CHANGED_FILES_SCHEMA_INVALID");
   add(Array.isArray(candidate?.changedFiles)
     && candidate.changedFiles.every(validSafeCandidateChangedFile),

@@ -13,6 +13,6 @@ assert.equal(result.status, 0, result.stderr);
 const report = JSON.parse(result.stdout);
 assert.equal(report.ok, true);
 assert.equal(report.code, "SELF_TEST_OK");
-assert.equal(report.cases, 78);
+assert.equal(report.cases, 94);
 assert.equal(report.applyEnabled, false);
 console.log(JSON.stringify(report));

@@ -50,13 +50,14 @@ jobs:
             const EXPECTED_STATIC_CHECK = "Exact-head P0/R0 control suite";
             const FULL_REVISION = /^[0-9a-f]{40}$/;
             const SHA256 = /^[0-9a-f]{64}$/;
-            const ALLOWED_MODES = new Set(["100644", "100755"]);
-            const LEGACY_CONTROL_PATHS = new Set([
+            const ALLOWED_MODES = new Set(["100644"]);
+            const CONTROL_INTEGRITY_NAMESPACE_PATHS = new Set([
               ".github/workflows/prototype-syntax.yml",
               "prototypes/calendar-ui/app-v10.js",
               "prototypes/calendar-ui/package.json",
               "prototypes/calendar-ui/serve.mjs",
               "tools/P0-append-only-trust.mjs",
+              "tools/P0-bounded-authority.mjs",
               "tools/P0-build-task-readiness-input.mjs",
               "tools/P0-content-safety.mjs",
               "tools/P0-control-review-trust.mjs",
@@ -89,6 +90,25 @@ jobs:
               "tools/build_phase1_release_plan.mjs",
               "tools/generate_phase1_roadmap_manifest.mjs",
               "tools/sync_phase1_github.mjs",
+            ]);
+            const AUTHORITY_SOURCE_PATHS = new Set([
+              "AGENTS.md",
+              "README.md",
+              "docs/INDEX.md",
+              "docs/council/PHASE1-COUNCIL-DECISION-RECORD.md",
+              "docs/council/PRODUCT-COUNCIL-CHARTER.md",
+              "docs/council/PRODUCT-COUNCIL.md",
+              "docs/council/agents/P0-QA-LEAD.md",
+              "docs/council/execution/P0-PHASE1-EXECUTION-AUTHORIZATION.md",
+              "docs/council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md",
+              "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
+              "docs/council/execution/P0-PHASE1-EXECUTION-DECISIONS.md",
+              "docs/council/execution/releases/P0-P0-R0-STAGE0-STATE-CONTRACT.md",
+              "docs/product/PRODUCT-REQUIREMENTS.md",
+              "docs/project/PHASE1-GITHUB-PROJECT-SYNC.md",
+              "docs/project/PHASE1-RELEASE-PLAN.md",
+              "docs/project/PROJECT-TRACKER.md",
+              "tools/generate_phase1_roadmap_manifest.mjs",
             ]);
 
             const pullRequest = context.payload.pull_request;
@@ -193,7 +213,9 @@ jobs:
             const exactKeys = (value, keys) => value !== null && typeof value === "object"
               && !Array.isArray(value)
               && JSON.stringify(Object.keys(value)) === JSON.stringify(keys);
-            const isAllowedAddition = (filePath) => LEGACY_CONTROL_PATHS.has(filePath)
+            const compareCodeUnits = (left, right) => left < right ? -1 : left > right ? 1 : 0;
+            const isAllowedAddition = (filePath) => CONTROL_INTEGRITY_NAMESPACE_PATHS.has(filePath)
+              || AUTHORITY_SOURCE_PATHS.has(filePath)
               || /^tools\/P0-[A-Za-z0-9][A-Za-z0-9-]*\.mjs$/.test(filePath)
               || /^docs\/council\/execution\/P0-[A-Z0-9][A-Z0-9-]*\.(?:json|md)$/.test(filePath)
               || /^\.github\/workflows\/P0-[a-z0-9][a-z0-9-]*\.yml$/.test(filePath);
@@ -211,8 +233,15 @@ jobs:
             const assertSortedUnique = (entries, label) => {
               const paths = entries.map((entry) => entry.path);
               if (new Set(paths).size !== paths.length
-                || JSON.stringify(paths) !== JSON.stringify([...paths].sort())) {
+                || JSON.stringify(paths) !== JSON.stringify([...paths].sort(compareCodeUnits))) {
                 throw new Error(`P0_CONTROL_INTEGRITY_${label}_NOT_SORTED_UNIQUE`);
+              }
+            };
+            const assertAuthoritySourceSubset = (entries, label) => {
+              const paths = new Set(entries.map((entry) => entry.path));
+              if (AUTHORITY_SOURCE_PATHS.size !== 17
+                || [...AUTHORITY_SOURCE_PATHS].some((filePath) => !paths.has(filePath))) {
+                throw new Error(`P0_CONTROL_INTEGRITY_${label}_AUTHORITY_SOURCE_SET_INVALID`);
               }
             };
             const parseManifest = (file, label) => {
@@ -277,7 +306,7 @@ jobs:
 
             const same = (left, right) => JSON.stringify(left) === JSON.stringify(right);
             const assertExactPathSet = (actual, expected, code) => {
-              const normalized = [...new Set(expected)].sort();
+              const normalized = [...new Set(expected)].sort(compareCodeUnits);
               if (!same(actual, normalized)) throw new Error(code);
             };
             const applyChanges = (current, changes) => {
@@ -291,7 +320,7 @@ jobs:
                   sha256: change.sha256,
                 });
               }
-              return [...entries.values()].sort((left, right) => left.path.localeCompare(right.path));
+              return [...entries.values()].sort((left, right) => compareCodeUnits(left.path, right.path));
             };
             const assertInventory = async (revision, inventory, label) => {
               for (const expected of inventory) {
@@ -318,7 +347,7 @@ jobs:
                 if (before?.type === "tree" && after?.type === "tree") return false;
                 return !before || !after || before.mode !== after.mode
                   || before.type !== after.type || before.sha !== after.sha;
-              }).sort();
+              }).sort(compareCodeUnits);
             };
 
             const verifyRequiredChecksWhenVisible = async () => {
@@ -375,6 +404,8 @@ jobs:
 
             const baseManifest = parseManifest(baseManifestFile, "BASE_MANIFEST");
             const headManifest = parseManifest(headManifestFile, "HEAD_MANIFEST");
+            assertAuthoritySourceSubset(baseManifest.current, "BASE_MANIFEST");
+            assertAuthoritySourceSubset(headManifest.current, "HEAD_MANIFEST");
             await assertInventory(base, baseManifest.current, "BASE_CURRENT");
             const changedPaths = changedFilePaths(base, head);
             let transition;

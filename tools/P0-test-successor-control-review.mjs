@@ -66,6 +66,14 @@ function createCandidateRepo() {
   const intermediateRevision = commitAll(repoRoot, "synthetic freeze evidence");
   const dossierPath = "docs/council/execution/releases/P0-SYNTHETIC-CANDIDATE.md";
   fs.writeFileSync(path.join(repoRoot, dossierPath), "# Synthetic candidate dossier\n");
+  fs.mkdirSync(path.join(repoRoot, "docs/council/execution/control-reviews"), { recursive: true });
+  fs.mkdirSync(path.join(repoRoot, "tools/build"), { recursive: true });
+  fs.writeFileSync(path.join(repoRoot, "P0-SYNTHETIC-ROOT.md"), "# Synthetic root candidate\n");
+  fs.writeFileSync(path.join(repoRoot, "docs/council/execution/P0-SYNTHETIC-UPPER.json"), "{}\n");
+  fs.writeFileSync(path.join(repoRoot,
+    "docs/council/execution/control-reviews/P0-SYNTHETIC-LOWER.json"), "{}\n");
+  fs.writeFileSync(path.join(repoRoot, "tools/P0-synthetic-upper.mjs"), "export const upper = true;\n");
+  fs.writeFileSync(path.join(repoRoot, "tools/build/P0-synthetic-lower.mjs"), "export const lower = true;\n");
   fs.writeFileSync(path.join(repoRoot, "tools/P0-synthetic.mjs"), "export const value = 2;\n");
   const candidateRevision = commitAll(repoRoot, "synthetic candidate");
   const changedFiles = deriveSuccessorChangedFiles(repoRoot, baseRevision, candidateRevision);
@@ -238,6 +246,15 @@ function expectFinding(group, mutator, code) {
   expect("binding", review.candidate.baseRevision === candidate.baseRevision
     && review.candidate.changedFiles.some((entry) => entry.path === "docs/council/execution/P0-SYNTHETIC-FREEZE.json"),
   "multi-commit candidate binds the complete activation-base range");
+  const changedPaths = candidate.changedFiles.map((entry) => entry.path);
+  const codePointSortedPaths = [...changedPaths].sort();
+  expect("ordering", canonicalJson(changedPaths) === canonicalJson(codePointSortedPaths),
+    "mixed uppercase/lowercase path prefixes derive in deterministic code-point order");
+  expect("ordering", changedPaths.indexOf("docs/council/execution/P0-SYNTHETIC-UPPER.json")
+    < changedPaths.indexOf("docs/council/execution/control-reviews/P0-SYNTHETIC-LOWER.json")
+    && changedPaths.indexOf("tools/P0-synthetic-upper.mjs")
+      < changedPaths.indexOf("tools/build/P0-synthetic-lower.mjs"),
+  "code-point order keeps uppercase path components before lowercase path components");
 
   const parentOnlyFiles = deriveSuccessorChangedFiles(
     candidate.repoRoot, candidate.intermediateRevision, candidate.candidateRevision,
@@ -287,7 +304,7 @@ expectFinding("binding", (review) => {
 expectFinding("binding", (review) => {
   const added = review.candidate.changedFiles.find((entry) => entry.changeType === "add");
   added.path = "docs/council/execution/releases/unprefixed-candidate.md";
-  review.candidate.changedFiles.sort((left, right) => left.path.localeCompare(right.path));
+  review.candidate.changedFiles.sort((left, right) => left.path < right.path ? -1 : left.path > right.path ? 1 : 0);
   review.candidate.changedFilesSha256 = computeSuccessorChangedFilesSha256(review.candidate.changedFiles);
   resign(review);
 }, "SUCCESSOR_CHANGED_FILES_SAFE_TYPES_INVALID");
@@ -516,7 +533,7 @@ expectFinding("effects", (review) => {
   "integrated committed deletion remains discoverable and fails closed");
 }
 
-const namedChecks = Object.fromEntries([...groups].sort(([left], [right]) => left.localeCompare(right))
+const namedChecks = Object.fromEntries([...groups].sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)
   .map(([group, labels]) => [group, `sha256:${crypto.createHash("sha256").update(canonicalJson(labels)).digest("hex")}`]));
 console.log(JSON.stringify({
   suite: "P0 successor control-review trust fixtures",

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import {
   preparationReviewRecordDigest,
+  MAX_SERIALIZABLE_STAGE_DEADLINE_MS,
   PRODUCTION_STAGED_ACTIONS,
   stageApprovalContextDigest,
   stageApprovalRecordDigest,
@@ -129,7 +130,8 @@ for (const [change, code] of [
   [{ moduleId: "../../evil" }, "STAGE_RUNNER_BINDING_INVALID"],
   [{ argumentSetId: "/tmp/args" }, "STAGE_RUNNER_BINDING_INVALID"],
   [{ deadlineMs: 999 }, "STAGE_DEADLINE_INVALID"],
-  [{ deadlineMs: 300_001 }, "STAGE_DEADLINE_INVALID"],
+  [{ deadlineMs: MAX_SERIALIZABLE_STAGE_DEADLINE_MS }, "STAGE_DEFINITION_VALID"],
+  [{ deadlineMs: MAX_SERIALIZABLE_STAGE_DEADLINE_MS + 1 }, "STAGE_DEADLINE_INVALID"],
   [{ predecessor: { stageId: base.stageId, receiptDigest: DIGEST } }, "STAGE_PREDECESSOR_INVALID"],
   [{ command: "sh" }, "STAGE_DEFINITION_SHAPE_INVALID"],
   [{ env: { TOKEN: "secret" } }, "STAGE_DEFINITION_SHAPE_INVALID"],

@@ -371,6 +371,33 @@ function validateProductionRequest(request) {
   return result(true, "STAGE_REQUEST_VALID", { taskId: request.taskId, stageId: request.stageId });
 }
 
+function captureSerializableProductionRequest(request) {
+  try {
+    if (request === null
+      || typeof request !== "object"
+      || Array.isArray(request)
+      || utilTypes.isProxy(request)
+      || PRIMORDIAL_OBJECT_GET_PROTOTYPE_OF(request) !== Object.prototype
+      || PRIMORDIAL_OBJECT_GET_OWN_PROPERTY_SYMBOLS(request).length !== 0) {
+      return null;
+    }
+    const descriptors = PRIMORDIAL_OBJECT_GET_OWN_PROPERTY_DESCRIPTORS(request);
+    if (Object.keys(descriptors).sort().join("\0") !== [...PRODUCTION_REQUEST_KEYS].sort().join("\0")
+      || !Object.values(descriptors).every((descriptor) => Object.hasOwn(descriptor, "value")
+        && descriptor.get === undefined
+        && descriptor.set === undefined
+        && descriptor.enumerable === true)) {
+      return null;
+    }
+    const identity = PRIMORDIAL_OBJECT_FREEZE(Object.fromEntries(
+      PRODUCTION_REQUEST_KEYS.map((key) => [key, descriptors[key].value]),
+    ));
+    return validateProductionRequest(identity).ok ? identity : null;
+  } catch {
+    return null;
+  }
+}
+
 function captureCallbackProductionRequest(request) {
   try {
     if (request === null
@@ -1123,6 +1150,10 @@ async function executeResolvedStage({
   spawnProcess = spawn,
   clock = () => new Date(),
   quiescenceIntervalMs = QUIESCENCE_INTERVAL_MS,
+  appendJournalEvent = appendEvent,
+  syncEventFile = syncRegularFile,
+  syncEventDirectory = syncDirectory,
+  childLockRecordPersistBarrier = async () => {},
 }) {
   const definitionValidation = validateStagedActionDefinition(definition);
   if (!definitionValidation.ok) return result(false, definitionValidation.code);
@@ -1183,6 +1214,22 @@ async function executeResolvedStage({
   let retainLock = false;
   let child = null;
   let ownerNonce = null;
+  let deadlineAt = Number.NaN;
+  let deadlineHandle;
+  let cancellationReason = null;
+  let terminationPromise = null;
+  let outcomePromise = null;
+  let actionMayHaveStarted = false;
+  let durableRecoveryOrTerminal = false;
+  let provenEventCount = 0;
+  let latestEvidence = {
+    moduleSha256: reviewedModule.moduleSha256,
+    childResultSha256: null,
+    evidenceDigest: null,
+    stdoutSha256: null,
+    stderrSha256: null,
+  };
+  let latestVerification = {};
   try {
     const supervisorStartIdentity = processStartIdentity(process.pid);
     if (supervisorStartIdentity === null) {
@@ -1208,11 +1255,20 @@ async function executeResolvedStage({
       pendingReceiptSha256: null,
       heartbeatAt: clock().toISOString(),
     };
+    let childLockRecordBarrierUsed = false;
     const persistLockRecord = async () => {
       lockRecord.heartbeatAt = clock().toISOString();
       const bytes = Buffer.from(`${canonicalJson(lockRecord)}\n`, "utf8");
       await lockHandle.truncate(0);
       await lockHandle.write(bytes, 0, bytes.length, 0);
+      if (lockRecord.childPid !== null && !childLockRecordBarrierUsed) {
+        childLockRecordBarrierUsed = true;
+        await childLockRecordPersistBarrier(Object.freeze({
+          childPid: lockRecord.childPid,
+          childStartIdentity: lockRecord.childStartIdentity,
+          stageId: definition.stageId,
+        }));
+      }
       await lockHandle.sync();
     };
     await persistLockRecord();
@@ -1234,12 +1290,13 @@ async function executeResolvedStage({
         state: "recovery-required",
         attempt: 1,
       });
-      await appendEvent(eventDir, existingEvents.length + 1, {
+      await appendJournalEvent(eventDir, existingEvents.length + 1, {
         schemaVersion: definition.schemaVersion,
         state: "recovery-required",
         occurredAt: clock().toISOString(),
         receipt: recoveredReceipt,
       });
+      durableRecoveryOrTerminal = true;
       return publicOperatorResult({
         ok: false,
         code: "STAGE_RECOVERY_REQUIRED",
@@ -1282,25 +1339,49 @@ async function executeResolvedStage({
     await syncDirectory(stageRoot);
     await syncDirectory(rawDir);
 
-    const startedAt = clock();
-    const configuredDeadline = startedAt.getTime() + definition.deadlineMs;
-    const gateDeadline = Date.parse(authorization.deadlineAt);
-    const deadlineAt = Number.isFinite(gateDeadline)
-      ? Math.min(configuredDeadline, gateDeadline)
-      : configuredDeadline;
-    if (!Number.isFinite(deadlineAt) || deadlineAt <= startedAt.getTime()) {
+    const runningAt = clock();
+    const initialDeadline = PRIMORDIAL_DATE_PARSE(authorization.deadlineAt);
+    if (!Number.isFinite(initialDeadline)
+      || initialDeadline <= PRIMORDIAL_DATE_GET_TIME(runningAt)) {
       return result(false, "STAGE_DEADLINE_INVALID", { taskId: definition.taskId, stageId: definition.stageId });
     }
 
-    await appendEvent(eventDir, 1, {
+    await appendJournalEvent(eventDir, 1, {
       schemaVersion: definition.schemaVersion,
       state: "running",
-      occurredAt: startedAt.toISOString(),
+      occurredAt: PRIMORDIAL_DATE_TO_ISO_STRING(runningAt),
       processGroupId: null,
       sourceRevision: authorization.sourceRevision,
       stageBindingDigest: definitionValidation.stageBindingDigest,
       executorSha256: reviewedModule.moduleSha256,
     });
+    provenEventCount = 1;
+    const appendNoMutationTerminal = async ({ expired, occurredAt }) => {
+      const terminalState = expired ? "expired-before-mutation" : "blocked-no-mutation";
+      const terminalReceipt = closedReceipt({
+        definition,
+        authorization,
+        state: terminalState,
+        attempt: 1,
+        evidence: { moduleSha256: reviewedModule.moduleSha256 },
+      });
+      const terminalValidation = validateStageReceipt(terminalReceipt, definition, authorization);
+      if (!terminalValidation.ok) throw new Error(terminalValidation.code);
+      await appendJournalEvent(eventDir, 2, {
+        schemaVersion: definition.schemaVersion,
+        state: terminalState,
+        occurredAt: PRIMORDIAL_DATE_TO_ISO_STRING(occurredAt),
+        receipt: terminalReceipt,
+      });
+      provenEventCount = 2;
+      durableRecoveryOrTerminal = true;
+      return result(false, expired ? "STAGE_EXPIRED_BEFORE_MUTATION" : "STAGE_BLOCKED_NO_MUTATION", {
+        taskId: definition.taskId,
+        stageId: definition.stageId,
+        state: terminalState,
+        receiptDigest: sha256(canonicalJson(terminalReceipt)),
+      });
+    };
     const bindingArgs = [
       `--p0-task-id=${definition.taskId}`,
       `--p0-stage-id=${definition.stageId}`,
@@ -1310,6 +1391,36 @@ async function executeResolvedStage({
     ];
     const resolvedLauncherPath = await realpath(launcherPath);
     const resolvedStageRoot = path.dirname(resolvedLauncherPath);
+
+    // The durable running event is only intent. Re-fetch the predecessor and
+    // exact-main Gate B after every awaited setup/journal operation, then take
+    // the actual spawn time. No await or caller-controlled work is allowed
+    // between this boundary and child creation.
+    const predecessorStillCurrent = await predecessorReceiptExists(runtimeRoot, definition);
+    let spawnAuthorization;
+    try {
+      spawnAuthorization = await authorize(request);
+    } catch {
+      spawnAuthorization = null;
+    }
+    const spawnAt = clock();
+    const spawnAtMs = PRIMORDIAL_DATE_GET_TIME(spawnAt);
+    const authorityDeadlines = [
+      PRIMORDIAL_DATE_PARSE(authorization.deadlineAt),
+      PRIMORDIAL_DATE_PARSE(spawnAuthorization?.deadlineAt ?? ""),
+    ];
+    const authorityExpired = authorityDeadlines.some((value) => Number.isFinite(value) && value <= spawnAtMs);
+    const spawnAuthorizationValid = predecessorStillCurrent
+      && validateAuthorization(spawnAuthorization, request, definition)
+      && sameAuthorization(authorization, spawnAuthorization)
+      && authorityDeadlines.every((value) => Number.isFinite(value) && value > spawnAtMs);
+    deadlineAt = spawnAuthorizationValid
+      ? Math.min(spawnAtMs + definition.deadlineMs, ...authorityDeadlines)
+      : Number.NaN;
+    if (!spawnAuthorizationValid || !Number.isFinite(deadlineAt) || deadlineAt <= spawnAtMs) {
+      return await appendNoMutationTerminal({ expired: authorityExpired, occurredAt: spawnAt });
+    }
+
     child = spawnProcess(process.execPath, [
       "--permission",
       `--allow-fs-read=${resolvedStageRoot}`,
@@ -1324,9 +1435,25 @@ async function executeResolvedStage({
       windowsHide: true,
       stdio: ["ignore", stdoutHandle.fd, stderrHandle.fd, childResultHandle.fd, "pipe"],
     });
+    const requestCancellation = (reason) => {
+      cancellationReason ??= reason;
+      terminationPromise ??= terminateProcessTree(child);
+    };
+    // The child exists but the trusted launcher is still blocked on fd 4.
+    // Observe settlement and arm cancellation before any await or identity/
+    // lock-record work can consume the remaining authority window.
+    outcomePromise = new Promise((resolve) => {
+      child.once("error", () => resolve({ exitCode: null, signal: null, spawnFailed: true }));
+      child.once("close", (exitCode, signal) => resolve({ exitCode, signal, spawnFailed: false }));
+    });
+    deadlineHandle = PRIMORDIAL_SET_TIMEOUT(
+      () => requestCancellation("deadline-before-or-during-action"),
+      Math.max(1, deadlineAt - PRIMORDIAL_DATE_NOW()),
+    );
     const childStartIdentity = processStartIdentity(child.pid);
     if (childStartIdentity === null) {
-      retainLock = !await terminateProcessTree(child).catch(() => false);
+      requestCancellation("child-identity-unavailable");
+      retainLock = !await terminationPromise.catch(() => false);
       return result(false, "STAGE_CHILD_IDENTITY_UNAVAILABLE", {
         taskId: definition.taskId,
         stageId: definition.stageId,
@@ -1336,20 +1463,86 @@ async function executeResolvedStage({
     lockRecord.childStartIdentity = childStartIdentity;
     lockRecord.childProcessGroupId = child.pid;
     await persistLockRecord();
+
+    // LAUNCH_SIGNAL, not launcher creation, is the possible module-effect
+    // boundary. Re-fetch every mutable authorization fact after the durable
+    // child lock-record fsync, then allow no await before the first signal byte.
+    const predecessorStillCurrentAtSignal = await predecessorReceiptExists(runtimeRoot, definition);
+    let signalAuthorization;
+    try {
+      signalAuthorization = await authorize(request);
+    } catch {
+      signalAuthorization = null;
+    }
+    const signalAt = clock();
+    const signalAtMs = PRIMORDIAL_DATE_GET_TIME(signalAt);
+    const signalAuthorityDeadlines = [
+      ...authorityDeadlines,
+      PRIMORDIAL_DATE_PARSE(signalAuthorization?.deadlineAt ?? ""),
+    ];
+    const signalDeadlineAt = Math.min(deadlineAt, ...signalAuthorityDeadlines);
+    const signalAuthorityExpired = cancellationReason !== null
+      || signalAuthorityDeadlines.some((value) => Number.isFinite(value) && value <= signalAtMs)
+      || deadlineAt <= signalAtMs;
+    const launcherStillWaiting = child.exitCode === null && child.signalCode === null;
+    const signalAuthorizationValid = cancellationReason === null
+      && launcherStillWaiting
+      && predecessorStillCurrentAtSignal
+      && validateAuthorization(signalAuthorization, request, definition)
+      && sameAuthorization(authorization, signalAuthorization)
+      && sameAuthorization(spawnAuthorization, signalAuthorization)
+      && signalAuthorityDeadlines.every((value) => Number.isFinite(value) && value > signalAtMs)
+      && Number.isFinite(signalDeadlineAt)
+      && signalDeadlineAt > signalAtMs;
+    if (!signalAuthorizationValid) {
+      requestCancellation(signalAuthorityExpired ? "expired-before-signal" : "blocked-before-signal");
+      const launcherQuiescent = await terminationPromise.catch(() => false);
+      if (!launcherQuiescent) {
+        retainLock = true;
+        try {
+          const recoveryReceipt = closedReceipt({
+            definition,
+            authorization,
+            state: "recovery-required",
+            attempt: 1,
+            evidence: latestEvidence,
+          });
+          await appendJournalEvent(eventDir, 2, {
+            schemaVersion: definition.schemaVersion,
+            state: "recovery-required",
+            occurredAt: PRIMORDIAL_DATE_TO_ISO_STRING(signalAt),
+            receipt: recoveryReceipt,
+          });
+          provenEventCount = 2;
+          durableRecoveryOrTerminal = true;
+        } catch {
+          // Keep the lock pinned when neither launcher settlement nor durable
+          // recovery can be proven.
+        }
+        return result(false, "STAGE_RECOVERY_REQUIRED", {
+          taskId: definition.taskId,
+          stageId: definition.stageId,
+        });
+      }
+      return await appendNoMutationTerminal({
+        expired: signalAuthorityExpired,
+        occurredAt: signalAt,
+      });
+    }
+
+    deadlineAt = signalDeadlineAt;
+    PRIMORDIAL_CLEAR_TIMEOUT(deadlineHandle);
+    deadlineHandle = PRIMORDIAL_SET_TIMEOUT(
+      () => requestCancellation("deadline-during-action"),
+      Math.max(1, deadlineAt - PRIMORDIAL_DATE_NOW()),
+    );
+    // Set this before .end(): signal bytes may escape even if .end() throws.
+    actionMayHaveStarted = true;
     child.stdio[4].end(LAUNCH_SIGNAL);
 
-    let cancellationReason = null;
-    let terminationPromise = null;
-    const requestCancellation = (reason) => {
-      cancellationReason ??= reason;
-      terminationPromise ??= terminateProcessTree(child);
-    };
-    const deadlineHandle = setTimeout(() => requestCancellation("recovery-required"), Math.max(1, deadlineAt - Date.now()));
-    const outcome = await new Promise((resolve) => {
-      child.once("error", () => resolve({ exitCode: null, signal: null, spawnFailed: true }));
-      child.once("close", (exitCode, signal) => resolve({ exitCode, signal, spawnFailed: false }));
-    });
-    clearTimeout(deadlineHandle);
+    const outcome = await outcomePromise;
+    PRIMORDIAL_CLEAR_TIMEOUT(deadlineHandle);
+    deadlineHandle = undefined;
     let processTreeQuiescent = true;
     if (terminationPromise) processTreeQuiescent = await terminationPromise;
     if (processTreeAlive(child)) processTreeQuiescent = await terminateProcessTree(child);
@@ -1370,7 +1563,7 @@ async function executeResolvedStage({
       sourceRevision: authorization.sourceRevision,
       stageBindingDigest: definitionValidation.stageBindingDigest,
     });
-    const evidence = {
+    latestEvidence = {
       moduleSha256: reviewedModule.moduleSha256,
       childResultSha256: childResult?.digest ?? null,
       evidenceDigest: childResult?.value?.evidenceDigest ?? null,
@@ -1384,14 +1577,16 @@ async function executeResolvedStage({
         authorization,
         state: "recovery-required",
         attempt: 1,
-        evidence,
+        evidence: latestEvidence,
       });
-      await appendEvent(eventDir, 2, {
+      await appendJournalEvent(eventDir, 2, {
         schemaVersion: definition.schemaVersion,
         state: "recovery-required",
-        occurredAt: clock().toISOString(),
+        occurredAt: PRIMORDIAL_DATE_TO_ISO_STRING(clock()),
         receipt: failedReceipt,
       });
+      provenEventCount = 2;
+      durableRecoveryOrTerminal = true;
       return publicOperatorResult({
         ok: false,
         code: "STAGE_RECOVERY_REQUIRED",
@@ -1414,20 +1609,22 @@ async function executeResolvedStage({
       authorization,
       state: "verification-pending",
       attempt: 1,
-      evidence,
+      evidence: latestEvidence,
     });
     const pendingReceiptSha256 = sha256(canonicalJson(pendingReceipt));
-    await appendEvent(eventDir, 2, {
+    await appendJournalEvent(eventDir, 2, {
       schemaVersion: definition.schemaVersion,
       state: "verification-pending",
-      occurredAt: clock().toISOString(),
+      occurredAt: PRIMORDIAL_DATE_TO_ISO_STRING(clock()),
       receipt: pendingReceipt,
     });
+    provenEventCount = 2;
     lockRecord.pendingReceiptSha256 = pendingReceiptSha256;
     await persistLockRecord();
 
     const authorizationStillValid = async () => {
-      if (clock().getTime() > deadlineAt) return false;
+      const nowMs = PRIMORDIAL_DATE_GET_TIME(clock());
+      if (nowMs >= deadlineAt) return false;
       let refreshed;
       try {
         refreshed = await authorize(request);
@@ -1435,7 +1632,8 @@ async function executeResolvedStage({
         return false;
       }
       return validateAuthorization(refreshed, request, definition)
-        && sameAuthorization(authorization, refreshed);
+        && sameAuthorization(authorization, refreshed)
+        && PRIMORDIAL_DATE_PARSE(refreshed.deadlineAt) > nowMs;
     };
     const verificationDigests = {
       immediateVerificationSha256: null,
@@ -1457,9 +1655,9 @@ async function executeResolvedStage({
           stageId: definition.stageId,
           sourceRevision: authorization.sourceRevision,
           stageBindingDigest: definitionValidation.stageBindingDigest,
-          moduleSha256: evidence.moduleSha256,
-          childResultSha256: evidence.childResultSha256,
-          evidenceDigest: evidence.evidenceDigest,
+          moduleSha256: latestEvidence.moduleSha256,
+          childResultSha256: latestEvidence.childResultSha256,
+          evidenceDigest: latestEvidence.evidenceDigest,
         }));
       } catch {
         return false;
@@ -1470,9 +1668,9 @@ async function executeResolvedStage({
         stageId: definition.stageId,
         sourceRevision: authorization.sourceRevision,
         stageBindingDigest: definitionValidation.stageBindingDigest,
-        moduleSha256: evidence.moduleSha256,
-        childResultSha256: evidence.childResultSha256,
-        evidenceDigest: evidence.evidenceDigest,
+        moduleSha256: latestEvidence.moduleSha256,
+        childResultSha256: latestEvidence.childResultSha256,
+        evidenceDigest: latestEvidence.evidenceDigest,
       });
       if (verified === null) return false;
       // Outcome verification may itself be slow. Re-fetch exact main and
@@ -1496,7 +1694,8 @@ async function executeResolvedStage({
     // incurs one more exact-main/authority check immediately before the
     // terminal receipt is constructed and persisted.
     if (postActionAuthorized) postActionAuthorized = await authorizationStillValid();
-    const verifiedEvidence = { ...evidence, ...verificationDigests };
+    latestVerification = verificationDigests;
+    const verifiedEvidence = { ...latestEvidence, ...verificationDigests };
     if (!postActionAuthorized) {
       const recoveryReceipt = closedReceipt({
         definition,
@@ -1505,12 +1704,14 @@ async function executeResolvedStage({
         attempt: 1,
         evidence: verifiedEvidence,
       });
-      await appendEvent(eventDir, 3, {
+      await appendJournalEvent(eventDir, 3, {
         schemaVersion: definition.schemaVersion,
         state: "recovery-required",
-        occurredAt: clock().toISOString(),
+        occurredAt: PRIMORDIAL_DATE_TO_ISO_STRING(clock()),
         receipt: recoveryReceipt,
       });
+      provenEventCount = 3;
+      durableRecoveryOrTerminal = true;
       return publicOperatorResult({
         ok: false,
         code: "STAGE_POST_ACTION_VERIFICATION_INVALID",
@@ -1538,13 +1739,15 @@ async function executeResolvedStage({
     });
     const completedValidation = validateStageReceipt(completedReceipt, definition, authorization);
     if (!completedValidation.ok) throw new Error(completedValidation.code);
-    await appendEvent(eventDir, 3, {
+    await appendJournalEvent(eventDir, 3, {
       schemaVersion: definition.schemaVersion,
       state: "verified-complete",
-      occurredAt: clock().toISOString(),
+      occurredAt: PRIMORDIAL_DATE_TO_ISO_STRING(clock()),
       receipt: completedReceipt,
       pendingReceiptSha256,
     });
+    provenEventCount = 3;
+    durableRecoveryOrTerminal = true;
     return publicOperatorResult({
       ok: true,
       code: "STAGE_SUCCEEDED",
@@ -1562,8 +1765,59 @@ async function executeResolvedStage({
     });
   } catch {
     if (child && !(await terminateProcessTree(child).catch(() => false))) retainLock = true;
+    if (actionMayHaveStarted && !durableRecoveryOrTerminal) {
+      try {
+        const events = await readEvents(eventDir);
+        if (events.length < provenEventCount || events.length > provenEventCount + 1) {
+          throw new Error("post-action journal event count is not provable");
+        }
+        let provenTail = events.at(-1);
+        if (events.length === provenEventCount + 1) {
+          // A later recovery event must never depend on a merely readable,
+          // fsync-uncertain predecessor created by the failed append.
+          provenTail = await proveReadableEventTailDurable({
+            eventDir,
+            events,
+            syncEventFile,
+            syncEventDirectory,
+          });
+          provenEventCount = events.length;
+        }
+        const alreadyWritten = provenTail?.state === "recovery-required"
+          || TERMINAL_STAGE_STATES.includes(provenTail?.state);
+        if (!alreadyWritten) {
+          const recoveryReceipt = closedReceipt({
+            definition,
+            authorization,
+            state: "recovery-required",
+            attempt: 1,
+            evidence: { ...latestEvidence, ...latestVerification },
+          });
+          await appendJournalEvent(eventDir, events.length + 1, {
+            schemaVersion: definition.schemaVersion,
+            state: "recovery-required",
+            occurredAt: PRIMORDIAL_DATE_TO_ISO_STRING(clock()),
+            receipt: recoveryReceipt,
+          });
+          provenEventCount = events.length + 1;
+        }
+        durableRecoveryOrTerminal = true;
+      } catch {
+        // A possible child effect without a proven durable recovery/terminal
+        // tail remains fail-stuck for reviewed recovery.
+        retainLock = true;
+      }
+      return result(false, "STAGE_RECOVERY_REQUIRED", {
+        taskId: definition.taskId,
+        stageId: definition.stageId,
+      });
+    }
     return result(false, "STAGE_RUNNER_FAILED", { taskId: definition.taskId, stageId: definition.stageId });
   } finally {
+    if (deadlineHandle !== undefined) {
+      PRIMORDIAL_CLEAR_TIMEOUT(deadlineHandle);
+      deadlineHandle = undefined;
+    }
     if (stdoutHandle) await stdoutHandle.close().catch(() => {});
     if (stderrHandle) await stderrHandle.close().catch(() => {});
     if (childResultHandle) await childResultHandle.close().catch(() => {});
@@ -2272,21 +2526,24 @@ export async function executeStageFromExactMain(request = {}) {
  * injectable.
  */
 export async function runSerializableStageFromExactMain(request = {}) {
-  const requestValidation = validateProductionRequest(request);
-  if (!requestValidation.ok) return requestValidation;
+  // Capture the closed identity from own data descriptors before this async
+  // function can yield. Caller mutation/accessors can never influence a later
+  // reconciliation, definition lookup, or execution boundary.
+  const identity = captureSerializableProductionRequest(request);
+  if (identity === null) return result(false, "STAGE_REQUEST_SHAPE_INVALID");
   const repoRoot = DEFAULT_REPO_ROOT;
   const runtimeRoot = await defaultRuntimeRoot(repoRoot);
-  const reconciled = await reconcileTerminalStage({ request, runtimeRoot });
+  const reconciled = await reconcileTerminalStage({ request: identity, runtimeRoot });
   if (reconciled !== null) return reconciled;
-  const definition = resolveProductionStagedAction(request);
+  const definition = resolveProductionStagedAction(identity);
   if (!definition
-    || definition.scopeClass !== request.scopeClass
-    || definition.actionClass !== request.actionClass
-    || (definition.predecessor?.receiptDigest ?? null) !== request.predecessorReceiptSha256) {
-    return result(false, "STAGE_ACTION_NOT_REVIEWED", { taskId: request.taskId, stageId: request.stageId });
+    || definition.scopeClass !== identity.scopeClass
+    || definition.actionClass !== identity.actionClass
+    || (definition.predecessor?.receiptDigest ?? null) !== identity.predecessorReceiptSha256) {
+    return result(false, "STAGE_ACTION_NOT_REVIEWED", { taskId: identity.taskId, stageId: identity.stageId });
   }
   const moduleEntry = PRODUCTION_MODULE_ALLOWLIST[definition.moduleId];
-  if (!moduleEntry) return result(false, "STAGE_MODULE_NOT_ALLOWLISTED", { taskId: request.taskId, stageId: request.stageId });
+  if (!moduleEntry) return result(false, "STAGE_MODULE_NOT_ALLOWLISTED", { taskId: identity.taskId, stageId: identity.stageId });
 
   return executeResolvedStage({
     definition,
@@ -2433,7 +2690,7 @@ async function selfTest() {
         definition,
         moduleEntry,
         repoRoot,
-        runtimeRoot,
+        runtimeRoot: overrides.runtimeRoot ?? runtimeRoot,
         authorize: overrides.authorize ?? (async () => authorization),
         verifyOutcome: overrides.verifyOutcome ?? (async (request) => ({
           schemaVersion: request.schemaVersion,
@@ -2450,6 +2707,11 @@ async function selfTest() {
         })),
         quiescenceIntervalMs: overrides.quiescenceIntervalMs ?? 5,
         clock: overrides.clock ?? (() => new Date()),
+        spawnProcess: overrides.spawnProcess ?? spawn,
+        appendJournalEvent: overrides.appendJournalEvent ?? appendEvent,
+        syncEventFile: overrides.syncEventFile ?? syncRegularFile,
+        syncEventDirectory: overrides.syncEventDirectory ?? syncDirectory,
+        childLockRecordPersistBarrier: overrides.childLockRecordPersistBarrier ?? (async () => {}),
       });
     };
     const callbackCompletionFor = (definition, context, overrides = {}) => ({
@@ -2537,7 +2799,7 @@ async function selfTest() {
       throw new Error("public operator receipt private-path rejection case failed");
     }
     cases += 1;
-    if (authorizationCalls !== 8) throw new Error("post-action authorization count case failed");
+    if (authorizationCalls !== 10) throw new Error("post-action authorization count case failed");
     cases += 1;
     const successKey = safeRuntimeSegment(`${definition.taskId}\0${definition.stageId}\0${definition.idempotencyKey}`);
     const successEvents = await readEvents(path.join(runtimeRoot, successKey, "events"));
@@ -2559,6 +2821,191 @@ async function selfTest() {
       || new Set(terminalVerificationDigests).size !== 3
       || !terminalVerificationResults.every((outcome) => outcome === "pass")) {
       throw new Error("terminal outcome-verification binding case failed");
+    }
+    cases += 1;
+
+    const preSpawnExpiryDefinition = definitionFor({ suffix: "PRESPAWN-DELAYED-EXPIRY" });
+    const preSpawnExpiryEntry = await entryFor(preSpawnExpiryDefinition, successName);
+    let preSpawnNowMs = Date.now();
+    const preSpawnExpiryAuthorization = authorizationFor(preSpawnExpiryDefinition, {
+      moduleSha256: preSpawnExpiryEntry.moduleSha256,
+      deadlineAt: new Date(preSpawnNowMs + 1_000).toISOString(),
+    });
+    let expiredSpawnCount = 0;
+    const delayedRunningJournal = async (directory, sequence, event) => {
+      const eventPath = await appendEvent(directory, sequence, event);
+      if (sequence === 1 && event.state === "running") preSpawnNowMs += 2_000;
+      return eventPath;
+    };
+    const preSpawnExpired = await executeFixture(preSpawnExpiryDefinition, preSpawnExpiryEntry, {
+      authorization: preSpawnExpiryAuthorization,
+      clock: () => new Date(preSpawnNowMs),
+      appendJournalEvent: delayedRunningJournal,
+      spawnProcess: (...args) => {
+        expiredSpawnCount += 1;
+        return spawn(...args);
+      },
+    });
+    const preSpawnExpiryKey = safeRuntimeSegment(`${preSpawnExpiryDefinition.taskId}\0${preSpawnExpiryDefinition.stageId}\0${preSpawnExpiryDefinition.idempotencyKey}`);
+    const preSpawnExpiryEvents = await readEvents(path.join(runtimeRoot, preSpawnExpiryKey, "events"));
+    if (preSpawnExpired.code !== "STAGE_EXPIRED_BEFORE_MUTATION"
+      || expiredSpawnCount !== 0
+      || preSpawnExpiryEvents.map((event) => event.state).join(",") !== "running,expired-before-mutation") {
+      throw new Error("serializable delayed pre-spawn expiry zero-child case failed");
+    }
+    cases += 1;
+
+    const preSpawnDriftDefinition = definitionFor({ suffix: "PRESPAWN-AUTHORITY-DRIFT" });
+    const preSpawnDriftEntry = await entryFor(preSpawnDriftDefinition, successName);
+    const preSpawnStableAuthorization = authorizationFor(preSpawnDriftDefinition, {
+      moduleSha256: preSpawnDriftEntry.moduleSha256,
+    });
+    let preSpawnAuthorizationCalls = 0;
+    let driftSpawnCount = 0;
+    let runningJournalPersisted = false;
+    const driftAfterRunningJournal = async (directory, sequence, event) => {
+      const eventPath = await appendEvent(directory, sequence, event);
+      if (sequence === 1 && event.state === "running") runningJournalPersisted = true;
+      return eventPath;
+    };
+    const preSpawnDrift = await executeFixture(preSpawnDriftDefinition, preSpawnDriftEntry, {
+      authorize: async () => {
+        preSpawnAuthorizationCalls += 1;
+        return !runningJournalPersisted
+          ? preSpawnStableAuthorization
+          : { ...preSpawnStableAuthorization, stageApprovalSha256: "0".repeat(64) };
+      },
+      appendJournalEvent: driftAfterRunningJournal,
+      spawnProcess: (...args) => {
+        driftSpawnCount += 1;
+        return spawn(...args);
+      },
+    });
+    const preSpawnDriftKey = safeRuntimeSegment(`${preSpawnDriftDefinition.taskId}\0${preSpawnDriftDefinition.stageId}\0${preSpawnDriftDefinition.idempotencyKey}`);
+    const preSpawnDriftEvents = await readEvents(path.join(runtimeRoot, preSpawnDriftKey, "events"));
+    if (preSpawnDrift.code !== "STAGE_BLOCKED_NO_MUTATION"
+      || preSpawnAuthorizationCalls !== 2
+      || !runningJournalPersisted
+      || driftSpawnCount !== 0
+      || preSpawnDriftEvents.map((event) => event.state).join(",") !== "running,blocked-no-mutation") {
+      throw new Error("serializable pre-spawn authority drift zero-child case failed");
+    }
+    cases += 1;
+
+    const preSignalDriftDefinition = definitionFor({ suffix: "PRESIGNAL-AUTHORITY-DRIFT" });
+    const preSignalDriftEntry = await entryFor(preSignalDriftDefinition, successName);
+    const preSignalDriftRuntimeRoot = path.join(root, "pre-signal-authority-drift-runtime");
+    const preSignalStableAuthorization = authorizationFor(preSignalDriftDefinition, {
+      moduleSha256: preSignalDriftEntry.moduleSha256,
+    });
+    let preSignalBarrierReached = false;
+    let preSignalAuthorizationCalls = 0;
+    let preSignalSpawnCount = 0;
+    let preSignalChild = null;
+    const preSignalDrift = await executeFixture(preSignalDriftDefinition, preSignalDriftEntry, {
+      runtimeRoot: preSignalDriftRuntimeRoot,
+      authorize: async () => {
+        preSignalAuthorizationCalls += 1;
+        return preSignalBarrierReached
+          ? { ...preSignalStableAuthorization, stageApprovalSha256: "0".repeat(64) }
+          : preSignalStableAuthorization;
+      },
+      childLockRecordPersistBarrier: async () => {
+        preSignalBarrierReached = true;
+        await Promise.resolve();
+      },
+      spawnProcess: (...args) => {
+        preSignalSpawnCount += 1;
+        preSignalChild = spawn(...args);
+        return preSignalChild;
+      },
+    });
+    const preSignalDriftKey = safeRuntimeSegment(`${preSignalDriftDefinition.taskId}\0${preSignalDriftDefinition.stageId}\0${preSignalDriftDefinition.idempotencyKey}`);
+    const preSignalDriftEvents = await readEvents(path.join(preSignalDriftRuntimeRoot, preSignalDriftKey, "events"));
+    const preSignalChildResultBytes = await readFile(path.join(
+      preSignalDriftRuntimeRoot,
+      preSignalDriftKey,
+      "raw-evidence",
+      "child-result.json",
+    ));
+    if (preSignalDrift.code !== "STAGE_BLOCKED_NO_MUTATION"
+      || preSignalSpawnCount !== 1
+      || preSignalAuthorizationCalls !== 3
+      || !preSignalBarrierReached
+      || preSignalChildResultBytes.length !== 0
+      || processTreeAlive(preSignalChild)
+      || preSignalDriftEvents.map((event) => event.state).join(",") !== "running,blocked-no-mutation") {
+      throw new Error("serializable post-lock pre-signal authority drift case failed");
+    }
+    cases += 1;
+
+    const preSignalDriftReplay = await executeFixture(preSignalDriftDefinition, preSignalDriftEntry, {
+      runtimeRoot: preSignalDriftRuntimeRoot,
+      spawnProcess: (...args) => {
+        preSignalSpawnCount += 1;
+        return spawn(...args);
+      },
+    });
+    if (preSignalDriftReplay.code !== "STAGE_ALREADY_TERMINAL"
+      || preSignalSpawnCount !== 1
+      || preSignalChildResultBytes.length !== 0) {
+      throw new Error("serializable post-lock pre-signal authority drift replay case failed");
+    }
+    cases += 1;
+
+    const preSignalExpiryDefinition = definitionFor({ suffix: "PRESIGNAL-DEADLINE-EXPIRY" });
+    const preSignalExpiryEntry = await entryFor(preSignalExpiryDefinition, successName);
+    const preSignalExpiryRuntimeRoot = path.join(root, "pre-signal-deadline-expiry-runtime");
+    const preSignalExpiryAuthorization = authorizationFor(preSignalExpiryDefinition, {
+      moduleSha256: preSignalExpiryEntry.moduleSha256,
+      deadlineAt: new Date(Date.now() + 4_000).toISOString(),
+    });
+    let preSignalExpirySpawnCount = 0;
+    let preSignalExpiryChild = null;
+    let preSignalExpiryBarrierCount = 0;
+    const preSignalExpired = await executeFixture(preSignalExpiryDefinition, preSignalExpiryEntry, {
+      runtimeRoot: preSignalExpiryRuntimeRoot,
+      authorization: preSignalExpiryAuthorization,
+      childLockRecordPersistBarrier: async () => {
+        preSignalExpiryBarrierCount += 1;
+        await delay(4_200);
+      },
+      spawnProcess: (...args) => {
+        preSignalExpirySpawnCount += 1;
+        preSignalExpiryChild = spawn(...args);
+        return preSignalExpiryChild;
+      },
+    });
+    const preSignalExpiryKey = safeRuntimeSegment(`${preSignalExpiryDefinition.taskId}\0${preSignalExpiryDefinition.stageId}\0${preSignalExpiryDefinition.idempotencyKey}`);
+    const preSignalExpiryEvents = await readEvents(path.join(preSignalExpiryRuntimeRoot, preSignalExpiryKey, "events"));
+    const preSignalExpiryChildResultBytes = await readFile(path.join(
+      preSignalExpiryRuntimeRoot,
+      preSignalExpiryKey,
+      "raw-evidence",
+      "child-result.json",
+    ));
+    if (preSignalExpired.code !== "STAGE_EXPIRED_BEFORE_MUTATION"
+      || preSignalExpirySpawnCount !== 1
+      || preSignalExpiryBarrierCount !== 1
+      || preSignalExpiryChildResultBytes.length !== 0
+      || processTreeAlive(preSignalExpiryChild)
+      || preSignalExpiryEvents.map((event) => event.state).join(",") !== "running,expired-before-mutation") {
+      throw new Error("serializable post-lock pre-signal deadline termination case failed");
+    }
+    cases += 1;
+
+    const preSignalExpiryReplay = await executeFixture(preSignalExpiryDefinition, preSignalExpiryEntry, {
+      runtimeRoot: preSignalExpiryRuntimeRoot,
+      authorization: preSignalExpiryAuthorization,
+      spawnProcess: (...args) => {
+        preSignalExpirySpawnCount += 1;
+        return spawn(...args);
+      },
+    });
+    if (preSignalExpiryReplay.code !== "STAGE_ALREADY_TERMINAL"
+      || preSignalExpirySpawnCount !== 1
+      || preSignalExpiryChildResultBytes.length !== 0) {
+      throw new Error("serializable post-lock pre-signal deadline replay case failed");
     }
     cases += 1;
 
@@ -2716,6 +3163,80 @@ async function selfTest() {
     if (wrongResult.code !== "STAGE_RECOVERY_REQUIRED") throw new Error("child-result binding case failed");
     cases += 1;
 
+    const serialPendingFileSyncDefinition = definitionFor({ suffix: "SERIAL-PENDING-FILESYNC-FAIL-STUCK" });
+    const serialPendingFileSyncEntry = await entryFor(serialPendingFileSyncDefinition, successName);
+    const serialPendingFileSyncRuntimeRoot = path.join(root, "serial-pending-filesync-fail-stuck-runtime");
+    let serialPendingSpawnCount = 0;
+    let serialPendingFileSyncAttempts = 0;
+    let serialPendingRecoveryAppendAttempts = 0;
+    const appendSerialPendingThenThrow = async (directory, sequence, event) => {
+      if (event.state === "recovery-required") serialPendingRecoveryAppendAttempts += 1;
+      const eventPath = await appendEvent(directory, sequence, event);
+      if (sequence === 2 && event.state === "verification-pending") {
+        throw new Error("synthetic serializable verification-pending file fsync uncertainty");
+      }
+      return eventPath;
+    };
+    const serialPendingFileSyncFailure = await executeFixture(
+      serialPendingFileSyncDefinition,
+      serialPendingFileSyncEntry,
+      {
+        runtimeRoot: serialPendingFileSyncRuntimeRoot,
+        appendJournalEvent: appendSerialPendingThenThrow,
+        syncEventFile: async () => {
+          serialPendingFileSyncAttempts += 1;
+          throw new Error("synthetic serializable tail file fsync failure");
+        },
+        spawnProcess: (...args) => {
+          serialPendingSpawnCount += 1;
+          return spawn(...args);
+        },
+      },
+    );
+    const serialPendingFileSyncKey = safeRuntimeSegment(`${serialPendingFileSyncDefinition.taskId}\0${serialPendingFileSyncDefinition.stageId}\0${serialPendingFileSyncDefinition.idempotencyKey}`);
+    const serialPendingFileSyncLockPath = path.join(
+      serialPendingFileSyncRuntimeRoot,
+      "locks",
+      `${serialPendingFileSyncKey}.lock`,
+    );
+    const serialPendingFileSyncEvents = await readEvents(path.join(
+      serialPendingFileSyncRuntimeRoot,
+      serialPendingFileSyncKey,
+      "events",
+    ));
+    let serialPendingFileSyncLockRetained = true;
+    try {
+      await access(serialPendingFileSyncLockPath, fsConstants.F_OK);
+    } catch {
+      serialPendingFileSyncLockRetained = false;
+    }
+    if (serialPendingFileSyncFailure.code !== "STAGE_RECOVERY_REQUIRED"
+      || serialPendingSpawnCount !== 1
+      || serialPendingFileSyncAttempts !== 1
+      || serialPendingRecoveryAppendAttempts !== 0
+      || serialPendingFileSyncEvents.map((event) => event.state).join(",") !== "running,verification-pending"
+      || !serialPendingFileSyncLockRetained) {
+      throw new Error("serializable verification-pending predecessor durability case failed");
+    }
+    cases += 1;
+
+    const serialPendingFileSyncReplay = await executeFixture(
+      serialPendingFileSyncDefinition,
+      serialPendingFileSyncEntry,
+      {
+        runtimeRoot: serialPendingFileSyncRuntimeRoot,
+        spawnProcess: (...args) => {
+          serialPendingSpawnCount += 1;
+          return spawn(...args);
+        },
+      },
+    );
+    if (serialPendingFileSyncReplay.code !== "STAGE_LOCK_UNAVAILABLE"
+      || serialPendingSpawnCount !== 1) {
+      throw new Error("serializable file-fsync-unproven replay lock case failed");
+    }
+    cases += 1;
+
     const escapedMarker = path.join(root, "escaped-descendant.txt");
     const detachedName = "P0-runner-detached-fixture.mjs";
     const detachedPrelude = [
@@ -2744,7 +3265,7 @@ async function selfTest() {
     const revoked = await executeFixture(revokedDefinition, moduleEntry, {
       authorize: async () => {
         revokeCalls += 1;
-        return revokeCalls === 1
+        return revokeCalls <= 3
           ? revokedAuthorization
           : { ...revokedAuthorization, stageApprovalSha256: "0".repeat(64) };
       },

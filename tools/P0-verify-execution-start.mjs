@@ -38,6 +38,8 @@ import {
   verifyExactMainStillCurrent,
 } from "./P0-exact-main.mjs";
 import {
+  MAX_SERIALIZABLE_STAGE_DEADLINE_MS,
+  resolveProductionStagedAction,
   verifyStageApprovalRegistryContinuity,
   verifyStageApprovalRegistryHistory,
 } from "./P0-staged-actions.mjs";
@@ -347,6 +349,42 @@ function callbackDeadline({ options, evaluationInput, now }) {
   const nowMs = Date.parse(now);
   if (!Number.isFinite(nowMs)) return null;
   let durationMs = configuredDuration;
+  if (["private-execution", "release"].includes(evaluationInput.requestedScope?.scopeClass)) {
+    const authorityWindowEnd = Date.parse(evaluationInput.privateAuthority?.windowEnd);
+    if (Number.isFinite(authorityWindowEnd)) durationMs = Math.min(durationMs, authorityWindowEnd - nowMs);
+  }
+  if (!Number.isSafeInteger(durationMs) || durationMs <= 0) return null;
+  return {
+    durationMs,
+    deadlineAt: new Date(nowMs + durationMs).toISOString(),
+  };
+}
+
+function serializableStageDeadline({ options, evaluationInput, now, request, stage }) {
+  const resolver = options.resolveStageDefinition ?? resolveProductionStagedAction;
+  let definition;
+  try {
+    definition = resolver(request);
+  } catch {
+    return null;
+  }
+  const predecessorReceiptSha256 = definition?.predecessor?.receiptDigest ?? null;
+  if (definition === null
+    || typeof definition !== "object"
+    || definition.taskId !== request.taskId
+    || definition.stageId !== request.stageId
+    || definition.scopeClass !== request.scopeClass
+    || definition.actionClass !== request.actionClass
+    || definition.idempotencyKey !== request.idempotencyKey
+    || predecessorReceiptSha256 !== request.predecessorReceiptSha256
+    || definition.moduleId !== stage.moduleId
+    || `sha256:${sha256(canonicalJson(definition))}` !== stage.stageDefinitionSha256
+    || !Number.isSafeInteger(definition.deadlineMs)
+    || definition.deadlineMs < 1_000
+    || definition.deadlineMs > MAX_SERIALIZABLE_STAGE_DEADLINE_MS) return null;
+  const nowMs = Date.parse(now);
+  if (!Number.isFinite(nowMs)) return null;
+  let durationMs = definition.deadlineMs;
   if (["private-execution", "release"].includes(evaluationInput.requestedScope?.scopeClass)) {
     const authorityWindowEnd = Date.parse(evaluationInput.privateAuthority?.windowEnd);
     if (Number.isFinite(authorityWindowEnd)) durationMs = Math.min(durationMs, authorityWindowEnd - nowMs);
@@ -1869,7 +1907,13 @@ async function verifyStageGateBAtExactMainCore(request, options = {}) {
       : [];
     return fail("TASK_RUNTIME_PERMISSION_DENIED", "stage-gate-b", { taskId, failedGateCodes });
   }
-  const deadline = callbackDeadline({ options, evaluationInput, now });
+  const deadline = serializableStageDeadline({
+    options,
+    evaluationInput,
+    now,
+    request,
+    stage,
+  });
   if (deadline === null) return fail("TASK_BOUNDED_ACTION_DEADLINE_EXCEEDED", "stage-gate-b", { taskId });
   const finalExactMain = await verifyExactMainStillCurrent({ repoRoot, run, expectedRevision: exactMain.revision });
   if (!finalExactMain.ok) return finalExactMain;
@@ -2475,6 +2519,18 @@ async function selfTest() {
     predecessorReceiptSha256: null,
     idempotencyKey: `P0-IDEMP-${taskId}-SYNTHETIC`,
   };
+  const stageDefinition = {
+    schemaVersion: "1.0.0",
+    taskId,
+    scopeClass,
+    actionClass,
+    stageId,
+    predecessor: null,
+    idempotencyKey: stageRequest.idempotencyKey,
+    moduleId: "pc.synthetic",
+    argumentSetId: "synthetic.v1",
+    deadlineMs: MAX_SERIALIZABLE_STAGE_DEADLINE_MS,
+  };
   const stageRecord = {
     taskId,
     stageId,
@@ -2496,7 +2552,7 @@ async function selfTest() {
     gateKind: "execute",
     independentQa: { result: "pass" },
     rollback: { snapshotReference: "rollback:synthetic-snapshot" },
-    stageDefinitionSha256: `sha256:${"2".repeat(64)}`,
+    stageDefinitionSha256: `sha256:${sha256(canonicalJson(stageDefinition))}`,
     moduleId: "pc.synthetic",
     moduleSha256: sha256(implementationBytes),
   };
@@ -2559,6 +2615,7 @@ async function selfTest() {
         normalizedEvidence: { sourceFingerprint: sha256("trusted synthetic stage source") },
       };
     },
+    resolveStageDefinition: () => structuredClone(stageDefinition),
     now: "2026-08-15T12:00:00.000Z",
   });
   const terminalHistory = await verifyStageTerminalHistoryAtExactMainCore(stageRequest, {
@@ -2588,11 +2645,27 @@ async function selfTest() {
     || stageEvaluationSource?.stage?.stageId !== stageId
     || gateBAuthorization.stageDefinitionSha256 !== stageRecord.stageDefinitionSha256
     || gateBAuthorization.moduleSha256 !== stageRecord.moduleSha256
+    || gateBAuthorization.deadlineAt !== "2026-08-15T16:00:00.000Z"
     || terminalHistory.code !== "STAGE_TERMINAL_HISTORY_VALID"
     || terminalHistory.stageDefinitionSha256 !== stageRecord.stageDefinitionSha256
     || terminalHistory.moduleSha256 !== stageRecord.moduleSha256) {
     throw new Error("Gate B immutable-stage/no-legacy-approval self-test failed");
   }
+  const overCeilingStageDefinition = {
+    ...stageDefinition,
+    deadlineMs: MAX_SERIALIZABLE_STAGE_DEADLINE_MS + 1,
+  };
+  const overCeilingDeadline = serializableStageDeadline({
+    options: { resolveStageDefinition: () => overCeilingStageDefinition },
+    evaluationInput: { requestedScope: { scopeClass, actionClass } },
+    now: "2026-08-15T12:00:00.000Z",
+    request: stageRequest,
+    stage: {
+      ...stageRecord,
+      stageDefinitionSha256: `sha256:${sha256(canonicalJson(overCeilingStageDefinition))}`,
+    },
+  });
+  if (overCeilingDeadline !== null) throw new Error("Gate B serializable deadline ceiling self-test failed");
   const deliveryTransitionTaskId = "SPK-R0-001";
   const deliveryTransitionStageId = `P0-STAGE-${deliveryTransitionTaskId}-STATUS-DELIVERY-TRANSITION`;
   const deliveryTransitionOverrideProbe = stageReadinessOverride({
@@ -3135,7 +3208,7 @@ async function selfTest() {
     throw new Error("advancing-clock near-expiry self-test failed");
   }
 
-  return { ok: true, code: "SELF_TEST_OK", cases: 65 };
+  return { ok: true, code: "SELF_TEST_OK", cases: 66 };
 }
 
 function usage() {
