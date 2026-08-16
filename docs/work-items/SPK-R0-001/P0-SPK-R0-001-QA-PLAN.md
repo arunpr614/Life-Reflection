@@ -29,6 +29,8 @@ Make the exact code-derived 15-scenario set reviewable for one later `local-synt
 
 Gate A can permit preparation only. After an accepted Gate A record exists, a registered evidence producer may execute the exact candidate's local/public/fictional/synthetic scenarios to create pre-review evidence, and an independent QA reviewer may verify or reproduce them without becoming the candidate's designated evidence producer. That work is not a governed task-stage invocation. Gate B alone may authorize the later exact-main stage runtime; neither activity may use private systems, real providers, authentic memories, photos, photo-derived data, credentials, or external mutation.
 
+Publication QA must prove the exact `M → A → AM → P → PM` chain before treating that record as accepted. It must reject direct `P`-after-`M`, `PM=[M,P]`, unarmed or cancelled publication, the wrong inventory operation or target hash, uncleared `next`, a missing installed `current` entry, extra paths, stale or interleaved parents, octopus or tree-mismatched merges, and any record not replayable from exact current main. For this first nonempty registry publication, the required inventory operation is `add`, producing protected current path 55. These are publication-oracle checks only and add no scenario ID to the canonical set of fifteen.
+
 ## Exact traceability binding
 
 - **Dependency:** `PC-001`; Gate A requires one passing opaque public-safe dependency-entry reference.

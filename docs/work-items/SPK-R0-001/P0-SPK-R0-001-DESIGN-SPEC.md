@@ -42,7 +42,7 @@ The evidence surface must let a reviewer answer, on first read:
 
 Every reviewer/operator view follows this order:
 
-1. One exact lifecycle label: `Preparation proposal — execution not allowed`, `Candidate QA — Gate A preparation evidence`, or the later governed Gate B stage state.
+1. One exact lifecycle label: `Preparation proposal — execution not allowed`, `Gate A preparation accepted — task-stage execution not allowed`, `Candidate QA — Gate A preparation evidence`, or the later governed Gate B stage state.
 2. Task ID, preparation review ID, intended stage ID, scope/action pair, source revision, task-contract digest, and fictional fixture identifier.
 3. Bounded conclusion: `not run`, `running`, `synthetic foundation passes`, `synthetic foundation fails`, `interrupted`, or `blocked — private evidence required`.
 4. Requirement and scenario counts with explicit pass/fail/blocked/not-run values.
@@ -52,6 +52,8 @@ Every reviewer/operator view follows this order:
 8. Detailed evidence records.
 
 No green icon, `Healthy` label, completed progress indicator, repository state, merged proposal, or validator pass may substitute for the bounded conclusion. `Healthy` is reserved for durable health state `success`; it never describes Gate A or overall task readiness.
+
+The publication-state presentation is equally fail-closed. `M` (proposal merged), `A/AM` (registry hash armed), and unmerged `P` (consume candidate) must all retain `Preparation proposal — execution not allowed`; arm-only, consume-only, stale-hash, cancelled, or tree-mismatched states must never appear accepted, ready, or green. Only after `P` directly parents `AM`, `PM=[AM,P]` is the exact normal merge, and exact-main replay verifies the consumed protected hash may the evidence surface show `Gate A preparation accepted — task-stage execution not allowed`.
 
 ## Reviewer/operator journeys
 
@@ -84,6 +86,7 @@ No green icon, `Healthy` label, completed progress indicator, repository state, 
 | Required state | Reviewer/operator presentation | Permitted action and truth boundary |
 | --- | --- | --- |
 | **Normal / proposal** | `Preparation proposal — execution not allowed`, exact bindings, proposed coverage, and live-host remainder. | Review or return Hold; no run control and no readiness claim. |
+| **Normal / accepted preparation** | `Gate A preparation accepted — task-stage execution not allowed`, exact PM/history replay binding, and the unchanged live-host remainder. | Author and independently test only the exact local/public/fictional/synthetic candidate within the accepted Gate A boundary; do not invoke the task stage or infer Gate B. |
 | **Normal / candidate-QA result** | `Candidate QA evidence — not a stage receipt`, exact terminal synthetic conclusion, requirement/scenario results, determinism comparison, digests, and remainder. | Submit the immutable evidence for independent QA and Gate B review; do not invoke the task stage, change task status, or infer live-host fit. |
 | **Normal / governed stage result** | `Gate B stage receipt`, exact terminal synthetic conclusion, bound stage receipt, requirement/scenario results, digests, and remainder. | Submit for the separately governed next decision; do not change task status or infer live-host fit. |
 | **Empty / never run** | State separately whether accepted-Gate-A candidate-QA evidence is absent and whether a Gate B stage receipt is absent; show zero results, expected fixture/version, and why either absence is not a pass. | Review the missing preparation, evidence, or stage gate and stop. |
