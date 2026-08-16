@@ -3,7 +3,7 @@
 Date: 2026-08-16
 Branch: `prototype/calendar-ui-v12-telegram-capture-companion`
 Baseline: frozen v11 implementation/evidence `0e4154f`, freeze record `4bb073f`, and final tracker record `3451605`
-Status: independently passed on the exact artifact identity below; freeze-ready; implementation/evidence commit pending
+Status: independently passed and frozen at implementation/evidence commit `3927b55`; freeze record follows
 
 ## Stable feature
 
