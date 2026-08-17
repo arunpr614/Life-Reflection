@@ -129,6 +129,21 @@ export const TASK_FILE_RUNTIME_DESCENDANT_DELTA_PATHS = Object.freeze([
   "docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json",
   "RUNNING_LOG.md",
 ]);
+export const REGISTERED_SUPPLEMENTAL_TASK_FILES = Object.freeze([Object.freeze({
+  taskId: "SPK-R0-001",
+  stageId: "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+  scopeClass: "local-synthetic",
+  actionClass: "synthetic-foundation",
+  purpose: "evidence",
+  path: "docs/work-items/SPK-R0-001/P0-SPK-R0-001-CANDIDATE-QA-CONTRACT.json",
+  sha256: "sha256:0467b716d1952b59fd07acf5337c6a105d44cfc926c104635829027751cdfb7f",
+  gitMode: "100644",
+  gitType: "blob",
+  pairedImplementationPath: "tools/spk-r0-001/P0-SPK-R0-001-synthetic-foundation.mjs",
+  pairedImplementationSha256: "sha256:e60d8e6398441a61812dd467ffcbdd292e01fb1198723e667e480d2cf453e47f",
+  pairedImplementationGitMode: "100644",
+  pairedImplementationGitType: "blob",
+})]);
 export const DESIGN_STATE_DIMENSIONS = Object.freeze([
   "normal",
   "empty",
@@ -878,6 +893,211 @@ export function taskFilesPayload(taskFiles) {
 
 export function computeTaskFilesSha256(taskFiles) {
   return sha256(canonicalJson(taskFilesPayload(taskFiles)));
+}
+
+const TASK_WORK_ITEM_ENTRY_KEYS = Object.freeze([
+  "path", "trackedAtHead", "gitMode", "gitType", "worktreeKind", "worktreeMode",
+]);
+
+/**
+ * Validate the complete docs/work-items leaf inventory without confusing the
+ * 58 x 6 generated proposal baseline with separately reviewed candidate
+ * evidence. Supplemental paths are exact code-owned registrations: presence is
+ * optional until their candidate is authored, but no unregistered leaf,
+ * substitution, duplicate, symlink, mode drift, or untracked file is accepted.
+ */
+export function validateTaskWorkItemInventory({ canonicalArtifactPaths, entries } = {}) {
+  const canonicalPaths = asArray(canonicalArtifactPaths);
+  const records = asArray(entries);
+  const canonicalPathSet = new Set(canonicalPaths);
+  const registeredByPath = new Map(REGISTERED_SUPPLEMENTAL_TASK_FILES
+    .map((registration) => [registration.path, registration]));
+  if (!Array.isArray(canonicalArtifactPaths)
+    || canonicalPaths.length !== 58 * ARTIFACT_KINDS.length
+    || canonicalPathSet.size !== canonicalPaths.length
+    || !canonicalPaths.every((filePath) => isNonemptyString(filePath)
+      && filePath.startsWith("docs/work-items/")
+      && !path.posix.isAbsolute(filePath)
+      && !filePath.split("/").includes("..")
+      && path.posix.normalize(filePath) === filePath)
+    || canonicalPaths.some((filePath) => registeredByPath.has(filePath))) {
+    return { ok: false, code: "TASK_WORK_ITEM_CANONICAL_SET_INVALID" };
+  }
+  if (!Array.isArray(entries)
+    || !records.every((entry) => hasExactKeys(entry, TASK_WORK_ITEM_ENTRY_KEYS)
+      && isNonemptyString(entry.path))) {
+    return { ok: false, code: "TASK_WORK_ITEM_ENTRY_SHAPE_INVALID" };
+  }
+  const paths = records.map((entry) => entry.path);
+  if (!unique(paths)) return { ok: false, code: "TASK_WORK_ITEM_PATH_DUPLICATE" };
+  const invalidEntry = records.find((entry) => entry.trackedAtHead !== true
+    || entry.gitMode !== "100644"
+    || entry.gitType !== "blob"
+    || entry.worktreeKind !== "file"
+    || entry.worktreeMode !== "100644");
+  if (invalidEntry) {
+    return { ok: false, code: "TASK_WORK_ITEM_ENTRY_NOT_REGULAR_TRACKED_100644", path: invalidEntry.path };
+  }
+  const missingCanonicalPath = canonicalPaths.find((filePath) => !paths.includes(filePath));
+  if (missingCanonicalPath) {
+    return { ok: false, code: "TASK_WORK_ITEM_CANONICAL_PATH_MISSING", path: missingCanonicalPath };
+  }
+  const supplementalPaths = paths.filter((filePath) => !canonicalPathSet.has(filePath));
+  const unregisteredPath = supplementalPaths.find((filePath) => !registeredByPath.has(filePath));
+  if (unregisteredPath) {
+    return { ok: false, code: "TASK_WORK_ITEM_SUPPLEMENTAL_PATH_UNREGISTERED", path: unregisteredPath };
+  }
+  if (supplementalPaths.length > REGISTERED_SUPPLEMENTAL_TASK_FILES.length) {
+    return { ok: false, code: "TASK_WORK_ITEM_SUPPLEMENTAL_CARDINALITY_INVALID" };
+  }
+  const expectedPaths = new Set([...canonicalPaths, ...supplementalPaths]);
+  if (records.length !== expectedPaths.size
+    || paths.some((filePath) => !expectedPaths.has(filePath))) {
+    return { ok: false, code: "TASK_WORK_ITEM_INVENTORY_SET_INVALID" };
+  }
+  return {
+    ok: true,
+    code: "TASK_WORK_ITEM_INVENTORY_VALID",
+    canonicalArtifactCount: canonicalPaths.length,
+    supplementalTaskFileCount: supplementalPaths.length,
+    totalWorkItemCount: records.length,
+    registeredSupplementalPaths: [...supplementalPaths].sort(),
+  };
+}
+
+const SUPPLEMENTAL_PAIRED_BLOB_ENTRY_KEYS = Object.freeze([
+  "path", "trackedAtHead", "gitMode", "gitType", "headSha256",
+  "worktreeKind", "worktreeMode", "worktreeSha256",
+]);
+
+function validateSupplementalPairedBlobEntry({
+  entry,
+  expectedPath,
+  expectedSha256,
+  expectedGitMode,
+  expectedGitType,
+  kind,
+}) {
+  if (!hasExactKeys(entry, SUPPLEMENTAL_PAIRED_BLOB_ENTRY_KEYS)
+    || entry.path !== expectedPath
+    || typeof entry.trackedAtHead !== "boolean"
+    || !["missing", "file", "symlink", "other"].includes(entry.worktreeKind)) {
+    return { ok: false, code: `TASK_WORK_ITEM_${kind}_ENTRY_INVALID`, path: expectedPath };
+  }
+  const headPresent = entry.trackedAtHead === true;
+  const worktreePresent = entry.worktreeKind !== "missing";
+  if (headPresent !== worktreePresent) {
+    return { ok: false, code: `TASK_WORK_ITEM_${kind}_HEAD_WORKTREE_MISMATCH`, path: expectedPath };
+  }
+  const exactAbsent = !headPresent
+    && entry.gitMode === null
+    && entry.gitType === null
+    && entry.headSha256 === null
+    && entry.worktreeKind === "missing"
+    && entry.worktreeMode === null
+    && entry.worktreeSha256 === null;
+  const exactPresent = headPresent
+    && entry.gitMode === expectedGitMode
+    && entry.gitType === expectedGitType
+    && entry.headSha256 === expectedSha256
+    && entry.worktreeKind === "file"
+    && entry.worktreeMode === expectedGitMode
+    && entry.worktreeSha256 === expectedSha256;
+  if (!exactAbsent && !exactPresent) {
+    return { ok: false, code: `TASK_WORK_ITEM_${kind}_BLOB_INVALID`, path: expectedPath };
+  }
+  return { ok: true, exactPresent };
+}
+
+/**
+ * Require every registered candidate-evidence file to appear with its exact
+ * paired implementation blob. HEAD and worktree presence must agree so a
+ * tracked deletion or an exact-looking untracked file cannot mask the state.
+ */
+export function validateRegisteredSupplementalTaskFilePresence({
+  inventory,
+  supplementalTaskFileEntries,
+  implementationEntries,
+} = {}) {
+  if (inventory?.ok !== true || inventory.code !== "TASK_WORK_ITEM_INVENTORY_VALID") {
+    return { ok: false, code: "TASK_WORK_ITEM_PRESENCE_INVENTORY_INVALID" };
+  }
+  const supplementalRecords = asArray(supplementalTaskFileEntries);
+  const implementationRecords = asArray(implementationEntries);
+  if (!Array.isArray(supplementalTaskFileEntries)
+    || supplementalRecords.length !== REGISTERED_SUPPLEMENTAL_TASK_FILES.length
+    || !supplementalRecords.every((entry) => hasExactKeys(entry, SUPPLEMENTAL_PAIRED_BLOB_ENTRY_KEYS)
+      && isNonemptyString(entry.path))
+    || !unique(supplementalRecords.map((entry) => entry.path))) {
+    return { ok: false, code: "TASK_WORK_ITEM_CONTRACT_PRESENCE_INVALID" };
+  }
+  if (!Array.isArray(implementationEntries)
+    || implementationRecords.length !== REGISTERED_SUPPLEMENTAL_TASK_FILES.length
+    || !implementationRecords.every((entry) => hasExactKeys(entry, SUPPLEMENTAL_PAIRED_BLOB_ENTRY_KEYS)
+      && isNonemptyString(entry.path))
+    || !unique(implementationRecords.map((entry) => entry.path))) {
+    return { ok: false, code: "TASK_WORK_ITEM_IMPLEMENTATION_PRESENCE_INVALID" };
+  }
+  const supplementalEntryByPath = new Map(supplementalRecords.map((entry) => [entry.path, entry]));
+  const implementationEntryByPath = new Map(implementationRecords.map((entry) => [entry.path, entry]));
+  const expectedSupplementalPaths = new Set(REGISTERED_SUPPLEMENTAL_TASK_FILES
+    .map((registration) => registration.path));
+  if (supplementalRecords.some((entry) => !expectedSupplementalPaths.has(entry.path))) {
+    return { ok: false, code: "TASK_WORK_ITEM_CONTRACT_PATH_UNREGISTERED" };
+  }
+  const expectedImplementationPaths = new Set(REGISTERED_SUPPLEMENTAL_TASK_FILES
+    .map((registration) => registration.pairedImplementationPath));
+  if (implementationRecords.some((entry) => !expectedImplementationPaths.has(entry.path))) {
+    return { ok: false, code: "TASK_WORK_ITEM_IMPLEMENTATION_PATH_UNREGISTERED" };
+  }
+  const supplementalPaths = new Set(inventory.registeredSupplementalPaths);
+  for (const registration of REGISTERED_SUPPLEMENTAL_TASK_FILES) {
+    const supplementalEntry = supplementalEntryByPath.get(registration.path);
+    const implementationEntry = implementationEntryByPath.get(registration.pairedImplementationPath);
+    if (!supplementalEntry) return { ok: false, code: "TASK_WORK_ITEM_CONTRACT_PRESENCE_INVALID" };
+    if (!implementationEntry) return { ok: false, code: "TASK_WORK_ITEM_IMPLEMENTATION_PRESENCE_INVALID" };
+    const supplementalValidation = validateSupplementalPairedBlobEntry({
+      entry: supplementalEntry,
+      expectedPath: registration.path,
+      expectedSha256: registration.sha256,
+      expectedGitMode: registration.gitMode,
+      expectedGitType: registration.gitType,
+      kind: "CONTRACT",
+    });
+    if (!supplementalValidation.ok) return supplementalValidation;
+    const implementationValidation = validateSupplementalPairedBlobEntry({
+      entry: implementationEntry,
+      expectedPath: registration.pairedImplementationPath,
+      expectedSha256: registration.pairedImplementationSha256,
+      expectedGitMode: registration.pairedImplementationGitMode,
+      expectedGitType: registration.pairedImplementationGitType,
+      kind: "IMPLEMENTATION",
+    });
+    if (!implementationValidation.ok) return implementationValidation;
+    if (supplementalPaths.has(registration.path) !== supplementalValidation.exactPresent) {
+      return {
+        ok: false,
+        code: "TASK_WORK_ITEM_CONTRACT_INVENTORY_MISMATCH",
+        path: registration.path,
+      };
+    }
+    if (supplementalValidation.exactPresent !== implementationValidation.exactPresent) {
+      return {
+        ok: false,
+        code: "TASK_WORK_ITEM_PAIR_PRESENCE_MISMATCH",
+        path: registration.path,
+      };
+    }
+  }
+  return {
+    ok: true,
+    code: "TASK_WORK_ITEM_IMPLEMENTATION_PRESENCE_VALID",
+    pairedPresenceCount: REGISTERED_SUPPLEMENTAL_TASK_FILES.filter((registration) => (
+      supplementalPaths.has(registration.path)
+        && supplementalEntryByPath.get(registration.path)?.trackedAtHead === true
+        && implementationEntryByPath.get(registration.pairedImplementationPath)?.trackedAtHead === true
+    )).length,
+  };
 }
 
 /**

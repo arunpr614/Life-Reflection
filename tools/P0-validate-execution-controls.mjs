@@ -12,6 +12,7 @@ import {
   P0_R0_SCOPE_TASK_IDS,
   P0_R0_SUBSTANTIVE_TASK_IDS,
   READINESS_SCHEMA_VERSION,
+  REGISTERED_SUPPLEMENTAL_TASK_FILES,
   SCOPE_ACTION_COMPATIBILITY,
   STAGE_APPROVAL_REGISTRY_PATH,
   STAGE_EXECUTION_SCHEMA_VERSION,
@@ -28,7 +29,9 @@ import {
   evaluateReadiness,
   isTaskMilestoneScopeActionCompatible,
   parseArtifactControlMarkers,
+  validateRegisteredSupplementalTaskFilePresence,
   validateTaskFilesManifest,
+  validateTaskWorkItemInventory,
 } from "./P0-readiness-gates.mjs";
 import { loadBoundedAuthoritySources } from "./P0-bounded-authority.mjs";
 import {
@@ -73,8 +76,8 @@ import {
 import {
   PRODUCTION_STAGED_ACTIONS,
   STAGE_APPROVAL_REGISTRY_BOOTSTRAP_PARENT_REVISION,
+  validateProductionStageLifecycleSnapshot,
   validateStageApprovalRegistry,
-  validateStageRuntimeLifecycle,
   verifyPreparationReviewRegistryHistory,
   verifyStageApprovalRegistryContinuity,
   verifyStageApprovalRegistryHistory,
@@ -169,6 +172,16 @@ const walkFiles = (relativeDirectory) => {
     if (entry.isFile()) files.push(relativePath);
   }
   return files;
+};
+const walkLeafPaths = (relativeDirectory) => {
+  const absoluteDirectory = path.join(repoRoot, relativeDirectory);
+  const paths = [];
+  for (const entry of fs.readdirSync(absoluteDirectory, { withFileTypes: true })) {
+    const relativePath = path.posix.join(relativeDirectory, entry.name);
+    if (entry.isDirectory() && !entry.isSymbolicLink()) paths.push(...walkLeafPaths(relativePath));
+    else paths.push(relativePath);
+  }
+  return paths;
 };
 const taskFilesShaAtRevision = (revision, taskFiles) => computeTaskFilesSha256(taskFiles.map((entry) => {
   const treeRow = execFileSync("git", ["ls-tree", revision, "--", entry.path], {
@@ -363,7 +376,7 @@ check(new Set(stageApprovals.map((record) => record?.stageId)).size === stageApp
 check(new Set(stageApprovals.map((record) => record?.idempotencyKey)).size === stageApprovals.length, "GOV-STAGE-012: stage idempotency keys are duplicated");
 const stageRegistryValidation = validateStageApprovalRegistry(stageApprovalRegistry);
 check(stageRegistryValidation.ok, `GOV-STAGE-013: stage approval registry is invalid (${stageRegistryValidation.code})`);
-const stageLifecycleValidation = validateStageRuntimeLifecycle({
+const stageLifecycleValidation = validateProductionStageLifecycleSnapshot({
   registry: stageApprovalRegistry,
   definitions: PRODUCTION_STAGED_ACTIONS,
   moduleBindings: PRODUCTION_MODULE_METADATA,
@@ -371,11 +384,12 @@ const stageLifecycleValidation = validateStageRuntimeLifecycle({
   callbackModuleIds: PRODUCTION_CALLBACK_MODULE_IDS,
 });
 check(stageLifecycleValidation.ok,
-  `GOV-STAGE-016: stage registry/runtime lifecycle is invalid (${stageLifecycleValidation.code})`);
+  `GOV-STAGE-016: production stage registry/runtime snapshot is invalid (${stageLifecycleValidation.code})`);
 check(preparationReviews.length === 1
   && preparationReviews[0]?.preparationReviewId === "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
 "GOV-STAGE-023: inert SPK preparation cardinality or identity drifted");
-check(stageApprovals.length === 0, "GOV-STAGE-024: inert SPK seed must have zero stage approvals");
+check(stageApprovals.length === 0 || stageApprovals.length === 1,
+  "GOV-STAGE-024: SPK production state must have zero approvals or one exact published Gate-B approval");
 check(jsonEqual(stageLifecycleValidation.preparationReviewIds, [
   "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
 ]) && jsonEqual(stageLifecycleValidation.definitionStageIds, [
@@ -393,9 +407,9 @@ check(stageLifecycleValidation.preparationReviewCount === 1
   && stageLifecycleValidation.moduleCount === 1
   && stageLifecycleValidation.outcomeVerifierCount === 1
   && stageLifecycleValidation.callbackCount === 0
-  && stageLifecycleValidation.stageApprovalCount === 0
-  && stageLifecycleValidation.executableStageCount === 0,
-"GOV-STAGE-026: inert SPK lifecycle counts are not exactly 1/1/1/1/0/0/0");
+  && stageLifecycleValidation.stageApprovalCount === stageApprovals.length
+  && stageLifecycleValidation.executableStageCount === stageApprovals.length,
+"GOV-STAGE-026: SPK lifecycle is neither exact 1/1/1/1/0/0/0 nor exact 1/1/1/1/0/1/1");
 check(PRODUCTION_MODULE_METADATA.length === 1
   && PRODUCTION_MODULE_METADATA[0]?.moduleId === "spk.synthetic"
   && PRODUCTION_MODULE_METADATA[0]?.moduleRelativePath
@@ -412,23 +426,53 @@ check(PRODUCTION_MODULE_METADATA.length === 1
 "GOV-STAGE-027: inert SPK module/verifier/callback metadata drifted");
 const spkFutureModuleMetadata = PRODUCTION_MODULE_METADATA[0];
 const spkFutureModulePath = path.join(repoRoot, spkFutureModuleMetadata.moduleRelativePath);
+let spkFutureModuleHeadEntry = null;
 let spkFutureModuleStats = null;
 let spkFutureModuleResolvedPath = null;
+let spkFutureModuleWorktreeSha256 = null;
 let spkFutureModuleInspectionFailed = false;
 try {
+  const treeRow = execFileSync("git", [
+    "ls-tree", "HEAD", "--", spkFutureModuleMetadata.moduleRelativePath,
+  ], { cwd: repoRoot, encoding: "utf8" }).trim();
+  if (treeRow !== "") {
+    const match = /^(\d{6}) ([a-z]+) [0-9a-f]+\t(.+)$/.exec(treeRow);
+    if (match === null || match[3] !== spkFutureModuleMetadata.moduleRelativePath) {
+      spkFutureModuleInspectionFailed = true;
+    } else {
+      const headBytes = execFileSync("git", [
+        "show", `HEAD:${spkFutureModuleMetadata.moduleRelativePath}`,
+      ], { cwd: repoRoot, encoding: null, maxBuffer: 64 * 1024 * 1024 });
+      spkFutureModuleHeadEntry = {
+        gitMode: match[1],
+        gitType: match[2],
+        headSha256: `sha256:${sha256(headBytes)}`,
+      };
+    }
+  }
   spkFutureModuleStats = fs.lstatSync(spkFutureModulePath);
   spkFutureModuleResolvedPath = fs.realpathSync(spkFutureModulePath);
+  if (spkFutureModuleStats.isFile() && !spkFutureModuleStats.isSymbolicLink()) {
+    spkFutureModuleWorktreeSha256 = `sha256:${sha256(fs.readFileSync(spkFutureModulePath))}`;
+  }
 } catch (error) {
   if (error?.code !== "ENOENT") spkFutureModuleInspectionFailed = true;
 }
 check(!spkFutureModuleInspectionFailed, "GOV-STAGE-028: future SPK module inspection failed");
-if (spkFutureModuleStats !== null) {
+const spkFutureModuleTrackedAtHead = spkFutureModuleHeadEntry !== null;
+const spkFutureModulePresentInWorktree = spkFutureModuleStats !== null;
+check(spkFutureModuleTrackedAtHead === spkFutureModulePresentInWorktree,
+  "GOV-STAGE-028: future SPK module HEAD/worktree presence drifted");
+if (spkFutureModuleTrackedAtHead && spkFutureModulePresentInWorktree) {
   check(spkFutureModuleStats.isFile()
     && !spkFutureModuleStats.isSymbolicLink()
     && spkFutureModuleResolvedPath === path.resolve(fs.realpathSync(repoRoot), spkFutureModuleMetadata.moduleRelativePath)
+    && spkFutureModuleHeadEntry.gitMode === spkFutureModuleMetadata.gitMode
+    && spkFutureModuleHeadEntry.gitType === "blob"
+    && spkFutureModuleHeadEntry.headSha256 === spkFutureModuleMetadata.moduleSha256
     && (spkFutureModuleStats.mode & 0o777) === 0o644
-    && sha256(fs.readFileSync(spkFutureModulePath)) === spkFutureModuleMetadata.moduleSha256.slice("sha256:".length),
-  "GOV-STAGE-028: present future SPK module is not the exact reviewed regular 100644 blob");
+    && spkFutureModuleWorktreeSha256 === spkFutureModuleMetadata.moduleSha256,
+  "GOV-STAGE-028: present future SPK module is not the exact reviewed HEAD/worktree regular 100644 blob");
 } else {
   check(stageApprovals.length === 0 && stageLifecycleValidation.executableStageCount === 0,
     "GOV-STAGE-028: absent future SPK module is allowed only while the seed remains inert");
@@ -1501,8 +1545,158 @@ for (const filePath of executionFiles) {
   check(path.basename(filePath).startsWith("P0-"), `GOV-NAME-002: execution artifact lacks P0- prefix: ${filePath}`);
 }
 check(path.basename(import.meta.filename).startsWith("P0-"), "GOV-NAME-003: this new validator lacks the P0- prefix");
-const workItemFiles = walkFiles("docs/work-items");
-check(workItemFiles.length === 58 * artifactKinds.length, `GOV-DOR-032: expected 348 task artifacts; found ${workItemFiles.length}`);
+const canonicalWorkItemFiles = tasks.flatMap((task) => artifactKinds
+  .map((kind) => expectedArtifactPath(task.id, kind)));
+const workItemTreeEntries = new Map(execFileSync("git", [
+  "ls-tree", "-r", "-z", "HEAD", "--", "docs/work-items",
+], {
+  cwd: repoRoot,
+  encoding: "utf8",
+  maxBuffer: 32 * 1024 * 1024,
+}).split("\0").filter(Boolean).map((row) => {
+  const match = /^(\d{6}) ([a-z]+) [0-9a-f]+\t(.+)$/.exec(row);
+  return match === null
+    ? [row, { gitMode: null, gitType: null }]
+    : [match[3], { gitMode: match[1], gitType: match[2] }];
+}));
+const physicalWorkItemPaths = walkLeafPaths("docs/work-items");
+const workItemPaths = [...new Set([
+  ...workItemTreeEntries.keys(),
+  ...physicalWorkItemPaths,
+])].sort();
+const workItemInventoryEntries = workItemPaths.map((filePath) => {
+  const tracked = workItemTreeEntries.get(filePath) ?? null;
+  let stats = null;
+  try {
+    stats = fs.lstatSync(path.join(repoRoot, filePath));
+  } catch {
+    stats = null;
+  }
+  const worktreeKind = stats === null
+    ? "missing"
+    : stats.isSymbolicLink()
+      ? "symlink"
+      : stats.isFile()
+        ? "file"
+        : "other";
+  return {
+    path: filePath,
+    trackedAtHead: tracked !== null,
+    gitMode: tracked?.gitMode ?? null,
+    gitType: tracked?.gitType ?? null,
+    worktreeKind,
+    worktreeMode: stats === null ? null : `100${(stats.mode & 0o777).toString(8).padStart(3, "0")}`,
+  };
+});
+const workItemInventory = validateTaskWorkItemInventory({
+  canonicalArtifactPaths: canonicalWorkItemFiles,
+  entries: workItemInventoryEntries,
+});
+check(workItemInventory.ok,
+  `GOV-DOR-032: task work-item inventory is invalid (${workItemInventory.code}${workItemInventory.path ? `:${workItemInventory.path}` : ""})`);
+const workItemFiles = workItemInventoryEntries.map((entry) => entry.path);
+const registeredCandidateQaExpectedPath =
+  "docs/work-items/SPK-R0-001/P0-SPK-R0-001-CANDIDATE-QA-CONTRACT.json";
+const registeredCandidateQaRegistration = REGISTERED_SUPPLEMENTAL_TASK_FILES[0] ?? null;
+const registeredCandidateQaPath = registeredCandidateQaRegistration?.path ?? null;
+const registeredCandidateQaPresent = workItemFiles.includes(registeredCandidateQaPath);
+check(REGISTERED_SUPPLEMENTAL_TASK_FILES.length === 1
+  && registeredCandidateQaPath === registeredCandidateQaExpectedPath
+  && registeredCandidateQaRegistration?.sha256
+    === "sha256:0467b716d1952b59fd07acf5337c6a105d44cfc926c104635829027751cdfb7f"
+  && registeredCandidateQaRegistration?.gitMode === "100644"
+  && registeredCandidateQaRegistration?.gitType === "blob",
+"GOV-DOR-052: registered supplemental task-file allowlist is not the exact SPK candidate-QA singleton");
+let registeredCandidateQaHeadEntry = null;
+let registeredCandidateQaStats = null;
+let registeredCandidateQaResolvedPath = null;
+let registeredCandidateQaWorktreeSha256 = null;
+let registeredCandidateQaInspectionFailed = registeredCandidateQaPath !== registeredCandidateQaExpectedPath;
+if (!registeredCandidateQaInspectionFailed) {
+  try {
+    const tracked = workItemTreeEntries.get(registeredCandidateQaPath) ?? null;
+    if (tracked !== null) {
+      const headBytes = execFileSync("git", [
+        "show", `HEAD:${registeredCandidateQaPath}`,
+      ], { cwd: repoRoot, encoding: null, maxBuffer: 64 * 1024 * 1024 });
+      registeredCandidateQaHeadEntry = {
+        gitMode: tracked.gitMode,
+        gitType: tracked.gitType,
+        headSha256: `sha256:${sha256(headBytes)}`,
+      };
+    }
+    registeredCandidateQaStats = fs.lstatSync(path.join(repoRoot, registeredCandidateQaPath));
+    registeredCandidateQaResolvedPath = fs.realpathSync(path.join(repoRoot, registeredCandidateQaPath));
+    if (registeredCandidateQaStats.isFile() && !registeredCandidateQaStats.isSymbolicLink()) {
+      registeredCandidateQaWorktreeSha256 = `sha256:${sha256(fs.readFileSync(
+        path.join(repoRoot, registeredCandidateQaPath),
+      ))}`;
+    }
+  } catch (error) {
+    if (error?.code !== "ENOENT") registeredCandidateQaInspectionFailed = true;
+  }
+}
+check(!registeredCandidateQaInspectionFailed,
+  "GOV-DOR-053: registered SPK candidate-QA contract inspection failed");
+if (registeredCandidateQaStats !== null) {
+  check(registeredCandidateQaResolvedPath
+    === path.resolve(fs.realpathSync(repoRoot), registeredCandidateQaExpectedPath),
+  "GOV-DOR-053: registered SPK candidate-QA contract path escapes its exact repository location");
+}
+const registeredCandidateQaPresence = validateRegisteredSupplementalTaskFilePresence({
+  inventory: workItemInventory,
+  supplementalTaskFileEntries: [{
+    path: registeredCandidateQaPath,
+    trackedAtHead: registeredCandidateQaHeadEntry !== null,
+    gitMode: registeredCandidateQaHeadEntry?.gitMode ?? null,
+    gitType: registeredCandidateQaHeadEntry?.gitType ?? null,
+    headSha256: registeredCandidateQaHeadEntry?.headSha256 ?? null,
+    worktreeKind: registeredCandidateQaStats === null
+      ? "missing"
+      : registeredCandidateQaStats.isSymbolicLink()
+        ? "symlink"
+        : registeredCandidateQaStats.isFile()
+          ? "file"
+          : "other",
+    worktreeMode: registeredCandidateQaStats === null
+      ? null
+      : `100${(registeredCandidateQaStats.mode & 0o777).toString(8).padStart(3, "0")}`,
+    worktreeSha256: registeredCandidateQaWorktreeSha256,
+  }],
+  implementationEntries: [{
+    path: spkFutureModuleMetadata.moduleRelativePath,
+    trackedAtHead: spkFutureModuleTrackedAtHead,
+    gitMode: spkFutureModuleHeadEntry?.gitMode ?? null,
+    gitType: spkFutureModuleHeadEntry?.gitType ?? null,
+    headSha256: spkFutureModuleHeadEntry?.headSha256 ?? null,
+    worktreeKind: spkFutureModuleStats === null
+      ? "missing"
+      : spkFutureModuleStats.isSymbolicLink()
+        ? "symlink"
+        : spkFutureModuleStats.isFile()
+          ? "file"
+          : "other",
+    worktreeMode: spkFutureModuleStats === null
+      ? null
+      : `100${(spkFutureModuleStats.mode & 0o777).toString(8).padStart(3, "0")}`,
+    worktreeSha256: spkFutureModuleWorktreeSha256,
+  }],
+});
+check(registeredCandidateQaPresence.ok,
+  `GOV-DOR-054: exact SPK candidate-QA contract/future-module presence is invalid (${registeredCandidateQaPresence.code})`);
+if (workItemInventory.ok && registeredCandidateQaPresent) {
+  let candidateQaJsonValid = false;
+  try {
+    const candidateQaDocument = readJson(registeredCandidateQaPath);
+    candidateQaJsonValid = candidateQaDocument !== null
+      && typeof candidateQaDocument === "object"
+      && !Array.isArray(candidateQaDocument);
+  } catch {
+    candidateQaJsonValid = false;
+  }
+  check(candidateQaJsonValid,
+    "GOV-DOR-055: registered SPK candidate-QA contract is not duplicate-key-safe JSON object data");
+}
 for (const filePath of workItemFiles) {
   check(path.basename(filePath).startsWith("P0-"), `GOV-NAME-005: task artifact lacks P0- prefix: ${filePath}`);
 }

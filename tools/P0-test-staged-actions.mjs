@@ -4,6 +4,7 @@ import {
   preparationReviewRecordDigest,
   MAX_SERIALIZABLE_STAGE_DEADLINE_MS,
   P0_GATE_A_PROPOSAL_PROJECTION_PATHS,
+  PRODUCTION_STAGE_MODULE_BINDINGS,
   PRODUCTION_STAGED_ACTIONS,
   stageApprovalContextDigest,
   stageApprovalRecordDigest,
@@ -12,6 +13,7 @@ import {
   P0_R0_GATE_A_MINIMUM_BASE_REVISION,
   STAGE_APPROVAL_REGISTRY_SOURCE_BASE_REVISION,
   validateGateAPreparationDecision,
+  validateProductionStageLifecycleSnapshot,
   validateStageApprovalRegistry,
   validateStageChain,
   validateStageReceipt,
@@ -1543,6 +1545,56 @@ assert.deepEqual({
   moduleArgumentBindings: [{ moduleId: base.moduleId, argumentSetId: base.argumentSetId, arguments: [] }],
   counts: [1, 1, 1, 1, 0, 0, 0],
 }); cases += 1;
+const productionInertSnapshot = validateProductionStageLifecycleSnapshot({
+  registry: registryFixture.prepared,
+  definitions: [base],
+  moduleBindings: [PRODUCTION_STAGE_MODULE_BINDINGS[0]],
+  outcomeVerificationModuleIds: [base.moduleId],
+  callbackModuleIds: [],
+});
+expectCode(productionInertSnapshot, "PRODUCTION_STAGE_LIFECYCLE_SNAPSHOT_VALID");
+assert.equal(productionInertSnapshot.activationState, "inert"); cases += 1;
+expectCode(validateProductionStageLifecycleSnapshot({
+  registry: registryFixture.prepared,
+  definitions: [{ ...base, deadlineMs: base.deadlineMs + 1 }],
+  moduleBindings: [PRODUCTION_STAGE_MODULE_BINDINGS[0]],
+  outcomeVerificationModuleIds: [base.moduleId],
+  callbackModuleIds: [],
+}), "PRODUCTION_STAGE_DEFINITION_IDENTITY_INVALID");
+expectCode(validateProductionStageLifecycleSnapshot({
+  registry: registryFixture.prepared,
+  definitions: [{ ...base, idempotencyKey: `${base.idempotencyKey}-DRIFT` }],
+  moduleBindings: [PRODUCTION_STAGE_MODULE_BINDINGS[0]],
+  outcomeVerificationModuleIds: [base.moduleId],
+  callbackModuleIds: [],
+}), "PRODUCTION_STAGE_DEFINITION_IDENTITY_INVALID");
+expectCode(validateProductionStageLifecycleSnapshot({
+  registry: registryFixture.prepared,
+  definitions: [base],
+  moduleBindings: [{
+    ...PRODUCTION_STAGE_MODULE_BINDINGS[0],
+    moduleRelativePath: "tools/spk-r0-001/P0-SPK-R0-001-drift.mjs",
+  }],
+  outcomeVerificationModuleIds: [base.moduleId],
+  callbackModuleIds: [],
+}), "PRODUCTION_STAGE_MODULE_BINDING_INVALID");
+expectCode(validateProductionStageLifecycleSnapshot({
+  registry: registryFixture.prepared,
+  definitions: [base],
+  moduleBindings: [{
+    ...PRODUCTION_STAGE_MODULE_BINDINGS[0],
+    moduleSha256: `sha256:${"a".repeat(64)}`,
+  }],
+  outcomeVerificationModuleIds: [base.moduleId],
+  callbackModuleIds: [],
+}), "PRODUCTION_STAGE_MODULE_BINDING_INVALID");
+expectCode(validateProductionStageLifecycleSnapshot({
+  registry: registryFixture.prepared,
+  definitions: [base],
+  moduleBindings: [{ ...PRODUCTION_STAGE_MODULE_BINDINGS[0], gitMode: "100755" }],
+  outcomeVerificationModuleIds: [base.moduleId],
+  callbackModuleIds: [],
+}), "PRODUCTION_STAGE_MODULE_BINDING_INVALID");
 expectCode(validateStageRuntimeLifecycle({
   registry: registryFixture.prepared,
   definitions: [base],
@@ -1622,13 +1674,38 @@ expectCode(validateStageRuntimeLifecycle({
   outcomeVerificationModuleIds: [base.moduleId],
   callbackModuleIds: [],
 }), "STAGE_RUNTIME_ARGUMENT_SET_ORPHANED");
-expectCode(validateStageRuntimeLifecycle({
+const activeLifecycleInput = {
   registry: registryFixture.published,
   definitions: [base],
   moduleBindings: [moduleBindings[0]],
   outcomeVerificationModuleIds: [base.moduleId],
   callbackModuleIds: [],
-}), "STAGE_RUNTIME_LIFECYCLE_VALID");
+};
+expectCode(validateStageRuntimeLifecycle(activeLifecycleInput), "STAGE_RUNTIME_LIFECYCLE_VALID");
+const productionPublishedRegistry = structuredClone(registryFixture.published);
+productionPublishedRegistry.stageApprovals[0].moduleSha256 =
+  PRODUCTION_STAGE_MODULE_BINDINGS[0].moduleSha256;
+resealStageApproval(productionPublishedRegistry.stageApprovals[0]);
+for (const seat of COUNCIL_SEATS) {
+  const attestation = productionPublishedRegistry.stageApprovals[0].stageCouncil.seatVerdicts[seat];
+  attestation.attestationDigest = computeStageApprovalSeatAttestationDigest(attestation);
+}
+const productionActiveSnapshot = validateProductionStageLifecycleSnapshot({
+  ...activeLifecycleInput,
+  registry: productionPublishedRegistry,
+  moduleBindings: [PRODUCTION_STAGE_MODULE_BINDINGS[0]],
+});
+expectCode(productionActiveSnapshot, "PRODUCTION_STAGE_LIFECYCLE_SNAPSHOT_VALID");
+assert.deepEqual([
+  productionActiveSnapshot.preparationReviewCount,
+  productionActiveSnapshot.definitionCount,
+  productionActiveSnapshot.moduleCount,
+  productionActiveSnapshot.outcomeVerifierCount,
+  productionActiveSnapshot.callbackCount,
+  productionActiveSnapshot.stageApprovalCount,
+  productionActiveSnapshot.executableStageCount,
+], [1, 1, 1, 1, 0, 1, 1]); cases += 1;
+assert.equal(productionActiveSnapshot.activationState, "gate-b-published"); cases += 1;
 expectCode(validateStageRuntimeLifecycle({
   registry: chainedRegistry,
   definitions: [base, secondLifecycle],
@@ -1636,6 +1713,13 @@ expectCode(validateStageRuntimeLifecycle({
   outcomeVerificationModuleIds: [base.moduleId, secondLifecycle.moduleId],
   callbackModuleIds: [],
 }), "STAGE_RUNTIME_LIFECYCLE_VALID");
+expectCode(validateProductionStageLifecycleSnapshot({
+  registry: chainedRegistry,
+  definitions: [base, secondLifecycle],
+  moduleBindings,
+  outcomeVerificationModuleIds: [base.moduleId, secondLifecycle.moduleId],
+  callbackModuleIds: [],
+}), "PRODUCTION_STAGE_LIFECYCLE_CARDINALITY_INVALID");
 const wrongPredecessorDefinition = {
   ...secondLifecycle,
   predecessor: {

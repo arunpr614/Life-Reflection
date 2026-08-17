@@ -2484,6 +2484,82 @@ export const PRODUCTION_STAGED_ACTIONS = Object.freeze([Object.freeze({
   argumentSetId: "synthetic.v1",
   deadlineMs: 60_000,
 })]);
+export const PRODUCTION_STAGE_MODULE_BINDINGS = Object.freeze([Object.freeze({
+  moduleId: "spk.synthetic",
+  moduleRelativePath: "tools/spk-r0-001/P0-SPK-R0-001-synthetic-foundation.mjs",
+  moduleSha256: "sha256:e60d8e6398441a61812dd467ffcbdd292e01fb1198723e667e480d2cf453e47f",
+  gitMode: "100644",
+  argumentSetIds: Object.freeze(["synthetic.v1"]),
+  argumentSets: Object.freeze({ "synthetic.v1": Object.freeze([]) }),
+})]);
+
+/**
+ * Close the current production snapshot to either the inert SPK seed or its
+ * one exact, append-only Gate-B publication. The generic lifecycle validator
+ * intentionally supports later reviewed chains; this repository-level oracle
+ * prevents that future capacity from silently widening today's production
+ * state.
+ */
+export function validateProductionStageLifecycleSnapshot(input = {}) {
+  const lifecycle = validateStageRuntimeLifecycle(input);
+  if (!lifecycle.ok) return lifecycle;
+  const definition = PRODUCTION_STAGED_ACTIONS[0];
+  const approvals = input.registry.stageApprovals;
+  if (PRODUCTION_STAGED_ACTIONS.length !== 1 || approvals.length > 1) {
+    return fail("PRODUCTION_STAGE_LIFECYCLE_CARDINALITY_INVALID");
+  }
+  if (canonicalJson(input.definitions) !== canonicalJson(PRODUCTION_STAGED_ACTIONS)) {
+    return fail("PRODUCTION_STAGE_DEFINITION_IDENTITY_INVALID");
+  }
+  if (canonicalJson(input.moduleBindings) !== canonicalJson(PRODUCTION_STAGE_MODULE_BINDINGS)) {
+    return fail("PRODUCTION_STAGE_MODULE_BINDING_INVALID");
+  }
+  if (approvals.length === 1) {
+    const approval = approvals[0];
+    if (approval.taskId !== definition.taskId
+      || approval.stageId !== definition.stageId
+      || approval.preparationReviewId !== "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION"
+      || approval.gateKind !== "execute"
+      || approval.state !== "ready"
+      || approval.scopeClass !== definition.scopeClass
+      || approval.actionClass !== definition.actionClass
+      || approval.sequence !== 1
+      || approval.predecessorReceiptSha256 !== null
+      || approval.idempotencyKey !== definition.idempotencyKey
+      || approval.stageDefinitionSha256 !== stageBindingDigest(definition)
+      || approval.moduleId !== definition.moduleId
+      || approval.moduleSha256 !== input.moduleBindings[0]?.moduleSha256) {
+      return fail("PRODUCTION_STAGE_APPROVAL_IDENTITY_INVALID");
+    }
+  }
+  const activationCount = approvals.length;
+  if (canonicalJson(lifecycle.preparationReviewIds) !== canonicalJson([
+    "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+  ])
+    || canonicalJson(lifecycle.definitionStageIds) !== canonicalJson([definition.stageId])
+    || canonicalJson(lifecycle.moduleIds) !== canonicalJson([definition.moduleId])
+    || canonicalJson(lifecycle.outcomeVerificationModuleIds) !== canonicalJson([definition.moduleId])
+    || canonicalJson(lifecycle.callbackModuleIds) !== canonicalJson([])
+    || canonicalJson(lifecycle.moduleArgumentBindings) !== canonicalJson([{
+      moduleId: definition.moduleId,
+      argumentSetId: definition.argumentSetId,
+      arguments: [],
+    }])
+    || lifecycle.preparationReviewCount !== 1
+    || lifecycle.definitionCount !== 1
+    || lifecycle.moduleCount !== 1
+    || lifecycle.outcomeVerifierCount !== 1
+    || lifecycle.callbackCount !== 0
+    || lifecycle.stageApprovalCount !== activationCount
+    || lifecycle.executableStageCount !== activationCount) {
+    return fail("PRODUCTION_STAGE_LIFECYCLE_SNAPSHOT_INVALID");
+  }
+  const { ok: _ok, code: _code, ...lifecycleFacts } = lifecycle;
+  return pass("PRODUCTION_STAGE_LIFECYCLE_SNAPSHOT_VALID", {
+    activationState: activationCount === 0 ? "inert" : "gate-b-published",
+    ...lifecycleFacts,
+  });
+}
 
 export function resolveProductionStagedAction({ taskId, stageId, idempotencyKey } = {}) {
   const matches = PRODUCTION_STAGED_ACTIONS.filter((definition) => definition.taskId === taskId
