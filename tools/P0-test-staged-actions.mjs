@@ -331,7 +331,7 @@ function gateAProofResult(evaluation) {
   };
 }
 
-function stageRegistryFixture() {
+function stageRegistryFixture({ laterImplementationBase = false } = {}) {
   const sourceBaseRevision = STAGE_APPROVAL_REGISTRY_SOURCE_BASE_REVISION;
   const minimumGateABaseRevision = P0_R0_GATE_A_MINIMUM_BASE_REVISION;
   const proposalRevision = "8".repeat(40);
@@ -342,6 +342,10 @@ function stageRegistryFixture() {
   const preparationArmMainRevision = "02".repeat(20);
   const preparationPublicationRevision = "a".repeat(40);
   const preparationMainPublicationRevision = "d".repeat(40);
+  const postPreparationMainRevision = "04".repeat(20);
+  const candidateBaseRevision = laterImplementationBase
+    ? postPreparationMainRevision
+    : preparationMainPublicationRevision;
   const candidateRevision = "b".repeat(40);
   const implementationMainPublicationRevision = "e".repeat(40);
   const stageArmRevision = "03".repeat(20);
@@ -647,7 +651,7 @@ function stageRegistryFixture() {
   });
   const stageCandidate = {
     revision: candidateRevision,
-    baseRevision: preparationMainPublicationRevision,
+    baseRevision: candidateBaseRevision,
     dossierDigest: null,
     taskContractSha256,
     artifacts: artifactBindings,
@@ -868,6 +872,7 @@ function stageRegistryFixture() {
     [preparationArmMainRevision, empty],
     [preparationPublicationRevision, prepared],
     [preparationMainPublicationRevision, prepared],
+    ...(laterImplementationBase ? [[postPreparationMainRevision, prepared]] : []),
     [candidateRevision, prepared],
     [implementationMainPublicationRevision, prepared],
     [stageArmRevision, prepared],
@@ -884,6 +889,7 @@ function stageRegistryFixture() {
     [preparationArmMainRevision, armedPreparationIntegrity],
     [preparationPublicationRevision, clearPreparedIntegrity],
     [preparationMainPublicationRevision, clearPreparedIntegrity],
+    ...(laterImplementationBase ? [[postPreparationMainRevision, clearPreparedIntegrity]] : []),
     [candidateRevision, clearPreparedIntegrity],
     [implementationMainPublicationRevision, clearPreparedIntegrity],
     [stageArmRevision, armedStageIntegrity],
@@ -900,8 +906,9 @@ function stageRegistryFixture() {
     [preparationArmMainRevision, [proposalMainPublicationRevision, preparationArmRevision]],
     [preparationPublicationRevision, [preparationArmMainRevision]],
     [preparationMainPublicationRevision, [preparationArmMainRevision, preparationPublicationRevision]],
-    [candidateRevision, [preparationMainPublicationRevision]],
-    [implementationMainPublicationRevision, [preparationMainPublicationRevision, candidateRevision]],
+    ...(laterImplementationBase ? [[postPreparationMainRevision, [preparationMainPublicationRevision]]] : []),
+    [candidateRevision, [candidateBaseRevision]],
+    [implementationMainPublicationRevision, [candidateBaseRevision, candidateRevision]],
     [stageArmRevision, [implementationMainPublicationRevision]],
     [stageArmMainRevision, [implementationMainPublicationRevision, stageArmRevision]],
     [stagePublicationRevision, [stageArmMainRevision]],
@@ -940,6 +947,7 @@ function stageRegistryFixture() {
     preparationArmMainRevision,
     preparationPublicationRevision,
     preparationMainPublicationRevision,
+    ...(laterImplementationBase ? [postPreparationMainRevision] : []),
     candidateRevision,
     implementationMainPublicationRevision,
     stageArmRevision,
@@ -1119,6 +1127,8 @@ function stageRegistryFixture() {
     preparationArmMainRevision,
     preparationPublicationRevision,
     preparationMainPublicationRevision,
+    postPreparationMainRevision,
+    candidateBaseRevision,
     candidateRevision,
     implementationMainPublicationRevision,
     stageArmRevision,
@@ -2415,7 +2425,10 @@ for (const topologyMutation of [
   await expectGateAGitNegative({ fixture, run, code: "PREPARATION_GATE_A_PROPOSAL_UNPUBLISHED" });
 }
 
-for (const revisionKey of ["proposalRevision", "preparationPublicationRevision", "stagePublicationRevision"]) {
+for (const revisionKey of [
+  "proposalRevision", "proposalMainPublicationRevision", "preparationPublicationRevision",
+  "preparationMainPublicationRevision", "stagePublicationRevision",
+]) {
   const fixture = stageRegistryFixture();
   const revision = fixture[revisionKey];
   const changedRegistry = structuredClone(fixture.reviewerRegistry);
@@ -2435,7 +2448,10 @@ for (const revisionKey of ["proposalRevision", "preparationPublicationRevision",
   });
 }
 
-for (const revisionKey of ["proposalRevision", "preparationPublicationRevision", "stagePublicationRevision"]) {
+for (const revisionKey of [
+  "proposalRevision", "preparationPublicationRevision", "preparationMainPublicationRevision",
+  "stagePublicationRevision",
+]) {
   const fixture = stageRegistryFixture();
   const revision = fixture[revisionKey];
   const changedManifest = structuredClone(fixture.manifestDocument);
@@ -2456,7 +2472,8 @@ for (const revisionKey of ["proposalRevision", "preparationPublicationRevision",
 }
 
 for (const revisionKey of [
-  "proposalRevision", "proposalMainPublicationRevision", "preparationPublicationRevision", "stagePublicationRevision",
+  "proposalRevision", "proposalMainPublicationRevision", "preparationPublicationRevision",
+  "preparationMainPublicationRevision", "stagePublicationRevision",
 ]) {
   const fixture = stageRegistryFixture();
   const revision = fixture[revisionKey];
@@ -2506,6 +2523,31 @@ for (const { revisionKey, mutate } of [
   }), "PREPARATION_GATE_A_EXPECTED_TASK_INVALID");
 }
 
+// Canonically equivalent reviewer JSON at B is still raw-byte drift. I and
+// current restore the preparation-bound bytes, but the selected base must be
+// an unchanged preparation replay too.
+{
+  const fixture = stageRegistryFixture({ laterImplementationBase: true });
+  const reorderedRegistry = {
+    reviewers: fixture.reviewerRegistry.reviewers,
+    schemaVersion: fixture.reviewerRegistry.schemaVersion,
+  };
+  const bytes = Buffer.from(`${JSON.stringify(reorderedRegistry)}\n`);
+  const run = async (command, args, options = {}) => (
+    args[0] === "show"
+      && args[1] === `${fixture.candidateBaseRevision}:${REVIEWER_REGISTRY_PATH}`
+      ? { ok: true, status: 0, stdout: options.encoding === null ? bytes : bytes.toString("utf8") }
+      : fixture.run(command, args, options)
+  );
+  expectCode(await verifyStageApprovalRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run,
+    publishedRef: fixture.stagePublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
+    stageId: fixture.stage.stageId,
+  }), "PREPARATION_GATE_A_REVIEWER_REGISTRY_MISMATCH");
+}
+
 for (const { publishedRefKey, revisionKey } of [
   { publishedRefKey: "stagePublicationRevision", revisionKey: "stagePublicationRevision" },
   { publishedRefKey: "stageMainPublicationRevision", revisionKey: "stageMainPublicationRevision" },
@@ -2531,7 +2573,7 @@ for (const { publishedRefKey, revisionKey } of [
   }), "PREPARATION_GATE_A_EXPECTED_TASK_INVALID");
 }
 
-for (const revisionKey of ["preparationPublicationRevision", "stagePublicationRevision"]) {
+for (const revisionKey of ["preparationPublicationRevision", "preparationMainPublicationRevision"]) {
   const fixture = stageRegistryFixture();
   const revision = fixture[revisionKey];
   const artifactPath = fixture.artifactBindings.product.path;
@@ -2550,13 +2592,33 @@ for (const revisionKey of ["preparationPublicationRevision", "stagePublicationRe
   });
 }
 
-for (const revisionKey of ["preparationPublicationRevision", "stagePublicationRevision"]) {
+for (const revisionKey of ["preparationPublicationRevision", "preparationMainPublicationRevision"]) {
   const fixture = stageRegistryFixture();
   const revision = fixture[revisionKey];
   const artifactPath = fixture.artifactBindings.product.path;
   const run = async (command, args, options) => (
     args[0] === "ls-tree" && args[1] === revision && args.at(-1) === artifactPath
       ? { ok: true, status: 0, stdout: `100755 blob ${"1".repeat(40)}\t${artifactPath}\n` }
+      : fixture.run(command, args, options)
+  );
+  await expectGateAGitNegative({
+    fixture,
+    run,
+    publishedRef: fixture.stagePublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
+    code: "PREPARATION_GATE_A_ARTIFACT_CONTINUITY_INVALID",
+  });
+}
+
+{
+  const fixture = stageRegistryFixture();
+  const artifactPath = fixture.artifactBindings.product.path;
+  const implementedBytes = Buffer.from(`${fixture.artifactBytes.product}\nimplementation candidate bytes\n`);
+  const run = async (command, args, options = {}) => (
+    args[0] === "show" && args[1] === `${fixture.stagePublicationRevision}:${artifactPath}`
+      ? { ok: true, status: 0, stdout: options.encoding === null
+        ? implementedBytes
+        : implementedBytes.toString("utf8") }
       : fixture.run(command, args, options)
   );
   await expectGateAGitNegative({
@@ -2803,6 +2865,376 @@ for (const boundaryKey of ["implementationMainPublicationRevision", "stageMainPu
     publishedRef: fixture.stageMainPublicationRevision,
     stageId: fixture.stage.stageId,
   }), "STAGE_MAIN_PUBLICATION_BOUNDARY_INVALID");
+}
+
+// Regression for the live 2026-08-17 shape: a log-only PR head directly
+// parents the accepted preparation main merge (PM).
+{
+  const fixture = stageRegistryFixture();
+  const logOnlyHead = "11".repeat(20);
+  const run = fixtureWithLinearChild(
+    fixture,
+    logOnlyHead,
+    fixture.preparationMainPublicationRevision,
+    fixture.prepared,
+  );
+  expectCode(await verifyPreparationReviewRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run,
+    publishedRef: logOnlyHead,
+    fetchedMainRevision: fixture.preparationMainPublicationRevision,
+    preparationReviewId: fixture.preparationReview.preparationReviewId,
+  }), "PREPARATION_REVIEW_HISTORY_VALID");
+}
+
+// A future implementation/evidence candidate may branch from that log-only
+// main descendant. Its task contract, reviewer registry, and immutable proposal
+// artifact snapshots still replay Gate A.
+{
+  const fixture = stageRegistryFixture();
+  const logOnlyMain = "11".repeat(20);
+  const implementationHead = "12".repeat(20);
+  const logRun = fixtureWithLinearChild(
+    fixture,
+    logOnlyMain,
+    fixture.preparationMainPublicationRevision,
+    fixture.prepared,
+  );
+  const implementationRun = fixtureWithLinearChild(
+    { ...fixture, run: logRun },
+    implementationHead,
+    logOnlyMain,
+    fixture.prepared,
+  );
+  expectCode(await verifyPreparationReviewRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run: implementationRun,
+    publishedRef: implementationHead,
+    fetchedMainRevision: logOnlyMain,
+    preparationReviewId: fixture.preparationReview.preparationReviewId,
+  }), "PREPARATION_REVIEW_HISTORY_VALID");
+}
+
+// A later PR head cannot restore a proposal snapshot that already drifted on
+// its fetched-main parent. Artifact, task-contract, and reviewer bytes are each
+// bound independently at both revisions.
+for (const driftKind of ["artifact", "task", "reviewer"]) {
+  const fixture = stageRegistryFixture();
+  const fetchedMain = "24".repeat(20);
+  const restoringHead = "25".repeat(20);
+  const mainRun = fixtureWithLinearChild(
+    fixture,
+    fetchedMain,
+    fixture.preparationMainPublicationRevision,
+    fixture.prepared,
+  );
+  const headRun = fixtureWithLinearChild(
+    { ...fixture, run: mainRun },
+    restoringHead,
+    fetchedMain,
+    fixture.prepared,
+  );
+  let relativePath;
+  let driftedBytes;
+  let expectedCode;
+  if (driftKind === "artifact") {
+    relativePath = fixture.artifactBindings.product.path;
+    driftedBytes = Buffer.from(`${fixture.artifactBytes.product}\nfetched-main drift\n`);
+    expectedCode = "PREPARATION_GATE_A_ARTIFACT_CONTINUITY_INVALID";
+  } else if (driftKind === "task") {
+    relativePath = MANIFEST_PATH;
+    const changedManifest = structuredClone(fixture.manifestDocument);
+    changedManifest.tasks[0].description = "Fetched-main task drift restored by PR head.";
+    driftedBytes = Buffer.from(`${JSON.stringify(changedManifest, null, 2)}\n`);
+    expectedCode = "PREPARATION_GATE_A_EXPECTED_TASK_INVALID";
+  } else {
+    relativePath = REVIEWER_REGISTRY_PATH;
+    const changedReviewers = structuredClone(fixture.reviewerRegistry);
+    changedReviewers.reviewers[0].active = false;
+    driftedBytes = Buffer.from(`${JSON.stringify(changedReviewers, null, 2)}\n`);
+    expectedCode = "PREPARATION_GATE_A_REVIEWER_REGISTRY_MISMATCH";
+  }
+  const run = async (command, args, options = {}) => (
+    args[0] === "show" && args[1] === `${fetchedMain}:${relativePath}`
+      ? { ok: true, status: 0, stdout: options.encoding === null
+        ? driftedBytes
+        : driftedBytes.toString("utf8") }
+      : headRun(command, args, options)
+  );
+  expectCode(await verifyPreparationReviewRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run,
+    publishedRef: restoringHead,
+    fetchedMainRevision: fetchedMain,
+    preparationReviewId: fixture.preparationReview.preparationReviewId,
+  }), expectedCode);
+}
+
+// Gate B accepts an implementation merge whose freshly selected base is a
+// later first-parent main descendant of PM, not only PM itself.
+{
+  const fixture = stageRegistryFixture({ laterImplementationBase: true });
+  const result = await verifyStageApprovalRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run: fixture.run,
+    publishedRef: fixture.stagePublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
+    stageId: fixture.stage.stageId,
+  });
+  expectCode(result, "STAGE_APPROVAL_HISTORY_VALID");
+  assert.equal(result.implementationMainPublicationRevision,
+    fixture.implementationMainPublicationRevision); cases += 1;
+}
+
+// The same descendant-PR rule remains available after the exact stage main
+// publication boundary (SM).
+{
+  const fixture = stageRegistryFixture();
+  const laterMain = "13".repeat(20);
+  const laterHead = "14".repeat(20);
+  const mainRun = fixtureWithLinearChild(
+    fixture,
+    laterMain,
+    fixture.stageMainPublicationRevision,
+    fixture.published,
+  );
+  const run = fixtureWithLinearChild(
+    { ...fixture, run: mainRun },
+    laterHead,
+    laterMain,
+    fixture.published,
+  );
+  expectCode(await verifyStageApprovalRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run,
+    publishedRef: laterHead,
+    fetchedMainRevision: laterMain,
+    stageId: fixture.stage.stageId,
+  }), "STAGE_APPROVAL_HISTORY_VALID");
+}
+
+// A sibling of fetched main is not the reviewed PR head, even when both
+// branches descend the same accepted PM anchor.
+{
+  const fixture = stageRegistryFixture();
+  const fetchedMain = "15".repeat(20);
+  const siblingHead = "16".repeat(20);
+  const fetchedRun = fixtureWithLinearChild(
+    fixture,
+    fetchedMain,
+    fixture.preparationMainPublicationRevision,
+    fixture.prepared,
+  );
+  const run = fixtureWithLinearChild(
+    { ...fixture, run: fetchedRun },
+    siblingHead,
+    fixture.preparationMainPublicationRevision,
+    fixture.prepared,
+  );
+  expectCode(await verifyPreparationReviewRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run,
+    publishedRef: siblingHead,
+    fetchedMainRevision: fetchedMain,
+    preparationReviewId: fixture.preparationReview.preparationReviewId,
+  }), "PREPARATION_REVIEW_PUBLICATION_SCOPE_INVALID");
+}
+
+// A descendant PR head must itself be a one-parent commit.
+{
+  const fixture = stageRegistryFixture();
+  const mergeHead = "17".repeat(20);
+  const linearRun = fixtureWithLinearChild(
+    fixture,
+    mergeHead,
+    fixture.preparationMainPublicationRevision,
+    fixture.prepared,
+  );
+  const run = async (command, args, options) => {
+    const result = await linearRun(command, args, options);
+    if (args[0] === "rev-list" && args[1] === "--parents" && args.at(-1) === mergeHead) {
+      return { ...result, stdout: result.stdout.trimEnd() + ` ${"18".repeat(20)}\n` };
+    }
+    return result;
+  };
+  expectCode(await verifyPreparationReviewRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run,
+    publishedRef: mergeHead,
+    fetchedMainRevision: fixture.preparationMainPublicationRevision,
+    preparationReviewId: fixture.preparationReview.preparationReviewId,
+  }), "PREPARATION_REVIEW_PUBLICATION_SCOPE_INVALID");
+}
+
+// Reachability through a side parent cannot substitute for ordered
+// first-parent PM -> fetched main -> PR-head history.
+{
+  const fixture = stageRegistryFixture();
+  const fetchedMain = "19".repeat(20);
+  const sideHead = "20".repeat(20);
+  const fetchedRun = fixtureWithLinearChild(
+    fixture,
+    fetchedMain,
+    fixture.preparationMainPublicationRevision,
+    fixture.prepared,
+  );
+  const linearRun = fixtureWithLinearChild(
+    { ...fixture, run: fetchedRun },
+    sideHead,
+    fetchedMain,
+    fixture.prepared,
+  );
+  const run = async (command, args, options) => {
+    const result = await linearRun(command, args, options);
+    if (args[0] === "rev-list" && args.includes("--first-parent")
+      && args.at(-1).endsWith(`..${sideHead}`)) {
+      const revisions = result.stdout.split(/\r?\n/).filter((revision) => (
+        revision && revision !== fixture.preparationMainPublicationRevision
+      ));
+      return { ...result, stdout: `${revisions.join("\n")}\n` };
+    }
+    return result;
+  };
+  expectCode(await verifyPreparationReviewRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run,
+    publishedRef: sideHead,
+    fetchedMainRevision: fetchedMain,
+    preparationReviewId: fixture.preparationReview.preparationReviewId,
+  }), "PREPARATION_REVIEW_PUBLICATION_SCOPE_INVALID");
+}
+
+// A stale/reordered anchor cannot be laundered through an otherwise direct
+// fetched-main child.
+{
+  const fixture = stageRegistryFixture();
+  const fetchedMain = "22".repeat(20);
+  const staleAnchorHead = "23".repeat(20);
+  const fetchedRun = fixtureWithLinearChild(
+    fixture,
+    fetchedMain,
+    fixture.preparationMainPublicationRevision,
+    fixture.prepared,
+  );
+  const linearRun = fixtureWithLinearChild(
+    { ...fixture, run: fetchedRun },
+    staleAnchorHead,
+    fetchedMain,
+    fixture.prepared,
+  );
+  const run = async (command, args, options) => {
+    const result = await linearRun(command, args, options);
+    if (args[0] === "rev-list" && args.includes("--first-parent")
+      && args.at(-1).endsWith(`..${staleAnchorHead}`)) {
+      const revisions = result.stdout.split(/\r?\n/).filter(Boolean);
+      const anchorIndex = revisions.indexOf(fixture.preparationMainPublicationRevision);
+      revisions.splice(anchorIndex, 1);
+      revisions.splice(revisions.indexOf(fetchedMain) + 1, 0,
+        fixture.preparationMainPublicationRevision);
+      return { ...result, stdout: `${revisions.join("\n")}\n` };
+    }
+    return result;
+  };
+  expectCode(await verifyPreparationReviewRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run,
+    publishedRef: staleAnchorHead,
+    fetchedMainRevision: fetchedMain,
+    preparationReviewId: fixture.preparationReview.preparationReviewId,
+  }), "PREPARATION_REVIEW_PUBLICATION_SCOPE_INVALID");
+}
+
+// A candidate base that is only side-reachable, rather than present on the
+// fetched main first-parent chain, fails before implementation publication.
+{
+  const fixture = stageRegistryFixture({ laterImplementationBase: true });
+  const run = async (command, args, options) => {
+    const result = await fixture.run(command, args, options);
+    if (args[0] === "rev-list" && args.includes("--first-parent")
+      && args.at(-1).endsWith(`..${fixture.stageArmMainRevision}`)) {
+      const revisions = result.stdout.split(/\r?\n/).filter((revision) => (
+        revision && revision !== fixture.candidateBaseRevision
+      ));
+      return { ...result, stdout: `${revisions.join("\n")}\n` };
+    }
+    return result;
+  };
+  expectCode(await verifyStageApprovalRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run,
+    publishedRef: fixture.stagePublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
+    stageId: fixture.stage.stageId,
+  }), "STAGE_IMPLEMENTATION_PREPARATION_BASE_INVALID");
+}
+
+// An interleaved main revision makes the selected candidate base stale even
+// if a forged commit-parent response still names it as IM's first parent.
+{
+  const fixture = stageRegistryFixture({ laterImplementationBase: true });
+  const interleavedMain = "21".repeat(20);
+  const run = async (command, args, options) => {
+    const result = await fixture.run(command, args, options);
+    if (args[0] === "rev-list" && args.includes("--first-parent")
+      && args.at(-1).endsWith(`..${fixture.stageArmMainRevision}`)) {
+      const revisions = result.stdout.split(/\r?\n/).filter(Boolean);
+      const baseIndex = revisions.indexOf(fixture.candidateBaseRevision);
+      revisions.splice(baseIndex + 1, 0, interleavedMain);
+      return { ...result, stdout: `${revisions.join("\n")}\n` };
+    }
+    return result;
+  };
+  expectCode(await verifyStageApprovalRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run,
+    publishedRef: fixture.stagePublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
+    stageId: fixture.stage.stageId,
+  }), "STAGE_IMPLEMENTATION_PUBLICATION_BOUNDARY_INVALID");
+}
+
+// Preparation replay must remain unchanged at the freshly selected later base.
+{
+  const fixture = stageRegistryFixture({ laterImplementationBase: true });
+  const changedRegistry = structuredClone(fixture.reviewerRegistry);
+  changedRegistry.reviewers[0].active = false;
+  const bytes = Buffer.from(`${JSON.stringify(changedRegistry, null, 2)}\n`);
+  const run = async (command, args, options = {}) => (
+    args[0] === "show"
+      && args[1] === `${fixture.candidateBaseRevision}:${REVIEWER_REGISTRY_PATH}`
+      ? { ok: true, status: 0, stdout: options.encoding === null ? bytes : bytes.toString("utf8") }
+      : fixture.run(command, args, options)
+  );
+  expectCode(await verifyStageApprovalRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run,
+    publishedRef: fixture.stagePublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
+    stageId: fixture.stage.stageId,
+  }), "PREPARATION_GATE_A_REVIEWER_REGISTRY_MISMATCH");
+}
+
+// Stage history itself rejects a selected main base whose accepted proposal
+// artifact drift is restored by I; terminal-history callers do not depend on
+// the separate candidate-publication verifier for this invariant.
+{
+  const fixture = stageRegistryFixture({ laterImplementationBase: true });
+  const artifactPath = fixture.artifactBindings.product.path;
+  const driftedBytes = Buffer.from(`${fixture.artifactBytes.product}\nselected-base drift\n`);
+  const run = async (command, args, options = {}) => (
+    args[0] === "show" && args[1] === `${fixture.candidateBaseRevision}:${artifactPath}`
+      ? { ok: true, status: 0, stdout: options.encoding === null
+        ? driftedBytes
+        : driftedBytes.toString("utf8") }
+      : fixture.run(command, args, options)
+  );
+  expectCode(await verifyStageApprovalRegistryHistory({
+    repoRoot: "/synthetic/repository",
+    run,
+    publishedRef: fixture.stagePublicationRevision,
+    fetchedMainRevision: fixture.stageArmMainRevision,
+    stageId: fixture.stage.stageId,
+  }), "PREPARATION_GATE_A_ARTIFACT_CONTINUITY_INVALID");
 }
 
 {

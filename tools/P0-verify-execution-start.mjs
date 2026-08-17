@@ -11,9 +11,10 @@ import {
   DELIVERY_TRANSITION_GATE_B_CONTRACT,
   READINESS_SCHEMA_VERSION,
   SCOPE_ACTION_COMPATIBILITY,
+  STAGE_APPROVAL_REGISTRY_PATH,
   STAGE_EXECUTION_SCHEMA_VERSION,
-  TASK_FILE_DESCENDANT_DELTA_PATHS,
   TASK_FILE_DIFF_EXCLUSIONS,
+  TASK_FILE_RUNTIME_DESCENDANT_DELTA_PATHS,
   canonicalJson,
   classifyLocalSyntheticTaskFile,
   computeDossierDigest,
@@ -502,21 +503,36 @@ async function gitTreeBlob(run, repoRoot, revision, relativePath) {
     : { exists: true, bytes: null };
 }
 
-async function gitDiffPaths(run, repoRoot, fromRevision, toRevision, diffFilter = null) {
-  const args = ["diff", "--name-only", "-z", "--no-renames"];
-  if (diffFilter) args.push(`--diff-filter=${diffFilter}`);
-  args.push(fromRevision, toRevision, "--");
-  const result = await git(run, repoRoot, args, { encoding: null });
+async function gitRawDiffRecords(run, repoRoot, fromRevision, toRevision) {
+  const result = await git(run, repoRoot, [
+    "diff", "--raw", "--no-abbrev", "--no-ext-diff", "--no-renames", "-z",
+    fromRevision, toRevision, "--",
+  ], { encoding: null });
   if (!result.ok) return null;
   const fields = nulFields(result.stdout);
-  if (!fields) return null;
-  const paths = [];
+  if (!fields || fields.length % 2 !== 0) return null;
+  const records = [];
   try {
-    for (const field of fields) paths.push(decodeUtf8(field));
+    for (let index = 0; index < fields.length; index += 2) {
+      const header = decodeUtf8(fields[index]);
+      const relativePath = decodeUtf8(fields[index + 1]);
+      const match = header.match(
+        /^:(\d{6}) (\d{6}) ([0-9a-f]{40,64}) ([0-9a-f]{40,64}) ([A-Z])$/,
+      );
+      if (!match) return null;
+      records.push({
+        oldMode: match[1],
+        newMode: match[2],
+        oldObjectId: match[3],
+        newObjectId: match[4],
+        status: match[5],
+        path: relativePath,
+      });
+    }
   } catch {
     return null;
   }
-  return paths;
+  return records;
 }
 
 const CRC32_TABLE = Object.freeze(Array.from({ length: 256 }, (_, value) => {
@@ -1028,6 +1044,12 @@ export async function deriveCandidatePublicationFacts({
       || candidateBinding?.sha256 !== registeredBinding?.sha256) {
       return fail("TASK_CANDIDATE_TASK_FILES_UNVERIFIED", "candidate-publication", { taskId });
     }
+    const baseArtifact = await gitTreeBlob(run, resolvedRoot, baseRevision, candidateBinding.path);
+    if (!baseArtifact.exists || baseArtifact.bytes === null
+      || baseArtifact.gitMode !== "100644" || baseArtifact.gitType !== "blob"
+      || sha256(baseArtifact.bytes) !== candidateBinding.sha256) {
+      return fail("TASK_CANDIDATE_TASK_FILES_UNVERIFIED", "candidate-publication", { taskId });
+    }
   }
 
   let taskFilesValidation;
@@ -1047,18 +1069,35 @@ export async function deriveCandidatePublicationFacts({
     return fail("TASK_CANDIDATE_TASK_FILES_UNVERIFIED", "candidate-publication", { taskId });
   }
 
-  const candidateDiffPaths = await gitDiffPaths(run, resolvedRoot, baseRevision, revision);
-  const candidateForbiddenDiffPaths = await gitDiffPaths(run, resolvedRoot, baseRevision, revision, "DT");
-  if (!candidateDiffPaths || !candidateForbiddenDiffPaths || candidateForbiddenDiffPaths.length > 0) {
+  const candidateDiffRecords = await gitRawDiffRecords(run, resolvedRoot, baseRevision, revision);
+  if (!candidateDiffRecords) {
     return fail("TASK_CANDIDATE_TASK_FILES_UNVERIFIED", "candidate-publication", { taskId });
   }
-  const candidateManifestPaths = taskFiles.map((entry) => entry.path).sort();
-  const candidateBoundDiffPaths = candidateDiffPaths
-    .filter((entry) => !TASK_FILE_DIFF_EXCLUSIONS.includes(entry))
-    .sort();
+  const taskFileByPath = new Map(taskFiles.map((entry) => [entry.path, entry]));
+  const candidateDiffPaths = candidateDiffRecords.map((entry) => entry.path);
+  const changedClosureRecords = candidateDiffRecords.filter((entry) => (
+    !TASK_FILE_DIFF_EXCLUSIONS.includes(entry.path)
+  ));
+  const candidateDiffShapeValid = candidateDiffRecords.every((entry) => (
+    entry.status === "A"
+      ? entry.oldMode === "000000" && ["100644", "100755"].includes(entry.newMode)
+      : entry.status === "M" && entry.oldMode === entry.newMode
+        && ["100644", "100755"].includes(entry.newMode)
+  ));
+  const changedClosureCovered = changedClosureRecords.every((entry) => (
+    taskFileByPath.has(entry.path)
+      && taskFileByPath.get(entry.path).gitMode === entry.newMode
+      && taskFileByPath.get(entry.path).gitType === "blob"
+  ));
+  const changedClosurePurposesValid = changedClosureRecords.every((entry) => (
+    ["implementation", "evidence"].includes(taskFileByPath.get(entry.path)?.purpose)
+  ));
+  const changedWorkBlobPresent = changedClosureRecords.some((entry) => (
+    ["implementation", "evidence"].includes(taskFileByPath.get(entry.path)?.purpose)
+  ));
   if (new Set(candidateDiffPaths).size !== candidateDiffPaths.length
-    || candidateBoundDiffPaths.length !== candidateManifestPaths.length
-    || candidateBoundDiffPaths.some((entry, index) => entry !== candidateManifestPaths[index])) {
+    || !candidateDiffShapeValid || !changedClosureCovered
+    || !changedClosurePurposesValid || !changedWorkBlobPresent) {
     return fail("TASK_CANDIDATE_TASK_FILES_UNVERIFIED", "candidate-publication", { taskId });
   }
 
@@ -1072,7 +1111,11 @@ export async function deriveCandidatePublicationFacts({
     const publishedFile = await gitTreeBlob(run, resolvedRoot, revision, binding.path);
     const currentFile = await gitTreeBlob(run, resolvedRoot, publishedRef, binding.path);
     if (!publishedFile.exists || publishedFile.bytes === null
-      || !currentFile.exists || currentFile.bytes === null) {
+      || !currentFile.exists || currentFile.bytes === null
+      || publishedFile.gitType !== "blob" || currentFile.gitType !== "blob"
+      || !["100644", "100755"].includes(publishedFile.gitMode)
+      || publishedFile.gitMode !== binding.gitMode
+      || currentFile.gitMode !== binding.gitMode) {
       return fail("TASK_CANDIDATE_TASK_FILES_UNVERIFIED", "candidate-publication", { taskId });
     }
     if (scopeClass === "local-synthetic") {
@@ -1112,13 +1155,19 @@ export async function deriveCandidatePublicationFacts({
     return fail("TASK_CANDIDATE_TASK_FILES_UNVERIFIED", "candidate-publication", { taskId });
   }
 
-  const currentDescendantDeltaPaths = await gitDiffPaths(run, resolvedRoot, revision, publishedRef);
-  const currentForbiddenDeltaPaths = await gitDiffPaths(run, resolvedRoot, revision, publishedRef, "DT");
-  if (!currentDescendantDeltaPaths
-    || !currentForbiddenDeltaPaths
-    || currentForbiddenDeltaPaths.length > 0
+  const currentDescendantDiffRecords = await gitRawDiffRecords(
+    run, resolvedRoot, revision, publishedRef,
+  );
+  const currentDescendantDeltaPaths = currentDescendantDiffRecords?.map((entry) => entry.path) ?? [];
+  if (!currentDescendantDiffRecords
     || new Set(currentDescendantDeltaPaths).size !== currentDescendantDeltaPaths.length
-    || currentDescendantDeltaPaths.some((entry) => !TASK_FILE_DESCENDANT_DELTA_PATHS.includes(entry))) {
+    || currentDescendantDiffRecords.some((entry) => !(
+      entry.status === "M" && entry.oldMode === "100644" && entry.newMode === "100644"
+      || entry.status === "A" && entry.oldMode === "000000" && entry.newMode === "100644"
+    ))
+    || currentDescendantDeltaPaths.some((entry) => (
+      !TASK_FILE_RUNTIME_DESCENDANT_DELTA_PATHS.includes(entry)
+    ))) {
     return fail("TASK_CANDIDATE_TASK_FILES_UNVERIFIED", "candidate-publication", { taskId });
   }
 
@@ -2243,6 +2292,7 @@ async function selfTest() {
     [textFixturePath, textFixtureBytes],
     [evidencePath, evidenceBytes],
   ]);
+  const artifactPaths = new Set(ARTIFACT_KINDS.map((kind) => artifactBindings[kind].path));
   const taskFileModes = new Map(taskFiles.map((entry) => [entry.path, entry.gitMode]));
   const currentTaskApproval = {
     candidate: {
@@ -2317,9 +2367,22 @@ async function selfTest() {
     taskContractChangedAfterApproval = false,
     candidateTaskContractChanged = false,
     omittedCandidateDiffPath = false,
+    candidateRestoredArtifact = false,
+    candidateBaseArtifactDrift = false,
+    noChangedWorkBlob = false,
+    candidateDeletion = false,
+    candidateRename = false,
+    candidateTypeTransition = false,
+    candidateDiffModeTransition = false,
+    candidateClosureBlobMissing = false,
+    candidateClosureBlobChanged = false,
     candidateModeMismatch = false,
     descendantTaskFileDrift = false,
     descendantModeDrift = false,
+    descendantControlIntegrityChange = false,
+    descendantRunningLogAppend = false,
+    descendantStageRegistryAddition = false,
+    descendantClosedPathMutation = null,
     invalidUtf8CollisionDrift = false,
     disguisedBinaryText = false,
     encodedMediaText = false,
@@ -2378,7 +2441,19 @@ async function selfTest() {
         }
         return manifestBytes;
       }
+      if (revision === baseRevision && artifactPaths.has(relativePath)) {
+        if (candidateBaseArtifactDrift && relativePath === artifactBindings.product.path) {
+          return `${taskFileBytes.get(relativePath)}base artifact drift\n`;
+        }
+        return taskFileBytes.get(relativePath);
+      }
       if ([candidateRevision, mainRevision].includes(revision) && taskFileBytes.has(relativePath)) {
+        if (candidateClosureBlobMissing && revision === candidateRevision && relativePath === evidencePath) {
+          return null;
+        }
+        if (candidateClosureBlobChanged && revision === candidateRevision && relativePath === implementationPath) {
+          return `${implementationBytes}// candidate byte drift\n`;
+        }
         if (malformedArchive && relativePath === evidencePath) return malformedArchiveBytes;
         if (descendantTaskFileDrift && revision === mainRevision && relativePath === implementationPath) {
           return `${implementationBytes}// descendant drift\n`;
@@ -2442,39 +2517,83 @@ async function selfTest() {
       if (key === `rev-list --reverse --topo-order --ancestry-path ${candidateRevision}..${mainRevision}`) {
         return { ok: true, stdout: `${history.join("\n")}\n` };
       }
-      if (args[0] === "diff" && args[1] === "--name-only" && args[2] === "-z" && args[3] === "--no-renames") {
-        const hasFilter = args[4]?.startsWith("--diff-filter=");
-        const fromRevision = args[hasFilter ? 5 : 4];
-        const toRevision = args[hasFilter ? 6 : 5];
-        const filter = hasFilter ? args[4].slice("--diff-filter=".length) : null;
-        let paths = [];
-        if (fromRevision === baseRevision && toRevision === candidateRevision) {
-          paths = filter === "DT"
-            ? []
+      if (args[0] === "diff" && args[1] === "--raw" && args[2] === "--no-abbrev"
+        && args[3] === "--no-ext-diff" && args[4] === "--no-renames" && args[5] === "-z"
+        && args[8] === "--") {
+        const zeroObject = "0".repeat(40);
+        const oldObject = "1".repeat(40);
+        const newObject = "2".repeat(40);
+        const modified = (relativePath, mode = taskFileModes.get(relativePath)) => (
+          [`:${mode} ${mode} ${oldObject} ${newObject} M`, relativePath]
+        );
+        const added = (relativePath, mode = taskFileModes.get(relativePath)) => (
+          [`:000000 ${mode} ${zeroObject} ${newObject} A`, relativePath]
+        );
+        let records;
+        if (args[6] === baseRevision && args[7] === candidateRevision) {
+          records = noChangedWorkBlob
+            ? [modified(DOCUMENT_PATHS.manifest, "100644")]
             : [
-              ...taskFiles.map((entry) => entry.path),
-              DOCUMENT_PATHS.manifest,
-              ...(omittedCandidateDiffPath ? ["config/unbound-runtime.json"] : []),
+              modified(implementationPath),
+              modified(textFixturePath),
+              added(evidencePath),
+              modified(DOCUMENT_PATHS.manifest, "100644"),
             ];
-        } else if (fromRevision === candidateRevision && toRevision === mainRevision) {
-          paths = filter === "DT"
-            ? []
-            : [
-              APPROVAL_REGISTRY_PATH,
-              ...(descendantTaskFileDrift ? [implementationPath] : []),
-            ];
+          if (omittedCandidateDiffPath) records.push(modified("config/unbound-runtime.json", "100644"));
+          if (candidateRestoredArtifact) records.push(modified(artifactBindings.product.path));
+          if (candidateDeletion) {
+            records.push([`:100644 000000 ${oldObject} ${zeroObject} D`, "config/P0-deleted-runtime.json"]);
+          }
+          if (candidateRename) {
+            records.push(
+              [`:100644 000000 ${oldObject} ${zeroObject} D`, "config/P0-renamed-from.json"],
+              [":000000 100644 " + zeroObject + " " + newObject + " A", "config/P0-renamed-to.json"],
+            );
+          }
+          if (candidateTypeTransition) {
+            records[0] = [`:100755 120000 ${oldObject} ${newObject} T`, implementationPath];
+          }
+          if (candidateDiffModeTransition) {
+            records[0] = [`:100755 100644 ${oldObject} ${newObject} M`, implementationPath];
+          }
+        } else if (args[6] === candidateRevision && args[7] === mainRevision) {
+          records = [modified(APPROVAL_REGISTRY_PATH, "100644")];
+          if (descendantControlIntegrityChange) {
+            records.push(modified("docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json", "100644"));
+          }
+          if (descendantRunningLogAppend) records.push(modified("RUNNING_LOG.md", "100644"));
+          if (descendantStageRegistryAddition) records.push(added(STAGE_APPROVAL_REGISTRY_PATH, "100644"));
+          if (descendantTaskFileDrift) records.push(modified(implementationPath));
+          const mutationPath = descendantClosedPathMutation?.startsWith("integrity-")
+            ? "docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json"
+            : descendantClosedPathMutation?.startsWith("log-") ? "RUNNING_LOG.md" : null;
+          const mutationShape = descendantClosedPathMutation?.split("-").at(-1);
+          if (mutationPath && mutationShape === "mode") {
+            records.push([`:100644 100755 ${oldObject} ${newObject} M`, mutationPath]);
+          } else if (mutationPath && mutationShape === "type") {
+            records.push([`:100644 120000 ${oldObject} ${newObject} T`, mutationPath]);
+          } else if (mutationPath && mutationShape === "delete") {
+            records.push([`:100644 000000 ${oldObject} ${zeroObject} D`, mutationPath]);
+          } else if (descendantClosedPathMutation === "arbitrary-path") {
+            records.push(modified("config/P0-untrusted-descendant.json", "100644"));
+          }
         } else {
           return { ok: false, stdout: "" };
         }
         return {
           ok: true,
-          stdout: paths.length === 0 ? Buffer.alloc(0) : Buffer.from(`${paths.join("\0")}\0`),
+          stdout: Buffer.from(`${records.flat().join("\0")}\0`),
         };
       }
       if (args[0] === "ls-tree" && args[1] === "-z" && args[3] === "--") {
         const revision = args[2];
         const relativePath = args[4];
-        if (![candidateRevision, mainRevision].includes(revision) || !taskFileBytes.has(relativePath)) {
+        if (candidateClosureBlobMissing && revision === candidateRevision && relativePath === evidencePath) {
+          return { ok: true, stdout: Buffer.alloc(0) };
+        }
+        const baseArtifact = revision === baseRevision && artifactPaths.has(relativePath);
+        if ((!baseArtifact && ![candidateRevision, mainRevision].includes(revision))
+          || !taskFileBytes.has(relativePath)) {
           return { ok: true, stdout: Buffer.alloc(0) };
         }
         let gitMode = taskFileModes.get(relativePath);
@@ -2977,10 +3096,35 @@ async function selfTest() {
     });
   };
 
+  for (const [label, configuration] of [
+    ["post-candidate-control-integrity", { descendantControlIntegrityChange: true }],
+    ["post-candidate-running-log", { descendantRunningLogAppend: true }],
+    ["post-candidate-stage-registry-addition", { descendantStageRegistryAddition: true }],
+  ]) {
+    const result = await runTaskFixture(configuration);
+    if (!result.ok) throw new Error(`${label} closed-descendant-path self-test failed: ${result.code}`);
+  }
+
   for (const [label, configuration, settings, expectedCode] of [
     ["candidate-contract-drift", { candidateTaskContractChanged: true }, { approval: changedContractTaskApproval }, "TASK_CANDIDATE_TASK_CONTRACT_UNVERIFIED"],
     ["omitted-candidate-diff", { omittedCandidateDiffPath: true }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
+    ["candidate-restored-proposal-artifact", { candidateRestoredArtifact: true }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
+    ["candidate-base-proposal-artifact-drift", { candidateBaseArtifactDrift: true }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
+    ["candidate-without-changed-work-blob", { noChangedWorkBlob: true }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
+    ["candidate-deletion", { candidateDeletion: true }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
+    ["candidate-rename", { candidateRename: true }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
+    ["candidate-type-transition", { candidateTypeTransition: true }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
+    ["candidate-mode-transition", { candidateDiffModeTransition: true }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
+    ["candidate-closure-blob-missing", { candidateClosureBlobMissing: true }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
+    ["candidate-closure-blob-changed", { candidateClosureBlobChanged: true }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
     ["candidate-mode-mismatch", { candidateModeMismatch: true }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
+    ["descendant-integrity-mode-transition", { descendantClosedPathMutation: "integrity-mode" }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
+    ["descendant-integrity-type-transition", { descendantClosedPathMutation: "integrity-type" }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
+    ["descendant-integrity-deletion", { descendantClosedPathMutation: "integrity-delete" }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
+    ["descendant-log-mode-transition", { descendantClosedPathMutation: "log-mode" }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
+    ["descendant-log-type-transition", { descendantClosedPathMutation: "log-type" }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
+    ["descendant-log-deletion", { descendantClosedPathMutation: "log-delete" }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
+    ["descendant-arbitrary-path", { descendantClosedPathMutation: "arbitrary-path" }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
     ["descendant-mode-drift", { descendantModeDrift: true }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
     ["invalid-utf8-collision", { invalidUtf8CollisionDrift: true }, {}, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
     ["binary-photo-disguised-as-text", { disguisedBinaryText: true }, { approval: disguisedBinaryTaskApproval }, "TASK_CANDIDATE_TASK_FILES_UNVERIFIED"],
@@ -3272,7 +3416,7 @@ async function selfTest() {
     throw new Error("advancing-clock near-expiry self-test failed");
   }
 
-  return { ok: true, code: "SELF_TEST_OK", cases: 66 };
+  return { ok: true, code: "SELF_TEST_OK", cases: 85 };
 }
 
 function usage() {

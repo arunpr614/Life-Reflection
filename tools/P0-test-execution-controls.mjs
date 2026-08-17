@@ -27,6 +27,7 @@ import {
   TASK_FUTURE_SCOPE_ACTION_OPTIONS,
   TASK_FILE_DESCENDANT_DELTA_PATHS,
   TASK_FILE_DIFF_EXCLUSIONS,
+  TASK_FILE_RUNTIME_DESCENDANT_DELTA_PATHS,
   canonicalJson,
   canonicalMilestoneForTaskId,
   computeArtifactReviewsSha256,
@@ -1719,10 +1720,10 @@ const publicationCases = [
   ["candidate publication revision mismatch", (_fixture, trusted) => { trusted.candidatePublication.revision = "d".repeat(40); }, "CANDIDATE_PUBLICATION_BINDING"],
   ["candidate publication missing", (_fixture, trusted) => { trusted.candidatePublication = {}; }, "CANDIDATE_PUBLICATION_BINDING"],
   ["candidate base ancestry unverified", (_fixture, trusted) => { trusted.candidatePublication.baseAncestorOfCandidate = false; }, "CANDIDATE_BASE_REVISION"],
-  ["candidate full-diff digest mismatched", (_fixture, trusted) => { trusted.candidatePublication.candidateDiffTaskFilesSha256 = "0".repeat(64); }, "CANDIDATE_TASK_FILES_FULL_DIFF"],
-  ["candidate full-diff set unverified", (_fixture, trusted) => { trusted.candidatePublication.candidateDiffExactMatchVerified = false; }, "CANDIDATE_TASK_FILES_FULL_DIFF"],
-  ["candidate full diff contains deletion", (_fixture, trusted) => { trusted.candidatePublication.candidateDiffNoDeletionsVerified = false; }, "CANDIDATE_TASK_FILES_FULL_DIFF"],
-  ["candidate diff uses an extra exclusion", (_fixture, trusted) => { trusted.candidatePublication.candidateDiffExclusions.push("tools/extra.mjs"); }, "CANDIDATE_TASK_FILES_FULL_DIFF"],
+  ["candidate closure digest mismatched", (_fixture, trusted) => { trusted.candidatePublication.candidateDiffTaskFilesSha256 = "0".repeat(64); }, "CANDIDATE_TASK_FILES_FULL_DIFF"],
+  ["candidate closure set unverified", (_fixture, trusted) => { trusted.candidatePublication.candidateDiffExactMatchVerified = false; }, "CANDIDATE_TASK_FILES_FULL_DIFF"],
+  ["candidate closure contains a forbidden diff shape", (_fixture, trusted) => { trusted.candidatePublication.candidateDiffNoDeletionsVerified = false; }, "CANDIDATE_TASK_FILES_FULL_DIFF"],
+  ["candidate closure uses an extra exclusion", (_fixture, trusted) => { trusted.candidatePublication.candidateDiffExclusions.push("tools/extra.mjs"); }, "CANDIDATE_TASK_FILES_FULL_DIFF"],
   ["candidate manifest task differs", (_fixture, trusted) => { trusted.candidatePublication.candidateTaskContractSha256 = "0".repeat(64); }, "CANDIDATE_TASK_CONTRACT_PUBLICATION"],
   ["candidate manifest task bytes unverified", (_fixture, trusted) => { trusted.candidatePublication.candidateTaskContractBytesVerified = false; }, "CANDIDATE_TASK_CONTRACT_PUBLICATION"],
   ["candidate content classes unverified", (_fixture, trusted) => { trusted.candidatePublication.publishedTaskFileContentClassesVerified = false; }, "CANDIDATE_TASK_FILES_LOCAL_BYTES"],
@@ -2367,10 +2368,17 @@ assert.deepEqual(TASK_FILE_DESCENDANT_DELTA_PATHS, [
   STAGE_APPROVAL_REGISTRY_PATH,
   "docs/council/execution/P0-OWNER-ACTION-STATE.json",
 ]);
+assert.deepEqual(TASK_FILE_RUNTIME_DESCENDANT_DELTA_PATHS, [
+  ...TASK_FILE_DESCENDANT_DELTA_PATHS,
+  "docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json",
+  "RUNNING_LOG.md",
+]);
 assert.notStrictEqual(TASK_FILE_DIFF_EXCLUSIONS, TASK_FILE_DESCENDANT_DELTA_PATHS);
+assert.notStrictEqual(TASK_FILE_DESCENDANT_DELTA_PATHS, TASK_FILE_RUNTIME_DESCENDANT_DELTA_PATHS);
 assert.equal(Object.isFrozen(TASK_FILE_DIFF_EXCLUSIONS), true);
 assert.equal(Object.isFrozen(TASK_FILE_DESCENDANT_DELTA_PATHS), true);
-recordResult("PC-001-CTL-R01", "shared task-file schema has exact five-path candidate exclusions and seven-path descendant policy", "pass", {
+assert.equal(Object.isFrozen(TASK_FILE_RUNTIME_DESCENDANT_DELTA_PATHS), true);
+recordResult("PC-001-CTL-R01", "shared task-file schema has five candidate exclusions, seven projected descendants, and nine runtime-trusted descendants", "pass", {
   taskFilesSha256: sharedManifestValidation.sha256,
 });
 
@@ -2401,6 +2409,10 @@ for (const [extension, entry, expectedContentClass] of [
 const postCandidateOwnerActionFixture = singletonReleaseFixture();
 const postCandidateOwnerActionTrusted = trustedFacts(postCandidateOwnerActionFixture);
 assert.equal(TASK_FILE_DESCENDANT_DELTA_PATHS.includes("docs/council/execution/P0-OWNER-ACTION-STATE.json"), true);
+assert.equal(TASK_FILE_DESCENDANT_DELTA_PATHS.includes("docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json"), false);
+assert.equal(TASK_FILE_DESCENDANT_DELTA_PATHS.includes("RUNNING_LOG.md"), false);
+assert.equal(TASK_FILE_RUNTIME_DESCENDANT_DELTA_PATHS.includes("docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json"), true);
+assert.equal(TASK_FILE_RUNTIME_DESCENDANT_DELTA_PATHS.includes("RUNNING_LOG.md"), true);
 assert.equal(evaluateReadiness(postCandidateOwnerActionFixture, {
   now: FIXED_NOW,
   ...postCandidateOwnerActionTrusted,

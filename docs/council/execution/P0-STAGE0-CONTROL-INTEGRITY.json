@@ -71,7 +71,7 @@
       "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
       "mode": "100644",
       "type": "blob",
-      "sha256": "6304d259916e9d14870fe3c2c75cb5fa6eaee6660d1f4e20c715e3171a74d545"
+      "sha256": "62f83d78ca2a7105f3f44686c4893749d3a01024787695de20d189d5c0e87bdd"
     },
     {
       "path": "docs/council/execution/P0-R0-STAGE-APPROVAL-REGISTRY.json",
@@ -191,7 +191,7 @@
       "path": "tools/P0-readiness-gates.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "0ea83581a3473368be8b5cf5d890fe15e8ce01a947df56bcf9255b8333955e52"
+      "sha256": "b95a2ff9b31e3693302b26572220b1b49fbf263d17b13ee670873594b8340f00"
     },
     {
       "path": "tools/P0-running-log-trust.mjs",
@@ -209,13 +209,13 @@
       "path": "tools/P0-stage0-ci.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "b4a53f9b2c42483faa74f211d9f64873177735b8c6fab3e46c78ab9fd35f8e99"
+      "sha256": "5670b134db59d72f4e97fca2686e3efe63fda578eccd59a55b94e46304bde7b7"
     },
     {
       "path": "tools/P0-staged-actions.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "fb9364036fc0fd114ae866d679471143bdc4b353c9199c13d1604202f4acaaa9"
+      "sha256": "53ec555e07b4c27c9fb5d0e93f3ff7354b7b6439e5b752c10511ed68f9338d3e"
     },
     {
       "path": "tools/P0-successor-control-review.mjs",
@@ -239,7 +239,7 @@
       "path": "tools/P0-test-execution-controls.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "1429313d32647a10811901e05595fbadce5020e28440f33e41b41c47741319a4"
+      "sha256": "bfa5718431d30886ea784eb7e9b92953ffe3e2a8a31d4b98cde26e4ccc2aa79a"
     },
     {
       "path": "tools/P0-test-r1-r10-freeze.mjs",
@@ -263,7 +263,7 @@
       "path": "tools/P0-test-staged-actions.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "b06a2c4ddfb782bd2b6327f7911085ef2db4c7b611a2157ffb0f00d4682aa074"
+      "sha256": "dd168e5d6065acf9525fd9a9aa017e1355c9e7e416d1926413c66848380f77a3"
     },
     {
       "path": "tools/P0-test-successor-control-review.mjs",
@@ -287,7 +287,7 @@
       "path": "tools/P0-verify-execution-start.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "921b646b3405779ac37992cdc90eb488168bbcde0c362c53ed3c48c1aaa28715"
+      "sha256": "efb2cd1ded8ec947b98f1ee42eef7b8aa149005e9a99978ce3e56c11eb834a49"
     },
     {
       "path": "tools/P0-verify-generated-tracking.mjs",
@@ -332,57 +332,5 @@
       "sha256": "e231adce514fb8631ec794e8d578d852fcd45629594201620d2e390e638d1fc7"
     }
   ],
-  "next": {
-    "changes": [
-      {
-        "operation": "modify",
-        "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "62f83d78ca2a7105f3f44686c4893749d3a01024787695de20d189d5c0e87bdd"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-readiness-gates.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "b95a2ff9b31e3693302b26572220b1b49fbf263d17b13ee670873594b8340f00"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-stage0-ci.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "5670b134db59d72f4e97fca2686e3efe63fda578eccd59a55b94e46304bde7b7"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-staged-actions.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "53ec555e07b4c27c9fb5d0e93f3ff7354b7b6439e5b752c10511ed68f9338d3e"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-test-execution-controls.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "bfa5718431d30886ea784eb7e9b92953ffe3e2a8a31d4b98cde26e4ccc2aa79a"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-test-staged-actions.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "dd168e5d6065acf9525fd9a9aa017e1355c9e7e416d1926413c66848380f77a3"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-verify-execution-start.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "efb2cd1ded8ec947b98f1ee42eef7b8aa149005e9a99978ce3e56c11eb834a49"
-      }
-    ]
-  }
+  "next": null
 }
