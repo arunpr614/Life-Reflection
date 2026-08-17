@@ -17,6 +17,7 @@ import {
   P0_R0_GATE_A_PROPOSAL_AUTHOR_IDS,
   P0_R0_SUBSTANTIVE_TASK_IDS,
   READINESS_SCHEMA_VERSION,
+  REGISTERED_SUPPLEMENTAL_TASK_FILES,
   SCOPE_ACTION_COMPATIBILITY,
   STAGE_APPROVAL_REGISTRY_PATH,
   STAGE_EXECUTION_SCHEMA_VERSION,
@@ -60,7 +61,9 @@ import {
   taskExecutionContractPairCount,
   parseArtifactControlMarkers,
   planProtectedRefresh,
+  validateRegisteredSupplementalTaskFilePresence,
   validateTaskFilesManifest,
+  validateTaskWorkItemInventory,
 } from "./P0-readiness-gates.mjs";
 import {
   OWNER_ACTION_REQUIREMENT_CATALOG,
@@ -921,6 +924,310 @@ function trustedFacts(fixture) {
 function recordResult(id, name, status, details = {}) {
   results.push({ id, name, status, ...details });
 }
+
+const inventoryArtifactPaths = Array.from({ length: 58 }, (_, index) => {
+  const taskId = `FIXTURE-${String(index + 1).padStart(3, "0")}`;
+  return ARTIFACT_KINDS.map((kind) => (
+    `docs/work-items/${taskId}/P0-${taskId}-${kind.toUpperCase()}.md`
+  ));
+}).flat();
+const inventoryEntry = (filePath, overrides = {}) => ({
+  path: filePath,
+  trackedAtHead: true,
+  gitMode: "100644",
+  gitType: "blob",
+  worktreeKind: "file",
+  worktreeMode: "100644",
+  ...overrides,
+});
+const canonicalInventoryEntries = inventoryArtifactPaths.map((filePath) => inventoryEntry(filePath));
+const supplementalRegistration = REGISTERED_SUPPLEMENTAL_TASK_FILES[0];
+assert.deepEqual(REGISTERED_SUPPLEMENTAL_TASK_FILES, [{
+  taskId: "SPK-R0-001",
+  stageId: "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+  scopeClass: "local-synthetic",
+  actionClass: "synthetic-foundation",
+  purpose: "evidence",
+  path: "docs/work-items/SPK-R0-001/P0-SPK-R0-001-CANDIDATE-QA-CONTRACT.json",
+  sha256: "sha256:0467b716d1952b59fd07acf5337c6a105d44cfc926c104635829027751cdfb7f",
+  gitMode: "100644",
+  gitType: "blob",
+  pairedImplementationPath: "tools/spk-r0-001/P0-SPK-R0-001-synthetic-foundation.mjs",
+  pairedImplementationSha256: "sha256:e60d8e6398441a61812dd467ffcbdd292e01fb1198723e667e480d2cf453e47f",
+  pairedImplementationGitMode: "100644",
+  pairedImplementationGitType: "blob",
+}]);
+recordResult("PC-001-CTL-P06", "supplemental task-file registry is the exact SPK candidate-QA singleton", "pass");
+
+const expectInventory = (name, expectedCode, entries, canonicalArtifactPaths = inventoryArtifactPaths) => {
+  const actual = validateTaskWorkItemInventory({ canonicalArtifactPaths, entries });
+  assert.equal(actual.code, expectedCode, `${name}: ${JSON.stringify(actual)}`);
+  recordResult("PC-001-CTL-P06", name, "pass", { expectedCode });
+  return actual;
+};
+const baselineInventory = expectInventory(
+  "exact 348-artifact baseline is valid before candidate authoring",
+  "TASK_WORK_ITEM_INVENTORY_VALID",
+  canonicalInventoryEntries,
+);
+const candidateInventoryEntries = [
+  ...canonicalInventoryEntries,
+  inventoryEntry(supplementalRegistration.path),
+];
+const candidateInventory = expectInventory(
+  "exact registered candidate-QA file produces the sole valid 349-file state",
+  "TASK_WORK_ITEM_INVENTORY_VALID",
+  candidateInventoryEntries,
+);
+expectInventory(
+  "an unregistered 349th work-item path is rejected",
+  "TASK_WORK_ITEM_SUPPLEMENTAL_PATH_UNREGISTERED",
+  [...canonicalInventoryEntries, inventoryEntry("docs/work-items/SPK-R0-001/P0-SPK-R0-001-UNREGISTERED.json")],
+);
+expectInventory(
+  "the registered file cannot replace a missing canonical artifact while preserving count 348",
+  "TASK_WORK_ITEM_CANONICAL_PATH_MISSING",
+  [...canonicalInventoryEntries.slice(1), inventoryEntry(supplementalRegistration.path)],
+);
+expectInventory(
+  "duplicate work-item paths fail closed",
+  "TASK_WORK_ITEM_PATH_DUPLICATE",
+  [...canonicalInventoryEntries, canonicalInventoryEntries[0]],
+);
+expectInventory(
+  "candidate-QA executable-mode drift fails closed",
+  "TASK_WORK_ITEM_ENTRY_NOT_REGULAR_TRACKED_100644",
+  [...canonicalInventoryEntries, inventoryEntry(supplementalRegistration.path, {
+    gitMode: "100755",
+    worktreeMode: "100755",
+  })],
+);
+expectInventory(
+  "candidate-QA symlink drift fails closed",
+  "TASK_WORK_ITEM_ENTRY_NOT_REGULAR_TRACKED_100644",
+  [...canonicalInventoryEntries, inventoryEntry(supplementalRegistration.path, {
+    gitMode: "120000",
+    worktreeKind: "symlink",
+    worktreeMode: "100777",
+  })],
+);
+expectInventory(
+  "an untracked candidate-QA file fails closed",
+  "TASK_WORK_ITEM_ENTRY_NOT_REGULAR_TRACKED_100644",
+  [...canonicalInventoryEntries, inventoryEntry(supplementalRegistration.path, {
+    trackedAtHead: false,
+    gitMode: null,
+    gitType: null,
+  })],
+);
+expectInventory(
+  "a 347-path canonical declaration cannot redefine the generated baseline",
+  "TASK_WORK_ITEM_CANONICAL_SET_INVALID",
+  canonicalInventoryEntries.slice(1),
+  inventoryArtifactPaths.slice(1),
+);
+
+const implementationEntry = (overrides = {}) => ({
+  path: supplementalRegistration.pairedImplementationPath,
+  trackedAtHead: true,
+  gitMode: supplementalRegistration.pairedImplementationGitMode,
+  gitType: supplementalRegistration.pairedImplementationGitType,
+  headSha256: supplementalRegistration.pairedImplementationSha256,
+  worktreeKind: "file",
+  worktreeMode: supplementalRegistration.pairedImplementationGitMode,
+  worktreeSha256: supplementalRegistration.pairedImplementationSha256,
+  ...overrides,
+});
+const absentImplementationEntry = implementationEntry({
+  trackedAtHead: false,
+  gitMode: null,
+  gitType: null,
+  headSha256: null,
+  worktreeKind: "missing",
+  worktreeMode: null,
+  worktreeSha256: null,
+});
+const contractEntry = (overrides = {}) => ({
+  path: supplementalRegistration.path,
+  trackedAtHead: true,
+  gitMode: supplementalRegistration.gitMode,
+  gitType: supplementalRegistration.gitType,
+  headSha256: supplementalRegistration.sha256,
+  worktreeKind: "file",
+  worktreeMode: supplementalRegistration.gitMode,
+  worktreeSha256: supplementalRegistration.sha256,
+  ...overrides,
+});
+const absentContractEntry = contractEntry({
+  trackedAtHead: false,
+  gitMode: null,
+  gitType: null,
+  headSha256: null,
+  worktreeKind: "missing",
+  worktreeMode: null,
+  worktreeSha256: null,
+});
+const expectPresence = (
+  name,
+  expectedCode,
+  inventory,
+  supplementalTaskFileEntries,
+  implementationEntries,
+) => {
+  const actual = validateRegisteredSupplementalTaskFilePresence({
+    inventory,
+    supplementalTaskFileEntries,
+    implementationEntries,
+  });
+  assert.equal(actual.code, expectedCode, `${name}: ${JSON.stringify(actual)}`);
+  recordResult("PC-001-CTL-P06", name, "pass", { expectedCode });
+};
+expectPresence(
+  "pre-I candidate-QA and module absence is valid",
+  "TASK_WORK_ITEM_IMPLEMENTATION_PRESENCE_VALID",
+  baselineInventory,
+  [absentContractEntry],
+  [absentImplementationEntry],
+);
+expectPresence(
+  "post-I exact candidate-QA and module presence is valid",
+  "TASK_WORK_ITEM_IMPLEMENTATION_PRESENCE_VALID",
+  candidateInventory,
+  [contractEntry()],
+  [implementationEntry()],
+);
+expectPresence(
+  "candidate-QA without its exact module fails closed",
+  "TASK_WORK_ITEM_PAIR_PRESENCE_MISMATCH",
+  candidateInventory,
+  [contractEntry()],
+  [absentImplementationEntry],
+);
+expectPresence(
+  "the exact module without candidate-QA fails closed",
+  "TASK_WORK_ITEM_PAIR_PRESENCE_MISMATCH",
+  baselineInventory,
+  [absentContractEntry],
+  [implementationEntry()],
+);
+expectPresence(
+  "an exact-looking untracked module cannot mask HEAD absence",
+  "TASK_WORK_ITEM_IMPLEMENTATION_HEAD_WORKTREE_MISMATCH",
+  candidateInventory,
+  [contractEntry()],
+  [implementationEntry({ trackedAtHead: false, gitMode: null, gitType: null, headSha256: null })],
+);
+expectPresence(
+  "a HEAD-tracked module missing from the worktree fails closed",
+  "TASK_WORK_ITEM_IMPLEMENTATION_HEAD_WORKTREE_MISMATCH",
+  candidateInventory,
+  [contractEntry()],
+  [implementationEntry({ worktreeKind: "missing", worktreeMode: null, worktreeSha256: null })],
+);
+expectPresence(
+  "HEAD module mode or type drift fails closed",
+  "TASK_WORK_ITEM_IMPLEMENTATION_BLOB_INVALID",
+  candidateInventory,
+  [contractEntry()],
+  [implementationEntry({ gitMode: "100755", gitType: "commit" })],
+);
+expectPresence(
+  "HEAD module hash drift cannot be hidden by exact worktree bytes",
+  "TASK_WORK_ITEM_IMPLEMENTATION_BLOB_INVALID",
+  candidateInventory,
+  [contractEntry()],
+  [implementationEntry({ headSha256: `sha256:${"a".repeat(64)}` })],
+);
+expectPresence(
+  "worktree module symlink drift fails closed",
+  "TASK_WORK_ITEM_IMPLEMENTATION_BLOB_INVALID",
+  candidateInventory,
+  [contractEntry()],
+  [implementationEntry({ worktreeKind: "symlink", worktreeMode: "100777", worktreeSha256: null })],
+);
+expectPresence(
+  "worktree module mode drift fails closed",
+  "TASK_WORK_ITEM_IMPLEMENTATION_BLOB_INVALID",
+  candidateInventory,
+  [contractEntry()],
+  [implementationEntry({ worktreeMode: "100755" })],
+);
+expectPresence(
+  "worktree module hash drift fails closed",
+  "TASK_WORK_ITEM_IMPLEMENTATION_BLOB_INVALID",
+  candidateInventory,
+  [contractEntry()],
+  [implementationEntry({ worktreeSha256: `sha256:${"b".repeat(64)}` })],
+);
+expectPresence(
+  "a duplicate-key-safe empty-object candidate-QA replacement fails closed",
+  "TASK_WORK_ITEM_CONTRACT_BLOB_INVALID",
+  candidateInventory,
+  [contractEntry({
+    headSha256: `sha256:${sha256("{}\n")}`,
+    worktreeSha256: `sha256:${sha256("{}\n")}`,
+  })],
+  [implementationEntry()],
+);
+expectPresence(
+  "valid-JSON candidate-QA byte drift fails closed",
+  "TASK_WORK_ITEM_CONTRACT_BLOB_INVALID",
+  candidateInventory,
+  [contractEntry({
+    headSha256: `sha256:${sha256('{"schemaVersion":"1.0.0"}\n')}`,
+    worktreeSha256: `sha256:${sha256('{"schemaVersion":"1.0.0"}\n')}`,
+  })],
+  [implementationEntry()],
+);
+expectPresence(
+  "HEAD candidate-QA hash drift cannot be hidden by exact worktree bytes",
+  "TASK_WORK_ITEM_CONTRACT_BLOB_INVALID",
+  candidateInventory,
+  [contractEntry({ headSha256: `sha256:${"c".repeat(64)}` })],
+  [implementationEntry()],
+);
+expectPresence(
+  "worktree candidate-QA hash drift cannot be hidden by exact HEAD bytes",
+  "TASK_WORK_ITEM_CONTRACT_BLOB_INVALID",
+  candidateInventory,
+  [contractEntry({ worktreeSha256: `sha256:${"d".repeat(64)}` })],
+  [implementationEntry()],
+);
+expectPresence(
+  "an exact-looking untracked candidate-QA contract cannot mask HEAD absence",
+  "TASK_WORK_ITEM_CONTRACT_HEAD_WORKTREE_MISMATCH",
+  candidateInventory,
+  [contractEntry({ trackedAtHead: false, gitMode: null, gitType: null, headSha256: null })],
+  [implementationEntry()],
+);
+expectPresence(
+  "a HEAD-tracked candidate-QA contract missing from the worktree fails closed",
+  "TASK_WORK_ITEM_CONTRACT_HEAD_WORKTREE_MISMATCH",
+  candidateInventory,
+  [contractEntry({ worktreeKind: "missing", worktreeMode: null, worktreeSha256: null })],
+  [implementationEntry()],
+);
+expectPresence(
+  "HEAD candidate-QA type drift fails closed",
+  "TASK_WORK_ITEM_CONTRACT_BLOB_INVALID",
+  candidateInventory,
+  [contractEntry({ gitMode: "160000", gitType: "commit" })],
+  [implementationEntry()],
+);
+expectPresence(
+  "HEAD candidate-QA mode drift fails closed",
+  "TASK_WORK_ITEM_CONTRACT_BLOB_INVALID",
+  candidateInventory,
+  [contractEntry({ gitMode: "100755" })],
+  [implementationEntry()],
+);
+expectPresence(
+  "worktree candidate-QA mode drift fails closed",
+  "TASK_WORK_ITEM_CONTRACT_BLOB_INVALID",
+  candidateInventory,
+  [contractEntry({ worktreeMode: "100755" })],
+  [implementationEntry()],
+);
 
 function assertPositive(id, name, factory, options = {}) {
   const fixture = factory();

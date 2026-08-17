@@ -71,7 +71,7 @@
       "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
       "mode": "100644",
       "type": "blob",
-      "sha256": "a21cef249066a851bfe89f3fb42d9f108d89f30097e883dcaa47c05c05054869"
+      "sha256": "7095ca0ec166fada945ba0caacbdd20ea6137484e97d2b4605edc53e3426c1c5"
     },
     {
       "path": "docs/council/execution/P0-R0-STAGE-APPROVAL-REGISTRY.json",
@@ -83,7 +83,7 @@
       "path": "docs/council/execution/releases/P0-P0-R0-STAGE0-STATE-CONTRACT.md",
       "mode": "100644",
       "type": "blob",
-      "sha256": "06d15713d63469bacaf25857b483f7ba7cfc3bfa8178ff856c10b1e5733f25f4"
+      "sha256": "8deba1d7bd662002c81d6f6e971a9f17a96f979d6ef39450c04065a162545a22"
     },
     {
       "path": "docs/product/PRODUCT-REQUIREMENTS.md",
@@ -191,7 +191,7 @@
       "path": "tools/P0-readiness-gates.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "b95a2ff9b31e3693302b26572220b1b49fbf263d17b13ee670873594b8340f00"
+      "sha256": "30d805120f3d8f4972cf6792d5dbdafbdba2c5ed307503be530345f3e70bfd3a"
     },
     {
       "path": "tools/P0-running-log-trust.mjs",
@@ -209,13 +209,13 @@
       "path": "tools/P0-stage0-ci.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "5bce57ae12b2977a70c3336ae855c799e2c65858ad07de21bd856c5187cb0f14"
+      "sha256": "88f2f7f02cb37108861c8e5b106275e5cb286157747c4cce6ccdd59cfbeb3259"
     },
     {
       "path": "tools/P0-staged-actions.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "b499ed76cddee1a654dfdec1517ec61adb80ef8b8cc627029edf6a129828018e"
+      "sha256": "c64914808c275c633a451d3a1a228d0e4194c331226ac6844ad67eaf204e57b9"
     },
     {
       "path": "tools/P0-successor-control-review.mjs",
@@ -239,7 +239,7 @@
       "path": "tools/P0-test-execution-controls.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "bfa5718431d30886ea784eb7e9b92953ffe3e2a8a31d4b98cde26e4ccc2aa79a"
+      "sha256": "6345dc2334252f380e093efd81598c2b19f59879f1c10cda9b9db96414f95666"
     },
     {
       "path": "tools/P0-test-r1-r10-freeze.mjs",
@@ -263,7 +263,7 @@
       "path": "tools/P0-test-staged-actions.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "21a351d24d289f64202dec36a581bb87b5726a465b09f73e9c4571f0fc01de38"
+      "sha256": "10d14bd85fce6ac9f420d720ba6747dcb79969231b13c8e092720ba5d776136a"
     },
     {
       "path": "tools/P0-test-successor-control-review.mjs",
@@ -281,7 +281,7 @@
       "path": "tools/P0-validate-execution-controls.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "860d0c894be92b777ddefb8eead94b1ee0a676c3e876c76cbe54e4f93d23867a"
+      "sha256": "f3947d8ab05baba093eb70b99b4a0fe195070c912869c713355b7708ce93f342"
     },
     {
       "path": "tools/P0-verify-execution-start.mjs",
@@ -332,64 +332,5 @@
       "sha256": "e231adce514fb8631ec794e8d578d852fcd45629594201620d2e390e638d1fc7"
     }
   ],
-  "next": {
-    "changes": [
-      {
-        "operation": "modify",
-        "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "7095ca0ec166fada945ba0caacbdd20ea6137484e97d2b4605edc53e3426c1c5"
-      },
-      {
-        "operation": "modify",
-        "path": "docs/council/execution/releases/P0-P0-R0-STAGE0-STATE-CONTRACT.md",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "8deba1d7bd662002c81d6f6e971a9f17a96f979d6ef39450c04065a162545a22"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-readiness-gates.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "30d805120f3d8f4972cf6792d5dbdafbdba2c5ed307503be530345f3e70bfd3a"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-stage0-ci.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "88f2f7f02cb37108861c8e5b106275e5cb286157747c4cce6ccdd59cfbeb3259"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-staged-actions.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "c64914808c275c633a451d3a1a228d0e4194c331226ac6844ad67eaf204e57b9"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-test-execution-controls.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "6345dc2334252f380e093efd81598c2b19f59879f1c10cda9b9db96414f95666"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-test-staged-actions.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "10d14bd85fce6ac9f420d720ba6747dcb79969231b13c8e092720ba5d776136a"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-validate-execution-controls.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "f3947d8ab05baba093eb70b99b4a0fe195070c912869c713355b7708ce93f342"
-      }
-    ]
-  }
+  "next": null
 }
