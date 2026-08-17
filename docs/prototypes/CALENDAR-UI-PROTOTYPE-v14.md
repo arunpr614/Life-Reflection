@@ -3,7 +3,7 @@
 Date: 2026-08-17
 Branch: `prototype/calendar-ui-v14-durable-manual-upload`
 Baseline: frozen v13 implementation/evidence `9e2e588`, documentation-only freeze record `e97b6f5`, and final tracker record `a6c2f78`
-Status: **Independent QA Pass; current-run evidence complete; freeze-ready; not frozen; implementation/evidence commit pending; P=A; D=A; C=A; I=IP; Q=A**
+Status: **independently passed and frozen at implementation/evidence commit `f5e75e3`; this documentation-only commit is the freeze record; P=A; D=A; C=A; I=A; Q=A**
 
 ## Stable feature candidate
 
