@@ -3,7 +3,7 @@
 Date: 2026-08-17
 Branch: `prototype/calendar-ui-v13-telegram-duplicate-handling`
 Baseline: frozen v12 implementation/evidence `3927b55`, freeze record `689536c`, and final tracker record `1aa3c5f`
-Status: **independently passed; implementation/evidence commit pending; freeze not recorded**
+Status: **independently passed and frozen at implementation/evidence commit `9e2e588`; this documentation-only commit is the freeze record**
 
 ## Stable feature candidate
 
