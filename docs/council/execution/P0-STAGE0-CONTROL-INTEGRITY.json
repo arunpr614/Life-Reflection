@@ -326,5 +326,15 @@
       "sha256": "e231adce514fb8631ec794e8d578d852fcd45629594201620d2e390e638d1fc7"
     }
   ],
-  "next": null
+  "next": {
+    "changes": [
+      {
+        "operation": "add",
+        "path": "docs/council/execution/P0-R0-STAGE-APPROVAL-REGISTRY.json",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "e64a24b863816027930e0926be7e7e58216d638c661b82c8774c0c6dfd4647b7"
+      }
+    ]
+  }
 }
