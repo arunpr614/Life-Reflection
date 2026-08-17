@@ -1148,3 +1148,98 @@ No owner decision is required for the next local/public control and candidate-pr
 - **Protection:** strict two-context required checks restored; admin enforcement and conversation resolution enabled; force pushes and deletions disabled.
 - **Deployed/runtime state:** no R0 runtime or deployment exists; deployment remains `Unknown — private read authority pending`.
 - **Next milestone:** merge this canonical recap, then publish the inert runtime-activation controls needed to form and review the exact SPK implementation/evidence candidate.
+<!-- P0-RUNNING-LOG-EVENT:{"authorId":"codex-primary-integrator-01","bodySha256":"387ec0da51fed35982f3ce187ad5e1d6f99ac1f63fb95ac4a6f81f950b0ed9e1","eventId":"P0-R0-SPK-RUNTIME-SEED-SUCCESSOR-RECAP-20260817-001","eventType":"terminal-recap","evidenceReference":"github-pr:102","parentRevision":"499059a2aabd8bac6aecf5d6ce96fa3ff27e35e4","previousByteLength":121747,"previousSha256":"88324f428acb0254a82ad921a6cb73e92705363538b6c7501bacb4951548de9d","recordedAt":"2026-08-17T23:17:47+05:30","schemaVersion":"1.0.0"} -->
+## 2026-08-17 23:17 IST — Inert SPK runtime seed and successor reviews published; pre-I controls are next
+
+**Entry author:** AI agent (Codex) · **Triggered by:** the Product Owner's literal resume command after the requested temporary pause, continuing the bounded P0/R0 Goal without widening authority.
+
+### Planned since last entry
+
+The prior trusted recap required normal publication of its one-path evidence, closure of the post-preparation control repair, an inert runtime-activation seed, a fresh implementation base, an exact implementation/evidence candidate, all 15 local/public/fictional/synthetic QA scenarios, five-seat Gate B review, and a separately published Gate B record before any governed stage invocation. This interval completed the recap, both non-authorizing successor-review closures, and the inert runtime seed. It did not create `I`, Gate B, task-stage authority, private access, deployment, acceptance, release, or R0 completion.
+
+### Done
+
+- PR #94 normally published the prior one-path Gate A descendant-repair recap at merge `2ed36b1a6bd298747d6c7ce8d29b16ea86d92fcf`. Exact-main running-log trust and structural validation passed, and post-merge run `31996629448` completed successfully.
+- PR #95 published post-preparation closure candidate `368818a11a9c5dcc62db2be7cf944e4627514367` through normal merge `184bf81189172667b892321a78f349c23daf9a9b`. PR #96 then published its add-only successor record candidate `0250f0ff98c6e95e1c98b4679889f785bfbed6ce` through normal merge `b90e7c8f6721b6e25436a04a56b04f58fe8b86d3`. That exact five-seat review remained non-authorizing, with zero vetoes and no task-approval or permission effect.
+- The runtime design froze a future self-contained serializable module off main at 135,119 bytes with raw SHA-256 `e60d8e6398441a61812dd467ffcbdd292e01fb1198723e667e480d2cf453e47f`. Its governed-evidence contract digest is `sha256:38c8deeb899e87cfef731cc1932d3594f3cf4b7d6afa1aeff62cb343395931d8`. The module was independently exercised and mutation-tested as local candidate evidence, remains absent from the repository runtime, and has never been invoked through the governed stage/runtime lane.
+- Draft PR #97 contained an earlier activation-dossier candidate and was closed unmerged. PR #98 normally published the corrected exact-byte-only dossier candidate `2b34fa93c3fb7d28cf0ae7ea886e1f1028900312` as merge `a9272e98ad8416627c3286e8a6f45ff219c3d4ea`.
+- PR #99 armed exactly seven reviewed protected runtime-seed targets at head `e4a0efc32300c0e120f3fd81d4682f55e6db2e55` and merged normally as `9c524e1caaaca98cb20f7271939abe80b411f512`. A same-head stage-runner fixture failure was preserved and its narrowly justified rerun passed; all final required exact-head and immutable-guard contexts were green. No protection exception, admin merge, direct-main push, or bypass was used.
+- PR #100 consumed the seven payloads plus the integrity manifest at head `2b999a90bfe6b56692ebb42739ac8daca66a81cb` and merged normally as `ccf226acd3e708f31396aa19c9c3255af86b17da`. The consumed manifest has 55 unique current entries, `next:null`, raw SHA-256 `628949d77f6f92d9ad88875bb069dcf887ca233e4463a9087f78da5859901260`, and repository-native transition `consumed`. Post-merge run `32028193466` passed two deterministic exact-main passes with result digest `sha256:3a2e2ef78698f936f6e9e164a62879712a20feaccb8cd56a69dd5e0ee32ade7b`.
+- The published seed is intentionally inert. Exact lifecycle cardinality is one accepted preparation, one staged definition, one module-metadata record, one code-owned outcome verifier, zero callbacks, zero stage approvals, and zero executable stages (`1/1/1/1/0/0/0`). Argument set `synthetic.v1` is empty, the future module is absent, and Gate B still returns no execution authority.
+- After the literal resume command, the previously interrupted D2 suite was restarted from pass one. Candidate `f75e6e7fc43ff919178e479613e0a9200e1a8fad` remained a clean direct child of `ccf226a…`, adding only regular `100644` closure dossier `docs/council/execution/control-reviews/dossiers/P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED-CLOSURE.md`, 24,789 bytes with raw SHA-256 `ea85dccbe3829cc854d843343a129e2f2eb3d8161ce19f804be2fc77b2828852`. Its predecessor interval derived exactly ten safe records with digest `3cd5f73144ae958f53e9241fa62c64f3ad6e73c6f97692ed5f32aad1fb2a3736`.
+- PR #101 published D2 by normal merge `b94938bdd6b14a402e7189d54e17a85505f9b8bb`, with ordered parents `[ccf226acd3e708f31396aa19c9c3255af86b17da, f75e6e7fc43ff919178e479613e0a9200e1a8fad]` and tree exactly equal to D2. Its initial hosted push fixture failure and two immutable-guard service failures were retained; unchanged-head retries passed. Post-merge run `32047102913` passed two exact-main passes with result digest `sha256:c1129ec4e3bfc70b2e21f35c01e6d4820dcf1640f0df4bf73bd3cdbd397b509b`.
+- PR #102 published add-only successor record candidate `c35eed4691413adf3442ed412535a56d55f39cd6` by normal merge `499059a2aabd8bac6aecf5d6ce96fa3ff27e35e4`, with ordered parents `[b94938bdd6b14a402e7189d54e17a85505f9b8bb, c35eed4691413adf3442ed412535a56d55f39cd6]` and tree `ca3efb3f288c65334256c99c97a9392c0d408454` exactly equal to the reviewed head. The sole first-parent addition is regular `100644` record `docs/council/execution/control-reviews/P0-CONTROL-REVIEW-P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED.json`, raw SHA-256 `ec9efd2c36c20f14710329e0fd28fb7fc999f8ac0990636847681e1cf3f65bc1` and canonical-record SHA-256 `8d2d38ddf54e2dc0a9e40a7f2d4d7af2e5b0db378aa9080b53b3d9e1a3d8f1a5`.
+- All PR #102 push, pull-request, initial guard, and ready-state guard checks passed on the exact head. GitHub briefly returned HTTP 503 for ready-state mutations; read-only checks confirmed no state change before the eventual exact mutation succeeded. Post-merge run `32051107714` passed at exact `499059a…` with two deterministic passes, suite digest `sha256:4dc3d525b9404b5bcd068fb22deb73fd7fa9cd1647155a561f32e49fe705390f`, and result digest `sha256:e9c0675ce822e4fd261e3eb4edde3feeaeadfaa15315ee3c2524df0a0b0c0d87`.
+- Exact-main successor replay now passes with three immutable reviews, zero findings, `runtimeAuthority=false`, `taskApprovalEffect=none`, and `permissionEffect=none`. The current structural validator passes 78 requirements, 58 tasks, 348 artifacts, 58 Incomplete, 336 Draft, 12 In-review, zero Ready, zero execution-allowed, `authenticMediaAccessed=false`, and deployment `Unknown — private read authority pending`.
+- The pause-time append was intentionally never committed or pushed. Its event marker bound parent `ccf226a…`, but main advanced through PRs #101 and #102. Disposable topology replay proved that transplanting those exact marker bytes after `499059a…` must fail either running-log parent trust or the one-parent later-PR scope rule. The original 133,108-byte dirty file remains untouched as unpublished provenance; this distinct event is built directly from exact current main.
+- Before selecting `I`, audit found two repository-control gaps: the old structural snapshot admitted only 348 work-item files and unconditionally required zero approvals/executable stages. An isolated eight-path protected repair now recognizes only the three closed states: pre-`I` 348 files with the module/QA contract absent; post-`I` 349 files with the exact pair present and still zero approval; and post-Gate-B one exact SPK approval/executable stage. A follow-up adversarial review also caught and repaired a fail-open QA-contract byte seam by freezing raw SHA-256 `0467b716d1952b59fd07acf5337c6a105d44cfc926c104635829027751cdfb7f` at both HEAD and worktree. That repair is uncommitted, unarmed, and non-authorizing; it must be transplanted and reviewed on fresh exact main before publication.
+
+### Cross-lane notes
+
+- This recap branch is a fresh single-parent child of exact `499059a…` and changes only `RUNNING_LOG.md`. The stale pause worktree remains separate and must not be amended, rebased, cherry-picked, committed, or pushed.
+- The isolated pre-`I` validator-repair worktree still carries exactly eight unstaged protected-path modifications on its old development base. Its semantic focused suites pass, but its hashes are not a publication freeze and its full structural replay correctly became stale when main advanced.
+- The future module and the candidate-QA contract remain separate, unpublished design artifacts. They belong together only in the later exact implementation candidate `I`, never in the control ratchet or this recap.
+- The one-time PR #92 bootstrap exception remains exhausted and is not precedent. Merged PRs #94-#96 and #98-#102 used normal protected publication and normal merge commits.
+
+### Learned
+
+- A running-log event's parent binding and later-PR topology form one atomic trust boundary. Once main moves, a preserved unpublished marker cannot be transplanted through a merge-head workaround; a new event must be generated from the exact current parent while the stale bytes remain untouched as provenance.
+- Successor closure is a distinct non-authorizing publication boundary. A pre-arm dossier cannot retrospectively bind arm, consume, exact-main CI, and the final five-seat context; each control wave needs a later closure dossier and add-only record.
+- A metadata-only future module, inert definition, and independent verifier can coexist safely with zero approvals and zero executable stages, but validators must explicitly recognize the later exact candidate and Gate-B lifecycle states before those states can be published.
+- Registering an evidence path without freezing its bytes is fail open. The QA contract must be bound just like the module: exact raw digest, regular mode/type, presence parity at HEAD and worktree, strict duplicate-key-safe JSON, and negative drift fixtures.
+- Same-head retries are acceptable only for evidenced infrastructure or fixture-class failures and must preserve all failed attempts. They never excuse a changed head, stale base, or protection bypass.
+
+### Deployed / Released
+
+Repository governance and inert runtime metadata were published normally through merged PRs #94-#96 and #98-#102. Exact main now contains three immutable non-authorizing successor reviews in total. Nothing was deployed or released. No governed task stage, private host, provider, credential, authentic content, issue/Project transition, Wiki mutation, production backup/restore/rollback, or production surface was invoked.
+
+### Documents created or updated this period
+
+**Created:**
+- `docs/council/execution/control-reviews/dossiers/P0-STAGE0-POSTPREPARATION-DESCENDANT-REPAIR-CLOSURE.md` — binds the repaired post-preparation interval.
+- `docs/council/execution/control-reviews/P0-CONTROL-REVIEW-P0-STAGE0-POSTPREPARATION-DESCENDANT-REPAIR.json` — add-only five-seat non-authorizing successor record.
+- `docs/council/execution/control-reviews/dossiers/P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED.md` — exact inert seed publication contract.
+- `docs/council/execution/control-reviews/dossiers/P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED-CLOSURE.md` — binds the completed seed arm/consume interval and exact-main evidence.
+- `docs/council/execution/control-reviews/P0-CONTROL-REVIEW-P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED.json` — add-only five-seat non-authorizing seed successor record.
+
+**Updated:**
+- `docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md` and the six protected runtime/test/control tools — install the inert one-definition, one-metadata, one-verifier seed while preserving zero callbacks, approvals, and executable stages.
+- `docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json` — armed and consumed the exact seven protected seed hashes, ending at 55 current entries with `next:null`.
+- `RUNNING_LOG.md` — this append-only exact-main recap; every prior byte remains unchanged.
+
+### Current remaining to-do
+
+1. Publish this one-path recap through a normal protected PR. Require the immutable guard, both exact-head suites, exact parent/tree/path/mode/hash checks, and a normal merge `[499059a…, recap-head]` with tree equal to the recap head.
+2. From the resulting fresh exact main, publish the pre-`I` validator repair through its own non-authorizing sequence: a one-path pre-arm dossier; exact eight-target integrity arm; exact manifest-plus-eight consume; a later one-path closure dossier; and an add-only five-seat successor review. Rehash every old-base target on the selected publication base and stop on any drift.
+3. Only after that repair's successor review and a fresh recap, select implementation base `B`. Build `I` as its single-parent child with the six unchanged Gate A proposal artifacts plus exact module `e60d8e…` and candidate-QA contract `0467b716…` in the declared eight-file closure. Change only implementation/evidence work and preserve every task, reviewer, artifact, mode, type, and hash boundary.
+4. Merge `I` normally, then produce local/public/fictional/synthetic evidence for all 15 canonical scenarios. Keep the evidence producer and independent QA identities distinct; obtain six exact-candidate artifact reviews and five distinct Gate B seats.
+5. Publish any Gate B stage-approval record through its own integrity arm/consume sequence. Do not invoke the governed stage unless freshly fetched exact-main Gate B returns `executionAllowed=true`. Private-host and authentic-media work remain separately blocked.
+
+### Open questions / decisions needed
+
+No Product Owner decision is required for the remaining local/public/fictional/synthetic control, candidate-preparation, and review sequence. `P0-OA-001` and `R0-OA-001` remain unsatisfied and block every private-host lane. Any credential, provider, spend, deployment, authentic-content, recovery-material, acceptance, release, or production action remains a separate owner decision and is not authorized here.
+
+### Session self-critique
+
+- The post-seed successor dossier should have been designed alongside the seed publication rather than after PR #100. Keeping it separate preserved the non-self-referential review boundary, but added two PRs and exposed more stale-base surface.
+- The pause-time append was truthful when drafted, yet its unpublished parent binding became stale while the Goal resumed. Topology should have been proven before suggesting a side-branch publication workaround; the final simulation correctly rejected that route and preserved the original bytes unchanged.
+- The pre-`I` validator design initially froze the module but not the candidate-QA contract. Independent adversarial review caught the `{}`/valid-JSON drift seam before publication; no repair hash should be called final until fresh-base transplant and another review pass.
+- Hosted fixture and GitHub service failures were preserved and resolved only by unchanged-head retries. Future evidence must continue to distinguish infrastructure/fixture retries from candidate failures.
+
+### Action items for the next agent
+
+1. Verify live `main` is the recap merge before selecting the pre-`I` repair base. Never update, rebase, or merge main into a frozen control candidate.
+2. Preserve the stale pause append, module-design worktree, and candidate-QA contract bytes as separate provenance; do not publish them outside their exact later boundaries.
+3. Port the reviewed eight-path pre-`I` repair onto fresh main, rerun syntax plus 433 readiness, 269 staged-actions, 136 stage-runner, 214 Stage-0 self-test, generated tracking, frozen-scope, structural, and two-pass exact-head CI before freezing payload hashes.
+4. Keep every R1-R10 file, private-owner action, deployment surface, authentic-content path, task status, and external system frozen.
+
+### State snapshot
+
+- **Current phase / version:** Gate A preparation accepted; post-preparation repair, inert runtime seed, and all three required non-authorizing successor reviews published; pre-`I` validator repair remains local and unpublished; Gate B not started.
+- **Current source:** exact merged main `499059a2aabd8bac6aecf5d6ce96fa3ff27e35e4` from PR #102.
+- **Active recap branch:** `codex/r0-spk-runtime-seed-successor-recap-20260817-499059a`, created directly from exact current main.
+- **Working tree:** clean before this append; only `RUNNING_LOG.md` changes in this recap. The stale pause append and the isolated eight-path validator repair remain separately preserved.
+- **Roadmap/runtime:** 58 Incomplete, zero Ready, zero execution-allowed; 336 Draft and 12 In-review artifacts; 50 R1-R10 tasks and 300 artifacts frozen; lifecycle `1/1/1/1/0/0/0`; future module absent.
+- **Protection:** strict required immutable guard plus exact-head suite, admin enforcement and conversation resolution enabled, force pushes and deletions disabled; normal merge commits allowed.
+- **Deployed/runtime state:** no governed R0 task-stage execution or deployment exists; deployment remains `Unknown — private read authority pending`.
+- **Next milestone:** normal publication of this recap, followed by the pre-`I` validator repair dossier/ratchet/closure/successor sequence.
