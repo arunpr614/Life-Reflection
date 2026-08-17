@@ -332,5 +332,57 @@
       "sha256": "e231adce514fb8631ec794e8d578d852fcd45629594201620d2e390e638d1fc7"
     }
   ],
-  "next": null
+  "next": {
+    "changes": [
+      {
+        "operation": "modify",
+        "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "a21cef249066a851bfe89f3fb42d9f108d89f30097e883dcaa47c05c05054869"
+      },
+      {
+        "operation": "modify",
+        "path": "tools/P0-stage-runner.mjs",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "db285c747eed86febfdd82b22d52fca43ebf234c985a5e07960f57b63ccd613b"
+      },
+      {
+        "operation": "modify",
+        "path": "tools/P0-stage0-ci.mjs",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "5bce57ae12b2977a70c3336ae855c799e2c65858ad07de21bd856c5187cb0f14"
+      },
+      {
+        "operation": "modify",
+        "path": "tools/P0-staged-actions.mjs",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "b499ed76cddee1a654dfdec1517ec61adb80ef8b8cc627029edf6a129828018e"
+      },
+      {
+        "operation": "modify",
+        "path": "tools/P0-test-stage-runner.mjs",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "78b14c9e2ee493b9fc58d52d22e4c470f33c590b36c9c1c055a642bd0aad8f9a"
+      },
+      {
+        "operation": "modify",
+        "path": "tools/P0-test-staged-actions.mjs",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "21a351d24d289f64202dec36a581bb87b5726a465b09f73e9c4571f0fc01de38"
+      },
+      {
+        "operation": "modify",
+        "path": "tools/P0-validate-execution-controls.mjs",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "860d0c894be92b777ddefb8eead94b1ee0a676c3e876c76cbe54e4f93d23867a"
+      }
+    ]
+  }
 }
