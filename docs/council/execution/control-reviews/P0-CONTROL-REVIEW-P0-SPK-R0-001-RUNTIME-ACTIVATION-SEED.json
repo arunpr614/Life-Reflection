@@ -1,0 +1,261 @@
+{
+  "schemaVersion": "1.0.0",
+  "reviewId": "P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED",
+  "reviewDate": "2026-08-17",
+  "reviewType": "non-authorizing-successor-control-review",
+  "predecessor": {
+    "kind": "review",
+    "reviewId": "P0-STAGE0-POSTPREPARATION-DESCENDANT-REPAIR",
+    "recordPath": "docs/council/execution/control-reviews/P0-CONTROL-REVIEW-P0-STAGE0-POSTPREPARATION-DESCENDANT-REPAIR.json",
+    "recordSha256": "bed04527f37df531b6c5e100ab792fc02d095326e15974e28b386632feb106d6"
+  },
+  "candidate": {
+    "baseRevision": "0250f0ff98c6e95e1c98b4679889f785bfbed6ce",
+    "revision": "f75e6e7fc43ff919178e479613e0a9200e1a8fad",
+    "dossierPath": "docs/council/execution/control-reviews/dossiers/P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED-CLOSURE.md",
+    "dossierSha256": "ea85dccbe3829cc854d843343a129e2f2eb3d8161ce19f804be2fc77b2828852",
+    "reviewerRegistryPath": "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json",
+    "reviewerRegistrySha256": "71c3eaf517da4bec7048fa53617410160032def15ded247bdfbfd11dcb83a30e",
+    "changedFiles": [
+      {
+        "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "62f83d78ca2a7105f3f44686c4893749d3a01024787695de20d189d5c0e87bdd",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "a21cef249066a851bfe89f3fb42d9f108d89f30097e883dcaa47c05c05054869",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json",
+        "changeType": "modify",
+        "base": {
+          "sha256": "d24c4c12244292a093b4f30b85b7436c8d2a5f293beeb6a5c2236274ebcd601d",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "628949d77f6f92d9ad88875bb069dcf887ca233e4463a9087f78da5859901260",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/control-reviews/dossiers/P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED-CLOSURE.md",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "ea85dccbe3829cc854d843343a129e2f2eb3d8161ce19f804be2fc77b2828852",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/control-reviews/dossiers/P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED.md",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "4c39f01849727c48eba9175277fe682c204495b400927c7ec6a94b457db3dcae",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-stage-runner.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "f73c2a22a029597b8c0c8af0022b1c536c2a4bea3b73ddae9e9db2eeab0eb2f6",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "db285c747eed86febfdd82b22d52fca43ebf234c985a5e07960f57b63ccd613b",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-stage0-ci.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "5670b134db59d72f4e97fca2686e3efe63fda578eccd59a55b94e46304bde7b7",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "5bce57ae12b2977a70c3336ae855c799e2c65858ad07de21bd856c5187cb0f14",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-staged-actions.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "53ec555e07b4c27c9fb5d0e93f3ff7354b7b6439e5b752c10511ed68f9338d3e",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "b499ed76cddee1a654dfdec1517ec61adb80ef8b8cc627029edf6a129828018e",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-test-stage-runner.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "66f163861827197d1ce13d05be8d27cd0ea9f04c45900ca072bf00145a488a9f",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "78b14c9e2ee493b9fc58d52d22e4c470f33c590b36c9c1c055a642bd0aad8f9a",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-test-staged-actions.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "dd168e5d6065acf9525fd9a9aa017e1355c9e7e416d1926413c66848380f77a3",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "21a351d24d289f64202dec36a581bb87b5726a465b09f73e9c4571f0fc01de38",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-validate-execution-controls.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "ba47489b073b571f59e66f05f3ded6c947664b0db65a47189968bc3df7678669",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "860d0c894be92b777ddefb8eead94b1ee0a676c3e876c76cbe54e4f93d23867a",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      }
+    ],
+    "changedFilesSha256": "3cd5f73144ae958f53e9241fa62c64f3ad6e73c6f97692ed5f32aad1fb2a3736",
+    "implementerIds": [
+      "codex-primary-integrator-01"
+    ],
+    "evidenceProducerIds": [
+      "codex-evidence-producer-01"
+    ]
+  },
+  "namedChecks": [
+    {
+      "checkId": "P0-CHECK-ADVERSARIAL",
+      "result": "pass",
+      "evidenceDigest": "sha256:85b804c456b302fc5f0489863ed71f56ffbca43db4afbed64f15bfdab97cd54c",
+      "evidenceReference": "review:P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED-ADVERSARIAL-F75E6E7"
+    },
+    {
+      "checkId": "P0-CHECK-FROZEN-SCOPE",
+      "result": "pass",
+      "evidenceDigest": "sha256:be2f43e5edfe91de1f57f20929451e32ace9630c0d3180dbeebb00601c6e1480",
+      "evidenceReference": "local-evidence:P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED-FROZEN-SCOPE-F75E6E7"
+    },
+    {
+      "checkId": "P0-CHECK-GITHUB-CI",
+      "result": "pass",
+      "evidenceDigest": "sha256:e49769ad44317c02cd2883664b23283545a3141feead42f7d12636626e03a07e",
+      "evidenceReference": "github-pr:101"
+    },
+    {
+      "checkId": "P0-CHECK-INDEPENDENT-QA",
+      "result": "pass",
+      "evidenceDigest": "sha256:a6bb38ec3963ce25413f68d3a2a970cf9419ad681cc75119ca022e5b00656555",
+      "evidenceReference": "review:P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED-QA-F75E6E7"
+    },
+    {
+      "checkId": "P0-CHECK-LOCAL-CI",
+      "result": "pass",
+      "evidenceDigest": "sha256:c7ad34468b8cb3aa5089ffb260fea885fc42dfff277af3d8faabc8c09486897f",
+      "evidenceReference": "local-evidence:P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED-LOCAL-CI-F75E6E7"
+    }
+  ],
+  "namedChecksSha256": "d13bf2b87506fe614735fe48c9030bf6b27e18fe208e7af58c4b0994e3f655b1",
+  "reviewContextSha256": "da30c7e0e081ab0651e2d9d51208e655ccad7e35cd375d9cd0eef95df9ab04a0",
+  "seatAttestations": {
+    "product": {
+      "reviewerId": "codex-product-manager-01",
+      "reviewerRole": "product",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "f75e6e7fc43ff919178e479613e0a9200e1a8fad",
+      "reviewContextSha256": "da30c7e0e081ab0651e2d9d51208e655ccad7e35cd375d9cd0eef95df9ab04a0",
+      "evidenceDigest": "sha256:bd4872583c79d73396c01be91da36252d3025c359c79ee570bbebcc1d0d1726b",
+      "evidenceReference": "review:P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED-PRODUCT-F75E6E7",
+      "rationale": "Exact f75e6e7 aggregate preserves the immutable 11-requirement and 15-scenario SPK product contract and the accepted local-synthetic/synthetic-foundation preparation boundary while SPK artifact readiness remains Incomplete, its execution decision remains Hold, and live-host acceptance remains outstanding. Lifecycle remains 1/1/1/1/0/0/0, the future module is absent, and all R1-R10 scope remains frozen; approve only normal publication of this non-authorizing closure, with no task approval, execution, private, status, deployment, acceptance, release, or production authority.",
+      "attestationDigest": "d974dc0fd475f42470c99aeb2c59b1cd424db7bb8984ef59f7b0c89cbb578bb8"
+    },
+    "design": {
+      "reviewerId": "codex-ui-ux-designer-01",
+      "reviewerRole": "design",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "f75e6e7fc43ff919178e479613e0a9200e1a8fad",
+      "reviewContextSha256": "da30c7e0e081ab0651e2d9d51208e655ccad7e35cd375d9cd0eef95df9ab04a0",
+      "evidenceDigest": "sha256:f80a0f1bf428bd14e944f09310da96e4aaea3892c4ba9afb4c98fa2d13bba42f",
+      "evidenceReference": "review:P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED-DESIGN-F75E6E7",
+      "rationale": "Exact f75e6e7 aggregate leaves the SPK Design and QA proposal bytes unchanged, changes no product UI path, retains the text-first Markdown/JSON/CLI evidence-state contract for normal, empty, loading, error, interruption, destructive, blocked-private, and unavailable states, and keeps rendered product UI and product UI accessibility explicitly unclaimed. Lifecycle remains 1/1/1/1/0/0/0 with no callback, stage approval, executable stage, or future module; approve only normal publication of this non-authorizing closure, with no private, status, deployment, acceptance, release, production, or R1-R10 effect.",
+      "attestationDigest": "34935187d53812c769be9a83226991183b288561c18e3fa21431cb0d475ac97a"
+    },
+    "architecture": {
+      "reviewerId": "codex-technical-architect-01",
+      "reviewerRole": "architecture",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "f75e6e7fc43ff919178e479613e0a9200e1a8fad",
+      "reviewContextSha256": "da30c7e0e081ab0651e2d9d51208e655ccad7e35cd375d9cd0eef95df9ab04a0",
+      "evidenceDigest": "sha256:f8cd650c1f6b40d92d89543ffc0b473022d41b495d217bd78cf28dd8b6342d05",
+      "evidenceReference": "review:P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED-ARCH-F75E6E7",
+      "rationale": "Exact f75e6e7 architecture review reproduced the direct-child dossier-only topology, sole regular 100644 addition, 10-record 0250f0f aggregate digest, PRs #98-#100 two-parent tree-preserving normal merges, final 55-entry next:null integrity manifest, and closed inert lifecycle 1/1/1/1/0/0/0 with the future module absent. Subject to the final review context binding a successful same-head immutable guard, approve normal publication only; no task, runtime, private, delivery, status, deployment, acceptance, release, or R1-R10 authority is created.",
+      "attestationDigest": "3ec8092c4d6d66b521692ab354150a6f53d276d475d327f66d9daefdb14b9f66"
+    },
+    "qa": {
+      "reviewerId": "codex-independent-qa-01",
+      "reviewerRole": "qa",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "f75e6e7fc43ff919178e479613e0a9200e1a8fad",
+      "reviewContextSha256": "da30c7e0e081ab0651e2d9d51208e655ccad7e35cd375d9cd0eef95df9ab04a0",
+      "evidenceDigest": "sha256:a6bb38ec3963ce25413f68d3a2a970cf9419ad681cc75119ca022e5b00656555",
+      "evidenceReference": "review:P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED-QA-F75E6E7",
+      "rationale": "Independent QA at exact f75e6e7 reproduced the dossier SHA-256, Git blob/mode/type, byte and line counts, public-text and whitespace safety, complete 10-record aggregate, 58/0/0 task state, 50-task/300-artifact freeze, and inert lifecycle. Local CI passed two fresh exact-head passes with result 3f6e8c5e, while hosted push attempt 1's stage_runner_fixtures failure remains recorded before unchanged-head attempt 2 and the PR run both passed with result 79e64cb3. Subject to the final review context binding a successful same-head immutable guard, approve normal publication only; no execution, private, status, deployment, acceptance, release, or R1-R10 authority is granted.",
+      "attestationDigest": "7fbb098c8f0c51da7ff637b723bf73f2ff98a15335fc33edc05e12cf48db0740"
+    },
+    "project": {
+      "reviewerId": "codex-project-manager-01",
+      "reviewerRole": "project",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "f75e6e7fc43ff919178e479613e0a9200e1a8fad",
+      "reviewContextSha256": "da30c7e0e081ab0651e2d9d51208e655ccad7e35cd375d9cd0eef95df9ab04a0",
+      "evidenceDigest": "sha256:4773f8fb2041f906d927103659203c9cefe3a97d77e3b044efb4cc97898f659d",
+      "evidenceReference": "review:P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED-PROJECT-F75E6E7",
+      "rationale": "Exact lineage review at f75e6e7 verified live main ccf226a, D2 as its one-file direct child, PRs #98-#100 as normal two-parent tree-preserving merges, and the required future D2-to-DM-to-R2-to-RM sequence with no update-branch, squash, rebase, force-push, admin merge, or bypass. The preserved pause recap remains outside this candidate and cannot publish before RM; all 58 tasks remain Incomplete, 50 R1-R10 tasks and 300 artifacts remain frozen, and deployment remains Unknown — private read authority pending. Subject to the final review context binding a successful same-head immutable guard, approve normal publication only.",
+      "attestationDigest": "c3a9a98d59fa6871149f2ab53f4f974194c3c634baf5988f6b2f6ecee3e9287a"
+    }
+  },
+  "unresolvedVetoes": [],
+  "disposition": "accepted-normal-merge-only",
+  "taskApprovalCreated": false,
+  "runtimeAuthority": false,
+  "executionAllowed": false,
+  "privateActionAllowed": false,
+  "statusTransitionAllowed": false,
+  "r1R10Effect": "none",
+  "permittedClaim": "Accepted only for normal publication of the exact public/local control candidate; this review is non-authorizing and creates no task approval, execution permission, private access, R0 action, deployment, acceptance, status transition, or R1-R10 effect."
+}
