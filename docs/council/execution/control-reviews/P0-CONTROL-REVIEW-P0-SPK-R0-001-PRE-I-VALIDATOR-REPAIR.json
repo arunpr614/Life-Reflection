@@ -1,0 +1,289 @@
+{
+  "schemaVersion": "1.0.0",
+  "reviewId": "P0-SPK-R0-001-PRE-I-VALIDATOR-REPAIR",
+  "reviewDate": "2026-08-18",
+  "reviewType": "non-authorizing-successor-control-review",
+  "predecessor": {
+    "kind": "review",
+    "reviewId": "P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED",
+    "recordPath": "docs/council/execution/control-reviews/P0-CONTROL-REVIEW-P0-SPK-R0-001-RUNTIME-ACTIVATION-SEED.json",
+    "recordSha256": "8d2d38ddf54e2dc0a9e40a7f2d4d7af2e5b0db378aa9080b53b3d9e1a3d8f1a5"
+  },
+  "candidate": {
+    "baseRevision": "c35eed4691413adf3442ed412535a56d55f39cd6",
+    "revision": "0825f11954f18d71344491f1b7eba77bbfdb5038",
+    "dossierPath": "docs/council/execution/control-reviews/dossiers/P0-SPK-R0-001-PRE-I-VALIDATOR-REPAIR-CLOSURE.md",
+    "dossierSha256": "98067db4e2a50ad02069449590bea1020fd484bf360c3be442ba4596e22dcd57",
+    "reviewerRegistryPath": "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json",
+    "reviewerRegistrySha256": "71c3eaf517da4bec7048fa53617410160032def15ded247bdfbfd11dcb83a30e",
+    "changedFiles": [
+      {
+        "path": "RUNNING_LOG.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "88324f428acb0254a82ad921a6cb73e92705363538b6c7501bacb4951548de9d",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "22ab3008fd3be9a7283ff3cfcc82eea619215e8e85d7e478db1d0ca4c97a1533",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "a21cef249066a851bfe89f3fb42d9f108d89f30097e883dcaa47c05c05054869",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "7095ca0ec166fada945ba0caacbdd20ea6137484e97d2b4605edc53e3426c1c5",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json",
+        "changeType": "modify",
+        "base": {
+          "sha256": "628949d77f6f92d9ad88875bb069dcf887ca233e4463a9087f78da5859901260",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "0eaddfd36358b296ab45676e7b6283c2cf4ea2abaf2a1e1fa8fde7e04f576943",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/control-reviews/dossiers/P0-SPK-R0-001-PRE-I-VALIDATOR-REPAIR-CLOSURE.md",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "98067db4e2a50ad02069449590bea1020fd484bf360c3be442ba4596e22dcd57",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/control-reviews/dossiers/P0-SPK-R0-001-PRE-I-VALIDATOR-REPAIR.md",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "ec0b5a924bc4abfc92d4c263d739bba5f408791c4e7f63fbd0780e6acc0ed427",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/releases/P0-P0-R0-STAGE0-STATE-CONTRACT.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "06d15713d63469bacaf25857b483f7ba7cfc3bfa8178ff856c10b1e5733f25f4",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "8deba1d7bd662002c81d6f6e971a9f17a96f979d6ef39450c04065a162545a22",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-readiness-gates.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "b95a2ff9b31e3693302b26572220b1b49fbf263d17b13ee670873594b8340f00",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "30d805120f3d8f4972cf6792d5dbdafbdba2c5ed307503be530345f3e70bfd3a",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-stage0-ci.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "5bce57ae12b2977a70c3336ae855c799e2c65858ad07de21bd856c5187cb0f14",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "88f2f7f02cb37108861c8e5b106275e5cb286157747c4cce6ccdd59cfbeb3259",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-staged-actions.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "b499ed76cddee1a654dfdec1517ec61adb80ef8b8cc627029edf6a129828018e",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "c64914808c275c633a451d3a1a228d0e4194c331226ac6844ad67eaf204e57b9",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-test-execution-controls.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "bfa5718431d30886ea784eb7e9b92953ffe3e2a8a31d4b98cde26e4ccc2aa79a",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "6345dc2334252f380e093efd81598c2b19f59879f1c10cda9b9db96414f95666",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-test-staged-actions.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "21a351d24d289f64202dec36a581bb87b5726a465b09f73e9c4571f0fc01de38",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "10d14bd85fce6ac9f420d720ba6747dcb79969231b13c8e092720ba5d776136a",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-validate-execution-controls.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "860d0c894be92b777ddefb8eead94b1ee0a676c3e876c76cbe54e4f93d23867a",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "f3947d8ab05baba093eb70b99b4a0fe195070c912869c713355b7708ce93f342",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      }
+    ],
+    "changedFilesSha256": "f5670366a01dbf4bc221e10ecd2622a4005a7ecbe6a1bfb0fd1ee52683545fba",
+    "implementerIds": [
+      "codex-primary-integrator-01"
+    ],
+    "evidenceProducerIds": [
+      "codex-evidence-producer-01"
+    ]
+  },
+  "namedChecks": [
+    {
+      "checkId": "P0-CHECK-ADVERSARIAL",
+      "result": "pass",
+      "evidenceDigest": "sha256:5de6448414c5258abf803422d2126c7a5d10c1830c662a2e0f3ac39ba99ada6a",
+      "evidenceReference": "review:P0-SPK-R0-001-PRE-I-VALIDATOR-REPAIR-ADVERSARIAL-0825F11"
+    },
+    {
+      "checkId": "P0-CHECK-FROZEN-SCOPE",
+      "result": "pass",
+      "evidenceDigest": "sha256:cf22cccceaeea4ef26fa19459afd1bdf58c235a8c1c24225534f5c2e8d56f04f",
+      "evidenceReference": "local-evidence:P0-SPK-R0-001-PRE-I-VALIDATOR-REPAIR-FROZEN-SCOPE-0825F11"
+    },
+    {
+      "checkId": "P0-CHECK-GITHUB-CI",
+      "result": "pass",
+      "evidenceDigest": "sha256:6e687f5161f138fba8ede3ece8751fa45b63709c34911fa638b812c6b438060f",
+      "evidenceReference": "github-pr:107"
+    },
+    {
+      "checkId": "P0-CHECK-INDEPENDENT-QA",
+      "result": "pass",
+      "evidenceDigest": "sha256:22064eaac2117672a562f3bbde952216644ae725e17aa568e8f8eb900f3f1725",
+      "evidenceReference": "review:P0-SPK-R0-001-PRE-I-VALIDATOR-REPAIR-QA-0825F11"
+    },
+    {
+      "checkId": "P0-CHECK-LOCAL-CI",
+      "result": "pass",
+      "evidenceDigest": "sha256:3847e0eb479d95deba83855995af894d767f0f796187af19e0632131bac53ca2",
+      "evidenceReference": "local-evidence:P0-SPK-R0-001-PRE-I-VALIDATOR-REPAIR-LOCAL-CI-0825F11"
+    }
+  ],
+  "namedChecksSha256": "e5b3f7d1d698f0b9549070e695a36c8b3b39f03f963b89a1eb101e5fff2df73b",
+  "reviewContextSha256": "ce9dcdbef110139237cd31dcde319226de3a853ddf82859d76a744522b587d15",
+  "seatAttestations": {
+    "product": {
+      "reviewerId": "codex-product-manager-01",
+      "reviewerRole": "product",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "0825f11954f18d71344491f1b7eba77bbfdb5038",
+      "reviewContextSha256": "ce9dcdbef110139237cd31dcde319226de3a853ddf82859d76a744522b587d15",
+      "evidenceDigest": "sha256:188cb093713684eb59debf939bcc553aaa53c75a9e3b2f96699d07b2be610a9c",
+      "evidenceReference": "review:P0-SPK-R0-001-PRE-I-VALIDATOR-REPAIR-PRODUCT-0825F11",
+      "rationale": "Exact 0825f11954f18d71344491f1b7eba77bbfdb5038 preserves all six immutable SPK proposal blobs and the product contract's 11 mapped requirements, 15 scenarios, local/public/fictional/synthetic boundary, and outstanding live-host remainder. The candidate adds only the public closure dossier; the accepted Gate A preparation remains unchanged, no Gate B approval exists, the future module and candidate-QA contract remain absent, lifecycle is inert 1/1/1/1/0/0/0, all 58 tasks remain Incomplete with 0 Ready and 0 execution-allowed, and the 50 R1-R10 tasks plus 300 artifacts remain frozen. Subject to the final common review context binding all five passing same-head checks and GitHub evidence, approve only normal publication of this non-authorizing control closure; it creates no task approval, execution, private, status, deployment, acceptance, release, production, or R1-R10 authority.",
+      "attestationDigest": "fe47443e5062b0069a8bb045114e1df16c6b5b1136062c75c1acd8faaf891466"
+    },
+    "design": {
+      "reviewerId": "codex-ui-ux-designer-01",
+      "reviewerRole": "design",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "0825f11954f18d71344491f1b7eba77bbfdb5038",
+      "reviewContextSha256": "ce9dcdbef110139237cd31dcde319226de3a853ddf82859d76a744522b587d15",
+      "evidenceDigest": "sha256:6ccd3b1449a0aa5ef228fc690f4802ddb272cdc6ac8abe1404f1bebdfcab9b53",
+      "evidenceReference": "review:P0-SPK-R0-001-PRE-I-VALIDATOR-REPAIR-DESIGN-0825F11",
+      "rationale": "Exact 0825f11954f18d71344491f1b7eba77bbfdb5038 preserves the SPK Design artifact byte-for-byte, including its text-first Markdown/JSON/CLI evidence surface, normal/empty/loading/error/interruption/destructive/blocked-private/unavailable states, and keyboard, focus, screen-reader, target-size, contrast, zoom, theme, and reduced-motion requirements. The candidate adds only a public-safe Markdown closure dossier with explicit headings, text labels, synthetic/live boundaries, and non-authority language; it changes no product UI, prototype, screenshot, private surface, or runtime evidence, while lifecycle remains inert 1/1/1/1/0/0/0 and the future paired files remain absent. Subject to the final common review context binding all five passing same-head checks and GitHub evidence, approve only normal publication of this non-authorizing closure; it creates no private, execution, status, deployment, acceptance, release, production, or R1-R10 effect.",
+      "attestationDigest": "3002775cfa57799ce95ae9192ef0e64259cb52b0a6a131116facc1d0e12a92ab"
+    },
+    "architecture": {
+      "reviewerId": "codex-technical-architect-01",
+      "reviewerRole": "architecture",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "0825f11954f18d71344491f1b7eba77bbfdb5038",
+      "reviewContextSha256": "ce9dcdbef110139237cd31dcde319226de3a853ddf82859d76a744522b587d15",
+      "evidenceDigest": "sha256:2f9d67f953b6fc7160e2b072f737d2eb7250514e5692ac6238c1ac448c5cd94e",
+      "evidenceReference": "review:P0-SPK-R0-001-PRE-I-VALIDATOR-REPAIR-ARCH-0825F11",
+      "rationale": "Exact 0825f11 architecture review reproduced the clean direct-child dossier-only topology, sole regular 100644 addition, complete 12-record c35eed4 aggregate digest f5670366, and ordered-parent/tree-equality D/DM, A/AM, and S/SM history. The consumed 55-entry next:null manifest, exact eight repaired targets, 348-file inventory, absent future pair, and inert lifecycle 1/1/1/1/0/0/0 remain exact. Subject to the final review context binding successful same-head required checks and the prescribed D2M/R/RM normal-merge sequence, approve normal publication only; no task, runtime, private, status, deployment, acceptance, release, production, or R1-R10 authority is created.",
+      "attestationDigest": "7207958b96b3fe881e53b1aa9c8b8a81e0030b82d82f6fbe8cab571d976c4dde"
+    },
+    "qa": {
+      "reviewerId": "codex-independent-qa-01",
+      "reviewerRole": "qa",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "0825f11954f18d71344491f1b7eba77bbfdb5038",
+      "reviewContextSha256": "ce9dcdbef110139237cd31dcde319226de3a853ddf82859d76a744522b587d15",
+      "evidenceDigest": "sha256:22064eaac2117672a562f3bbde952216644ae725e17aa568e8f8eb900f3f1725",
+      "evidenceReference": "review:P0-SPK-R0-001-PRE-I-VALIDATOR-REPAIR-QA-0825F11",
+      "rationale": "Independent QA at exact 0825f11 reproduced the dossier SHA-256, blob, mode, type, 20587-byte and 186-line counts, terminal LF, public-text safety, whitespace-clean diff, complete 12-record aggregate, and reviewer-registry digest. Focused checks passed: readiness 433/433, staged actions 269, successor fixtures zero failures, successor trust zero findings, structural 78/58/348 with 336 Draft, 12 In-review, zero Ready, zero execution allowed and 58 incomplete, plus the 50-task/300-artifact/zero-execution freeze. GitHub history for PRs 104-106 and their exact-main runs contains only attempt-1 successes with the bound result digests. This seat did not run D2 full CI; the final context must bind root-produced clean exact-head two-pass local CI and D2 hosted required checks. Approve normal publication only; no execution, private, status, deployment, acceptance, release, production, or R1-R10 authority is granted.",
+      "attestationDigest": "a0887bac1c4c143a016bee628461e67058beaf5972896b758a19b03ffd5b9ea1"
+    },
+    "project": {
+      "reviewerId": "codex-project-manager-01",
+      "reviewerRole": "project",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "0825f11954f18d71344491f1b7eba77bbfdb5038",
+      "reviewContextSha256": "ce9dcdbef110139237cd31dcde319226de3a853ddf82859d76a744522b587d15",
+      "evidenceDigest": "sha256:eec8c036c1079378afe7b95cf1cfaf6b0b6281137f1d234257d12daed524264d",
+      "evidenceReference": "review:P0-SPK-R0-001-PRE-I-VALIDATOR-REPAIR-PROJECT-0825F11",
+      "rationale": "Exact lineage review at 0825f11 verified continuity from predecessor candidate c35eed4 through merge 499059a, recap merge dbab302, repair merges 4d74a57/2101fdb/5492406, and D2 as the consume merge's direct one-file child with no intervening commit. The successor record is absent at D2; required order remains D2, D2M, R, RM, then freshly based I. All 58 artifact-readiness results remain incomplete, all 50 R1-R10 tasks and 300 artifacts remain frozen, and executionAllowed remains zero. Subject to candidate-specific checks, tree-preserving normal merges, and a zero-finding successor verifier at RM, approve normal publication only; no implementation, candidate QA, Gate B, runtime, private, status, deployment, acceptance, release, or production state exists.",
+      "attestationDigest": "ffd13560e4a4aa29cbea17ec02ebf3aa091269e9f1785177aa6c38e9e1535fec"
+    }
+  },
+  "unresolvedVetoes": [],
+  "disposition": "accepted-normal-merge-only",
+  "taskApprovalCreated": false,
+  "runtimeAuthority": false,
+  "executionAllowed": false,
+  "privateActionAllowed": false,
+  "statusTransitionAllowed": false,
+  "r1R10Effect": "none",
+  "permittedClaim": "Accepted only for normal publication of the exact public/local control candidate; this review is non-authorizing and creates no task approval, execution permission, private access, R0 action, deployment, acceptance, status transition, or R1-R10 effect."
+}
