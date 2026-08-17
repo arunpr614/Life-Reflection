@@ -71,7 +71,7 @@
       "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
       "mode": "100644",
       "type": "blob",
-      "sha256": "62f83d78ca2a7105f3f44686c4893749d3a01024787695de20d189d5c0e87bdd"
+      "sha256": "a21cef249066a851bfe89f3fb42d9f108d89f30097e883dcaa47c05c05054869"
     },
     {
       "path": "docs/council/execution/P0-R0-STAGE-APPROVAL-REGISTRY.json",
@@ -203,19 +203,19 @@
       "path": "tools/P0-stage-runner.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "f73c2a22a029597b8c0c8af0022b1c536c2a4bea3b73ddae9e9db2eeab0eb2f6"
+      "sha256": "db285c747eed86febfdd82b22d52fca43ebf234c985a5e07960f57b63ccd613b"
     },
     {
       "path": "tools/P0-stage0-ci.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "5670b134db59d72f4e97fca2686e3efe63fda578eccd59a55b94e46304bde7b7"
+      "sha256": "5bce57ae12b2977a70c3336ae855c799e2c65858ad07de21bd856c5187cb0f14"
     },
     {
       "path": "tools/P0-staged-actions.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "53ec555e07b4c27c9fb5d0e93f3ff7354b7b6439e5b752c10511ed68f9338d3e"
+      "sha256": "b499ed76cddee1a654dfdec1517ec61adb80ef8b8cc627029edf6a129828018e"
     },
     {
       "path": "tools/P0-successor-control-review.mjs",
@@ -257,13 +257,13 @@
       "path": "tools/P0-test-stage-runner.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "66f163861827197d1ce13d05be8d27cd0ea9f04c45900ca072bf00145a488a9f"
+      "sha256": "78b14c9e2ee493b9fc58d52d22e4c470f33c590b36c9c1c055a642bd0aad8f9a"
     },
     {
       "path": "tools/P0-test-staged-actions.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "dd168e5d6065acf9525fd9a9aa017e1355c9e7e416d1926413c66848380f77a3"
+      "sha256": "21a351d24d289f64202dec36a581bb87b5726a465b09f73e9c4571f0fc01de38"
     },
     {
       "path": "tools/P0-test-successor-control-review.mjs",
@@ -281,7 +281,7 @@
       "path": "tools/P0-validate-execution-controls.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha256": "ba47489b073b571f59e66f05f3ded6c947664b0db65a47189968bc3df7678669"
+      "sha256": "860d0c894be92b777ddefb8eead94b1ee0a676c3e876c76cbe54e4f93d23867a"
     },
     {
       "path": "tools/P0-verify-execution-start.mjs",
@@ -332,57 +332,5 @@
       "sha256": "e231adce514fb8631ec794e8d578d852fcd45629594201620d2e390e638d1fc7"
     }
   ],
-  "next": {
-    "changes": [
-      {
-        "operation": "modify",
-        "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "a21cef249066a851bfe89f3fb42d9f108d89f30097e883dcaa47c05c05054869"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-stage-runner.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "db285c747eed86febfdd82b22d52fca43ebf234c985a5e07960f57b63ccd613b"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-stage0-ci.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "5bce57ae12b2977a70c3336ae855c799e2c65858ad07de21bd856c5187cb0f14"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-staged-actions.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "b499ed76cddee1a654dfdec1517ec61adb80ef8b8cc627029edf6a129828018e"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-test-stage-runner.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "78b14c9e2ee493b9fc58d52d22e4c470f33c590b36c9c1c055a642bd0aad8f9a"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-test-staged-actions.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "21a351d24d289f64202dec36a581bb87b5726a465b09f73e9c4571f0fc01de38"
-      },
-      {
-        "operation": "modify",
-        "path": "tools/P0-validate-execution-controls.mjs",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "860d0c894be92b777ddefb8eead94b1ee0a676c3e876c76cbe54e4f93d23867a"
-      }
-    ]
-  }
+  "next": null
 }

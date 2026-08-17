@@ -132,10 +132,10 @@ const TEST_COMMANDS = Object.freeze([
   }],
   ["wiki_fixtures", "node", ["tools/P0-test-wiki-trust.mjs"], { ok: true, cases: 30, helpWrites: 0 }],
   ["staged_action_fixtures", "node", ["tools/P0-test-staged-actions.mjs"], {
-    ok: true, code: "SELF_TEST_OK", cases: 245, productionActions: 0,
+    ok: true, code: "SELF_TEST_OK", cases: 258, productionActions: 1,
   }],
   ["stage_runner_fixtures", "node", ["tools/P0-test-stage-runner.mjs"], {
-    ok: true, code: "SELF_TEST_OK", cases: 90, productionModules: 0,
+    ok: true, code: "SELF_TEST_OK", cases: 136, productionModules: 1,
   }],
   ["delivery_transition_fixtures", "node", ["tools/P0-test-delivery-transition.mjs"], {
     ok: true, code: "SELF_TEST_OK", cases: 96, applyEnabled: false,

@@ -80,8 +80,10 @@ import {
   verifyStageApprovalRegistryHistory,
 } from "./P0-staged-actions.mjs";
 import {
+  PRODUCTION_CALLBACK_MODULE_IDS,
   PRODUCTION_MODULE_METADATA,
   PRODUCTION_OUTCOME_VERIFICATION_MODULE_IDS,
+  SPK_GOVERNED_EVIDENCE_CONTRACT_SHA256,
 } from "./P0-stage-runner.mjs";
 
 const repoRoot = path.resolve(import.meta.dirname, "..");
@@ -366,9 +368,71 @@ const stageLifecycleValidation = validateStageRuntimeLifecycle({
   definitions: PRODUCTION_STAGED_ACTIONS,
   moduleBindings: PRODUCTION_MODULE_METADATA,
   outcomeVerificationModuleIds: PRODUCTION_OUTCOME_VERIFICATION_MODULE_IDS,
+  callbackModuleIds: PRODUCTION_CALLBACK_MODULE_IDS,
 });
 check(stageLifecycleValidation.ok,
   `GOV-STAGE-016: stage registry/runtime lifecycle is invalid (${stageLifecycleValidation.code})`);
+check(preparationReviews.length === 1
+  && preparationReviews[0]?.preparationReviewId === "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+"GOV-STAGE-023: inert SPK preparation cardinality or identity drifted");
+check(stageApprovals.length === 0, "GOV-STAGE-024: inert SPK seed must have zero stage approvals");
+check(jsonEqual(stageLifecycleValidation.preparationReviewIds, [
+  "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+]) && jsonEqual(stageLifecycleValidation.definitionStageIds, [
+  "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+]) && jsonEqual(stageLifecycleValidation.moduleIds, ["spk.synthetic"])
+  && jsonEqual(stageLifecycleValidation.outcomeVerificationModuleIds, ["spk.synthetic"])
+  && jsonEqual(stageLifecycleValidation.callbackModuleIds, [])
+  && jsonEqual(stageLifecycleValidation.moduleArgumentBindings, [{
+    moduleId: "spk.synthetic",
+    argumentSetId: "synthetic.v1",
+    arguments: [],
+  }]), "GOV-STAGE-025: inert SPK lifecycle identity or exact argument binding drifted");
+check(stageLifecycleValidation.preparationReviewCount === 1
+  && stageLifecycleValidation.definitionCount === 1
+  && stageLifecycleValidation.moduleCount === 1
+  && stageLifecycleValidation.outcomeVerifierCount === 1
+  && stageLifecycleValidation.callbackCount === 0
+  && stageLifecycleValidation.stageApprovalCount === 0
+  && stageLifecycleValidation.executableStageCount === 0,
+"GOV-STAGE-026: inert SPK lifecycle counts are not exactly 1/1/1/1/0/0/0");
+check(PRODUCTION_MODULE_METADATA.length === 1
+  && PRODUCTION_MODULE_METADATA[0]?.moduleId === "spk.synthetic"
+  && PRODUCTION_MODULE_METADATA[0]?.moduleRelativePath
+    === "tools/spk-r0-001/P0-SPK-R0-001-synthetic-foundation.mjs"
+  && PRODUCTION_MODULE_METADATA[0]?.gitMode === "100644"
+  && PRODUCTION_MODULE_METADATA[0]?.moduleSha256
+    === "sha256:e60d8e6398441a61812dd467ffcbdd292e01fb1198723e667e480d2cf453e47f"
+  && jsonEqual(PRODUCTION_MODULE_METADATA[0]?.argumentSetIds, ["synthetic.v1"])
+  && jsonEqual(PRODUCTION_MODULE_METADATA[0]?.argumentSets, { "synthetic.v1": [] })
+  && jsonEqual(PRODUCTION_OUTCOME_VERIFICATION_MODULE_IDS, ["spk.synthetic"])
+  && jsonEqual(PRODUCTION_CALLBACK_MODULE_IDS, [])
+  && SPK_GOVERNED_EVIDENCE_CONTRACT_SHA256
+    === "sha256:38c8deeb899e87cfef731cc1932d3594f3cf4b7d6afa1aeff62cb343395931d8",
+"GOV-STAGE-027: inert SPK module/verifier/callback metadata drifted");
+const spkFutureModuleMetadata = PRODUCTION_MODULE_METADATA[0];
+const spkFutureModulePath = path.join(repoRoot, spkFutureModuleMetadata.moduleRelativePath);
+let spkFutureModuleStats = null;
+let spkFutureModuleResolvedPath = null;
+let spkFutureModuleInspectionFailed = false;
+try {
+  spkFutureModuleStats = fs.lstatSync(spkFutureModulePath);
+  spkFutureModuleResolvedPath = fs.realpathSync(spkFutureModulePath);
+} catch (error) {
+  if (error?.code !== "ENOENT") spkFutureModuleInspectionFailed = true;
+}
+check(!spkFutureModuleInspectionFailed, "GOV-STAGE-028: future SPK module inspection failed");
+if (spkFutureModuleStats !== null) {
+  check(spkFutureModuleStats.isFile()
+    && !spkFutureModuleStats.isSymbolicLink()
+    && spkFutureModuleResolvedPath === path.resolve(fs.realpathSync(repoRoot), spkFutureModuleMetadata.moduleRelativePath)
+    && (spkFutureModuleStats.mode & 0o777) === 0o644
+    && sha256(fs.readFileSync(spkFutureModulePath)) === spkFutureModuleMetadata.moduleSha256.slice("sha256:".length),
+  "GOV-STAGE-028: present future SPK module is not the exact reviewed regular 100644 blob");
+} else {
+  check(stageApprovals.length === 0 && stageLifecycleValidation.executableStageCount === 0,
+    "GOV-STAGE-028: absent future SPK module is allowed only while the seed remains inert");
+}
 const stageHistoryRun = async (command, args, options = {}) => {
   try {
     return {

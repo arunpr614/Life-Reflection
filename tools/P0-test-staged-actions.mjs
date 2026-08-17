@@ -87,7 +87,7 @@ const base = Object.freeze({
 });
 
 expectCode(validateStagedActionDefinition(base), "STAGE_DEFINITION_VALID");
-assert.match(stageBindingDigest(base), /^sha256:[0-9a-f]{64}$/); cases += 1;
+assert.equal(stageBindingDigest(base), "sha256:fc172d2f8c1e5f9dccdf7a5c398fe0a2038591f7fb2903e54961879c73041983"); cases += 1;
 
 const deliveryTransitionDefinition = Object.freeze({
   ...base,
@@ -292,10 +292,16 @@ const second = {
   idempotencyKey: "P0-IDEMP-SPK-R0-001-PRIVATE-READ-001",
   predecessor: { stageId: base.stageId, receiptDigest },
 };
+const secondLifecycle = {
+  ...second,
+  moduleId: "spk.private-read",
+  argumentSetId: "private-read.v1",
+};
 expectCode(validateStageChain([base, second], [receipt]), "STAGE_CHAIN_VALID");
 expectCode(validateStageChain([base, second], [{ ...receipt, state: "recovery-required" }]), "STAGE_PREDECESSOR_NOT_SUCCEEDED");
 expectCode(validateStageChain([base, { ...second, idempotencyKey: base.idempotencyKey }], [receipt]), "STAGE_IDEMPOTENCY_KEY_DUPLICATE");
-assert.deepEqual(PRODUCTION_STAGED_ACTIONS, []); cases += 1;
+assert.deepEqual(PRODUCTION_STAGED_ACTIONS, [base]); cases += 1;
+assert.equal(canonicalJson(PRODUCTION_STAGED_ACTIONS[0]), "{\"actionClass\":\"synthetic-foundation\",\"argumentSetId\":\"synthetic.v1\",\"deadlineMs\":60000,\"idempotencyKey\":\"P0-IDEMP-SPK-R0-001-SYNTHETIC-001\",\"moduleId\":\"spk.synthetic\",\"predecessor\":null,\"schemaVersion\":\"1.0.0\",\"scopeClass\":\"local-synthetic\",\"stageId\":\"P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION\",\"taskId\":\"SPK-R0-001\"}"); cases += 1;
 
 function rawDigest(label) {
   return crypto.createHash("sha256").update(label).digest("hex");
@@ -1375,12 +1381,14 @@ const deliveryTransitionModuleBindings = [{
   moduleSha256: deliveryTransitionRegistry.stage.moduleSha256,
   gitMode: "100644",
   argumentSetIds: [deliveryTransitionDefinition.argumentSetId],
+  argumentSets: { [deliveryTransitionDefinition.argumentSetId]: [] },
 }];
 expectCode(validateStageRuntimeLifecycle({
   registry: deliveryTransitionRegistry.registry,
   definitions: [deliveryTransitionDefinition],
   moduleBindings: deliveryTransitionModuleBindings,
   outcomeVerificationModuleIds: [DELIVERY_TRANSITION_GATE_B_CONTRACT.moduleId],
+  callbackModuleIds: [],
 }), "STAGE_RUNTIME_LIFECYCLE_VALID");
 for (const taskId of ["AUD-001", "PC-001", "PRD-R0-001"]) {
   const preparationReview = structuredClone(deliveryTransitionRegistry.preparationReview);
@@ -1406,26 +1414,28 @@ expectCode(validateStageApprovalRegistry(missingSuffixTransitionRegistry), "PREP
 function secondStageRegistryFixture() {
   const preparationReview = resealPreparationReview(structuredClone(registryFixture.preparationReview));
   preparationReview.preparationReviewId = "P0-PREP-SPK-R0-001-PRIVATE-READ";
-  preparationReview.stageId = second.stageId;
-  preparationReview.scopeClass = second.scopeClass;
-  preparationReview.actionClass = second.actionClass;
+  preparationReview.stageId = secondLifecycle.stageId;
+  preparationReview.scopeClass = secondLifecycle.scopeClass;
+  preparationReview.actionClass = secondLifecycle.actionClass;
   preparationReview.proposalCandidate.revision = "6".repeat(40);
   preparationReview.proposalCandidate.baseRevision = "7".repeat(40);
   preparationReview.proposalCandidate.dossierDigest = rawDigest("second proposal dossier");
   resealPreparationReview(preparationReview);
 
   const stage = structuredClone(registryFixture.stage);
-  stage.stageId = second.stageId;
+  stage.stageId = secondLifecycle.stageId;
   stage.preparationReviewId = preparationReview.preparationReviewId;
   stage.preparationReviewSha256 = preparationReviewRecordDigest(preparationReview);
-  stage.scopeClass = second.scopeClass;
-  stage.actionClass = second.actionClass;
+  stage.scopeClass = secondLifecycle.scopeClass;
+  stage.actionClass = secondLifecycle.actionClass;
   stage.sequence = 2;
   stage.candidateRevision = "5".repeat(40);
   stage.dossierDigest = rawDigest("second implementation dossier");
   stage.predecessorReceiptSha256 = receiptDigest.slice("sha256:".length);
-  stage.idempotencyKey = second.idempotencyKey;
-  stage.stageDefinitionSha256 = stageBindingDigest(second);
+  stage.idempotencyKey = secondLifecycle.idempotencyKey;
+  stage.stageDefinitionSha256 = stageBindingDigest(secondLifecycle);
+  stage.moduleId = secondLifecycle.moduleId;
+  stage.moduleSha256 = `sha256:${rawDigest("second lifecycle module")}`;
   stage.candidate.revision = stage.candidateRevision;
   stage.candidate.baseRevision = "6".repeat(40);
   stage.candidate.dossierDigest = stage.dossierDigest;
@@ -1484,33 +1494,150 @@ const moduleBindings = [{
   moduleSha256: registryFixture.stage.moduleSha256,
   gitMode: "100644",
   argumentSetIds: [base.argumentSetId],
+  argumentSets: { [base.argumentSetId]: [] },
+}, {
+  moduleId: secondLifecycle.moduleId,
+  moduleRelativePath: "tools/P0-reviewed-private-read.mjs",
+  moduleSha256: chainedFixture.stage.moduleSha256,
+  gitMode: "100644",
+  argumentSetIds: [secondLifecycle.argumentSetId],
+  argumentSets: { [secondLifecycle.argumentSetId]: [] },
 }];
 expectCode(validateStageRuntimeLifecycle({
   registry: registryFixture.prepared,
   definitions: [],
   moduleBindings: [],
   outcomeVerificationModuleIds: [],
+  callbackModuleIds: [],
 }), "STAGE_RUNTIME_LIFECYCLE_VALID");
+const inertLifecycle = validateStageRuntimeLifecycle({
+  registry: registryFixture.prepared,
+  definitions: [base],
+  moduleBindings: [moduleBindings[0]],
+  outcomeVerificationModuleIds: [base.moduleId],
+  callbackModuleIds: [],
+});
+expectCode(inertLifecycle, "STAGE_RUNTIME_LIFECYCLE_VALID");
+assert.deepEqual({
+  preparationReviewIds: inertLifecycle.preparationReviewIds,
+  definitionStageIds: inertLifecycle.definitionStageIds,
+  moduleIds: inertLifecycle.moduleIds,
+  outcomeVerificationModuleIds: inertLifecycle.outcomeVerificationModuleIds,
+  callbackModuleIds: inertLifecycle.callbackModuleIds,
+  moduleArgumentBindings: inertLifecycle.moduleArgumentBindings,
+  counts: [
+    inertLifecycle.preparationReviewCount,
+    inertLifecycle.definitionCount,
+    inertLifecycle.moduleCount,
+    inertLifecycle.outcomeVerifierCount,
+    inertLifecycle.callbackCount,
+    inertLifecycle.stageApprovalCount,
+    inertLifecycle.executableStageCount,
+  ],
+}, {
+  preparationReviewIds: ["P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION"],
+  definitionStageIds: [base.stageId],
+  moduleIds: [base.moduleId],
+  outcomeVerificationModuleIds: [base.moduleId],
+  callbackModuleIds: [],
+  moduleArgumentBindings: [{ moduleId: base.moduleId, argumentSetId: base.argumentSetId, arguments: [] }],
+  counts: [1, 1, 1, 1, 0, 0, 0],
+}); cases += 1;
 expectCode(validateStageRuntimeLifecycle({
   registry: registryFixture.prepared,
   definitions: [base],
-  moduleBindings,
+  moduleBindings: [moduleBindings[0]],
   outcomeVerificationModuleIds: [base.moduleId],
-}), "STAGE_RUNTIME_LIFECYCLE_VALID");
+}), "STAGE_RUNTIME_LIFECYCLE_SHAPE_INVALID");
+expectCode(validateStageRuntimeLifecycle({
+  registry: registryFixture.prepared,
+  definitions: [base],
+  moduleBindings: [moduleBindings[0]],
+  outcomeVerificationModuleIds: [base.moduleId],
+  callbackModuleIds: [],
+  extra: true,
+}), "STAGE_RUNTIME_LIFECYCLE_SHAPE_INVALID");
+let lifecycleAccessorReads = 0;
+const lifecycleAccessorInput = {
+  registry: registryFixture.prepared,
+  definitions: [base],
+  moduleBindings: [moduleBindings[0]],
+  outcomeVerificationModuleIds: [base.moduleId],
+  callbackModuleIds: [],
+};
+Object.defineProperty(lifecycleAccessorInput, "callbackModuleIds", {
+  enumerable: true,
+  get() {
+    lifecycleAccessorReads += 1;
+    return [];
+  },
+});
+expectCode(validateStageRuntimeLifecycle(lifecycleAccessorInput), "STAGE_RUNTIME_LIFECYCLE_SHAPE_INVALID");
+assert.equal(lifecycleAccessorReads, 0); cases += 1;
+expectCode(validateStageRuntimeLifecycle(new Proxy({}, {})), "STAGE_RUNTIME_LIFECYCLE_SHAPE_INVALID");
+expectCode(validateStageRuntimeLifecycle({
+  registry: registryFixture.empty,
+  definitions: [base],
+  moduleBindings: [moduleBindings[0]],
+  outcomeVerificationModuleIds: [base.moduleId],
+  callbackModuleIds: [],
+}), "STAGE_RUNTIME_DEFINITION_MODULE_MISMATCH");
+expectCode(validateStageRuntimeLifecycle({
+  registry: registryFixture.prepared,
+  definitions: [base],
+  moduleBindings: [...moduleBindings],
+  outcomeVerificationModuleIds: [base.moduleId],
+  callbackModuleIds: [],
+}), "STAGE_RUNTIME_MODULE_ORPHANED");
+expectCode(validateStageRuntimeLifecycle({
+  registry: registryFixture.prepared,
+  definitions: [base],
+  moduleBindings: [moduleBindings[0]],
+  outcomeVerificationModuleIds: [base.moduleId, secondLifecycle.moduleId],
+  callbackModuleIds: [],
+}), "STAGE_RUNTIME_VERIFIER_ORPHANED");
+expectCode(validateStageRuntimeLifecycle({
+  registry: registryFixture.prepared,
+  definitions: [base],
+  moduleBindings: [moduleBindings[0]],
+  outcomeVerificationModuleIds: [base.moduleId],
+  callbackModuleIds: [base.moduleId],
+}), "STAGE_RUNTIME_CALLBACK_ORPHANED");
+expectCode(validateStageRuntimeLifecycle({
+  registry: registryFixture.prepared,
+  definitions: [base],
+  moduleBindings: [Object.fromEntries(Object.entries(moduleBindings[0])
+    .filter(([key]) => key !== "argumentSets"))],
+  outcomeVerificationModuleIds: [base.moduleId],
+  callbackModuleIds: [],
+}), "STAGE_RUNTIME_MODULE_BINDING_INVALID");
+expectCode(validateStageRuntimeLifecycle({
+  registry: registryFixture.prepared,
+  definitions: [base],
+  moduleBindings: [{
+    ...moduleBindings[0],
+    argumentSetIds: [base.argumentSetId, "synthetic.extra"],
+    argumentSets: { [base.argumentSetId]: [], "synthetic.extra": [] },
+  }],
+  outcomeVerificationModuleIds: [base.moduleId],
+  callbackModuleIds: [],
+}), "STAGE_RUNTIME_ARGUMENT_SET_ORPHANED");
 expectCode(validateStageRuntimeLifecycle({
   registry: registryFixture.published,
   definitions: [base],
-  moduleBindings,
+  moduleBindings: [moduleBindings[0]],
   outcomeVerificationModuleIds: [base.moduleId],
+  callbackModuleIds: [],
 }), "STAGE_RUNTIME_LIFECYCLE_VALID");
 expectCode(validateStageRuntimeLifecycle({
   registry: chainedRegistry,
-  definitions: [base, second],
+  definitions: [base, secondLifecycle],
   moduleBindings,
-  outcomeVerificationModuleIds: [base.moduleId],
+  outcomeVerificationModuleIds: [base.moduleId, secondLifecycle.moduleId],
+  callbackModuleIds: [],
 }), "STAGE_RUNTIME_LIFECYCLE_VALID");
 const wrongPredecessorDefinition = {
-  ...second,
+  ...secondLifecycle,
   predecessor: {
     stageId: "P0-STAGE-SPK-R0-001-UNRELATED-FIRST",
     receiptDigest,
@@ -1523,19 +1650,22 @@ expectCode(validateStageRuntimeLifecycle({
   registry: { ...chainedRegistry, stageApprovals: [registryFixture.stage, wrongPredecessorStage] },
   definitions: [base, wrongPredecessorDefinition],
   moduleBindings,
-  outcomeVerificationModuleIds: [base.moduleId],
+  outcomeVerificationModuleIds: [base.moduleId, secondLifecycle.moduleId],
+  callbackModuleIds: [],
 }), "STAGE_RUNTIME_PREDECESSOR_CHAIN_INVALID");
 expectCode(validateStageRuntimeLifecycle({
   registry: registryFixture.published,
   definitions: [],
   moduleBindings: [],
   outcomeVerificationModuleIds: [],
+  callbackModuleIds: [],
 }), "STAGE_RUNTIME_APPROVAL_ORPHANED");
 expectCode(validateStageRuntimeLifecycle({
   registry: registryFixture.prepared,
   definitions: [base],
-  moduleBindings,
+  moduleBindings: [moduleBindings[0]],
   outcomeVerificationModuleIds: [],
+  callbackModuleIds: [],
 }), "STAGE_RUNTIME_DEFINITION_MODULE_MISMATCH");
 const historyResult = await verifyStageApprovalRegistryHistory({
   repoRoot: "/synthetic/repository",
@@ -3332,4 +3462,9 @@ for (const driftKind of ["artifact", "task", "reviewer"]) {
   }), "STAGE_MAIN_PUBLICATION_BOUNDARY_INVALID");
 }
 
-console.log(JSON.stringify({ ok: true, code: "SELF_TEST_OK", cases, productionActions: 0 }));
+console.log(JSON.stringify({
+  ok: true,
+  code: "SELF_TEST_OK",
+  cases,
+  productionActions: PRODUCTION_STAGED_ACTIONS.length,
+}));
