@@ -1,6 +1,6 @@
 # Life in Days — document index
 
-Updated: 2026-08-16
+Updated: 2026-08-17
 
 This is the single navigation point for the Life in Days product, design, architecture, delivery, research, and governance documents.
 
@@ -83,6 +83,11 @@ Current status: **G0 planning baseline complete. G1 is blocked on Arun's explici
 | [Telegram Capture Companion v12 council](prototypes/v12/COUNCIL-v12.md) | Approved Product, Design, and Project contract for PVA-007. |
 | [Telegram v12 fixture sheet](prototypes/v12/TELEGRAM-FIXTURES-v12.md) | Exact fictional T1–T7, authorization, media, caption, interruption, and handoff fixtures. |
 | [Telegram Capture Companion v12 independent QA](../design-qa-v12.md) | Exact eight-file UI fingerprint plus package check artifact, complete Council/frozen-regression matrix, 22 current-run PNGs, 0/0/0/0 findings, and Pass verdict. |
+| [Telegram Duplicate Handling prototype v13](prototypes/CALENDAR-UI-PROTOTYPE-v13.md) | Eighth remediation slice: deterministic same-day and cross-day Telegram-photo duplicate decisions, explicit permits, represented shared-media references, guarded retries, and private handoffs. |
+| [Calendar UI v13 prototype guide](../prototypes/calendar-ui/README-v13.md) | Local run instructions, duplicate-decision contract, exact passed fingerprint and evidence manifest, deliberate limits, and review artifacts. |
+| [Telegram Duplicate Handling v13 council](prototypes/v13/COUNCIL-v13.md) | Approved Product, Design, and Project contract for PVA-008. |
+| [Telegram duplicate fixture sheet v13](prototypes/v13/TELEGRAM-DUPLICATE-FIXTURES-v13.md) | Exact fictional same-day, cross-day, retry, replay, concurrency, stale-work, privacy, handoff, and responsive fixtures. |
+| [Telegram Duplicate Handling v13 independent QA](../design-qa-v13.md) | Exact eight-file UI fingerprint plus package and pre-QA documentation inputs, complete Council/frozen-regression matrix, 22 current-run PNGs, 0/0/0/0 findings, and Pass verdict. |
 
 ## Discovery and research record
 

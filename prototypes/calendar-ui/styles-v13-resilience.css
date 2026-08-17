@@ -1,0 +1,1113 @@
+/* -------------------------------------------------------------------------- */
+/* V10 — Resilient application shell                                          */
+/* Additive to the frozen V9 paper/ink system.                                */
+/* -------------------------------------------------------------------------- */
+
+.shell-status-live-v10 {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+}
+
+.shell-status-bar-v10,
+.surface-state-row-v10,
+.month-state-v10,
+.media-state-v10,
+.server-state-v10,
+.correction-sheet-v10,
+.leave-confirm-v10,
+.session-gate-v10,
+.shell-fixture-lab-v10 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.shell-status-bar-v10 button,
+.surface-state-row-v10 button,
+.month-state-v10 button,
+.media-state-v10 button,
+.server-state-v10 button,
+.correction-sheet-v10 button,
+.leave-confirm-v10 button,
+.session-gate-v10 button,
+.shell-fixture-lab-v10 button,
+.shell-fixture-lab-v10 select {
+  min-width: 24px;
+  min-height: 44px;
+}
+
+/* Global shell status stays in document flow so it never covers content. */
+
+.shell-status-bar-v10 {
+  position: relative;
+  z-index: 30;
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px 28px;
+  padding: 11px clamp(20px, 4vw, 64px);
+  border-block: 1px solid var(--line-strong);
+  background: var(--amber-soft);
+  color: var(--ink);
+}
+
+.shell-status-bar-v10[data-state="connection"],
+.shell-status-bar-v10.is-interrupted {
+  border-color: color-mix(in srgb, var(--amber) 58%, var(--line));
+  background: color-mix(in srgb, var(--amber-soft) 74%, var(--paper-raised));
+}
+
+.shell-status-bar-v10[data-state="server"],
+.shell-status-bar-v10.is-error {
+  border-color: color-mix(in srgb, var(--rose) 46%, var(--line));
+  background: color-mix(in srgb, var(--rose-soft) 64%, var(--paper-raised));
+}
+
+.shell-status-bar-v10[data-state="restored"],
+.shell-status-bar-v10.is-restored {
+  border-color: color-mix(in srgb, var(--forest) 44%, var(--line));
+  background: color-mix(in srgb, var(--sage) 72%, var(--paper-raised));
+}
+
+.shell-status-bar-v10[data-state="pending"],
+.shell-status-bar-v10.is-busy {
+  background: color-mix(in srgb, var(--blue-soft) 64%, var(--paper-raised));
+}
+
+.shell-status-copy-v10 {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(12rem, auto) minmax(16rem, 1fr);
+  align-items: baseline;
+  gap: 4px 18px;
+}
+
+.shell-status-copy-v10 > * {
+  min-width: 0;
+  margin: 0;
+}
+
+.shell-status-copy-v10 strong,
+.shell-status-copy-v10 h2,
+.shell-status-copy-v10 h3 {
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 780;
+  letter-spacing: 0;
+  line-height: 1.45;
+}
+
+.shell-status-copy-v10 p,
+.shell-status-copy-v10 small {
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.shell-status-action-v10 {
+  display: inline-flex;
+  min-width: max-content;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 14px;
+  border: 1px solid #173e34;
+  border-radius: 9px;
+  background: #173e34;
+  color: #fffdf8;
+  font-size: 14px;
+  font-weight: 720;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.shell-status-action-v10:hover:not(:disabled):not([aria-disabled="true"]) {
+  border-color: #214f43;
+  background: #214f43;
+  color: #fffdf8;
+}
+
+.shell-status-action-v10[aria-disabled="true"] {
+  cursor: progress;
+  opacity: 0.68;
+}
+
+.shell-status-action-v10[aria-busy="true"] {
+  cursor: progress;
+}
+
+/* Object- and request-level status is a ruled row, not a dashboard card. */
+
+.surface-state-row-v10,
+.month-state-v10,
+.media-state-v10 {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 24px;
+  margin-block: 14px;
+  padding: 12px 0;
+  border-block: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+}
+
+.surface-state-row-v10 > div,
+.month-state-v10 > div,
+.media-state-v10 > div {
+  min-width: 0;
+}
+
+.surface-state-row-v10 h2,
+.surface-state-row-v10 h3,
+.surface-state-row-v10 strong,
+.month-state-v10 h2,
+.month-state-v10 h3,
+.month-state-v10 strong,
+.media-state-v10 h2,
+.media-state-v10 h3,
+.media-state-v10 strong {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 760;
+  line-height: 1.45;
+}
+
+.surface-state-row-v10 p,
+.surface-state-row-v10 small,
+.month-state-v10 p,
+.month-state-v10 small,
+.media-state-v10 p,
+.media-state-v10 small {
+  margin: 3px 0 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.surface-state-row-v10 button,
+.month-state-v10 button,
+.media-state-v10 button {
+  align-self: center;
+}
+
+.surface-state-row-v10[aria-busy="true"],
+.month-state-v10[aria-busy="true"],
+.media-state-v10[aria-busy="true"] {
+  cursor: progress;
+}
+
+/* Initial and month loading use neutral geometry with no fabricated content. */
+
+.archive-loading-v10 {
+  width: min(1180px, 100%);
+  min-height: calc(100dvh - var(--banner-height) - 72px);
+  margin-inline: auto;
+  padding: clamp(36px, 5vw, 72px) clamp(12px, 4vw, 48px) max(112px, calc(82px + env(safe-area-inset-bottom)));
+}
+
+.archive-loading-v10 > header {
+  max-width: 720px;
+  margin-bottom: clamp(30px, 5vw, 54px);
+}
+
+.archive-loading-v10 h1 {
+  margin-bottom: 12px;
+}
+
+.archive-loading-v10 > header p {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.calendar-skeleton-v10 {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: clamp(4px, 0.8vw, 10px);
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.skeleton-tile-v10 {
+  min-width: 0;
+  min-height: clamp(68px, 9vw, 118px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--paper-soft) 78%, var(--paper-raised));
+}
+
+.skeleton-line-v10 {
+  display: block;
+  width: min(38rem, 82%);
+  min-height: 14px;
+  margin-block: 10px;
+  border-radius: 999px;
+  background: var(--paper-strong);
+}
+
+.skeleton-line-v10.is-short {
+  width: min(18rem, 48%);
+}
+
+/* A failed image is replaced with neutral paper; no content is overlaid. */
+
+.calendar-tile.is-media-unavailable-v10,
+.chapter-media.is-media-unavailable-v10,
+.museum-card.is-media-unavailable-v10,
+.media-placeholder-v10 {
+  border-color: var(--line-strong);
+  background: color-mix(in srgb, var(--paper-soft) 80%, var(--paper-raised));
+}
+
+.calendar-tile.is-media-unavailable-v10 img,
+.chapter-media.is-media-unavailable-v10 img,
+.museum-card.is-media-unavailable-v10 img {
+  display: none;
+}
+
+.media-placeholder-v10 {
+  display: grid;
+  width: 100%;
+  min-height: clamp(180px, 34vw, 460px);
+  place-items: center;
+  padding: clamp(18px, 4vw, 42px);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.calendar-tile .media-placeholder-v10 {
+  min-height: 100%;
+  padding: 6px;
+  border: 0;
+  font-size: 11px;
+}
+
+.media-state-v10 {
+  border-color: color-mix(in srgb, var(--amber) 34%, var(--line));
+}
+
+[data-action="retry-shell-image"] {
+  min-height: 44px;
+  scroll-margin-block: 16px;
+}
+
+/* Total server failure replaces content with a quiet, ruled reading surface. */
+
+.server-state-v10 {
+  display: flex;
+  width: min(820px, calc(100% - 40px));
+  min-height: calc(100dvh - var(--banner-height) - 72px);
+  margin-inline: auto;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(42px, 8vw, 96px) 0 max(112px, calc(86px + env(safe-area-inset-bottom)));
+}
+
+.server-state-v10 > header,
+.server-state-v10 > div:first-child {
+  padding-block: clamp(24px, 5vw, 44px);
+  border-block: 1px solid var(--line-strong);
+}
+
+.server-state-v10 h1 {
+  max-width: 16ch;
+  margin-bottom: 14px;
+}
+
+.server-state-v10 p {
+  max-width: 65ch;
+  margin-bottom: 20px;
+  color: var(--ink-soft);
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.server-state-v10 .primary-button,
+.server-state-v10 > button {
+  width: fit-content;
+  min-height: 44px;
+}
+
+.sanitized-details-v10 {
+  margin-top: 18px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+
+.sanitized-details-v10 summary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--forest);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sanitized-details-v10 dl {
+  display: grid;
+  max-width: 620px;
+  grid-template-columns: minmax(9rem, 0.42fr) minmax(0, 1fr);
+  margin: 4px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.sanitized-details-v10 dl > div {
+  display: contents;
+}
+
+.sanitized-details-v10 dt,
+.sanitized-details-v10 dd {
+  min-width: 0;
+  margin: 0;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.sanitized-details-v10 dt {
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.sanitized-details-v10 dd {
+  color: var(--ink);
+}
+
+/* Bounded Correction exercise. These selectors assume the existing backdrop. */
+
+.correction-sheet-v10 {
+  width: min(760px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-raised);
+}
+
+.correction-sheet-v10 > header,
+.correction-sheet-body-v10 {
+  padding-inline: clamp(20px, 4vw, 38px);
+}
+
+.correction-sheet-v10 > header {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 4px;
+  padding-top: clamp(22px, 4vw, 38px);
+}
+
+.correction-sheet-v10 > header h2 {
+  margin: 4px 0 10px;
+}
+
+.correction-helper-v10 {
+  max-width: 66ch;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.correction-sheet-body-v10 {
+  padding-block: 22px 26px;
+}
+
+.correction-editor-v10 {
+  display: block;
+  width: 100%;
+  min-height: clamp(180px, 32vh, 360px);
+  resize: vertical;
+  padding: 15px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.correction-status-v10 {
+  min-height: 24px;
+  margin: 10px 0 0;
+  color: var(--amber);
+  font-size: 13px;
+  font-weight: 680;
+  line-height: 1.5;
+}
+
+.correction-status-v10[data-state="failed"] {
+  color: var(--rose);
+}
+
+.correction-status-v10[data-state="saved"] {
+  color: var(--forest-dark);
+}
+
+.correction-failure-v10 {
+  margin-top: 18px;
+  padding: 14px 0;
+  border-block: 1px solid color-mix(in srgb, var(--rose) 38%, var(--line));
+}
+
+.correction-failure-v10 h3,
+.correction-failure-v10 p {
+  margin: 0;
+}
+
+.correction-failure-v10 h3 {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 760;
+}
+
+.correction-failure-v10 p {
+  margin-top: 4px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.unsaved-savebar-v10 {
+  position: sticky;
+  z-index: 2;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px 12px;
+  padding: 14px clamp(20px, 4vw, 38px) max(14px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--paper-raised) 96%, transparent);
+}
+
+.unsaved-savebar-v10 button {
+  min-height: 44px;
+}
+
+.leave-confirm-v10 {
+  width: min(520px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: clamp(24px, 5vw, 38px);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-raised);
+}
+
+.leave-confirm-v10 > header {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 4px;
+}
+
+.leave-confirm-v10 h2 {
+  margin-bottom: 12px;
+}
+
+.leave-confirm-v10 > p {
+  margin-bottom: 24px;
+  color: var(--ink-soft);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.leave-confirm-actions-v10 {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px 12px;
+}
+
+.leave-confirm-actions-v10 button {
+  min-height: 44px;
+}
+
+/* Session state is a privacy surface, not an overlay on archive content. */
+
+.session-gate-v10 {
+  display: grid;
+  width: 100%;
+  min-height: calc(100dvh - var(--banner-height));
+  place-items: center;
+  padding: clamp(34px, 7vw, 88px) clamp(20px, 6vw, 80px) max(34px, env(safe-area-inset-bottom));
+  background: var(--paper);
+}
+
+.session-gate-panel-v10 {
+  width: min(680px, 100%);
+  padding-block: clamp(26px, 5vw, 48px);
+  border-block: 1px solid var(--line-strong);
+}
+
+.session-gate-v10 h1 {
+  max-width: 13ch;
+  margin-bottom: 16px;
+}
+
+.session-gate-v10 p {
+  max-width: 62ch;
+  margin-bottom: 16px;
+  color: var(--ink-soft);
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.session-gate-v10 .primary-button,
+.session-gate-v10 > button,
+.session-gate-panel-v10 > button {
+  min-height: 44px;
+  margin-top: 8px;
+}
+
+.reauth-boundary-v10 {
+  margin: 24px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-faint);
+  font-family: var(--sans) !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+.session-draft-loss-v10 {
+  padding-left: 14px;
+  border-left: 3px solid var(--amber);
+  color: var(--ink) !important;
+}
+
+/* Prototype-only fixture lab remains separate from product Settings. */
+
+.shell-fixture-lab-v10 {
+  width: min(1180px, calc(100% - 40px));
+  margin: 34px auto max(112px, calc(86px + env(safe-area-inset-bottom)));
+  padding-top: 12px;
+  border-top: 1px dashed var(--line-strong);
+  color: var(--ink-soft);
+}
+
+.shell-fixture-lab-v10 summary {
+  display: flex;
+  width: fit-content;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 720;
+  cursor: pointer;
+}
+
+.shell-fixture-lab-v10[open] summary {
+  color: var(--ink);
+}
+
+.shell-fixture-lab-body-v10 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 14px 22px;
+  padding: 14px 0 4px;
+}
+
+.shell-fixture-lab-v10 label,
+.shell-fixture-lab-v10 fieldset {
+  min-width: 0;
+  margin: 0;
+}
+
+.shell-fixture-lab-v10 label {
+  display: grid;
+  gap: 5px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 680;
+}
+
+.shell-fixture-lab-v10 select {
+  width: 100%;
+  padding: 8px 34px 8px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.shell-fixture-controls-v10 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.shell-fixture-current-v10 {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* 1280 keeps the strip broad but protects long copy from the action. */
+
+@media (max-width: 1280px) {
+  .shell-status-bar-v10 {
+    padding-inline: 28px;
+  }
+
+  .shell-status-copy-v10 {
+    grid-template-columns: minmax(10rem, auto) minmax(14rem, 1fr);
+  }
+}
+
+/* At tablet widths every shell state remains in normal flow above navigation. */
+
+@media (max-width: 960px) {
+  .shell-status-bar-v10 {
+    position: relative;
+    top: auto;
+    padding-inline: 20px;
+  }
+
+  .shell-status-copy-v10 {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .archive-loading-v10,
+  .server-state-v10 {
+    min-height: calc(100dvh - var(--banner-height) - 64px);
+  }
+
+  .shell-fixture-lab-v10 {
+    margin-bottom: max(112px, calc(86px + env(safe-area-inset-bottom)));
+  }
+}
+
+/* Compact layout: copy precedes one full-width primary action. */
+
+@media (max-width: 700px) {
+  .prototype-app:has(.server-state-v10) .compact-navigation {
+    position: static;
+    width: 100%;
+  }
+
+  .shell-status-bar-v10,
+  .surface-state-row-v10,
+  .month-state-v10,
+  .media-state-v10,
+  .shell-fixture-lab-body-v10 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .shell-status-bar-v10 {
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  .shell-status-copy-v10 p,
+  .surface-state-row-v10 p,
+  .month-state-v10 p,
+  .media-state-v10 p {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .shell-status-action-v10,
+  .surface-state-row-v10 button,
+  .month-state-v10 button,
+  .media-state-v10 button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .surface-state-row-v10,
+  .month-state-v10,
+  .media-state-v10 {
+    gap: 9px;
+  }
+
+  .museum-figure.is-media-unavailable-v10 {
+    width: 100%;
+    height: clamp(140px, 26vh, 180px);
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+
+  .museum-figure.is-media-unavailable-v10 .museum-paper-memory {
+    min-height: 100%;
+  }
+
+  .archive-loading-v10 {
+    padding-inline: 16px;
+  }
+
+  .calendar-skeleton-v10 {
+    gap: 3px;
+  }
+
+  .skeleton-tile-v10 {
+    min-height: clamp(54px, 14vw, 82px);
+    border-radius: 5px;
+  }
+
+  .server-state-v10 {
+    width: calc(100% - 32px);
+  }
+
+  .sanitized-details-v10 dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sanitized-details-v10 dl > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding-block: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .sanitized-details-v10 dt,
+  .sanitized-details-v10 dd {
+    padding: 0;
+    border: 0;
+  }
+
+  .modal-backdrop:has(.correction-sheet-v10),
+  .modal-backdrop:has(.leave-confirm-v10) {
+    align-items: end;
+    padding: 0;
+  }
+
+  .correction-sheet-v10 {
+    width: 100%;
+    max-height: calc(100dvh - 8px);
+    border-width: 1px 0 0;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .correction-editor-v10 {
+    min-height: clamp(170px, 34vh, 300px);
+    font-size: 16px;
+  }
+
+  .leave-confirm-v10 {
+    width: 100%;
+    max-height: calc(100dvh - 8px);
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+    border-width: 1px 0 0;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .unsaved-savebar-v10,
+  .leave-confirm-actions-v10 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .unsaved-savebar-v10 {
+    position: static;
+  }
+
+  .unsaved-savebar-v10 button,
+  .leave-confirm-actions-v10 button {
+    width: 100%;
+  }
+
+  .session-gate-v10 {
+    align-items: start;
+    padding: clamp(40px, 10vh, 72px) 16px max(28px, env(safe-area-inset-bottom));
+  }
+
+  .session-gate-panel-v10 {
+    align-self: start;
+  }
+
+  .shell-fixture-lab-v10 {
+    width: calc(100% - 32px);
+  }
+
+  .shell-fixture-controls-v10 > * {
+    flex: 1 1 12rem;
+  }
+}
+
+/*
+ * The inherited compact rule turns journal-only copy into a 10px marker at
+ * phone widths. V9 intentionally restores that copy from 481–700px, so reset
+ * the marker geometry as well; otherwise the restored words wrap inside the
+ * 10px line and appear as clipped letter fragments.
+ */
+@media (min-width: 481px) and (max-width: 700px) {
+  .calendar-shell--mosaic .calendar-tile.is-journal-only .paper-day {
+    display: flex;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    margin: auto 0 0;
+    background: transparent;
+  }
+
+  .calendar-shell--mosaic .calendar-tile.is-journal-only .paper-day strong {
+    display: -webkit-box;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 599px) {
+  .calendar-shell--mosaic .calendar-tile.is-journal-only .paper-day small {
+    display: none;
+  }
+}
+
+/* Phone geometry: 16px gutters at 390; complete wrapping at 320. */
+
+@media (max-width: 390px) {
+  .shell-status-bar-v10 {
+    padding-inline: 16px;
+  }
+
+  .archive-loading-v10 {
+    padding-inline: 16px;
+  }
+
+  .archive-loading-v10 h1,
+  .server-state-v10 h1,
+  .session-gate-v10 h1 {
+    font-size: clamp(2rem, 11vw, 2.8rem);
+  }
+
+  .server-state-v10,
+  .shell-fixture-lab-v10 {
+    width: calc(100% - 32px);
+  }
+
+  .server-state-v10 {
+    justify-content: flex-start;
+    padding-top: 24px;
+  }
+
+  .session-gate-v10 {
+    min-height: calc(100dvh - var(--banner-height));
+    overflow-y: auto;
+    padding-top: 12px;
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+
+  .session-gate-panel-v10 {
+    padding-block: 12px 20px;
+  }
+
+  .session-gate-v10 p {
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  .correction-sheet-v10,
+  .leave-confirm-v10 {
+    width: calc(100% - 16px);
+    margin-inline: 8px;
+    border-width: 1px;
+    border-radius: 14px 14px 0 0;
+  }
+
+  .calendar-skeleton-v10 {
+    gap: 2px;
+  }
+
+  .skeleton-tile-v10 {
+    min-height: 48px;
+    border-radius: 4px;
+  }
+}
+
+@media (max-width: 340px) {
+  .shell-status-bar-v10,
+  .archive-loading-v10,
+  .session-gate-v10 {
+    padding-inline: 8px;
+  }
+
+  .server-state-v10,
+  .shell-fixture-lab-v10 {
+    width: calc(100% - 16px);
+  }
+
+  .correction-sheet-v10 > header,
+  .correction-sheet-body-v10,
+  .unsaved-savebar-v10 {
+    padding-inline: 12px;
+  }
+
+  .shell-status-copy-v10 strong,
+  .shell-status-copy-v10 p,
+  .surface-state-row-v10 h2,
+  .surface-state-row-v10 h3,
+  .surface-state-row-v10 p,
+  .month-state-v10 h2,
+  .month-state-v10 h3,
+  .month-state-v10 p,
+  .media-state-v10 h2,
+  .media-state-v10 h3,
+  .media-state-v10 p {
+    hyphens: auto;
+  }
+}
+
+/* Short landscape viewports must retain every action. */
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .session-gate-v10 {
+    display: block;
+    min-height: 100dvh;
+    padding-block: 22px max(22px, env(safe-area-inset-bottom));
+  }
+
+  .correction-sheet-v10,
+  .leave-confirm-v10 {
+    max-height: calc(100dvh - 8px);
+  }
+
+  .correction-editor-v10 {
+    min-height: 120px;
+  }
+}
+
+/* The inherited tokens switch both themes; these keep state tones restrained. */
+
+:root[data-theme="dark"] .shell-status-bar-v10 {
+  background: color-mix(in srgb, var(--amber-soft) 54%, var(--paper-raised));
+}
+
+:root[data-theme="dark"] .shell-status-bar-v10[data-state="server"],
+:root[data-theme="dark"] .shell-status-bar-v10.is-error {
+  background: color-mix(in srgb, var(--rose-soft) 52%, var(--paper-raised));
+}
+
+:root[data-theme="dark"] .shell-status-bar-v10[data-state="restored"],
+:root[data-theme="dark"] .shell-status-bar-v10.is-restored {
+  background: color-mix(in srgb, var(--sage) 58%, var(--paper-raised));
+}
+
+:root[data-theme="dark"] .shell-status-action-v10 {
+  border-color: var(--forest-dark);
+  background: #173e34;
+  color: #fffdf8;
+}
+
+/*
+ * The inherited dark theme makes --forest-dark a light mint. Keep every
+ * inherited primary action on a genuinely dark surface so its white label
+ * retains readable contrast throughout the additive v10 package.
+ */
+:root[data-theme="dark"] .primary-button,
+:root[data-theme="dark"] .upload-primary {
+  border-color: var(--forest-dark);
+  background: #173e34;
+  color: #fffdf8;
+  filter: none;
+}
+
+:root[data-theme="dark"] .primary-button:hover:not(:disabled):not([aria-disabled="true"]),
+:root[data-theme="dark"] .upload-primary:hover:not(:disabled):not([aria-disabled="true"]) {
+  border-color: var(--forest-dark);
+  background: #214f43;
+  color: #fffdf8;
+  filter: none;
+}
+
+:root[data-theme="dark"] .primary-button[aria-disabled="true"],
+:root[data-theme="dark"] .upload-primary[aria-disabled="true"] {
+  opacity: 0.86;
+}
+
+:root[data-theme="dark"] .shell-status-action-v10[aria-disabled="true"] {
+  opacity: 0.86;
+}
+
+:root[data-theme="dark"] .skeleton-tile-v10,
+:root[data-theme="dark"] .media-placeholder-v10,
+:root[data-theme="dark"] .calendar-tile.is-media-unavailable-v10,
+:root[data-theme="dark"] .chapter-media.is-media-unavailable-v10,
+:root[data-theme="dark"] .museum-card.is-media-unavailable-v10 {
+  background: color-mix(in srgb, var(--paper-soft) 70%, var(--paper));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell-status-bar-v10,
+  .surface-state-row-v10,
+  .month-state-v10,
+  .media-state-v10,
+  .archive-loading-v10,
+  .calendar-skeleton-v10,
+  .skeleton-tile-v10,
+  .server-state-v10,
+  .correction-sheet-v10,
+  .leave-confirm-v10,
+  .session-gate-v10,
+  .shell-fixture-lab-v10,
+  .shell-status-bar-v10 *,
+  .correction-sheet-v10 *,
+  .session-gate-v10 * {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .shell-status-bar-v10,
+  .surface-state-row-v10,
+  .month-state-v10,
+  .media-state-v10,
+  .server-state-v10 > header,
+  .server-state-v10 > div:first-child,
+  .correction-sheet-v10,
+  .leave-confirm-v10,
+  .session-gate-panel-v10,
+  .shell-fixture-lab-v10 {
+    border-color: CanvasText;
+  }
+
+  .shell-status-action-v10,
+  .shell-status-bar-v10 button,
+  .surface-state-row-v10 button,
+  .month-state-v10 button,
+  .media-state-v10 button,
+  .server-state-v10 button,
+  .correction-sheet-v10 button,
+  .leave-confirm-v10 button,
+  .session-gate-v10 button {
+    forced-color-adjust: auto;
+  }
+}
