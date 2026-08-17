@@ -1,0 +1,489 @@
+{
+  "schemaVersion": "1.0.0",
+  "reviewId": "P0-STAGE0-POSTPREPARATION-DESCENDANT-REPAIR",
+  "reviewDate": "2026-08-17",
+  "reviewType": "non-authorizing-successor-control-review",
+  "predecessor": {
+    "kind": "review",
+    "reviewId": "P0-STAGE0-FINAL-FE33A449",
+    "recordPath": "docs/council/execution/control-reviews/P0-CONTROL-REVIEW-P0-STAGE0-FINAL-FE33A449.json",
+    "recordSha256": "d2093caa2e93b3951c2faf3c1ede7bf7ec7e82523283e05cf1ee22ff87d114e4"
+  },
+  "candidate": {
+    "baseRevision": "5de18606d04b05ea8eab537dd31a3e020030594e",
+    "revision": "368818a11a9c5dcc62db2be7cf944e4627514367",
+    "dossierPath": "docs/council/execution/control-reviews/dossiers/P0-STAGE0-POSTPREPARATION-DESCENDANT-REPAIR-CLOSURE.md",
+    "dossierSha256": "924ccf95f6ad6f083a332197f86a8533219fc3896b2163ea212ba5a7078733f5",
+    "reviewerRegistryPath": "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json",
+    "reviewerRegistrySha256": "71c3eaf517da4bec7048fa53617410160032def15ded247bdfbfd11dcb83a30e",
+    "changedFiles": [
+      {
+        "path": "RUNNING_LOG.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "fc10c8e7173300d6578fab46a015ef3bfbfc9d0ee04c058642bbc8b92482e567",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "88324f428acb0254a82ad921a6cb73e92705363538b6c7501bacb4951548de9d",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/INDEX.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "6bd35d4b73bf0d27b2a38c2ddf3b272cb02b615db96993cb54c50372e2653ad0",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "cd9cb73a85f9fbe9fbc6c923896768922f6a5b467e3d5ad15bc2d8a59df779d8",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/P0-PHASE1-EXECUTION-COUNCIL-CHARTER.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "e11488cb99d5763fc43dac81adca23e6210ae1b13c587b00c1feaab12cffb0be",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "72e1f48e083143dfee3d1b5636b757c257b9cc0a8779af64fb344db618851bc7",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "b2861176b67077f2be5c9bf637ed6bad033be4fd7d5bd55438f9c1346971f58e",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "62f83d78ca2a7105f3f44686c4893749d3a01024787695de20d189d5c0e87bdd",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/P0-R0-STAGE-APPROVAL-REGISTRY.json",
+        "changeType": "modify",
+        "base": {
+          "sha256": "ca0d280f5474c318dca101e2576fe2ed250223c8140f8abd8cb8b04d2cef64f5",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "e64a24b863816027930e0926be7e7e58216d638c661b82c8774c0c6dfd4647b7",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json",
+        "changeType": "modify",
+        "base": {
+          "sha256": "b8d5efa0b797d94a70c1c07e4417c884218965e2fbc6b49407124a7c38046dac",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "d24c4c12244292a093b4f30b85b7436c8d2a5f293beeb6a5c2236274ebcd601d",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/control-reviews/dossiers/P0-STAGE0-POSTPREPARATION-DESCENDANT-REPAIR-CLOSURE.md",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "924ccf95f6ad6f083a332197f86a8533219fc3896b2163ea212ba5a7078733f5",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/releases/P0-P0-R0-STAGE0-STATE-CONTRACT.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "aa6de009855bc388e431c0fb981715ec89eee6386e702de0172dd45a1f083b91",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "06d15713d63469bacaf25857b483f7ba7cfc3bfa8178ff856c10b1e5733f25f4",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json",
+        "changeType": "modify",
+        "base": {
+          "sha256": "c2524539b3436afccb5bb171b3b99a5e8cf382151385f7bfa203d3ce0baafcd9",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "518f3cfda7e32959712e59a2a323b3dc3c76d6400a63e6846ce399d0c85c79ab",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/project/PHASE1-GITHUB-PROJECT-SYNC.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "fbe2e1d2ad7a0958a4eeaa7bf9534e465e53880b4d2d5130f357fc9e09c9f32b",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "a82a78b071e7f3bec01deb9d44e6414f86c5841f69f439d0004b028992392d1c",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/project/PHASE1-ROADMAP-MANIFEST.json",
+        "changeType": "modify",
+        "base": {
+          "sha256": "27c2a54fbdf9aa45822ad8758741ca64e0c95c554db1457c5ae977d3e7c15b72",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "e312399a16a72a8030e5735413270af989c0295c50b73ce0a9ecf4e02406c166",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/project/PROJECT-TRACKER.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "c131c141d9745edfaf67a9807c0de6a727b6a57d910928a2c2398afba1c45e92",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "8e01e51829a44049e363a6988b08ec960e809080832e0874028703f174ada128",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-COUNCIL-READINESS.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "165761c3362f30e9fd87f2afd49dd95aabdecab448ea5093522836470b010d95",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "ce67ec01a780838c5a3ac32875e8d098bf5540b4efb9de14dd9bae15f3786511",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-DELIVERY-CHECKLIST.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "e959d7e379b657663c2d1fd1c704c37f9e9a6ae4870223bc603d98cc65a456e2",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "4500d345ec4e3b59fb750f7746fa764ef02170e858248f7a580ed06a9e64fee2",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-DESIGN-SPEC.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "5d54c4cf4dd9139c0bb712aafb6dca37b8caa9807a5eec428441ca2269bd9030",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "d1f4dff58a27e92c68850a83c63eabb06c88682ff7719647f2dc293d816cd443",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-PRD.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "4d256b0c58bc7881877fec19a7bd173b18864b93dab17e93634346d686836287",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "5aed5133e355d728bacd5f1c3c06f7fd679ce0f9d22df15923a9c0a1f5dcb376",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-QA-PLAN.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "326b4a89cb47efc5d594855414fa4fc83739f0e95f597bed59ad30a5d3ecf603",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "cd120ec2c946d43d73718f079d30561dbc35d9f6ade5a5dde74e2c19bbfd4389",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-TECHNICAL-PLAN.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "a5a20e23e773eda9816a07e646ee8a470296f012f135e428242dcae218c872df",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "21fa6e120bab948b436a50bf832efee46e1efe507d82f2d5d581112802201897",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "outputs/phase1/Life-in-Days-Phase1-Release-Plan.xlsx",
+        "changeType": "modify",
+        "base": {
+          "sha256": "b539b500147f9d80f0508a1fd458dc7061a51d44b6848a35512c1424c75cd229",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "f8466ba4f60514ab940856b533589f8ee68f11355b9337f01c490a1a5314ca5a",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-readiness-gates.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "ee56270564ed29a0e4fe95460cee9f2ec1839e86a48900b2af9ab6b1ec5f02e5",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "b95a2ff9b31e3693302b26572220b1b49fbf263d17b13ee670873594b8340f00",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-stage0-ci.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "84764bd1be4c77bba4ee094bb71c79cb8f27bce88a972235ba68e1f15fabf25f",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "5670b134db59d72f4e97fca2686e3efe63fda578eccd59a55b94e46304bde7b7",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-staged-actions.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "28e3d528f147c27b490a72cbec14c0a41705fa68db5607a09ecc465d5ad6ced5",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "53ec555e07b4c27c9fb5d0e93f3ff7354b7b6439e5b752c10511ed68f9338d3e",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-test-execution-controls.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "0451e6f0e5887d82db5e74e6f63027d86fe1862f70befb519daf1ca6e5028a38",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "bfa5718431d30886ea784eb7e9b92953ffe3e2a8a31d4b98cde26e4ccc2aa79a",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-test-staged-actions.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "86c6e6d191ac48abbb0b08e78b63f95fad5b8f50674943e4f1b5785d6ebd5d77",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "dd168e5d6065acf9525fd9a9aa017e1355c9e7e416d1926413c66848380f77a3",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-validate-execution-controls.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "33b397c3355cd33fb9361975cfa785feaacd1d7def18ff3b1ea32590693fd4ee",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "ba47489b073b571f59e66f05f3ded6c947664b0db65a47189968bc3df7678669",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "tools/P0-verify-execution-start.mjs",
+        "changeType": "modify",
+        "base": {
+          "sha256": "526cdc2b0631c8f2f1a8c4f39937928dfe77108bd6c89d264a4191f795a53872",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "efb2cd1ded8ec947b98f1ee42eef7b8aa149005e9a99978ce3e56c11eb834a49",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      }
+    ],
+    "changedFilesSha256": "51910e87874fd2f798a233feb48702710b3b2518ab29e3135b2f19c7e7e67ec5",
+    "implementerIds": [
+      "codex-primary-integrator-01"
+    ],
+    "evidenceProducerIds": [
+      "codex-evidence-producer-01"
+    ]
+  },
+  "namedChecks": [
+    {
+      "checkId": "P0-CHECK-ADVERSARIAL",
+      "result": "pass",
+      "evidenceDigest": "sha256:8a14ce97db7f8e5e1223ff69d5cd35f18e7333ae050a614792eaff9fd63a7f11",
+      "evidenceReference": "review:P0-STAGE0-POSTPREPARATION-DESCENDANT-REPAIR-ADVERSARIAL-368818A"
+    },
+    {
+      "checkId": "P0-CHECK-FROZEN-SCOPE",
+      "result": "pass",
+      "evidenceDigest": "sha256:717a1fe03d41329c70a940497fcf1f8546bebc486f41e946123667348b1d1b1c",
+      "evidenceReference": "local-evidence:P0-STAGE0-POSTPREPARATION-DESCENDANT-REPAIR-FROZEN-SCOPE-368818A"
+    },
+    {
+      "checkId": "P0-CHECK-GITHUB-CI",
+      "result": "pass",
+      "evidenceDigest": "sha256:341f55be7216acb81d7ccc17fbbca2b794d50c784ece0d539638690d43260e48",
+      "evidenceReference": "github-pr:95"
+    },
+    {
+      "checkId": "P0-CHECK-INDEPENDENT-QA",
+      "result": "pass",
+      "evidenceDigest": "sha256:5af91398ea5bfade80e61a38c2087b77378c1dae30bf7f50665c82a08b7e4503",
+      "evidenceReference": "review:P0-STAGE0-POSTPREPARATION-DESCENDANT-REPAIR-QA-368818A"
+    },
+    {
+      "checkId": "P0-CHECK-LOCAL-CI",
+      "result": "pass",
+      "evidenceDigest": "sha256:c5ff82d4bb8bc272acf98eb321998c2198557b48af281470458e2434f667a341",
+      "evidenceReference": "local-evidence:P0-STAGE0-POSTPREPARATION-DESCENDANT-REPAIR-LOCAL-CI-368818A"
+    }
+  ],
+  "namedChecksSha256": "248e7559d1271a51a5fc9e6d3eb8d6d9d51f80b803c7d813060eb661fe2f9731",
+  "reviewContextSha256": "bffe956bc5b5058c4106f6358a9a4205086b3b00f5ea02fbdd46a9eda16d1b64",
+  "seatAttestations": {
+    "product": {
+      "reviewerId": "codex-product-manager-01",
+      "reviewerRole": "product",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "368818a11a9c5dcc62db2be7cf944e4627514367",
+      "reviewContextSha256": "bffe956bc5b5058c4106f6358a9a4205086b3b00f5ea02fbdd46a9eda16d1b64",
+      "evidenceDigest": "sha256:234bb36a66fdc74d9950575e6ec33d8cb4fd5f65e2a78d99411517841201975e",
+      "evidenceReference": "review:P0-STAGE0-POSTPREPARATION-DESCENDANT-REPAIR-PRODUCT-368818A",
+      "rationale": "Exact 368818a aggregate preserves the 11-requirement and 15-scenario SPK product contract, records only the accepted local/public/fictional/synthetic Gate A preparation boundary, and leaves all 58 tasks Incomplete, zero Ready and zero execution-allowed, with private/deployment and R1-R10 scope frozen; approve only normal publication of the non-authorizing closure.",
+      "attestationDigest": "54ea588d5edd1e0b95b69fcbfca03324b155ab9ecc3da1644ceb3a995b706aa1"
+    },
+    "design": {
+      "reviewerId": "codex-ui-ux-designer-01",
+      "reviewerRole": "design",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "368818a11a9c5dcc62db2be7cf944e4627514367",
+      "reviewContextSha256": "bffe956bc5b5058c4106f6358a9a4205086b3b00f5ea02fbdd46a9eda16d1b64",
+      "evidenceDigest": "sha256:6a3ebdf8724e7cbb80f5d46995564bf6b1013d34d3edb1aafac399f3ee6b0af9",
+      "evidenceReference": "review:P0-STAGE0-POSTPREPARATION-DESCENDANT-REPAIR-DESIGN-368818A",
+      "rationale": "Exact 368818a aggregate preserves the complete reviewer/operator evidence-state and accessibility contract, keeps candidate-QA evidence distinct from governed stage receipts and synthetic conclusions distinct from live-host acceptance, and grants no runtime, private, status or deployment authority; approve only normal publication of the non-authorizing closure.",
+      "attestationDigest": "225e32f5c5a8397aac8a2a295154c9a870702deb1e05851722b9ad61de088570"
+    },
+    "architecture": {
+      "reviewerId": "codex-technical-architect-01",
+      "reviewerRole": "architecture",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "368818a11a9c5dcc62db2be7cf944e4627514367",
+      "reviewContextSha256": "bffe956bc5b5058c4106f6358a9a4205086b3b00f5ea02fbdd46a9eda16d1b64",
+      "evidenceDigest": "sha256:2e5c6931d46f88d8e21053158c860c0c116cd55e7f4343bb010c5958d3d5ec92",
+      "evidenceReference": "review:P0-STAGE0-POSTPREPARATION-DESCENDANT-REPAIR-ARCH-368818A",
+      "rationale": "Exact-candidate architecture review verified the 26-path aggregate as safe regular-file additions and modifications, the complete arm/cancel/consume ratchet history, the final 55-entry integrity manifest with next:null, and inert production topology: zero stage definitions, modules, outcome verifiers, or stage approvals. The documented PR #92 exception is exhausted and current strict protection is restored. Approve only normal publication of this closure; no task, runtime, private, delivery, status, deployment, acceptance, release, or R1-R10 authority is created.",
+      "attestationDigest": "92a1e674945d361d4309fe8d2f5f85a5931546f69fb6ba899cf313ec18ef0b64"
+    },
+    "qa": {
+      "reviewerId": "codex-independent-qa-01",
+      "reviewerRole": "qa",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "368818a11a9c5dcc62db2be7cf944e4627514367",
+      "reviewContextSha256": "bffe956bc5b5058c4106f6358a9a4205086b3b00f5ea02fbdd46a9eda16d1b64",
+      "evidenceDigest": "sha256:5af91398ea5bfade80e61a38c2087b77378c1dae30bf7f50665c82a08b7e4503",
+      "evidenceReference": "review:P0-STAGE0-POSTPREPARATION-DESCENDANT-REPAIR-QA-368818A",
+      "rationale": "Independent QA verified the exact parent, tree, one-file candidate delta, canonical 26-path manifest, all 25 textual candidate blobs, workbook package safety, two local 90-case stage-runner passes, structural and frozen-scope validators, two successful exact-head cloud runs, and the successful immutable guard. The initial transient stage-runner failure was closed by same-run attempt 2 at the unchanged head. Approve only normal inert publication; no task, execution, private-action, status, deployment, acceptance, release, or R1-R10 authority is granted.",
+      "attestationDigest": "2866878fae443e1c61b9c3c3e6f9c5be804887bc27ee6ed5766b14176be6d261"
+    },
+    "project": {
+      "reviewerId": "codex-project-manager-01",
+      "reviewerRole": "project",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "368818a11a9c5dcc62db2be7cf944e4627514367",
+      "reviewContextSha256": "bffe956bc5b5058c4106f6358a9a4205086b3b00f5ea02fbdd46a9eda16d1b64",
+      "evidenceDigest": "sha256:309af06a43ffe7c2027a434c84303c0432f8a56164ec4443182969bdf447b82e",
+      "evidenceReference": "review:P0-STAGE0-POSTPREPARATION-DESCENDANT-REPAIR-PROJECT-368818A",
+      "rationale": "Exact lineage audit verified 21 reviewed merges as two-parent and tree-preserving, with PRs #74 and #86 remaining unmerged, and verified the candidate as a single-parent child of exact main. Strict protection, the two-PR add-only successor topology, 58 Incomplete tasks, 45 Hold plus 13 Historical non-authorizing decisions, the frozen 50-task/300-artifact R1-R10 scope, and deployment unknown pending private-read authority remain intact. Approve normal publication only.",
+      "attestationDigest": "7451e36ee8e251ac41759587753ea86be664c4dede54965e47df053e3dfc3f52"
+    }
+  },
+  "unresolvedVetoes": [],
+  "disposition": "accepted-normal-merge-only",
+  "taskApprovalCreated": false,
+  "runtimeAuthority": false,
+  "executionAllowed": false,
+  "privateActionAllowed": false,
+  "statusTransitionAllowed": false,
+  "r1R10Effect": "none",
+  "permittedClaim": "Accepted only for normal publication of the exact public/local control candidate; this review is non-authorizing and creates no task approval, execution permission, private access, R0 action, deployment, acceptance, status transition, or R1-R10 effect."
+}
