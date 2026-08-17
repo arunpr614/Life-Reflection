@@ -13,6 +13,441 @@
     "PC-001",
     "PRD-R0-001"
   ],
-  "preparationReviews": [],
+  "preparationReviews": [
+    {
+      "preparationReviewId": "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+      "taskId": "SPK-R0-001",
+      "stageId": "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+      "state": "accepted",
+      "scopeClass": "local-synthetic",
+      "actionClass": "synthetic-foundation",
+      "gateAProof": {
+        "input": {
+          "schemaVersion": "1.1.0",
+          "preparationReviewId": "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+          "taskId": "SPK-R0-001",
+          "milestone": "R0",
+          "stageId": "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+          "requestedScope": {
+            "scopeClass": "local-synthetic",
+            "actionClass": "synthetic-foundation"
+          },
+          "taskContractSha256": "f58e65c56e58dc4b1e12deab68f7349822f7f95dd33eee4fcd4872243170fa23",
+          "candidate": {
+            "revision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+            "baseRevision": "c03e298f8c23a14ec7623aaccdfc77dc5dd3abe5",
+            "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+            "artifacts": {
+              "product": {
+                "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-PRD.md",
+                "sha256": "5aed5133e355d728bacd5f1c3c06f7fd679ce0f9d22df15923a9c0a1f5dcb376",
+                "contentState": "in-review"
+              },
+              "architecture": {
+                "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-TECHNICAL-PLAN.md",
+                "sha256": "21fa6e120bab948b436a50bf832efee46e1efe507d82f2d5d581112802201897",
+                "contentState": "in-review"
+              },
+              "design": {
+                "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-DESIGN-SPEC.md",
+                "sha256": "d1f4dff58a27e92c68850a83c63eabb06c88682ff7719647f2dc293d816cd443",
+                "contentState": "in-review"
+              },
+              "qa": {
+                "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-QA-PLAN.md",
+                "sha256": "cd120ec2c946d43d73718f079d30561dbc35d9f6ade5a5dde74e2c19bbfd4389",
+                "contentState": "in-review"
+              },
+              "delivery": {
+                "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-DELIVERY-CHECKLIST.md",
+                "sha256": "4500d345ec4e3b59fb750f7746fa764ef02170e858248f7a580ed06a9e64fee2",
+                "contentState": "in-review"
+              },
+              "council": {
+                "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-COUNCIL-READINESS.md",
+                "sha256": "ce67ec01a780838c5a3ac32875e8d098bf5540b4efb9de14dd9bae15f3786511",
+                "contentState": "in-review"
+              }
+            }
+          },
+          "dependencyIds": [
+            "PC-001"
+          ],
+          "dependencyEvidence": [
+            {
+              "dependencyId": "PC-001",
+              "result": "pass",
+              "evidenceReference": "github-pr:pull-70"
+            }
+          ],
+          "acceptanceScenarioIds": [
+            "SPK-R0-001-P-001",
+            "SPK-R0-001-P-002",
+            "SPK-R0-001-P-003",
+            "SPK-R0-001-T-001",
+            "SPK-R0-001-T-002",
+            "SPK-R0-001-T-003",
+            "SPK-R0-001-D-001",
+            "SPK-R0-001-D-002",
+            "SPK-R0-001-D-003",
+            "SPK-R0-001-QA-001",
+            "SPK-R0-001-QA-002",
+            "SPK-R0-001-QA-003",
+            "SPK-R0-001-QA-004",
+            "SPK-R0-001-QA-005",
+            "SPK-R0-001-QA-006"
+          ],
+          "proposalAuthorIds": [
+            "codex-primary-integrator-01"
+          ],
+          "proposalAuthorEvidence": {
+            "proposalAuthorIds": [
+              "codex-primary-integrator-01"
+            ],
+            "candidateRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+            "evidenceReference": "git-commit:f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+            "attestationDigest": "sha256:d403cbd8190603eb94f0303fd0f609fd18b62f2b85b561ca8710fcecc0ce022f"
+          },
+          "artifactReviews": {
+            "product": {
+              "reviewerId": "codex-product-manager-01",
+              "reviewerRole": "product",
+              "decision": "approved",
+              "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+              "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+              "artifactSha256": "5aed5133e355d728bacd5f1c3c06f7fd679ce0f9d22df15923a9c0a1f5dcb376",
+              "evidenceReference": "review:spk-r0-001-gatea-product-artifact-f3bbbb58-6e724bfb",
+              "attestationDigest": "sha256:292e8001f2ad70f9069dae4c982cce02df7f4d853894afcc9192e918f16ad76c"
+            },
+            "architecture": {
+              "reviewerId": "codex-technical-architect-01",
+              "reviewerRole": "architecture",
+              "decision": "approved",
+              "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+              "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+              "artifactSha256": "21fa6e120bab948b436a50bf832efee46e1efe507d82f2d5d581112802201897",
+              "evidenceReference": "review:SPK-R0-001-architecture-f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023-aa87da71bfb0fe56d2e5337cbf4b90d4798ce116-6e724bfb51eff076d5762e584eedd09ede0aa09f",
+              "attestationDigest": "sha256:7acd1e037ade1c077fd93c283032ee4abef916bebdd09e9c592d479030e16960"
+            },
+            "design": {
+              "reviewerId": "codex-ui-ux-designer-01",
+              "reviewerRole": "design",
+              "decision": "approved",
+              "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+              "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+              "artifactSha256": "d1f4dff58a27e92c68850a83c63eabb06c88682ff7719647f2dc293d816cd443",
+              "evidenceReference": "review:spk-r0-001/gate-a/design-artifact/f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023/aa87da71bfb0fe56d2e5337cbf4b90d4798ce116/6e724bfb51eff076d5762e584eedd09ede0aa09f/20260817-v1",
+              "attestationDigest": "sha256:e676a7a7c20ab635078887acb3c29dfaf2fcbd5a26adcd7f850844c2dbb34e78"
+            },
+            "qa": {
+              "reviewerId": "codex-independent-qa-01",
+              "reviewerRole": "qa",
+              "decision": "approved",
+              "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+              "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+              "artifactSha256": "cd120ec2c946d43d73718f079d30561dbc35d9f6ade5a5dde74e2c19bbfd4389",
+              "evidenceReference": "review:P0-PREP-SPK-R0-001-QA-ARTIFACT-F3BBBB58-393ED944",
+              "attestationDigest": "sha256:e36c45bafe3b8f0d5ce5dfbf234c0ec99483c841233b97deafef1e2e3b9fdfce"
+            },
+            "delivery": {
+              "reviewerId": "codex-project-manager-01",
+              "reviewerRole": "project",
+              "decision": "approved",
+              "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+              "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+              "artifactSha256": "4500d345ec4e3b59fb750f7746fa764ef02170e858248f7a580ed06a9e64fee2",
+              "evidenceReference": "review:SPK-R0-001-delivery-f3bbbb58-project-20260817",
+              "attestationDigest": "sha256:2761a2dd42390287305b369cf721a9a665689698599b34a5b27f563e7a520528"
+            },
+            "council": {
+              "reviewerId": "codex-project-manager-01",
+              "reviewerRole": "project",
+              "decision": "approved",
+              "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+              "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+              "artifactSha256": "ce67ec01a780838c5a3ac32875e8d098bf5540b4efb9de14dd9bae15f3786511",
+              "evidenceReference": "review:SPK-R0-001-council-f3bbbb58-project-20260817",
+              "attestationDigest": "sha256:71e23328472ea0a594384eb6a203f258ceda3e02970769944e07b7df7dea334a"
+            }
+          },
+          "council": {
+            "verdict": "ready-to-prepare",
+            "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+            "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+            "unresolvedBlockers": [],
+            "seatVerdicts": {
+              "product": {
+                "reviewerId": "codex-product-manager-01",
+                "reviewerRole": "product",
+                "verdict": "approve-preparation-candidate",
+                "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+                "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+                "preparationReviewId": "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+                "stageId": "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+                "evidenceReference": "review:spk-r0-001-gatea-product-seat-f3bbbb58-6e724bfb",
+                "attestationDigest": "sha256:0ecc0a841ef2693f80353d8ad8737b99234897e665bf3b577b28bfd16e80480b"
+              },
+              "design": {
+                "reviewerId": "codex-ui-ux-designer-01",
+                "reviewerRole": "design",
+                "verdict": "approve-preparation-candidate",
+                "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+                "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+                "preparationReviewId": "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+                "stageId": "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+                "evidenceReference": "review:spk-r0-001/gate-a/design-seat/f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023/aa87da71bfb0fe56d2e5337cbf4b90d4798ce116/6e724bfb51eff076d5762e584eedd09ede0aa09f/20260817-v1",
+                "attestationDigest": "sha256:568557313c7b7e8b94d28bbf6d64bdd75d9046c6dd994288582be8c3707acfe7"
+              },
+              "architecture": {
+                "reviewerId": "codex-technical-architect-01",
+                "reviewerRole": "architecture",
+                "verdict": "approve-preparation-candidate",
+                "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+                "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+                "preparationReviewId": "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+                "stageId": "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+                "evidenceReference": "seat:SPK-R0-001-architecture-f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023-aa87da71bfb0fe56d2e5337cbf4b90d4798ce116-6e724bfb51eff076d5762e584eedd09ede0aa09f",
+                "attestationDigest": "sha256:2e36da0800b349b8e1addf9d519abe76ba24c33b4d498e034fb1dd43613137ef"
+              },
+              "qa": {
+                "reviewerId": "codex-independent-qa-01",
+                "reviewerRole": "qa",
+                "verdict": "approve-preparation-candidate",
+                "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+                "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+                "preparationReviewId": "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+                "stageId": "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+                "evidenceReference": "review:P0-PREP-SPK-R0-001-QA-SEAT-F3BBBB58-393ED944",
+                "attestationDigest": "sha256:c0324a3ae66371606c6afe8a3f3c01f9b86d5479855714969ec0d0b9d3699cb6"
+              },
+              "project": {
+                "reviewerId": "codex-project-manager-01",
+                "reviewerRole": "project",
+                "verdict": "approve-preparation-candidate",
+                "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+                "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+                "preparationReviewId": "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+                "stageId": "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+                "evidenceReference": "review:SPK-R0-001-project-seat-f3bbbb58-20260817",
+                "attestationDigest": "sha256:01592c996db0c0ade0e9fba8db3df23d3ecc82dfe6d3a7d622733b048eeb3ea6"
+              }
+            }
+          },
+          "reviewerRegistry": {
+            "schemaVersion": "1.0.0",
+            "asOf": "2026-08-15",
+            "evidenceBoundary": "Stable public-safe identities and one role per identity only. Agent roles cannot attest a non-delegable human act. The inactive owner placeholder becomes eligible only after explicit owner confirmation; this registry contains no credential, private account, target, topology, recovery value, authentic content, or raw evidence.",
+            "reviewers": [
+              {
+                "reviewerId": "codex-primary-integrator-01",
+                "role": "implementation",
+                "identityClass": "agent",
+                "active": true
+              },
+              {
+                "reviewerId": "codex-product-manager-01",
+                "role": "product",
+                "identityClass": "agent",
+                "active": true
+              },
+              {
+                "reviewerId": "codex-ui-ux-designer-01",
+                "role": "design",
+                "identityClass": "agent",
+                "active": true
+              },
+              {
+                "reviewerId": "codex-technical-architect-01",
+                "role": "architecture",
+                "identityClass": "agent",
+                "active": true
+              },
+              {
+                "reviewerId": "codex-independent-qa-01",
+                "role": "qa",
+                "identityClass": "agent",
+                "active": true
+              },
+              {
+                "reviewerId": "codex-project-manager-01",
+                "role": "project",
+                "identityClass": "agent",
+                "active": true
+              },
+              {
+                "reviewerId": "codex-evidence-producer-01",
+                "role": "evidence-producer",
+                "identityClass": "agent",
+                "active": true
+              },
+              {
+                "reviewerId": "lid-owner-authority-pending",
+                "role": "owner-authority",
+                "identityClass": "human",
+                "active": false
+              }
+            ]
+          },
+          "openDecisions": [],
+          "specialistVetoes": [],
+          "safety": {
+            "authenticMediaAccessed": false,
+            "privateNetworkAccessed": false,
+            "externalMutationPerformed": false
+          }
+        },
+        "context": {
+          "expectedTask": {
+            "taskId": "SPK-R0-001",
+            "milestone": "R0",
+            "dependencyIds": [
+              "PC-001"
+            ],
+            "acceptanceScenarioIds": [
+              "SPK-R0-001-P-001",
+              "SPK-R0-001-P-002",
+              "SPK-R0-001-P-003",
+              "SPK-R0-001-T-001",
+              "SPK-R0-001-T-002",
+              "SPK-R0-001-T-003",
+              "SPK-R0-001-D-001",
+              "SPK-R0-001-D-002",
+              "SPK-R0-001-D-003",
+              "SPK-R0-001-QA-001",
+              "SPK-R0-001-QA-002",
+              "SPK-R0-001-QA-003",
+              "SPK-R0-001-QA-004",
+              "SPK-R0-001-QA-005",
+              "SPK-R0-001-QA-006"
+            ],
+            "taskContractSha256": "f58e65c56e58dc4b1e12deab68f7349822f7f95dd33eee4fcd4872243170fa23"
+          },
+          "candidatePublication": {
+            "revision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+            "baseRevision": "c03e298f8c23a14ec7623aaccdfc77dc5dd3abe5",
+            "bytesVerified": true,
+            "fullDiffVerified": true,
+            "candidateOnFetchedMain": true
+          }
+        },
+        "result": {
+          "preparationAllowed": true,
+          "executionAllowed": false,
+          "decision": "Ready to prepare — Gate A",
+          "blockers": [],
+          "preparationBounds": [
+            "local",
+            "public",
+            "fictional",
+            "synthetic"
+          ],
+          "privateActionsAllowed": false,
+          "externalMutationsAllowed": false,
+          "taskContractSha256": "f58e65c56e58dc4b1e12deab68f7349822f7f95dd33eee4fcd4872243170fa23",
+          "sourceFingerprint": "sha256:4dcf5fa35dc251a8db15c7ba34a7d0416db11677e2f1e1c0fea7815719b79206"
+        }
+      },
+      "proposalCandidate": {
+        "revision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+        "baseRevision": "c03e298f8c23a14ec7623aaccdfc77dc5dd3abe5",
+        "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+        "artifactBindings": {
+          "product": {
+            "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-PRD.md",
+            "sha256": "5aed5133e355d728bacd5f1c3c06f7fd679ce0f9d22df15923a9c0a1f5dcb376"
+          },
+          "architecture": {
+            "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-TECHNICAL-PLAN.md",
+            "sha256": "21fa6e120bab948b436a50bf832efee46e1efe507d82f2d5d581112802201897"
+          },
+          "design": {
+            "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-DESIGN-SPEC.md",
+            "sha256": "d1f4dff58a27e92c68850a83c63eabb06c88682ff7719647f2dc293d816cd443"
+          },
+          "qa": {
+            "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-QA-PLAN.md",
+            "sha256": "cd120ec2c946d43d73718f079d30561dbc35d9f6ade5a5dde74e2c19bbfd4389"
+          },
+          "delivery": {
+            "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-DELIVERY-CHECKLIST.md",
+            "sha256": "4500d345ec4e3b59fb750f7746fa764ef02170e858248f7a580ed06a9e64fee2"
+          },
+          "council": {
+            "path": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-COUNCIL-READINESS.md",
+            "sha256": "ce67ec01a780838c5a3ac32875e8d098bf5540b4efb9de14dd9bae15f3786511"
+          }
+        }
+      },
+      "reviewerRegistrySha256": "fb48caa79298f92cf66493c8caf74599b955498592e0d4f399e5a92a49cc954a",
+      "councilSeatAttestations": {
+        "product": {
+          "reviewerId": "codex-product-manager-01",
+          "reviewerRole": "product",
+          "verdict": "approve-preparation-candidate",
+          "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+          "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+          "preparationReviewId": "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+          "stageId": "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+          "evidenceReference": "review:spk-r0-001-gatea-product-seat-f3bbbb58-6e724bfb",
+          "attestationDigest": "sha256:0ecc0a841ef2693f80353d8ad8737b99234897e665bf3b577b28bfd16e80480b",
+          "scopeClass": "local-synthetic",
+          "actionClass": "synthetic-foundation"
+        },
+        "design": {
+          "reviewerId": "codex-ui-ux-designer-01",
+          "reviewerRole": "design",
+          "verdict": "approve-preparation-candidate",
+          "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+          "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+          "preparationReviewId": "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+          "stageId": "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+          "evidenceReference": "review:spk-r0-001/gate-a/design-seat/f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023/aa87da71bfb0fe56d2e5337cbf4b90d4798ce116/6e724bfb51eff076d5762e584eedd09ede0aa09f/20260817-v1",
+          "attestationDigest": "sha256:568557313c7b7e8b94d28bbf6d64bdd75d9046c6dd994288582be8c3707acfe7",
+          "scopeClass": "local-synthetic",
+          "actionClass": "synthetic-foundation"
+        },
+        "architecture": {
+          "reviewerId": "codex-technical-architect-01",
+          "reviewerRole": "architecture",
+          "verdict": "approve-preparation-candidate",
+          "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+          "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+          "preparationReviewId": "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+          "stageId": "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+          "evidenceReference": "seat:SPK-R0-001-architecture-f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023-aa87da71bfb0fe56d2e5337cbf4b90d4798ce116-6e724bfb51eff076d5762e584eedd09ede0aa09f",
+          "attestationDigest": "sha256:2e36da0800b349b8e1addf9d519abe76ba24c33b4d498e034fb1dd43613137ef",
+          "scopeClass": "local-synthetic",
+          "actionClass": "synthetic-foundation"
+        },
+        "qa": {
+          "reviewerId": "codex-independent-qa-01",
+          "reviewerRole": "qa",
+          "verdict": "approve-preparation-candidate",
+          "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+          "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+          "preparationReviewId": "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+          "stageId": "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+          "evidenceReference": "review:P0-PREP-SPK-R0-001-QA-SEAT-F3BBBB58-393ED944",
+          "attestationDigest": "sha256:c0324a3ae66371606c6afe8a3f3c01f9b86d5479855714969ec0d0b9d3699cb6",
+          "scopeClass": "local-synthetic",
+          "actionClass": "synthetic-foundation"
+        },
+        "project": {
+          "reviewerId": "codex-project-manager-01",
+          "reviewerRole": "project",
+          "verdict": "approve-preparation-candidate",
+          "reviewedRevision": "f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023",
+          "dossierDigest": "393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184",
+          "preparationReviewId": "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+          "stageId": "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+          "evidenceReference": "review:SPK-R0-001-project-seat-f3bbbb58-20260817",
+          "attestationDigest": "sha256:01592c996db0c0ade0e9fba8db3df23d3ecc82dfe6d3a7d622733b048eeb3ea6",
+          "scopeClass": "local-synthetic",
+          "actionClass": "synthetic-foundation"
+        }
+      },
+      "evidenceReference": "review:spk-r0-001-gatea-record-f3bbbb58-6e724bfb"
+    }
+  ],
   "stageApprovals": []
 }
