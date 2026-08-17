@@ -1063,3 +1063,88 @@ The prior trusted entry required the Gate A replay gap to be repaired before any
 ### Self-critique
 
 The first proposal audit should have exercised the protected readiness oracle against its generated C2 before treating the lineage as publishable. Holding that lineage avoided a false merge, but forced a five-target arm/consume repair and now requires a fresh proposal rebuild. The unmarked pause text is useful human evidence but cannot be treated as canonical merely because it preserved prior bytes; event provenance, prefix binding, privacy, and body digest are all mandatory.
+<!-- P0-RUNNING-LOG-EVENT:{"authorId":"codex-primary-integrator-01","bodySha256":"f0e785207ea5a84f15059957c4470b4057770ca3e542108fbba56f376c213657","eventId":"P0-R0-SPK-GATE-A-DESCENDANT-REPAIR-RECAP-20260817-001","eventType":"terminal-recap","evidenceReference":"github-pr:93","parentRevision":"7ceecf403a0ac9efda899725e80cfb5eea16830a","previousByteLength":106662,"previousSha256":"edc48a7fef5eb80d23f78afd6161e3a5b24b27cd3e7a39dce43e49d92f77b6b4","recordedAt":"2026-08-17T09:56:00+05:30","schemaVersion":"1.0.0"} -->
+## 2026-08-17 09:56 IST — Gate A descendant repair consumed; normal protected publication restored
+
+**Entry author:** AI agent (Codex) · **Triggered by:** the owner's direct continuation instruction and explicit authorization of one narrow bootstrap exception after the accepted preparation record exposed a protected publication self-lock.
+
+### Planned since last entry
+
+The prior trusted recap required a fresh six-artifact `SPK-R0-001` proposal, exact generated projections, independent review, and a separately published Gate A preparation record before bounded candidate work. That proposal and preparation record were completed, but the first ordinary post-preparation descendant proved that the accepted history contract could not validate later PR heads or select a later implementation base. This entry records the accepted preparation, the fail-closed stop, the exact repaired control publication, and the next safe execution order. It is evidence only and cannot create Gate B, task-stage, private-system, delivery, release, or production authority.
+
+### Done
+
+- PR #84 published the preceding canonical recap at `15b5e566eafd65add681f2fc3c36b7016f59360a`. PR #85 then published the fresh six-artifact proposal and its three generated projections at `00932790e928db99918842930003c40891abed6a`, truthfully preserving 336 Draft / 12 In-review artifacts, 58 Incomplete tasks, zero Ready tasks, and zero execution-allowed tasks.
+- Draft PR #86 was held and never merged after the base-owned guard exposed the mismatch between the protected registry namespace and the then-current direct-publication history contract. PRs #87 and #88 armed and consumed the five-path ratchet-aware publication repair, producing repaired main `c03e298f8c23a14ec7623aaccdfc77dc5dd3abe5`.
+- A fresh proposal was rebuilt from that main. C1 `f3bbbb58cce7cc8b1e0ce0481d268378d4ffe023` changed exactly the six `SPK-R0-001` In-review artifacts; C2 `aa87da71bfb0fe56d2e5337cbf4b90d4798ce116` changed exactly the register, roadmap manifest, and canonical workbook. PR #89 merged them as proposal publication `M=6e724bfb51eff076d5762e584eedd09ede0aa09f`.
+- The proposal retained task contract `f58e65c56e58dc4b1e12deab68f7349822f7f95dd33eee4fcd4872243170fa23`, scope/action `local-synthetic/synthetic-foundation`, all 11 requirements, and all 15 canonical acceptance scenarios. Six role-bound artifact reviews and five distinct active non-author Council seats approved that exact proposal. Gate A replay passed all 29 checks with preparation dossier `393ed944c1b4ba8ac46de7860247ded74787ddc3b5378d600da4cd8c2f294184`, source fingerprint `sha256:4dcf5fa35dc251a8db15c7ba34a7d0416db11677e2f1e1c0fea7815719b79206`, and canonical record digest `70168f46a379bcbccd7b2afee15bfdbaa957247b30ca87ee671fcd3ca2d8164b`.
+- PR #90 armed only the exact preparation-registry bytes and merged as `AM=4c67ccf4e720f729855a5564fb614e1e38155b02`. PR #91 consumed that arm with exactly the registry and integrity manifest and merged as `PM=556dad91f80076ceecffce06e4d7d0f7b5fdef7d`. Exact-main replay returned `PREPARATION_REVIEW_HISTORY_VALID`, `preparationAllowed=true`, `executionAllowed=false`, local/public/fictional/synthetic bounds, and zero failed gates. The registry held one preparation review and zero stage approvals.
+- The unpublished one-path recap candidate `336691b1d6de2919e24a8d3cb2bd9f966e1a3b29`, a direct child of `PM`, then failed the real structural validator solely at `GOV-STAGE-017 / PREPARATION_REVIEW_PUBLICATION_SCOPE_INVALID`. It was held and never pushed. The same audit found that the implementation boundary pinned `I` directly to `PM`, treated the six immutable Gate A artifacts as both required and changed candidate files, and did not safely accommodate the mandatory integrity-manifest or append-only running-log descendants.
+- A seven-path control repair was frozen and adversarially reviewed. Its exact payload is preserved at local review commit `75021417f0c105e79cabee4f3915153d7ea43e95` and was later published byte-for-byte through PR #93. It permits only ordered first-parent descendants after the accepted preparation merge, selects an exact later first-parent implementation base, keeps all six Gate A proposal blobs exact at that base/current, treats candidate task files as an exact closure, and requires every non-excluded candidate change to be a declared implementation/evidence work blob. The projected seven-path descendant contract remains unchanged; a separate runtime-only nine-path verifier set adds only the independently validated control-integrity manifest and append-only `RUNNING_LOG.md`, with exact path, uniqueness, mode, type, add/modify, and no-delete checks.
+- The old verifier made an ordinary manifest-only arm PR self-lock: the immutable guard accepted the arm, but the exact-head suite necessarily replayed the accepted preparation under the old descendant rule and failed only `GOV-STAGE-017`. The owner explicitly authorized one one-time exact-head bootstrap exception for the exact manifest-only arm head `b85bff5108948eb5fc9f597def2750aa8735be3b` in PR #92. The immutable base-owned guard passed; independent review confirmed the seven exact armed hashes and the sole deterministic exact-head failure.
+- For that exact head only, the required exact-head context was temporarily removed while the immutable guard, strict mode, admin enforcement, conversation resolution, and force/delete protections remained in force. PR #92 was merged normally, without an admin merge or direct main push, as `8688a193bb3c5e03ff6988090d6f48629a918378`. The exact two-context protection, including exact-head app ID `15368`, was immediately restored before the consume branch was pushed. The post-merge exact-main run `31991434249` succeeded.
+- PR #93 consumed the repair normally at head `0bda74a05befc72b2fc33c5d7f325eb30db37271`. It changed exactly the seven armed protected files plus the integrity manifest; all eight remained regular `100644` blobs. The consumed manifest has 55 exact current entries, `next:null`, and raw SHA-256 `d24c4c12244292a093b4f30b85b7436c8d2a5f293beeb6a5c2236274ebcd601d`. Native validation returned `transition:"consumed"` and current-integrity pass.
+- Local exact-head evidence passed staged actions 245, exact-start 85, readiness 403/403, Stage 0 self-test 214, generated tracking 352, and the structural validator with 78 requirements, 58 tasks, 348 artifacts, zero Ready, and zero execution-allowed. The clean full suite passed two deterministic passes with suite digest `sha256:4dc3d525b9404b5bcd068fb22deb73fd7fa9cd1647155a561f32e49fe705390f`.
+- PR #93 passed the immutable consume guard and both hosted exact-head suites under fully restored protection, then merged normally as `7ceecf403a0ac9efda899725e80cfb5eea16830a` with parents `[8688a193bb3c5e03ff6988090d6f48629a918378, 0bda74a05befc72b2fc33c5d7f325eb30db37271]` and a tree exactly equal to the reviewed head. Post-merge run `31993826735` passed on exact main with two deterministic passes, the same suite digest, and result digest `sha256:2c4939ae11f15c31c84c5af38644bbea183f9496ae53aaea2cb202ea851e79a7`. Independent exact-main structural and Git-object audits returned GO.
+
+### Learned
+
+- A preparation history that validates the publication merge but rejects every later first-parent PR descendant is self-locking even when the accepted record itself is sound. Descendant topology must be tested before the first nonempty record is published.
+- Candidate closure must distinguish immutable reviewed inputs from actual candidate changes. The six proposal artifacts remain exact closure members, while only declared implementation/evidence work may change between the selected base and `I`.
+- The control-integrity manifest and append-only running log may appear after `I` only through their own independently validated trust mechanisms. Name-only allowlists are insufficient; raw Git mode/type/add/modify/delete facts must remain fail closed.
+- The one-time arm exception was a bootstrap recovery for one exact reviewed manifest head, not a precedent or reusable permission. The repair consume and every later publication remain subject to the normal two required checks.
+
+### Deployed / Released
+
+Repository control changes were published through PRs #92 and #93. Nothing was deployed or released; no application runtime, task stage, private host, provider, or production surface was invoked.
+
+### Documents created or updated this period
+
+**Updated:**
+- `docs/council/execution/P0-PHASE1-TASK-DEFINITION-OF-READY.md` — records ordered post-preparation descendants, selected candidate-base continuity, and exact closure semantics.
+- `docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json` — consumed the seven exact repair hashes and returned to 55 current entries with `next:null`.
+- `tools/P0-readiness-gates.mjs`, `tools/P0-staged-actions.mjs`, and `tools/P0-verify-execution-start.mjs` — implement the reviewed Gate A continuity, descendant, candidate-base, and closure rules.
+- `tools/P0-test-execution-controls.mjs`, `tools/P0-test-staged-actions.mjs`, and `tools/P0-stage0-ci.mjs` — add adversarial coverage and freeze the exact accepted counts.
+
+### Current truth and authority boundary
+
+- The canonical registry still contains one accepted preparation review and zero stage approvals. Gate A remains limited to authoring and independently reviewing the exact local, public, fictional, synthetic candidate; no governed task-stage invocation has occurred.
+- All 58 tasks remain Incomplete; 336 artifacts are Draft and 12 are In-review; zero tasks are Ready and zero are execution-allowed. `SPK-R0-001` remains In progress / Incomplete / Hold in the project projections.
+- The 50 R1-R10 tasks and 300 artifacts remain frozen with zero execution permission and zero projection mismatch. No R1-R10 work started in this repair wave or under the active bounded execution authority.
+- Production action, module, callback, and outcome-verifier maps remain empty; delivery apply remains disabled. No non-GitHub product, delivery, private-system, provider, deployment, or production mutation occurred; no authentic media, credential use, restore, rollback, acceptance, release, issue/Project mutation, or task/status mutation occurred.
+- `P0-OA-001` and `R0-OA-001` remain unsatisfied and block every private-host lane. This event and both control PRs have fixed non-authorizing evidence effects and cannot widen those gates.
+
+### Current remaining to-do
+
+1. Publish this one-path canonical recap through the normal protected PR path; do not reuse or rewrite unpublished commit `336691b1…`.
+2. From the resulting fresh exact main, prepare and independently review the inert SPK runtime-activation seed and bounded protected control ratchet. Keep the stage definition, module, callback, and outcome-verifier maps non-executable until their exact reviewed activation is normally armed and consumed.
+3. Choose a fresh candidate base only after those controls are merged. Build `I` as a direct child with the six unchanged proposal artifacts plus the exact module and candidate-QA contract in its declared closure; change only implementation/evidence work and preserve every task, reviewer, artifact, mode, type, and hash boundary.
+4. Merge `I` normally, then produce local public fictional synthetic evidence for all 15 canonical scenarios. Keep the evidence-producer and independent-QA identities distinct, and obtain fresh exact-candidate Product, Architecture, Design, QA, Delivery/Council reviews plus five distinct Gate B seats.
+5. Publish any Gate B stage-approval record through its own exact integrity arm/consume sequence. Do not invoke the governed stage unless freshly fetched exact-main Gate B returns `executionAllowed=true`; private-host and authentic-media work remain separately blocked.
+
+### Open questions / decisions needed
+
+No owner decision is required for the next local/public control and candidate-preparation steps. Any private credential, host, authentic-media, provider, paid-account, deployment, recovery-material, release, or production action remains a separate owner decision and is not authorized here.
+
+### Session self-critique
+
+- The first proposed-record publication attempt correctly stopped at the immutable guard, but the post-acceptance descendant and implementation-base paths should also have been exercised before the preparation record was merged.
+- The held recap accurately described the accepted Gate A record but had a stale parent/evidence binding, called the first proposed record “accepted,” and proposed candidate work before the descendant repair. It remains unpublished rather than being amended or transplanted.
+- The exceptional arm merge was necessary only because the old exact-head verifier prevented its own normal repair path. Its exact scope, protection delta, restoration, and succeeding normal consume are recorded so a future agent does not misread it as standing bypass authority.
+
+### Action items for the next agent
+
+1. Verify live `origin/main` is the recap merge before selecting any new base; stop on drift rather than rebasing a frozen candidate.
+2. Read PRs #92–#93 and the seven repaired control files before designing the runtime-activation ratchet.
+3. Preserve the six proposal artifacts and accepted preparation record byte-for-byte. Never reuse stale proposal, record, review, or held recap commit identities.
+4. Keep every R1–R10 file, private-owner action, production map, deployment surface, and authentic-content path frozen.
+
+### State snapshot
+
+- **Current phase / version:** P0/R0 Gate A preparation accepted; post-preparation descendant and candidate-closure controls repaired and consumed; Gate B not started.
+- **Current source:** exact merged main `7ceecf403a0ac9efda899725e80cfb5eea16830a` from PR #93.
+- **Active recap branch:** `codex/r0-spk-running-log-recap-postprep-20260817-7ceecf4`, created directly from exact current main.
+- **Working tree:** clean before this append; stale unpublished recap worktree and commit `336691b1…` remain separately preserved and untouched.
+- **Protection:** strict two-context required checks restored; admin enforcement and conversation resolution enabled; force pushes and deletions disabled.
+- **Deployed/runtime state:** no R0 runtime or deployment exists; deployment remains `Unknown — private read authority pending`.
+- **Next milestone:** merge this canonical recap, then publish the inert runtime-activation controls needed to form and review the exact SPK implementation/evidence candidate.
