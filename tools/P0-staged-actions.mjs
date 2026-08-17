@@ -740,6 +740,25 @@ async function firstParentRevisions(run, repoRoot, tipRevision) {
   return { ok: true, revisions };
 }
 
+async function laterPullRequestHeadAfterMainAnchor({
+  run,
+  repoRoot,
+  anchorMainRevision,
+  fetchedMainRevision,
+  publishedRef,
+}) {
+  const head = await commitParentsAtRevision(run, repoRoot, publishedRef);
+  if (!head.ok || head.parents.length !== 1 || head.parents[0] !== fetchedMainRevision) return false;
+  const history = await firstParentRevisions(run, repoRoot, publishedRef);
+  if (!history.ok || history.revisions.at(-1) !== publishedRef) return false;
+  const anchorIndex = history.revisions.indexOf(anchorMainRevision);
+  const fetchedMainIndex = history.revisions.indexOf(fetchedMainRevision);
+  const headIndex = history.revisions.indexOf(publishedRef);
+  return anchorIndex >= 0
+    && fetchedMainIndex >= anchorIndex
+    && headIndex === fetchedMainIndex + 1;
+}
+
 async function rawGitDiffRecords(run, repoRoot, fromRevision, toRevision) {
   const rawDiff = await runGit(run, repoRoot, [
     "diff", "--raw", "--no-abbrev", "--no-ext-diff", "--no-renames", "-z",
@@ -1122,16 +1141,18 @@ async function deriveImplementationMainPublicationBoundary({
   candidateRevision,
   candidateBaseRevision,
 }) {
-  if (candidateBaseRevision !== preparationMainPublicationRevision) {
-    return { ok: false, code: "STAGE_IMPLEMENTATION_PREPARATION_BASE_INVALID" };
-  }
   const candidateCommit = await commitParentsAtRevision(run, repoRoot, candidateRevision);
   if (!candidateCommit.ok || candidateCommit.parents.length !== 1
-    || candidateCommit.parents[0] !== preparationMainPublicationRevision) {
+    || candidateCommit.parents[0] !== candidateBaseRevision) {
     return { ok: false, code: "STAGE_IMPLEMENTATION_PREPARATION_BASE_INVALID" };
   }
   const history = await firstParentRevisions(run, repoRoot, fetchedMainRevision);
   if (!history.ok) return history;
+  const preparationIndex = history.revisions.indexOf(preparationMainPublicationRevision);
+  const candidateBaseIndex = history.revisions.indexOf(candidateBaseRevision);
+  if (preparationIndex < 0 || candidateBaseIndex < preparationIndex) {
+    return { ok: false, code: "STAGE_IMPLEMENTATION_PREPARATION_BASE_INVALID" };
+  }
   let publicationRevision = null;
   for (const revision of history.revisions) {
     const containsCandidate = await runGit(run, repoRoot, [
@@ -1147,10 +1168,11 @@ async function deriveImplementationMainPublicationBoundary({
   }
   const commit = await commitParentsAtRevision(run, repoRoot, publicationRevision);
   if (!commit.ok || commit.parents.length !== 2
-    || commit.parents[0] !== preparationMainPublicationRevision
+    || commit.parents[0] !== candidateBaseRevision
     || commit.parents[1] !== candidateRevision) {
     return { ok: false, code: "STAGE_IMPLEMENTATION_PUBLICATION_BOUNDARY_INVALID" };
   }
+  const publicationIndex = history.revisions.indexOf(publicationRevision);
   const preparationBeforeFirstParent = await runGit(run, repoRoot, [
     "merge-base", "--is-ancestor", preparationMainPublicationRevision, commit.parents[0],
   ]);
@@ -1160,10 +1182,11 @@ async function deriveImplementationMainPublicationBoundary({
   const mergeTreeEqualsCandidate = await runGit(run, repoRoot, [
     "diff", "--quiet", candidateRevision, publicationRevision, "--",
   ]);
-  if (!preparationBeforeFirstParent.ok || candidateBeforeFirstParent.ok || !mergeTreeEqualsCandidate.ok) {
+  if (publicationIndex !== candidateBaseIndex + 1
+    || !preparationBeforeFirstParent.ok || candidateBeforeFirstParent.ok || !mergeTreeEqualsCandidate.ok) {
     return { ok: false, code: "STAGE_IMPLEMENTATION_PUBLICATION_BOUNDARY_INVALID" };
   }
-  return { ok: true, publicationRevision };
+  return { ok: true, publicationRevision, candidateBaseRevision };
 }
 
 async function deriveStageMainPublicationBoundary({
@@ -1330,8 +1353,10 @@ export async function verifyPreparationGateAProofFromGit({
     const continuityRevisions = new Set([
       proposalPublication.publicationRevision,
       preparationPublicationRevision,
+      preparationMainPublication.publicationRevision,
+      fetchedMainRevision,
       publishedRef,
-    ]);
+    ].filter((revision) => FULL_REVISION.test(revision ?? "")));
     for (const revision of continuityRevisions) {
       const currentFile = await gitFileAtRevision(run, repoRoot, revision, artifact.path);
       if (!currentFile.ok
@@ -1352,32 +1377,65 @@ export async function verifyPreparationGateAProofFromGit({
   const publicationManifest = await gitJsonAtRevision(
     run, repoRoot, preparationPublicationRevision, MANIFEST_PATH,
   );
+  const preparationMainManifest = FULL_REVISION.test(
+    preparationMainPublication.publicationRevision ?? "",
+  ) ? await gitJsonAtRevision(
+      run, repoRoot, preparationMainPublication.publicationRevision, MANIFEST_PATH,
+    ) : null;
   const currentManifest = await gitJsonAtRevision(run, repoRoot, publishedRef, MANIFEST_PATH);
+  const fetchedMainManifest = fetchedMainRevision === publishedRef
+    ? currentManifest
+    : await gitJsonAtRevision(run, repoRoot, fetchedMainRevision, MANIFEST_PATH);
   const candidateReviewerRegistry = await gitJsonAtRevision(
     run, repoRoot, candidate.revision, REVIEWER_REGISTRY_PATH,
+  );
+  const proposalPublicationReviewerRegistry = await gitJsonAtRevision(
+    run, repoRoot, proposalPublication.publicationRevision, REVIEWER_REGISTRY_PATH,
   );
   const publicationReviewerRegistry = await gitJsonAtRevision(
     run, repoRoot, preparationPublicationRevision, REVIEWER_REGISTRY_PATH,
   );
+  const preparationMainReviewerRegistry = FULL_REVISION.test(
+    preparationMainPublication.publicationRevision ?? "",
+  ) ? await gitJsonAtRevision(
+      run, repoRoot, preparationMainPublication.publicationRevision, REVIEWER_REGISTRY_PATH,
+    ) : null;
   const currentReviewerRegistry = await gitJsonAtRevision(
     run, repoRoot, publishedRef, REVIEWER_REGISTRY_PATH,
   );
-  if (!candidateManifest.ok || !proposalPublicationManifest.ok || !publicationManifest.ok || !currentManifest.ok
+  const fetchedMainReviewerRegistry = fetchedMainRevision === publishedRef
+    ? currentReviewerRegistry
+    : await gitJsonAtRevision(run, repoRoot, fetchedMainRevision, REVIEWER_REGISTRY_PATH);
+  if (!candidateManifest.ok || !proposalPublicationManifest.ok || !publicationManifest.ok
+    || !fetchedMainManifest.ok || !currentManifest.ok
+    || (preparationMainManifest !== null && !preparationMainManifest.ok)
     || !candidateReviewerRegistry.ok
-    || !publicationReviewerRegistry.ok || !currentReviewerRegistry.ok) {
-    return fail(!candidateManifest.ok || !proposalPublicationManifest.ok || !publicationManifest.ok || !currentManifest.ok
+    || !proposalPublicationReviewerRegistry.ok || !publicationReviewerRegistry.ok
+    || (preparationMainReviewerRegistry !== null && !preparationMainReviewerRegistry.ok)
+    || !fetchedMainReviewerRegistry.ok || !currentReviewerRegistry.ok) {
+    return fail(!candidateManifest.ok || !proposalPublicationManifest.ok || !publicationManifest.ok
+      || (preparationMainManifest !== null && !preparationMainManifest.ok)
+      || !fetchedMainManifest.ok || !currentManifest.ok
       ? "PREPARATION_GATE_A_MANIFEST_UNAVAILABLE"
       : "PREPARATION_GATE_A_REVIEWER_REGISTRY_UNAVAILABLE");
   }
   const candidateTask = gateATaskSnapshot(candidateManifest.value, record.taskId);
   const proposalPublicationTask = gateATaskSnapshot(proposalPublicationManifest.value, record.taskId);
   const publicationTask = gateATaskSnapshot(publicationManifest.value, record.taskId);
+  const preparationMainTask = preparationMainManifest === null
+    ? null
+    : gateATaskSnapshot(preparationMainManifest.value, record.taskId);
   const currentTask = gateATaskSnapshot(currentManifest.value, record.taskId);
+  const fetchedMainTask = gateATaskSnapshot(fetchedMainManifest.value, record.taskId);
   if (candidateTask === null || proposalPublicationTask === null
-    || publicationTask === null || currentTask === null
+    || publicationTask === null || fetchedMainTask === null || currentTask === null
+    || (preparationMainManifest !== null && preparationMainTask === null)
     || canonicalJson(candidateTask) !== canonicalJson(proposalPublicationTask)
     || canonicalJson(proposalPublicationTask) !== canonicalJson(publicationTask)
-    || canonicalJson(publicationTask) !== canonicalJson(currentTask)) {
+    || (preparationMainTask !== null
+      && canonicalJson(publicationTask) !== canonicalJson(preparationMainTask))
+    || canonicalJson(preparationMainTask ?? publicationTask) !== canonicalJson(fetchedMainTask)
+    || canonicalJson(fetchedMainTask) !== canonicalJson(currentTask)) {
     return fail("PREPARATION_GATE_A_EXPECTED_TASK_INVALID");
   }
   const expectedTask = candidateTask.expectedTask;
@@ -1398,8 +1456,13 @@ export async function verifyPreparationGateAProofFromGit({
     || canonicalJson(proof.context) !== canonicalJson(derivedContext)) {
     return fail("PREPARATION_GATE_A_EXPECTED_CONTEXT_MISMATCH");
   }
-  if (!candidateReviewerRegistry.bytes.equals(publicationReviewerRegistry.bytes)
-    || !publicationReviewerRegistry.bytes.equals(currentReviewerRegistry.bytes)
+  if (!candidateReviewerRegistry.bytes.equals(proposalPublicationReviewerRegistry.bytes)
+    || !proposalPublicationReviewerRegistry.bytes.equals(publicationReviewerRegistry.bytes)
+    || (preparationMainReviewerRegistry !== null
+      && !publicationReviewerRegistry.bytes.equals(preparationMainReviewerRegistry.bytes))
+    || !(preparationMainReviewerRegistry?.bytes ?? publicationReviewerRegistry.bytes)
+      .equals(fetchedMainReviewerRegistry.bytes)
+    || !fetchedMainReviewerRegistry.bytes.equals(currentReviewerRegistry.bytes)
     || canonicalJson(input.reviewerRegistry) !== canonicalJson(currentReviewerRegistry.value)
     || record.reviewerRegistrySha256 !== computeReviewerRegistrySha256(currentReviewerRegistry.value)) {
     return fail("PREPARATION_GATE_A_REVIEWER_REGISTRY_MISMATCH");
@@ -1708,10 +1771,21 @@ export async function verifyPreparationReviewRegistryHistory({
   if (!FULL_REVISION.test(gateAProof.preparationArmMainRevision ?? "")) {
     return fail("PREPARATION_GATE_A_PREPARATION_PUBLICATION_BOUNDARY_INVALID");
   }
-  if (fetchedMainRevision !== publishedRef
-    && (publishedRef !== preparationPublicationRevision
-      || fetchedMainRevision !== gateAProof.preparationArmMainRevision)) {
-    return fail("PREPARATION_REVIEW_PUBLICATION_SCOPE_INVALID");
+  if (fetchedMainRevision !== publishedRef) {
+    const exactPublicationPr = publishedRef === preparationPublicationRevision
+      && fetchedMainRevision === gateAProof.preparationArmMainRevision;
+    const laterDescendantPr = !exactPublicationPr
+      && FULL_REVISION.test(gateAProof.preparationMainPublicationRevision ?? "")
+      && await laterPullRequestHeadAfterMainAnchor({
+        run,
+        repoRoot,
+        anchorMainRevision: gateAProof.preparationMainPublicationRevision,
+        fetchedMainRevision,
+        publishedRef,
+      });
+    if (!exactPublicationPr && !laterDescendantPr) {
+      return fail("PREPARATION_REVIEW_PUBLICATION_SCOPE_INVALID");
+    }
   }
   if (!await exactSingleRecordPublication({
     run,
@@ -1835,10 +1909,21 @@ export async function verifyStageApprovalRegistryHistory({
   if (!FULL_REVISION.test(stageMainPublication.armMainRevision ?? "")) {
     return fail("STAGE_MAIN_PUBLICATION_BOUNDARY_INVALID");
   }
-  if (stagePrMode
-    && (publishedRef !== stagePublicationRevision
-      || fetchedMainRevision !== stageMainPublication.armMainRevision)) {
-    return fail("STAGE_APPROVAL_PUBLICATION_SCOPE_INVALID");
+  if (stagePrMode) {
+    const exactPublicationPr = publishedRef === stagePublicationRevision
+      && fetchedMainRevision === stageMainPublication.armMainRevision;
+    const laterDescendantPr = !exactPublicationPr
+      && FULL_REVISION.test(stageMainPublication.publicationRevision ?? "")
+      && await laterPullRequestHeadAfterMainAnchor({
+        run,
+        repoRoot,
+        anchorMainRevision: stageMainPublication.publicationRevision,
+        fetchedMainRevision,
+        publishedRef,
+      });
+    if (!exactPublicationPr && !laterDescendantPr) {
+      return fail("STAGE_APPROVAL_PUBLICATION_SCOPE_INVALID");
+    }
   }
   if (fetchedMainRevision === publishedRef && stageMainPublication.published !== true) {
     return fail("STAGE_MAIN_PUBLICATION_MISSING");
@@ -1862,13 +1947,45 @@ export async function verifyStageApprovalRegistryHistory({
     "merge-base", "--is-ancestor", implementationMainPublication.publicationRevision, stagePublicationRevision,
   ]);
   const stageCandidateRegistry = await registryAtRevision(run, repoRoot, record.candidateRevision);
+  const candidateBaseManifest = await gitJsonAtRevision(
+    run, repoRoot, implementationMainPublication.candidateBaseRevision, MANIFEST_PATH,
+  );
   const implementationManifest = await gitJsonAtRevision(run, repoRoot, record.candidateRevision, MANIFEST_PATH);
   const implementationMainManifest = await gitJsonAtRevision(
     run, repoRoot, implementationMainPublication.publicationRevision, MANIFEST_PATH,
   );
   const stagePublicationManifest = await gitJsonAtRevision(run, repoRoot, stagePublicationRevision, MANIFEST_PATH);
   const currentManifest = await gitJsonAtRevision(run, repoRoot, publishedRef, MANIFEST_PATH);
+  const candidateBaseReviewerRegistry = await gitJsonAtRevision(
+    run, repoRoot, implementationMainPublication.candidateBaseRevision, REVIEWER_REGISTRY_PATH,
+  );
+  const trustedPreparationReviewerRegistry = await gitJsonAtRevision(
+    run, repoRoot, preparationHistory.preparationCandidatePublication.revision, REVIEWER_REGISTRY_PATH,
+  );
+  for (const kind of ARTIFACT_KINDS) {
+    const proposalBinding = preparationReview.proposalCandidate.artifactBindings[kind];
+    const implementationBinding = record.candidate?.artifacts?.[kind];
+    const candidateBaseArtifact = await gitFileAtRevision(
+      run,
+      repoRoot,
+      implementationMainPublication.candidateBaseRevision,
+      proposalBinding.path,
+    );
+    if (implementationBinding?.path !== proposalBinding.path
+      || implementationBinding?.sha256 !== proposalBinding.sha256
+      || !candidateBaseArtifact.ok
+      || crypto.createHash("sha256").update(candidateBaseArtifact.bytes).digest("hex")
+        !== proposalBinding.sha256) {
+      return fail("PREPARATION_GATE_A_ARTIFACT_CONTINUITY_INVALID", {
+        artifactKind: kind,
+        revision: implementationMainPublication.candidateBaseRevision,
+      });
+    }
+  }
   const expectedTask = preparationHistory.preparationExpectedTask;
+  const candidateBaseTask = candidateBaseManifest.ok
+    ? gateATaskSnapshot(candidateBaseManifest.value, record.taskId)?.expectedTask ?? null
+    : null;
   const implementationTask = implementationManifest.ok
     ? gateATaskSnapshot(implementationManifest.value, record.taskId)?.expectedTask ?? null
     : null;
@@ -1882,14 +1999,22 @@ export async function verifyStageApprovalRegistryHistory({
     ? gateATaskSnapshot(currentManifest.value, record.taskId)?.expectedTask ?? null
     : null;
   if (expectedTask === null
-    || implementationTask === null || implementationMainTask === null
+    || candidateBaseTask === null || implementationTask === null || implementationMainTask === null
     || stagePublicationTask === null || currentTask === null
+    || canonicalJson(candidateBaseTask) !== canonicalJson(expectedTask)
     || canonicalJson(implementationTask) !== canonicalJson(expectedTask)
     || canonicalJson(implementationMainTask) !== canonicalJson(expectedTask)
     || canonicalJson(stagePublicationTask) !== canonicalJson(expectedTask)
     || canonicalJson(currentTask) !== canonicalJson(expectedTask)
     || record.candidate?.taskContractSha256 !== expectedTask.taskContractSha256) {
     return fail("PREPARATION_GATE_A_EXPECTED_TASK_INVALID");
+  }
+  if (!candidateBaseReviewerRegistry.ok
+    || !trustedPreparationReviewerRegistry.ok
+    || !candidateBaseReviewerRegistry.bytes.equals(trustedPreparationReviewerRegistry.bytes)
+    || computeReviewerRegistrySha256(candidateBaseReviewerRegistry.value)
+      !== preparationReview.reviewerRegistrySha256) {
+    return fail("PREPARATION_GATE_A_REVIEWER_REGISTRY_MISMATCH");
   }
   if (!preparationBeforeCandidate.ok || !candidateBeforeStage.ok
     || preparationMainPublicationRevision === record.candidateRevision

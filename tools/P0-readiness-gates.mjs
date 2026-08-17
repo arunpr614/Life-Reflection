@@ -102,9 +102,9 @@ export const LOCAL_SYNTHETIC_TASK_FILE_EXTENSIONS = Object.freeze([
   ...LOCAL_SYNTHETIC_CONTENT_POLICY.workbookExtensions,
 ]);
 // These publication/projection surfaces are regenerated after candidate review
-// and independently validated, so they are excluded from the candidate diff.
+// and independently validated, so they are excluded from candidate closure.
 // Immutable task evidence (including the P0 review workbook) is not excluded.
-// Deletions, renames, and non-blob type transitions remain forbidden in v2.
+// Deletions, renames, type transitions, and mode transitions remain forbidden.
 export const TASK_FILE_DIFF_EXCLUSIONS = Object.freeze([
   APPROVAL_REGISTRY_PATH,
   "docs/project/P0-PHASE1-TASK-ARTIFACT-REGISTER.json",
@@ -120,6 +120,14 @@ export const TASK_FILE_DESCENDANT_DELTA_PATHS = Object.freeze([
   // A private/release candidate may complete its candidate-bound accountable-
   // human action only after candidate review and before approval publication.
   "docs/council/execution/P0-OWNER-ACTION-STATE.json",
+]);
+// Exact-main/current verification may additionally observe these independently
+// trusted control surfaces after candidate review. This runtime-only allowlist
+// is deliberately separate from the projected task source-evidence model.
+export const TASK_FILE_RUNTIME_DESCENDANT_DELTA_PATHS = Object.freeze([
+  ...TASK_FILE_DESCENDANT_DELTA_PATHS,
+  "docs/council/execution/P0-STAGE0-CONTROL-INTEGRITY.json",
+  "RUNNING_LOG.md",
 ]);
 export const DESIGN_STATE_DIMENSIONS = Object.freeze([
   "normal",
@@ -873,7 +881,7 @@ export function computeTaskFilesSha256(taskFiles) {
 }
 
 /**
- * Shared schema/coverage validator for a task-scoped full-diff manifest.
+ * Shared schema/coverage validator for a task-scoped candidate closure.
  * Git-history completeness is separately proven by trusted publication facts;
  * this function owns the one canonical record shape used by every adapter.
  */
