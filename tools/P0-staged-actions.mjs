@@ -2275,17 +2275,39 @@ export function validateStageChain(definitions, receipts = []) {
   });
 }
 
+const STAGE_RUNTIME_LIFECYCLE_INPUT_KEYS = Object.freeze([
+  "registry",
+  "definitions",
+  "moduleBindings",
+  "outcomeVerificationModuleIds",
+  "callbackModuleIds",
+]);
+const STAGE_RUNTIME_MODULE_BINDING_KEYS = Object.freeze([
+  "moduleId",
+  "moduleRelativePath",
+  "moduleSha256",
+  "gitMode",
+  "argumentSetIds",
+  "argumentSets",
+]);
+
 /** Closed lifecycle check: registry records cannot select code without reviewed code-owned maps. */
-export function validateStageRuntimeLifecycle({
-  registry,
-  definitions,
-  moduleBindings,
-  outcomeVerificationModuleIds,
-} = {}) {
+export function validateStageRuntimeLifecycle(input = {}) {
+  if (!hasExactKeys(input, STAGE_RUNTIME_LIFECYCLE_INPUT_KEYS)) {
+    return fail("STAGE_RUNTIME_LIFECYCLE_SHAPE_INVALID");
+  }
+  const {
+    registry,
+    definitions,
+    moduleBindings,
+    outcomeVerificationModuleIds,
+    callbackModuleIds,
+  } = input;
   const registryValidation = validateStageApprovalRegistry(registry);
   if (!registryValidation.ok) return registryValidation;
   if (!Array.isArray(definitions) || !Array.isArray(moduleBindings)
-    || !Array.isArray(outcomeVerificationModuleIds)) return fail("STAGE_RUNTIME_LIFECYCLE_SHAPE_INVALID");
+    || !Array.isArray(outcomeVerificationModuleIds)
+    || !Array.isArray(callbackModuleIds)) return fail("STAGE_RUNTIME_LIFECYCLE_SHAPE_INVALID");
   const definitionsByStage = new Map();
   const definitionIdempotencyKeys = new Set();
   for (const definition of definitions) {
@@ -2299,7 +2321,7 @@ export function validateStageRuntimeLifecycle({
   }
   const moduleById = new Map();
   for (const binding of moduleBindings) {
-    if (!hasExactKeys(binding, ["moduleId", "moduleRelativePath", "moduleSha256", "gitMode", "argumentSetIds"])
+    if (!hasExactKeys(binding, STAGE_RUNTIME_MODULE_BINDING_KEYS)
       || !CLOSED_IDENTIFIER.test(binding.moduleId ?? "")
       || !/^tools\/[A-Za-z0-9._/-]+\.mjs$/.test(binding.moduleRelativePath ?? "")
       || binding.moduleRelativePath.includes("..")
@@ -2307,7 +2329,14 @@ export function validateStageRuntimeLifecycle({
       || !["100644", "100755"].includes(binding.gitMode)
       || !Array.isArray(binding.argumentSetIds)
       || binding.argumentSetIds.length === 0
+      || new Set(binding.argumentSetIds).size !== binding.argumentSetIds.length
       || !binding.argumentSetIds.every((id) => CLOSED_IDENTIFIER.test(id ?? ""))
+      || !hasExactKeys(binding.argumentSets, binding.argumentSetIds)
+      || !binding.argumentSetIds.every((id) => Array.isArray(binding.argumentSets[id])
+        && binding.argumentSets[id].every((argument) => typeof argument === "string"
+          && /^[A-Za-z0-9._:=/-]{1,160}$/.test(argument)
+          && !argument.includes("..")
+          && !argument.startsWith("/")))
       || moduleById.has(binding.moduleId)) return fail("STAGE_RUNTIME_MODULE_BINDING_INVALID");
     moduleById.set(binding.moduleId, binding);
   }
@@ -2316,10 +2345,60 @@ export function validateStageRuntimeLifecycle({
     return fail("STAGE_RUNTIME_VERIFICATION_BINDING_INVALID");
   }
   const verificationIds = new Set(outcomeVerificationModuleIds);
+  if (new Set(callbackModuleIds).size !== callbackModuleIds.length
+    || !callbackModuleIds.every((id) => CLOSED_IDENTIFIER.test(id ?? ""))) {
+    return fail("STAGE_RUNTIME_CALLBACK_BINDING_INVALID");
+  }
+  const callbackIds = new Set(callbackModuleIds);
+  const referencedPreparationIds = new Set();
+  const referencedModuleIds = new Set();
+  const referencedVerificationIds = new Set();
+  const referencedModuleCounts = new Map();
+  const referencedVerificationCounts = new Map();
+  const referencedArgumentSetCounts = new Map();
   for (const definition of definitions) {
     const moduleBinding = moduleById.get(definition.moduleId);
-    if (!moduleBinding || !moduleBinding.argumentSetIds.includes(definition.argumentSetId)
+    const matchingPreparations = registry.preparationReviews.filter((review) => (
+      review.taskId === definition.taskId
+      && review.stageId === definition.stageId
+      && review.scopeClass === definition.scopeClass
+      && review.actionClass === definition.actionClass
+      && review.state === "accepted"
+    ));
+    if (matchingPreparations.length !== 1
+      || referencedPreparationIds.has(matchingPreparations[0].preparationReviewId)
+      || !moduleBinding
+      || !moduleBinding.argumentSetIds.includes(definition.argumentSetId)
+      || !Object.hasOwn(moduleBinding.argumentSets, definition.argumentSetId)
       || !verificationIds.has(definition.moduleId)) return fail("STAGE_RUNTIME_DEFINITION_MODULE_MISMATCH");
+    referencedPreparationIds.add(matchingPreparations[0].preparationReviewId);
+    referencedModuleIds.add(definition.moduleId);
+    referencedVerificationIds.add(definition.moduleId);
+    referencedModuleCounts.set(definition.moduleId, (referencedModuleCounts.get(definition.moduleId) ?? 0) + 1);
+    referencedVerificationCounts.set(definition.moduleId,
+      (referencedVerificationCounts.get(definition.moduleId) ?? 0) + 1);
+    const argumentBindingKey = `${definition.moduleId}\0${definition.argumentSetId}`;
+    referencedArgumentSetCounts.set(argumentBindingKey,
+      (referencedArgumentSetCounts.get(argumentBindingKey) ?? 0) + 1);
+  }
+  if (moduleById.size !== referencedModuleIds.size
+    || [...moduleById.keys()].some((id) => !referencedModuleIds.has(id)
+      || referencedModuleCounts.get(id) !== 1)) {
+    return fail("STAGE_RUNTIME_MODULE_ORPHANED");
+  }
+  if ([...moduleById.values()].some((binding) => binding.argumentSetIds.some((argumentSetId) => (
+    referencedArgumentSetCounts.get(`${binding.moduleId}\0${argumentSetId}`) !== 1
+  )))) return fail("STAGE_RUNTIME_ARGUMENT_SET_ORPHANED");
+  if (verificationIds.size !== referencedVerificationIds.size
+    || [...verificationIds].some((id) => !referencedVerificationIds.has(id)
+      || referencedVerificationCounts.get(id) !== 1)) {
+    return fail("STAGE_RUNTIME_VERIFIER_ORPHANED");
+  }
+  // This seed contains only a serializable process definition. A callback must
+  // remain absent until a separately reviewed in-process definition and
+  // capability attestation are installed together.
+  if (callbackIds.size !== 0) {
+    return fail("STAGE_RUNTIME_CALLBACK_ORPHANED");
   }
   for (const stage of registry.stageApprovals) {
     const definition = definitionsByStage.get(stage.stageId);
@@ -2359,17 +2438,52 @@ export function validateStageRuntimeLifecycle({
       }
     }
   }
+  const preparationReviewIds = Object.freeze(registry.preparationReviews
+    .map((review) => review.preparationReviewId).sort());
+  const definitionStageIds = Object.freeze([...definitionsByStage.keys()].sort());
+  const moduleIds = Object.freeze([...moduleById.keys()].sort());
+  const verificationModuleIds = Object.freeze([...verificationIds].sort());
+  const callbackIdsSorted = Object.freeze([...callbackIds].sort());
+  const moduleArgumentBindings = Object.freeze(moduleIds.flatMap((moduleId) => {
+    const binding = moduleById.get(moduleId);
+    return [...binding.argumentSetIds].sort().map((argumentSetId) => Object.freeze({
+      moduleId,
+      argumentSetId,
+      arguments: Object.freeze([...binding.argumentSets[argumentSetId]]),
+    }));
+  }));
   return pass("STAGE_RUNTIME_LIFECYCLE_VALID", {
+    preparationReviewIds,
+    definitionStageIds,
+    moduleIds,
+    outcomeVerificationModuleIds: verificationModuleIds,
+    callbackModuleIds: callbackIdsSorted,
+    moduleArgumentBindings,
     preparationReviewCount: registry.preparationReviews.length,
     definitionCount: definitions.length,
+    moduleCount: moduleBindings.length,
+    outcomeVerifierCount: outcomeVerificationModuleIds.length,
+    callbackCount: callbackModuleIds.length,
     stageApprovalCount: registry.stageApprovals.length,
     executableStageCount: registry.stageApprovals.length,
   });
 }
 
-// Stage 0 deliberately ships no executable production module or argument set.
-// Reviewed task-specific stages must be added later through an immutable Gate B candidate.
-export const PRODUCTION_STAGED_ACTIONS = Object.freeze([]);
+// This definition is inert until a matching accepted Gate B stage approval is
+// present at exact main. It installs identity only; no future module is added or
+// accessed by this seed.
+export const PRODUCTION_STAGED_ACTIONS = Object.freeze([Object.freeze({
+  schemaVersion: "1.0.0",
+  taskId: "SPK-R0-001",
+  scopeClass: "local-synthetic",
+  actionClass: "synthetic-foundation",
+  stageId: "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+  predecessor: null,
+  idempotencyKey: "P0-IDEMP-SPK-R0-001-SYNTHETIC-001",
+  moduleId: "spk.synthetic",
+  argumentSetId: "synthetic.v1",
+  deadlineMs: 60_000,
+})]);
 
 export function resolveProductionStagedAction({ taskId, stageId, idempotencyKey } = {}) {
   const matches = PRODUCTION_STAGED_ACTIONS.filter((definition) => definition.taskId === taskId
