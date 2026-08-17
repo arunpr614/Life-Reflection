@@ -1,0 +1,1709 @@
+/* -------------------------------------------------------------------------- */
+/* V11 — Needs Date Review                                                    */
+/* Additive to the frozen V10 paper/ink, readiness, Almanac, and shell layers. */
+/* -------------------------------------------------------------------------- */
+
+.date-review-page-v11,
+.date-review-header-v11,
+.date-review-summary-v11,
+.date-review-list-v11,
+.date-review-row-v11,
+.date-review-row-copy-v11,
+.date-review-preview-v11,
+.date-review-detail-v11,
+.date-review-detail-grid-v11,
+.date-review-source-panel-v11,
+.date-review-form-panel-v11,
+.date-review-provenance-v11,
+.date-review-destination-v11,
+.date-review-status-v11,
+.date-review-empty-v11,
+.date-review-loading-v11,
+.date-review-load-failure-v11,
+.date-picker-v11,
+.date-review-fixture-group-v11 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.date-review-page-v11 button,
+.date-review-page-v11 input,
+.date-picker-v11 button,
+.date-review-nav-v11,
+.date-review-more-v11,
+.unified-v11 [data-action="open-date-review"] {
+  min-width: 24px;
+  min-height: 44px;
+}
+
+/* The conditional shortcut is intentionally quieter than Add journal. */
+
+.date-review-nav-v11,
+.unified-v11 .topbar-actions [data-action="open-date-review"] {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 11px;
+  border: 1px solid color-mix(in srgb, var(--amber) 42%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--amber-soft) 36%, transparent);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 720;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.date-review-nav-v11:hover,
+.unified-v11 .topbar-actions [data-action="open-date-review"]:hover {
+  border-color: color-mix(in srgb, var(--amber) 68%, var(--line));
+  background: color-mix(in srgb, var(--amber-soft) 62%, var(--paper-raised));
+}
+
+.date-review-nav-v11[aria-current="page"],
+.unified-v11 .topbar-actions [data-action="open-date-review"][aria-current="page"] {
+  border-color: var(--forest);
+  background: var(--sage);
+  color: var(--forest-dark);
+}
+
+.date-review-count-v11 {
+  font-variant-numeric: tabular-nums;
+}
+
+.date-review-more-v11 {
+  position: relative;
+}
+
+.date-review-more-v11 .date-review-count-v11 {
+  display: inline-flex;
+  min-width: 26px;
+  min-height: 26px;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  padding-inline: 7px;
+  border: 1px solid color-mix(in srgb, var(--amber) 44%, var(--line));
+  border-radius: 999px;
+  background: var(--amber-soft);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 780;
+}
+
+/* Queue page: one archival surface, ruled rows, and no warning-card grid. */
+
+.date-review-page-v11 {
+  width: 100%;
+  min-height: calc(100dvh - var(--banner-height) - 72px);
+  padding: clamp(44px, 6vw, 78px) clamp(32px, 4vw, 58px) 96px;
+  background: var(--paper-raised);
+}
+
+.date-review-page-v11 > * {
+  width: min(1180px, 100%);
+  margin-inline: auto;
+}
+
+.date-review-header-v11 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 20px 40px;
+  padding-bottom: clamp(24px, 4vw, 42px);
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.date-review-header-v11 h1 {
+  grid-column: 1;
+  grid-row: 2;
+  max-width: 14ch;
+  margin: 0;
+}
+
+.date-review-header-v11 > .eyebrow {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+}
+
+.date-review-header-v11 > p:not(.eyebrow):not(.date-review-summary-v11):not(.date-review-invariant-v11) {
+  grid-column: 1;
+  max-width: 64ch;
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: var(--serif);
+  font-size: clamp(17px, 1.6vw, 21px);
+  line-height: 1.55;
+}
+
+.date-review-summary-v11 {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: end;
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 760;
+  line-height: 1.45;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.date-review-header-v11 > .date-review-invariant-v11 {
+  grid-column: 2;
+  grid-row: 3 / span 2;
+  align-self: start;
+  max-width: 32ch;
+  margin: 0;
+  padding-top: 0;
+  border-top: 0;
+  text-align: right;
+}
+
+.date-review-list-v11 {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.date-review-list-v11 > li {
+  margin: 0;
+  padding: 0;
+}
+
+.date-review-row-v11 {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px 32px;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+}
+
+.date-review-row-v11:focus-visible {
+  border-radius: var(--radius-sm);
+}
+
+.date-review-preview-v11 {
+  position: relative;
+  display: grid;
+  width: 104px;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--paper-soft);
+}
+
+.date-review-preview-v11 img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.date-review-preview-v11.is-journal,
+.date-review-preview-v11[data-source="voice"] {
+  align-content: center;
+  justify-items: start;
+  padding: 12px;
+  background: color-mix(in srgb, var(--paper-soft) 68%, var(--paper-raised));
+  color: var(--ink);
+}
+
+.date-review-preview-v11.is-journal::before,
+.date-review-preview-v11[data-source="voice"]::before {
+  width: 28px;
+  height: 2px;
+  margin-bottom: 11px;
+  background: var(--forest);
+  content: "";
+}
+
+.date-review-preview-v11.is-journal strong,
+.date-review-preview-v11[data-source="voice"] strong,
+.date-review-preview-v11.is-journal > span,
+.date-review-preview-v11[data-source="voice"] > span {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 520;
+  line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.date-review-row-copy-v11 {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+}
+
+.date-review-row-copy-v11 > h2 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: clamp(20px, 2vw, 25px);
+  font-weight: 520;
+  line-height: 1.25;
+}
+
+.date-review-source-v11 {
+  margin: 0;
+  color: var(--forest);
+  font-size: 13px;
+  font-weight: 780;
+  letter-spacing: 0.09em;
+  line-height: 18px;
+  text-transform: uppercase;
+}
+
+.date-review-reason-v11 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: clamp(20px, 2vw, 25px);
+  font-weight: 520;
+  line-height: 1.25;
+}
+
+div.date-review-reason-v11 {
+  display: grid;
+  gap: 2px;
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+div.date-review-reason-v11 strong {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 760;
+}
+
+div.date-review-reason-v11 p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.date-review-reason-copy-v11,
+.date-review-meta-v11 {
+  max-width: 74ch;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.date-review-meta-v11 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 14px;
+}
+
+.date-review-meta-v11 > div {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 220px;
+  flex-wrap: wrap;
+  gap: 3px 6px;
+}
+
+.date-review-meta-v11 dt,
+.date-review-meta-v11 dd {
+  min-width: 0;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.date-review-meta-v11 dt {
+  color: var(--ink-faint);
+  font-weight: 760;
+}
+
+.date-review-meta-v11 dd {
+  color: var(--ink-soft);
+}
+
+.date-review-meta-v11 > span + span {
+  position: relative;
+  padding-left: 14px;
+}
+
+.date-review-meta-v11 > span + span::before {
+  position: absolute;
+  top: 0.65em;
+  left: 0;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--line-strong);
+  content: "";
+}
+
+.date-review-preserved-v11 {
+  width: fit-content;
+  margin: 2px 0 0;
+  padding-left: 10px;
+  border-left: 3px solid var(--amber);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 720;
+  line-height: 1.4;
+}
+
+.date-review-row-action-v11 {
+  min-width: 164px;
+  min-height: 44px;
+  align-self: center;
+  justify-self: end;
+  white-space: nowrap;
+}
+
+/* Queue loading, request failure, success, and honest absence. */
+
+.date-review-loading-v11,
+.date-review-load-failure-v11,
+.date-review-empty-v11 {
+  padding-block: clamp(44px, 7vw, 86px);
+  border-bottom: 1px solid var(--line);
+}
+
+.date-review-loading-v11 > p,
+.date-review-load-failure-v11 > p,
+.date-review-empty-v11 > p {
+  max-width: 60ch;
+  margin-bottom: 18px;
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.date-review-empty-v11 h2,
+.date-review-load-failure-v11 h2 {
+  max-width: 22ch;
+}
+
+.date-review-skeleton-v11 {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr) 164px;
+  align-items: center;
+  gap: 24px 32px;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.date-review-skeleton-v11 > * {
+  min-height: 18px;
+  border-radius: 6px;
+  background: var(--paper-soft);
+}
+
+.date-review-skeleton-v11 > :first-child {
+  width: 104px;
+  aspect-ratio: 4 / 5;
+}
+
+.date-review-skeleton-copy-v11 {
+  display: grid;
+  gap: 10px;
+  background: transparent;
+}
+
+.date-review-skeleton-copy-v11 > * {
+  width: min(100%, 500px);
+  min-height: 14px;
+  border-radius: 5px;
+  background: var(--paper-soft);
+}
+
+.date-review-skeleton-copy-v11 > :nth-child(2) {
+  width: min(72%, 360px);
+  min-height: 24px;
+}
+
+.date-review-skeleton-copy-v11 > :last-child {
+  width: min(84%, 430px);
+}
+
+.date-review-status-v11 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 24px;
+  margin: 0 0 24px;
+  padding: 13px 0;
+  border-block: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.date-review-status-v11 > * {
+  min-width: 0;
+  margin-block: 0;
+}
+
+.date-review-status-v11.is-success,
+.date-review-status-v11[data-state="success"] {
+  border-color: color-mix(in srgb, var(--forest) 44%, var(--line));
+  background: color-mix(in srgb, var(--sage) 34%, transparent);
+}
+
+.date-review-status-v11.is-pending,
+.date-review-status-v11[data-state="pending"] {
+  border-color: color-mix(in srgb, var(--forest) 32%, var(--line));
+  background: color-mix(in srgb, var(--blue-soft) 30%, transparent);
+}
+
+.date-review-status-v11.is-failure,
+.date-review-status-v11[data-state="failure"] {
+  border-color: color-mix(in srgb, var(--rose) 48%, var(--line));
+  background: color-mix(in srgb, var(--rose-soft) 38%, transparent);
+}
+
+.date-review-status-v11 strong,
+.date-review-status-v11 h2,
+.date-review-status-v11 h3 {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 780;
+  line-height: 1.45;
+}
+
+.date-review-status-v11 p {
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.date-review-status-v11 > h2,
+.date-review-status-v11 > p {
+  grid-column: 1;
+}
+
+.date-review-status-v11 > button,
+.date-review-status-v11 > a {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+/* Assignment is a page state, not a trapped alert dialog. */
+
+.date-review-detail-v11 {
+  width: 100%;
+  min-height: calc(100dvh - var(--banner-height) - 72px);
+  padding: clamp(44px, 6vw, 78px) clamp(32px, 4vw, 58px) 96px;
+  background: var(--paper-raised);
+}
+
+.date-review-detail-v11 > *:not(.date-review-back-v11) {
+  width: min(1180px, 100%);
+  margin-inline: auto;
+}
+
+.date-review-detail-v11 > .date-review-back-v11 {
+  width: fit-content;
+  margin-right: auto;
+  margin-left: max(0px, calc((100% - 1180px) / 2));
+}
+
+.date-review-back-v11 {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  gap: 7px;
+  margin-bottom: 26px;
+  padding-inline: 0;
+  border: 0;
+  background: transparent;
+  color: var(--forest-dark);
+  font-size: 14px;
+  font-weight: 720;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--forest) 45%, transparent);
+  text-underline-offset: 4px;
+}
+
+.date-review-detail-header-v11 {
+  max-width: 760px;
+  padding-bottom: 30px;
+}
+
+.date-review-detail-header-v11 h1 {
+  max-width: 15ch;
+  margin-bottom: 14px;
+}
+
+.date-review-detail-header-v11 p:not(.eyebrow) {
+  max-width: 64ch;
+  margin-bottom: 8px;
+  color: var(--ink-soft);
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+.date-review-detail-grid-v11 {
+  display: grid;
+  grid-template-columns: minmax(300px, 5fr) minmax(390px, 7fr);
+  align-items: start;
+  border-block: 1px solid var(--line-strong);
+}
+
+.date-review-source-panel-v11,
+.date-review-form-panel-v11 {
+  min-width: 0;
+  padding-block: clamp(28px, 4vw, 46px);
+}
+
+.date-review-source-panel-v11 {
+  padding-right: clamp(28px, 4vw, 52px);
+}
+
+.date-review-form-panel-v11 {
+  padding-left: clamp(28px, 4vw, 52px);
+  border-left: 1px solid var(--line);
+}
+
+.date-review-source-panel-v11 > h2,
+.date-review-form-panel-v11 > h2,
+.date-review-destination-v11 > h2 {
+  margin-bottom: 16px;
+  font-size: clamp(24px, 2.5vw, 34px);
+}
+
+.date-review-source-media-v11 {
+  width: min(100%, 312px);
+  margin: 0 0 24px;
+}
+
+.date-review-source-media-v11 img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  object-fit: cover;
+}
+
+.date-review-source-media-v11 figcaption {
+  margin-top: 8px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.date-review-why-v11 {
+  margin: 0 0 24px;
+  padding: 14px 0 14px 16px;
+  border-left: 3px solid var(--amber);
+}
+
+.date-review-why-v11 h3,
+.date-review-why-v11 strong {
+  margin-bottom: 5px;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 780;
+  line-height: 1.45;
+}
+
+.date-review-why-v11 p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.date-review-provenance-v11 {
+  display: grid;
+  margin: 0;
+  border-top: 1px solid var(--line);
+}
+
+.date-review-provenance-v11 > div {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.75fr) minmax(0, 1.25fr);
+  gap: 12px 20px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.date-review-provenance-v11 dt,
+.date-review-provenance-v11 dd {
+  min-width: 0;
+  margin: 0;
+}
+
+.date-review-provenance-v11 dt {
+  color: var(--ink-faint);
+  font-size: 13px;
+  font-weight: 780;
+  letter-spacing: 0.06em;
+  line-height: 18px;
+  text-transform: uppercase;
+}
+
+.date-review-provenance-v11 dd {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.date-review-provenance-v11 dd small {
+  display: block;
+  margin-top: 3px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.date-review-provenance-v11 code,
+.date-review-reason-copy-v11 code,
+.date-review-error-v11 code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--paper-soft);
+  color: inherit;
+  font-size: 0.94em;
+  overflow-wrap: anywhere;
+}
+
+.date-review-journal-preview-v11,
+.date-review-voice-preview-v11 {
+  margin-top: 20px;
+  padding-block: 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.date-review-journal-preview-v11 summary,
+.date-review-voice-preview-v11 summary {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--forest-dark);
+  font-size: 13px;
+  font-weight: 720;
+  cursor: pointer;
+}
+
+.date-review-journal-preview-v11 blockquote,
+.date-review-journal-preview-v11 p,
+.date-review-voice-preview-v11 p,
+.date-review-source-panel-v11 > details p {
+  margin: 8px 0 16px;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.date-review-source-panel-v11 > details {
+  margin-top: 20px;
+  padding-block: 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.date-review-source-panel-v11 > details summary {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--forest-dark);
+  font-size: 13px;
+  font-weight: 720;
+  cursor: pointer;
+}
+
+.date-review-invariant-v11 {
+  margin: 22px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 680;
+  line-height: 1.55;
+}
+
+/* Date entry and destination preview. */
+
+.date-review-form-v11,
+#date-review-form-v11 {
+  display: grid;
+  gap: 20px;
+}
+
+.date-review-field-v11 {
+  display: grid;
+  gap: 7px;
+}
+
+.date-review-field-v11 > label,
+.date-review-field-label-v11 {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 760;
+  line-height: 1.4;
+}
+
+.date-review-input-row-v11 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.date-review-input-v11,
+.date-review-field-v11 input[type="text"] {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.date-review-input-v11[aria-invalid="true"],
+.date-review-field-v11 input[aria-invalid="true"] {
+  border-color: var(--rose);
+  box-shadow: inset 0 0 0 1px var(--rose);
+}
+
+.date-review-input-v11[aria-invalid="true"]:focus-visible,
+.date-review-field-v11 input[aria-invalid="true"]:focus-visible {
+  box-shadow:
+    inset 0 0 0 1px var(--rose),
+    0 0 0 3px var(--paper-raised),
+    0 0 0 6px var(--focus);
+}
+
+.date-review-calendar-open-v11 {
+  min-height: 48px;
+  white-space: nowrap;
+}
+
+.date-review-help-v11,
+.date-review-clock-v11 {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.date-review-clock-v11 {
+  width: fit-content;
+  padding: 8px 10px;
+  border-block: 1px solid var(--line);
+  color: var(--ink);
+  font-weight: 680;
+}
+
+.date-review-error-v11 {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--rose);
+  background: color-mix(in srgb, var(--rose-soft) 42%, transparent);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 680;
+  line-height: 1.5;
+}
+
+.date-review-destination-v11 {
+  margin-top: 8px;
+  padding-block: 22px;
+  border-block: 1px solid var(--line-strong);
+}
+
+.date-review-destination-v11 > p {
+  margin-bottom: 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.date-review-destination-v11.is-ready,
+.date-review-destination-v11[data-state="ready"] {
+  border-color: color-mix(in srgb, var(--forest) 45%, var(--line-strong));
+}
+
+.date-review-destination-date-v11 {
+  margin-bottom: 16px;
+  color: var(--forest-dark);
+  font-family: var(--serif);
+  font-size: clamp(20px, 2vw, 27px);
+  font-weight: 520;
+  line-height: 1.3;
+}
+
+.date-review-effect-grid-v11 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 18px 0;
+  border-block: 1px solid var(--line);
+}
+
+.date-review-effect-grid-v11 > div {
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+.date-review-effect-grid-v11 > div:first-child {
+  padding-left: 0;
+}
+
+.date-review-effect-grid-v11 > div + div {
+  border-left: 1px solid var(--line);
+}
+
+.date-review-effect-grid-v11 dt,
+.date-review-effect-grid-v11 dd {
+  margin: 0;
+}
+
+.date-review-effect-grid-v11 dt {
+  margin-bottom: 5px;
+  color: var(--ink-faint);
+  font-size: 13px;
+  font-weight: 780;
+  letter-spacing: 0.07em;
+  line-height: 18px;
+  text-transform: uppercase;
+}
+
+.date-review-effect-grid-v11 dd {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.date-review-effect-grid-v11 strong,
+.date-review-effect-grid-v11 span {
+  display: block;
+}
+
+.date-review-effect-grid-v11 strong {
+  margin-bottom: 5px;
+  color: var(--ink-faint);
+  font-size: 13px;
+  font-weight: 780;
+  letter-spacing: 0.07em;
+  line-height: 18px;
+  text-transform: uppercase;
+}
+
+.date-review-effect-grid-v11 span {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.date-review-actions-v11 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 12px;
+  padding-top: 4px;
+}
+
+.date-review-actions-v11 button {
+  min-height: 44px;
+}
+
+.date-review-actions-v11 .primary-button,
+.date-review-actions-v11 [data-action="assign-journal-date"],
+.date-review-actions-v11 [data-action="retry-date-assignment"] {
+  min-width: 176px;
+}
+
+.date-review-form-panel-v11[aria-busy="true"] .date-review-actions-v11,
+.date-review-form-v11[aria-busy="true"] .date-review-actions-v11 {
+  cursor: progress;
+}
+
+/* Monday-first calendar picker. */
+
+.date-picker-backdrop-v11 {
+  position: fixed;
+  z-index: 820;
+  inset: 0;
+  display: grid;
+  overflow-y: auto;
+  place-items: center;
+  padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+  background: rgba(17, 25, 23, 0.64);
+}
+
+.date-picker-v11 {
+  width: min(610px, 100%);
+  max-height: min(760px, calc(100dvh - 40px));
+  overflow-y: auto;
+  padding: clamp(22px, 4vw, 34px);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-raised);
+}
+
+.date-picker-header-v11 {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.date-picker-header-v11 h2 {
+  margin-bottom: 5px;
+}
+
+.date-picker-header-v11 p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.date-picker-month-v11 {
+  display: grid;
+  grid-template-columns: 44px 44px minmax(0, 1fr) 44px 44px;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 14px;
+}
+
+.date-picker-month-v11 h3,
+.date-picker-month-v11 p,
+.date-picker-month-v11 > strong {
+  min-width: 0;
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 520;
+  line-height: 1.3;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.date-picker-month-v11 button {
+  display: inline-grid;
+  min-width: 44px;
+  min-height: 44px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink);
+}
+
+.date-picker-weekdays-v11,
+.date-picker-grid-v11 {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.date-picker-weekdays-v11 {
+  margin-bottom: 5px;
+  color: var(--ink-faint);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.date-picker-weekdays-v11 > span {
+  padding-block: 8px;
+}
+
+.date-picker-grid-v11 {
+  gap: 4px;
+}
+
+.date-picker-day-v11 {
+  position: relative;
+  display: inline-grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  aspect-ratio: 1;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.date-picker-day-v11:hover:not(:disabled) {
+  border-color: var(--line-strong);
+  background: var(--paper-soft);
+}
+
+.date-picker-day-v11.is-prototype-date,
+.date-picker-day-v11[aria-current="date"] {
+  border-color: var(--amber);
+  border-style: dotted;
+}
+
+.date-picker-day-v11.is-selected,
+.date-picker-day-v11[aria-selected="true"] {
+  border-color: var(--forest-dark);
+  background: var(--forest-dark);
+  color: var(--paper-raised);
+  font-weight: 780;
+}
+
+.date-picker-day-v11:disabled,
+.date-picker-day-v11[aria-disabled="true"] {
+  border-color: transparent;
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: not-allowed;
+  opacity: 0.46;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.date-picker-day-v11.is-outside-month {
+  color: var(--ink-faint);
+}
+
+.date-picker-day-v11 small {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  left: 2px;
+  color: currentColor;
+  font-size: 7px;
+  font-weight: 720;
+  letter-spacing: 0;
+  line-height: 1;
+  text-align: center;
+  white-space: normal;
+}
+
+.date-picker-legend-v11 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 16px;
+  margin: 14px 0 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.date-picker-actions-v11 {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px 12px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.date-picker-actions-v11 button {
+  min-height: 44px;
+}
+
+.date-picker-actions-v11 > span {
+  align-self: center;
+  margin-right: auto;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+/* The v11 fixture group remains obviously separate from product state. */
+
+.date-review-fixture-group-v11 {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(180px, 1fr) minmax(220px, 1fr);
+  gap: 12px 18px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line-strong);
+}
+
+.date-review-fixture-group-v11 > legend,
+.date-review-fixture-group-v11 > h3 {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 780;
+  line-height: 1.4;
+}
+
+.date-review-fixture-group-v11 > p {
+  grid-column: 1 / -1;
+  max-width: 72ch;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.date-review-fixture-group-v11 > fieldset {
+  min-width: 0;
+}
+
+.date-review-fixture-group-v11 > button {
+  width: fit-content;
+  min-height: 44px;
+}
+
+.date-review-fixture-group-v11 label {
+  display: grid;
+  gap: 5px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 680;
+}
+
+.date-review-fixture-group-v11 select,
+.date-review-fixture-group-v11 button {
+  min-height: 44px;
+}
+
+.date-review-fixture-actions-v11 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+}
+
+/* 1280 protects row and assignment copy without changing hierarchy. */
+
+@media (max-width: 1280px) {
+  .date-review-page-v11,
+  .date-review-detail-v11 {
+    padding-inline: 36px;
+  }
+
+  .date-review-row-v11,
+  .date-review-skeleton-v11 {
+    grid-template-columns: 96px minmax(0, 1fr) auto;
+    gap: 22px 26px;
+  }
+
+  .date-review-preview-v11,
+  .date-review-skeleton-v11 > :first-child {
+    width: 96px;
+  }
+
+  .date-review-row-action-v11 {
+    min-width: 154px;
+  }
+
+  .date-review-detail-grid-v11 {
+    grid-template-columns: minmax(285px, 5fr) minmax(360px, 7fr);
+  }
+}
+
+/* 960 inherits the compact shell and stacks the detail in document order. */
+
+@media (max-width: 960px) {
+  .date-review-nav-v11,
+  .unified-v11 .topbar-actions [data-action="open-date-review"] {
+    display: none;
+  }
+
+  .date-review-page-v11,
+  .date-review-detail-v11 {
+    min-height: calc(100dvh - var(--banner-height) - 64px);
+    padding: 42px 28px max(132px, calc(102px + env(safe-area-inset-bottom)));
+  }
+
+  .date-review-header-v11 {
+    gap: 18px 28px;
+  }
+
+  .date-review-detail-grid-v11 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .date-review-source-panel-v11,
+  .date-review-form-panel-v11 {
+    padding-inline: 0;
+  }
+
+  .date-review-source-panel-v11 {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .date-review-form-panel-v11 {
+    border-left: 0;
+  }
+
+  .date-review-source-media-v11 {
+    width: min(260px, 42vw);
+  }
+}
+
+/* 700 gives the action a full row and keeps calm reading width. */
+
+@media (max-width: 700px) {
+  .date-review-page-v11,
+  .date-review-detail-v11 {
+    padding: 34px 20px max(126px, calc(96px + env(safe-area-inset-bottom)));
+  }
+
+  .date-review-header-v11 {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 14px;
+  }
+
+  .date-review-header-v11 > .eyebrow,
+  .date-review-header-v11 > h1,
+  .date-review-header-v11 > p,
+  .date-review-summary-v11,
+  .date-review-header-v11 > .date-review-invariant-v11 {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: start;
+    text-align: left;
+  }
+
+  .date-review-header-v11 h1 {
+    font-size: clamp(2.55rem, 12vw, 3.65rem);
+  }
+
+  .date-review-summary-v11 {
+    text-align: left;
+    white-space: normal;
+  }
+
+  .date-review-row-v11,
+  .date-review-skeleton-v11 {
+    grid-template-columns: 80px minmax(0, 1fr);
+    gap: 18px 20px;
+    padding-block: 22px;
+  }
+
+  .date-review-preview-v11,
+  .date-review-skeleton-v11 > :first-child {
+    width: 80px;
+  }
+
+  .date-review-row-action-v11,
+  .date-review-skeleton-v11 > :last-child {
+    width: 100%;
+    min-width: 0;
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+
+  .date-review-row-action-v11 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .date-review-meta-v11 {
+    display: grid;
+    gap: 2px;
+  }
+
+  .date-review-meta-v11 > div {
+    display: grid;
+    grid-template-columns: minmax(120px, 0.7fr) minmax(0, 1.3fr);
+    gap: 4px 12px;
+  }
+
+  .date-review-meta-v11 > span + span {
+    padding-left: 0;
+  }
+
+  .date-review-meta-v11 > span + span::before {
+    display: none;
+  }
+
+  .date-review-status-v11 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .date-review-status-v11 > h2,
+  .date-review-status-v11 > p,
+  .date-review-status-v11 > button,
+  .date-review-status-v11 > a {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .date-review-status-v11 > a,
+  .date-review-status-v11 > button {
+    width: 100%;
+  }
+
+  .date-review-detail-header-v11 p:not(.eyebrow) {
+    font-size: 17px;
+  }
+
+  .date-review-provenance-v11 > div {
+    grid-template-columns: minmax(100px, 0.7fr) minmax(0, 1.3fr);
+  }
+
+  .date-review-effect-grid-v11 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .date-review-effect-grid-v11 > div,
+  .date-review-effect-grid-v11 > div:first-child {
+    padding: 12px 0;
+  }
+
+  .date-review-effect-grid-v11 > div + div {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+
+  .date-review-actions-v11 {
+    align-items: stretch;
+  }
+
+  .date-review-actions-v11 button {
+    flex: 1 1 180px;
+  }
+
+  .date-review-fixture-group-v11 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .date-review-fixture-group-v11 > legend,
+  .date-review-fixture-group-v11 > h3 {
+    grid-column: auto;
+  }
+}
+
+/* 390 uses a full-height picker sheet above the inherited bottom navigation. */
+
+@media (max-width: 390px) {
+  .date-review-page-v11,
+  .date-review-detail-v11 {
+    padding-inline: 16px;
+  }
+
+  .date-review-header-v11 h1,
+  .date-review-detail-header-v11 h1 {
+    font-size: clamp(2.4rem, 13vw, 3.1rem);
+  }
+
+  .date-review-row-v11,
+  .date-review-skeleton-v11 {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 15px 16px;
+  }
+
+  .date-review-preview-v11,
+  .date-review-skeleton-v11 > :first-child {
+    width: 72px;
+  }
+
+  .date-review-reason-v11 {
+    font-size: 19px;
+  }
+
+  .date-review-source-media-v11 {
+    width: min(230px, 72vw);
+  }
+
+  .date-review-provenance-v11 > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .date-review-meta-v11 > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1px;
+  }
+
+  .date-review-input-row-v11 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .date-review-calendar-open-v11,
+  .date-review-actions-v11 button,
+  .date-review-actions-v11 .primary-button {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  .date-picker-backdrop-v11 {
+    align-items: stretch;
+    padding: var(--banner-height) 0 calc(66px + env(safe-area-inset-bottom));
+    background: var(--paper-raised);
+  }
+
+  .date-picker-v11 {
+    width: 100%;
+    max-height: none;
+    min-height: calc(100dvh - var(--banner-height) - 66px - env(safe-area-inset-bottom));
+    padding: 22px 16px max(24px, env(safe-area-inset-bottom));
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .date-picker-header-v11 {
+    position: sticky;
+    z-index: 2;
+    top: -22px;
+    margin: -22px -16px 0;
+    padding: 22px 16px 16px;
+    background: var(--paper-raised);
+  }
+
+  .date-picker-day-v11 {
+    min-height: 43px;
+  }
+
+  .date-picker-actions-v11 {
+    position: sticky;
+    z-index: 2;
+    bottom: calc(-1 * max(24px, env(safe-area-inset-bottom)));
+    margin: 20px -16px calc(-1 * max(24px, env(safe-area-inset-bottom)));
+    padding: 16px 16px max(16px, env(safe-area-inset-bottom));
+    background: var(--paper-raised);
+  }
+}
+
+/* 320 protects full tokens, seven picker columns, and 44px primary actions. */
+
+@media (max-width: 340px) {
+  .date-review-page-v11,
+  .date-review-detail-v11 {
+    padding: 28px 8px max(120px, calc(92px + env(safe-area-inset-bottom)));
+  }
+
+  .date-review-row-v11,
+  .date-review-skeleton-v11 {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 14px 12px;
+    padding-block: 18px;
+  }
+
+  .date-review-preview-v11,
+  .date-review-skeleton-v11 > :first-child {
+    width: 64px;
+  }
+
+  .date-review-preview-v11.is-journal,
+  .date-review-preview-v11[data-source="voice"] {
+    padding: 8px;
+  }
+
+  .date-review-preview-v11.is-journal strong,
+  .date-review-preview-v11[data-source="voice"] strong {
+    font-size: 12px;
+    -webkit-line-clamp: 4;
+  }
+
+  .date-review-source-v11 {
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .date-review-reason-v11 {
+    font-size: 18px;
+  }
+
+  .date-review-reason-copy-v11,
+  .date-review-meta-v11,
+  .date-review-preserved-v11,
+  .date-review-provenance-v11 dd,
+  .date-review-help-v11,
+  .date-review-error-v11 {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .date-review-source-panel-v11,
+  .date-review-form-panel-v11 {
+    padding-block: 24px;
+  }
+
+  .date-review-clock-v11 {
+    width: 100%;
+  }
+
+  .date-picker-v11 {
+    padding-inline: 8px;
+  }
+
+  .date-picker-header-v11 {
+    margin-inline: -8px;
+    padding-inline: 8px;
+  }
+
+  .date-picker-month-v11 {
+    gap: 4px;
+  }
+
+  .date-picker-grid-v11 {
+    gap: 0;
+  }
+
+  .date-picker-weekdays-v11 {
+    font-size: 9px;
+  }
+
+  .date-picker-day-v11 {
+    min-height: 40px;
+    border-radius: 6px;
+  }
+
+  .date-picker-actions-v11 {
+    margin-inline: -8px;
+    padding-inline: 8px;
+  }
+}
+
+/* Short landscape remains scrollable; no fixed action can cover the picker. */
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .date-review-page-v11,
+  .date-review-detail-v11 {
+    padding-top: 24px;
+    padding-bottom: max(104px, calc(78px + env(safe-area-inset-bottom)));
+  }
+
+  .date-picker-backdrop-v11 {
+    align-items: start;
+    padding: 0 0 calc(66px + env(safe-area-inset-bottom));
+    background: var(--paper-raised);
+  }
+
+  .date-picker-v11 {
+    width: 100%;
+    max-height: none;
+    min-height: calc(100dvh - 66px - env(safe-area-inset-bottom));
+    padding: 18px max(16px, env(safe-area-inset-left)) 24px max(16px, env(safe-area-inset-right));
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .date-picker-header-v11,
+  .date-picker-actions-v11 {
+    position: static;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  .date-picker-day-v11 {
+    min-height: 40px;
+    aspect-ratio: auto;
+  }
+}
+
+/* Dark mode relies on inherited semantic tokens and tightens selected contrast. */
+
+:root[data-theme="dark"] .date-review-nav-v11,
+:root[data-theme="dark"] .unified-v11 .topbar-actions [data-action="open-date-review"] {
+  background: color-mix(in srgb, var(--amber-soft) 58%, var(--paper-raised));
+}
+
+:root[data-theme="dark"] .date-review-preview-v11,
+:root[data-theme="dark"] .date-review-skeleton-v11 > *,
+:root[data-theme="dark"] .date-review-skeleton-copy-v11 > * {
+  border-color: var(--line-strong);
+}
+
+:root[data-theme="dark"] .date-picker-day-v11.is-selected,
+:root[data-theme="dark"] .date-picker-day-v11[aria-selected="true"] {
+  border-color: #9bd2bf;
+  background: #9bd2bf;
+  color: #111917;
+}
+
+:root[data-theme="dark"] .date-review-error-v11 {
+  background: color-mix(in srgb, var(--rose-soft) 64%, var(--paper-raised));
+}
+
+/* State change remains complete with reduced motion; no spinner is required. */
+
+@media (prefers-reduced-motion: reduce) {
+  .date-review-page-v11 *,
+  .date-picker-v11 *,
+  .date-review-nav-v11,
+  .date-review-more-v11 {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+  }
+}
+
+/* Forced colours keep grouping, attention, selection, and focus distinguishable. */
+
+@media (forced-colors: active) {
+  .date-review-nav-v11,
+  .date-review-more-v11,
+  .date-review-row-v11,
+  .date-review-preview-v11,
+  .date-review-status-v11,
+  .date-review-detail-grid-v11,
+  .date-review-source-panel-v11,
+  .date-review-form-panel-v11,
+  .date-review-why-v11,
+  .date-review-invariant-v11,
+  .date-review-input-v11,
+  .date-review-error-v11,
+  .date-review-destination-v11,
+  .date-picker-v11,
+  .date-picker-day-v11,
+  .date-review-fixture-group-v11 {
+    forced-color-adjust: auto;
+    border-color: CanvasText;
+  }
+
+  .date-review-preserved-v11,
+  .date-review-why-v11,
+  .date-review-error-v11 {
+    border-left-color: Highlight;
+  }
+
+  .date-picker-day-v11.is-selected,
+  .date-picker-day-v11[aria-selected="true"] {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .date-picker-day-v11:disabled,
+  .date-picker-day-v11[aria-disabled="true"] {
+    color: GrayText;
+  }
+
+  .date-review-input-v11[aria-invalid="true"]:focus-visible,
+  .date-review-field-v11 input[aria-invalid="true"]:focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 3px;
+    box-shadow: none;
+  }
+}

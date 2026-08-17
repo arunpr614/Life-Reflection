@@ -88,6 +88,11 @@ Current status: **G0 planning baseline complete. G1 is blocked on Arun's explici
 | [Telegram Duplicate Handling v13 council](prototypes/v13/COUNCIL-v13.md) | Approved Product, Design, and Project contract for PVA-008. |
 | [Telegram duplicate fixture sheet v13](prototypes/v13/TELEGRAM-DUPLICATE-FIXTURES-v13.md) | Exact fictional same-day, cross-day, retry, replay, concurrency, stale-work, privacy, handoff, and responsive fixtures. |
 | [Telegram Duplicate Handling v13 independent QA](../design-qa-v13.md) | Exact eight-file UI fingerprint plus package and pre-QA documentation inputs, complete Council/frozen-regression matrix, 22 current-run PNGs, 0/0/0/0 findings, and Pass verdict. |
+| [Durable Manual Upload prototype v14](prototypes/CALENDAR-UI-PROTOTYPE-v14.md) | Ninth remediation slice: deliberate Journal Date choice, inert txt/md review, represented original identity and archive-wide duplicate decisions, guarded Retry, provenance, and derived pending/stale outcomes. The exact fingerprint and current 22-frame set passed independent QA; freeze-ready, not frozen, with the implementation/evidence commit pending. |
+| [Calendar UI v14 prototype guide](../prototypes/calendar-ui/README-v14.md) | Local run instructions, passed manual-upload contract, exact candidate fingerprint, and 22/22 independently verified current-run frames. Freeze-ready, not frozen; implementation/evidence commit pending. |
+| [Durable Manual Upload v14 council](prototypes/v14/COUNCIL-v14.md) | Approved Product, Design, and Project contract used by the independent Pass on the exact current 22-frame set. Freeze-ready, not frozen. |
+| [Upload fixture sheet v14](prototypes/v14/UPLOAD-FIXTURES-v14.md) | Exact fictional entry, validation, review, duplicate, failure, race, provenance, privacy, focus/history, responsive, and current 22-frame evidence roster independently passed. Freeze-ready, not frozen. |
+| [Durable Manual Upload v14 independent QA](../design-qa-v14.md) | Final Pass report for the exact nine-file UI fingerprint, separate package artifact, current 22/22 evidence set, complete Council §18 and fixture coverage, 168/168 frozen v6–v13 comparison, and 0/0/0/0 unresolved findings. Freeze-ready, not frozen; implementation/evidence commit pending. |
 
 ## Discovery and research record
 
