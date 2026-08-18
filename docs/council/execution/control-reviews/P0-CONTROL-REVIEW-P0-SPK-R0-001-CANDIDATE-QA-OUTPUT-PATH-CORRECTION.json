@@ -1,0 +1,153 @@
+{
+  "schemaVersion": "1.0.0",
+  "reviewId": "P0-SPK-R0-001-CANDIDATE-QA-OUTPUT-PATH-CORRECTION",
+  "reviewDate": "2026-08-18",
+  "reviewType": "non-authorizing-successor-control-review",
+  "predecessor": {
+    "kind": "review",
+    "reviewId": "P0-SPK-R0-001-PRE-I-VALIDATOR-REPAIR",
+    "recordPath": "docs/council/execution/control-reviews/P0-CONTROL-REVIEW-P0-SPK-R0-001-PRE-I-VALIDATOR-REPAIR.json",
+    "recordSha256": "c63736b6663f45b545ea91f303837e9ccb1553b9c012a368e9fbe1201b85c605"
+  },
+  "candidate": {
+    "baseRevision": "73c1b6bad0e2fac742da3f7bf8decf710116fc38",
+    "revision": "3b25cc2423409c7bcf948260e311d39c93b30d01",
+    "dossierPath": "docs/council/execution/control-reviews/dossiers/P0-SPK-R0-001-CANDIDATE-QA-OUTPUT-PATH-CORRECTION.md",
+    "dossierSha256": "00da27663c4c722f887c717c539ca781f09ed3c1f7b3fec5e71f2b421e730ea1",
+    "reviewerRegistryPath": "docs/council/execution/P0-EXECUTION-REVIEWER-REGISTRY.json",
+    "reviewerRegistrySha256": "71c3eaf517da4bec7048fa53617410160032def15ded247bdfbfd11dcb83a30e",
+    "changedFiles": [
+      {
+        "path": "RUNNING_LOG.md",
+        "changeType": "modify",
+        "base": {
+          "sha256": "22ab3008fd3be9a7283ff3cfcc82eea619215e8e85d7e478db1d0ca4c97a1533",
+          "gitMode": "100644",
+          "gitType": "blob"
+        },
+        "candidate": {
+          "sha256": "100068729d5a386b571f42a2024efe47af01b4a69cad9077d975683da0bbe4c8",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      },
+      {
+        "path": "docs/council/execution/control-reviews/dossiers/P0-SPK-R0-001-CANDIDATE-QA-OUTPUT-PATH-CORRECTION.md",
+        "changeType": "add",
+        "base": null,
+        "candidate": {
+          "sha256": "00da27663c4c722f887c717c539ca781f09ed3c1f7b3fec5e71f2b421e730ea1",
+          "gitMode": "100644",
+          "gitType": "blob"
+        }
+      }
+    ],
+    "changedFilesSha256": "594f8249044fc2a089fe09e2f78a43830fd5e5af7bc4e11bbeb1a8b64f59d002",
+    "implementerIds": [
+      "codex-primary-integrator-01"
+    ],
+    "evidenceProducerIds": [
+      "codex-evidence-producer-01"
+    ]
+  },
+  "namedChecks": [
+    {
+      "checkId": "P0-CHECK-ADVERSARIAL",
+      "result": "pass",
+      "evidenceDigest": "sha256:9a0fe9655c54bbcf0b220c827fcea9827a2a5d25141c14915893abb293fddeaa",
+      "evidenceReference": "review:P0-SPK-R0-001-CANDIDATE-QA-OUTPUT-PATH-CORRECTION-ADVERSARIAL-D3B25CC2-M3353D94"
+    },
+    {
+      "checkId": "P0-CHECK-FROZEN-SCOPE",
+      "result": "pass",
+      "evidenceDigest": "sha256:2ad7d08c88f90dd1be2b68e4575c425f9ad72a9c54423dff2c3e0202e87ede20",
+      "evidenceReference": "local-evidence:P0-SPK-R0-001-CANDIDATE-QA-OUTPUT-PATH-CORRECTION-FROZEN-SCOPE-D3B25CC2-M3353D94"
+    },
+    {
+      "checkId": "P0-CHECK-GITHUB-CI",
+      "result": "pass",
+      "evidenceDigest": "sha256:066f89358e6f8001ab3c7b0fccc3020a1578680f68537598be0d269ab33e05c4",
+      "evidenceReference": "github-pr:110"
+    },
+    {
+      "checkId": "P0-CHECK-INDEPENDENT-QA",
+      "result": "pass",
+      "evidenceDigest": "sha256:7608d76bcd70afe66482d4a910f05ec375ee1be666a4089652d9afb39623cebd",
+      "evidenceReference": "review:P0-SPK-R0-001-CANDIDATE-QA-OUTPUT-PATH-CORRECTION-QA-D3B25CC2-M3353D94"
+    },
+    {
+      "checkId": "P0-CHECK-LOCAL-CI",
+      "result": "pass",
+      "evidenceDigest": "sha256:349fae360b92023b9438a0ad106b0f3f42678a86255a66c308088c3bdea33493",
+      "evidenceReference": "local-evidence:P0-SPK-R0-001-CANDIDATE-QA-OUTPUT-PATH-CORRECTION-LOCAL-CI-D3B25CC2-M3353D94"
+    }
+  ],
+  "namedChecksSha256": "5b20f9964b35410514f813145bd56089d512d567aa4f0a17f863e3eb0cf679ff",
+  "reviewContextSha256": "3e9fd5124e92b753dc24469371c9d6408f6c79fdc376c36dd6b1a85d97ba345b",
+  "seatAttestations": {
+    "product": {
+      "reviewerId": "codex-product-manager-01",
+      "reviewerRole": "product",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "3b25cc2423409c7bcf948260e311d39c93b30d01",
+      "reviewContextSha256": "3e9fd5124e92b753dc24469371c9d6408f6c79fdc376c36dd6b1a85d97ba345b",
+      "evidenceDigest": "sha256:c4f6eee57ef931ea3703ecddf3a76bd1d531ca672c290daf97e9aafdc8d535f2",
+      "evidenceReference": "review:P0-SPK-R0-001-CANDIDATE-QA-OUTPUT-PATH-CORRECTION-PRODUCT-D3B25CC2-M3353D94",
+      "rationale": "Terminal D/DM evidence confirms that the correction resolves only the conflicting third candidate-QA filename while preserving the exact three-file closed set, the 11-requirement and 15-scenario local-synthetic product boundary, the absent candidate contract and module, the inert lifecycle, all 58 Incomplete tasks, and the complete R1-R10 freeze. Local exact-head CI, both hosted D suites, both workflow guards, and exact-DM postmerge CI pass at their bound revisions with zero findings. Product approves only normal publication of the add-only successor record binding exact D; this creates no task approval, execution permission, private access, status transition, deployment, acceptance, release, production, or R1-R10 authority.",
+      "attestationDigest": "eb7ff8824582170c0f4d759e3328cefecf1e2176d65faaaac71cc9abdaf20e57"
+    },
+    "design": {
+      "reviewerId": "codex-ui-ux-designer-01",
+      "reviewerRole": "design",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "3b25cc2423409c7bcf948260e311d39c93b30d01",
+      "reviewContextSha256": "3e9fd5124e92b753dc24469371c9d6408f6c79fdc376c36dd6b1a85d97ba345b",
+      "evidenceDigest": "sha256:cbe4021816c105750b4d8651fca2dc86a45be2e41f5320f8111ae31b7845180a",
+      "evidenceReference": "review:P0-SPK-R0-001-CANDIDATE-QA-OUTPUT-PATH-CORRECTION-DESIGN-D3B25CC2-M3353D94",
+      "rationale": "Terminal D/DM evidence confirms that the sole dossier addition changes no product UI, prototype, screenshot, rendered accessibility claim, or evidence schema. It aligns one machine-output filename with the frozen exact three-file contract, forbids aliases and extra artifacts, and preserves the text-first Markdown/JSON/CLI evidence hierarchy, complete state vocabulary, accessibility requirements, inert lifecycle, absent candidate contract and module, and R1-R10 freeze. Local exact-head CI, both hosted D suites, both workflow guards, and exact-DM postmerge CI pass at their bound revisions with zero findings. Design approves only normal publication of the add-only successor record binding exact D; no execution, private, status, deployment, acceptance, release, production, or R1-R10 authority is created.",
+      "attestationDigest": "7701ff50ad3312e818cbf72e88b7db25c4f8dacc685f78775b0b29f4599d737d"
+    },
+    "architecture": {
+      "reviewerId": "codex-technical-architect-01",
+      "reviewerRole": "architecture",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "3b25cc2423409c7bcf948260e311d39c93b30d01",
+      "reviewContextSha256": "3e9fd5124e92b753dc24469371c9d6408f6c79fdc376c36dd6b1a85d97ba345b",
+      "evidenceDigest": "sha256:7ce9f2e86f59b86861dc8fc79bfbc7545fb6dd14844a468e3151e988ff2d0add",
+      "evidenceReference": "review:P0-SPK-R0-001-CANDIDATE-QA-OUTPUT-PATH-CORRECTION-ARCH-D3B25CC2-M3353D94",
+      "rationale": "Exact D and normal DM preserve the one-file public correction, closed output contract, protected topology, inert lifecycle, and frozen scope; approve only the later add-only successor record through its normal merge path.",
+      "attestationDigest": "7c3e623bdf91b8c24b41cc040ed40217c86b2bcf531d0cec6b0ec088117c982b"
+    },
+    "qa": {
+      "reviewerId": "codex-independent-qa-01",
+      "reviewerRole": "qa",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "3b25cc2423409c7bcf948260e311d39c93b30d01",
+      "reviewContextSha256": "3e9fd5124e92b753dc24469371c9d6408f6c79fdc376c36dd6b1a85d97ba345b",
+      "evidenceDigest": "sha256:7608d76bcd70afe66482d4a910f05ec375ee1be666a4089652d9afb39623cebd",
+      "evidenceReference": "review:P0-SPK-R0-001-CANDIDATE-QA-OUTPUT-PATH-CORRECTION-QA-D3B25CC2-M3353D94",
+      "rationale": "Independent reproduction binds the exact dossier, aggregate, registry, local and hosted attempt-1 results, normal DM topology, inert state, frozen scope, and zero findings; approve only normal publication of the add-only successor record.",
+      "attestationDigest": "0207ad1bbd675c2ac2f035833a1e74a2aa8446c76c96d8b8efbbec67f6a4e913"
+    },
+    "project": {
+      "reviewerId": "codex-project-manager-01",
+      "reviewerRole": "project",
+      "verdict": "approve-normal-merge-only",
+      "reviewedRevision": "3b25cc2423409c7bcf948260e311d39c93b30d01",
+      "reviewContextSha256": "3e9fd5124e92b753dc24469371c9d6408f6c79fdc376c36dd6b1a85d97ba345b",
+      "evidenceDigest": "sha256:d15d4ae291ec51722cb4c21a27b186b44f1378d677e1ee4c0f41ba8ace982f6f",
+      "evidenceReference": "review:P0-SPK-R0-001-CANDIDATE-QA-OUTPUT-PATH-CORRECTION-PROJECT-D3B25CC2-M3353D94",
+      "rationale": "Exact D and DM preserve the required recap and publication boundaries, all hosted attempts are terminal success, and every later successor, L2, and I-prime step remains separately conditional; approve only the add-only successor record's normal merge.",
+      "attestationDigest": "f8bee1b8761f7dd44e1ebcaba3b5f628385510f776808cec8da5b72dd42428f6"
+    }
+  },
+  "unresolvedVetoes": [],
+  "disposition": "accepted-normal-merge-only",
+  "taskApprovalCreated": false,
+  "runtimeAuthority": false,
+  "executionAllowed": false,
+  "privateActionAllowed": false,
+  "statusTransitionAllowed": false,
+  "r1R10Effect": "none",
+  "permittedClaim": "Accepted only for normal publication of the exact public/local control candidate; this review is non-authorizing and creates no task approval, execution permission, private access, R0 action, deployment, acceptance, status transition, or R1-R10 effect."
+}
