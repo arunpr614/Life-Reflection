@@ -1,6 +1,6 @@
 # Life in Days — document index
 
-Updated: 2026-08-18
+Updated: 2026-08-19
 
 This is the single navigation point for the Life in Days product, design, architecture, delivery, research, and governance documents.
 
@@ -98,6 +98,11 @@ Current status: **G0 planning baseline complete. G1 is blocked on Arun's explici
 | [Correction Editor v15 council](prototypes/v15/COUNCIL-v15.md) | Approved Product, Design, and Project contract for PVA-010. The immutable Council input remains the contract judged by the independent Pass; its pre-QA gate sentence is historical handoff language, while current commit/freeze status is governed by the handoff `Status:` line and append-only tracker. |
 | [Correction fixture sheet v15](prototypes/v15/CORRECTION-FIXTURES-v15.md) | Exact fictional source, lifecycle, failure, retry, race, privacy, focus/history, responsive, and 22-frame evidence cases independently passed on the held bytes. The post-QA/pre-commit snapshot leaves implementation/freeze sequencing to the handoff and tracker. |
 | [Correction Editor v15 final independent QA report](../design-qa-v15.md) | Final report for the exact held UI/package/authority/evidence bytes: Pass by `/root/v15_independent_qa_final2`, 22/22 original-size evidence inspection, complete v15 and inherited live regression, and Critical 0, High 0, Medium 0, Low 0. At the recorded post-QA/pre-commit snapshot, I=IP, the implementation/evidence commit is pending, and v15 is not frozen. |
+| [Source Conflict Resolution prototype v16](prototypes/CALENDAR-UI-PROTOTYPE-v16.md) | Eleventh remediation-slice handoff for the bounded `LID-SRC-002` frontend prototype: complete C1/R2 comparison, persistent unresolved Cancel, three no-auto-merge outcomes, guarded resolution, and R3 races. `/root/v16_independent_qa_final` passed the exact held bytes and 22/22 evidence with Critical 0, High 0, Medium 0, Low 0; I=IP, Q=A, the implementation/evidence commit is pending, and v16 is not frozen. |
+| [Calendar UI v16 prototype guide](../prototypes/calendar-ui/README-v16.md) | Local run instructions, exact eleven-file UI/package/authority fingerprint, source-conflict contract, current-run 22-frame evidence manifest, independent PASS summary, browser limitations, and post-QA/pre-commit gate state. |
+| [Source Conflict Resolution v16 council](prototypes/v16/COUNCIL-v16.md) | Approved Product, Design, and Project authority for `PVA-011`, including the complete comparison, exactly three outcomes, deterministic result cardinalities, privacy and accessibility contracts, exclusions, and exact 22-frame roster. Council approval is not implementation or QA approval. |
+| [Source-conflict fixture sheet v16](prototypes/v16/SOURCE-CONFLICT-FIXTURES-v16.md) | Exact fictional C1/R1/R2/R3/C2 facts, 129 independent cases, focus/privacy/history oracles, lifecycle and regression requirements, and the byte-identical 22-frame roster. No execution result is recorded in the oracle. |
+| [Source Conflict Resolution v16 final independent QA report](../design-qa-v16.md) | `/root/v16_independent_qa_final` Pass on exact held bytes: 129/129 cases, 22/22 original-size evidence inspection, v6–v16 static and inherited regression, privacy/network/cleanup evidence, explicit in-app-browser limits, and Critical 0, High 0, Medium 0, Low 0. This is post-QA/pre-commit evidence, not a freeze or production claim. |
 
 ## Discovery and research record
 
