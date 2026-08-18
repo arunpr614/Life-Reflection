@@ -1344,3 +1344,109 @@ No new product-scope or private-owner decision is required beyond explicit Produ
 - **Roadmap/runtime:** 58 Incomplete, zero Ready, zero execution-allowed; 336 Draft and 12 In-review artifacts; lifecycle `1/1/1/1/0/0/0`; candidate pair absent from merged main; 50 R1-R10 tasks and 300 artifacts frozen.
 - **Deployed/runtime state:** exact-`2c766088…` preparation and Stage 0 CI did not import or run the module; no candidate QA, Independent QA, Gate B, governed R0 task-stage execution, or deployment occurred; no executable R0 stage exists; deployment remains `Unknown — private read authority pending`.
 - **Next milestone:** normal publication of this `L1` recap, then the add-only QA-output-path correction dossier and successor record, then `L2`, then a fresh `I'`.
+<!-- P0-RUNNING-LOG-EVENT:{"authorId":"codex-primary-integrator-01","bodySha256":"b0b96a9ccc44ddbb22b6218d872968e361c0880d98dff62749e69bff6b0817bc","eventId":"P0-R0-SPK-QA-PATH-CORRECTION-RECAP-20260818-001","eventType":"terminal-recap","evidenceReference":"github-pr:111","parentRevision":"ababf3f5ee228e26ae42d0fd0ec951539577951f","previousByteLength":161154,"previousSha256":"100068729d5a386b571f42a2024efe47af01b4a69cad9077d975683da0bbe4c8","recordedAt":"2026-08-18T09:37:24+05:30","schemaVersion":"1.0.0"} -->
+## 2026-08-18 09:37 IST — QA output-path correction and successor review published; normal L2 merge gates fresh I-prime
+
+**Entry author:** AI agent (Codex) · **Triggered by:** terminal postmerge verification of PR #111 and the required L2 recap boundary before any fresh `SPK-R0-001` implementation candidate.
+
+### Planned since last entry
+
+The prior trusted entry recorded local implementation candidate `2c766088f74e0d0b2ce05f83bf5afce6735688a5` as held and abandoned before push because it skipped the required post-successor recap and inherited an exact candidate-QA output-path conflict. It required four distinct normal one-path publications before any replacement candidate: recap `L1`, the additive correction dossier, its add-only successor record, and this later recap `L2`. PR #109 published `L1`; PRs #110 and #111 then published the correction dossier and successor record without interleaving another path. This append is the required L2 terminal-recap candidate. Until it is itself normally merged with the prescribed parent and tree, no fresh `I'` may be selected.
+
+This entry is public/local evidence only. It creates no implementation acceptance, candidate-QA result, Independent-QA result, Gate B authority, task or stage approval, execution permission, private authority, owner-action satisfaction, status or delivery transition, deployment, release, production claim, or R1-R10 effect.
+
+### Done
+
+- **PR #109 — required pre-correction recap `L1`.** Candidate `c13645ddd2f0a22b620783526b8411491fec03c6`, a single-parent child of `5f869eaaf2a86752817f9bd2d9ba9440f103b679`, modified only regular `100644` `RUNNING_LOG.md`. Normal merge `dfe2f0f6f6229092acb85dabc603cd62ea2becb1` has ordered parents `[5f869eaaf2a86752817f9bd2d9ba9440f103b679,c13645ddd2f0a22b620783526b8411491fec03c6]` and tree `650728e5049c41919513982f10a2d2b27debcbbe`, exactly equal to the recap candidate tree. Its resulting running-log prefix is 161,154 bytes, raw SHA-256 `100068729d5a386b571f42a2024efe47af01b4a69cad9077d975683da0bbe4c8`, and Git blob `b6bd957b9b9acdff0fbb6a2d3ec10e79897920d5`.
+- **PR #110 — additive output-path correction dossier.** Candidate `3b25cc2423409c7bcf948260e311d39c93b30d01`, a single-parent direct child of `dfe2f0f6f6229092acb85dabc603cd62ea2becb1`, added only regular `100644` `docs/council/execution/control-reviews/dossiers/P0-SPK-R0-001-CANDIDATE-QA-OUTPUT-PATH-CORRECTION.md`: 20,167 bytes, 194 lines, raw SHA-256 `00da27663c4c722f887c717c539ca781f09ed3c1f7b3fec5e71f2b421e730ea1`, Git blob `d215b49bf3ef4732330d289d83ab86fff0089c82`, and tree `9fd34132cc286d9b12106ed4a1628c5c9f09517f`. Local exact-head Stage 0 CI returned `P0_STAGE0_CI_OK`, pass count 2, suite `sha256:4dc3d525b9404b5bcd068fb22deb73fd7fa9cd1647155a561f32e49fe705390f`, and result `sha256:70e49e7002588c46ba397371d4f0aa93a618cfa5e0c18502c6ed3a4d02146230`. Push run `32092491959` and PR run `32092519701`, attempt 1, succeeded at the exact head with result `sha256:7b053fb7fec0704ae8b6ae77a8781f8e759ad021a5c4b4279cd03ca1697f17e7`; opening and ready guards `32092519726` and `32092997056`, attempt 1, succeeded. Normal merge `3353d9433ca8243ef26153599803b44f2dfe273e` has ordered parents `[dfe2f0f6f6229092acb85dabc603cd62ea2becb1,3b25cc2423409c7bcf948260e311d39c93b30d01]` and tree `9fd34132cc286d9b12106ed4a1628c5c9f09517f`, exactly equal to the candidate tree. Exact-main run `32093107583`, attempt 1, succeeded with pass count 2 and result `sha256:334b01957d5505c87619136d71b4732ada3d1e84ce4877b77c614b6fa0397943`.
+- **PR #111 — add-only correction successor review.** Candidate `05e4f25b519b1fc3d61208362ab0cf2529b9ecc5`, a single-parent direct child of `3353d9433ca8243ef26153599803b44f2dfe273e`, added only regular `100644` `docs/council/execution/control-reviews/P0-CONTROL-REVIEW-P0-SPK-R0-001-CANDIDATE-QA-OUTPUT-PATH-CORRECTION.json`. The record is 9,754 bytes and 153 lines, with raw SHA-256 `4e50ea98b3aff0cddcb845a9a16f7d9703b32621a2be7d33a3ea9b93ffb1485c`, Git blob `e07b9ff786458f60f1c092199826dda548206951`, canonical SHA-256 `af3095ee91cde18e2197871014e21c311bbfb5a26844ebbd0773b251691dc5d6`, and tree `e308b0323e884516d372b6a1662a7e7a4d7ff094`. It binds correction candidate `3b25cc2…`, complete two-record aggregate digest `594f8249044fc2a089fe09e2f78a43830fd5e5af7bc4e11bbeb1a8b64f59d002`, reviewer-registry digest `71c3eaf517da4bec7048fa53617410160032def15ded247bdfbfd11dcb83a30e`, five passing named checks at digest `5b20f9964b35410514f813145bd56089d512d567aa4f0a17f863e3eb0cf679ff`, common review context `3e9fd5124e92b753dc24469371c9d6408f6c79fdc376c36dd6b1a85d97ba345b`, five distinct `approve-normal-merge-only` seats, and zero vetoes.
+- The recorded local exact-head PR #111 suite returned `P0_STAGE0_CI_OK`, pass count 2, suite `sha256:4dc3d525b9404b5bcd068fb22deb73fd7fa9cd1647155a561f32e49fe705390f`, and result `sha256:6f00fb4a1b95b6a9f20393ea2b6e997a01161af32a4d682e142338c9848be46c`. Push run `32096686135` and PR run `32096723596`, attempt 1, succeeded at exact `05e4f25…` with result `sha256:725fe984fa059a30f0b16fd30be4c1ee77044ecff8aefffeee6710ce4d68ba77`. Opening and ready guards `32096723605` and `32097196204`, attempt 1, succeeded with integrity state `clear`. The guard path emitted a required-check observability warning; a separate direct protection audit confirmed strict mode, both exact required contexts, admin enforcement, conversation resolution, and disabled force pushes and deletions.
+- Normal PR #111 merge `ababf3f5ee228e26ae42d0fd0ec951539577951f` has ordered parents `[3353d9433ca8243ef26153599803b44f2dfe273e,05e4f25b519b1fc3d61208362ab0cf2529b9ecc5]` and tree `e308b0323e884516d372b6a1662a7e7a4d7ff094`, exactly equal to the reviewed successor candidate tree. Exact-main run `32097284389`, attempt 1, succeeded with `P0_STAGE0_CI_OK`, pass count 2, suite `sha256:4dc3d525b9404b5bcd068fb22deb73fd7fa9cd1647155a561f32e49fe705390f`, and result `sha256:c6c75dc2112d6f53cb5298a8288c51d8cd22b24b1beb259bc32239c099edabf0`. At exact merge, successor trust reports 5 reviews, 0 findings, `runtimeAuthority=false`, `taskApprovalEffect=none`, and `permissionEffect=none`.
+
+### Exact correction outcome
+
+- The immutable runtime-activation seed remains historical evidence. The additive correction supersedes only its third candidate-QA output filename; it changes no receipt, evidence-index, attestation schema, candidate contract, module, proposal, task, workflow, lifecycle, permission, or safety boundary.
+- Every later bundle governed by these exact inputs has directory `outputs/P0-SPK-R0-001-CANDIDATE-QA-<I12>` and exactly three regular files: `P0-SPK-R0-001-CANDIDATE-QA-RECEIPT.json`, `P0-SPK-R0-001-CANDIDATE-QA-EVIDENCE-INDEX.json`, and `P0-SPK-R0-001-CANDIDATE-QA-INDEPENDENT-QA-ATTESTATION.json`.
+- Historical name `P0-SPK-R0-001-INDEPENDENT-QA-ATTESTATION.json` is prohibited as an alias, duplicate, copy, fallback, compatibility name, link, fourth artifact, secondary-directory artifact, or substitute. The output count remains exactly three and `additionalFilesAllowed=false`.
+- The candidate-QA contract and synthetic module remain absent at exact `ababf3f…`. No correction or review command imported or ran the module, and no candidate-QA output bundle exists.
+
+### Held implementation candidate remains abandoned
+
+- Local commit `2c766088f74e0d0b2ce05f83bf5afce6735688a5`, parent `5f869eaaf2a86752817f9bd2d9ba9440f103b679`, tree `b85325d28bab982a30a167bb6f11f5bd6141e53d`, remains **HOLD / abandoned**. A fresh read-only repository lookup still found no published commit. Do not push, amend, rebase, merge, or reuse its commit, tree, revision-derived `I12`, or revision-derived evidence.
+- Only its exact file bytes may be reused after normal L2 merge: contract `docs/work-items/SPK-R0-001/P0-SPK-R0-001-CANDIDATE-QA-CONTRACT.json`, 52,147 bytes, raw SHA-256 `0467b716d1952b59fd07acf5337c6a105d44cfc926c104635829027751cdfb7f`, Git blob `a445372f2b1c49d63607bd1d7a5e7ae05c23c00f`; and module `tools/spk-r0-001/P0-SPK-R0-001-synthetic-foundation.mjs`, 135,119 bytes, raw SHA-256 `e60d8e6398441a61812dd467ffcbdd292e01fb1198723e667e480d2cf453e47f`, Git blob `9f1885bd4a0d8b4b85fe759da56641ec7e25b356`.
+- The held commit's earlier exact-head result `sha256:f499039a80b223b06c4151b6d7f5bd4c971a2726a7a90edc2d4840c52228c4ff` remains mechanical evidence for that abandoned revision only. It is not reusable candidate evidence, candidate QA, Independent QA, Gate B, module execution, or runtime evidence.
+
+### Current truth and authority boundary
+
+- Exact `ababf3f…` retains the regular `100644` integrity manifest with 55 `current` records and `next:null`, one accepted Gate A preparation, zero Gate B stage approvals, no callback, no executable stage, and lifecycle tuple `1/1/1/1/0/0/0`.
+- All 58 tasks remain Incomplete; the generated work-item inventory remains 348 files with 336 Draft and 12 In-review artifacts, zero Ready, and zero execution-allowed. All 50 R1-R10 tasks and 300 R1-R10 artifacts remain frozen with zero execution allowed.
+- The correction successor record is non-authorizing: `taskApprovalCreated=false`, `runtimeAuthority=false`, `executionAllowed=false`, `privateActionAllowed=false`, `statusTransitionAllowed=false`, and `r1R10Effect=none`. This running-log event has no task-contract, dossier-digest, Gate A/B, authority, owner-action, task-status, issue/Project-status, permission, or execution effect.
+- Beyond the normal GitHub branch, PR, check, ready, and merge actions recorded above, no external product, private-host, provider, or runtime mutation occurred. No candidate QA, Independent QA execution, Gate B review, governed task-stage invocation, private or authentic-content access, credential use, provider contact, issue or Project mutation, roadmap/workbook/Wiki change, backup, restore, rollback, deployment, acceptance, release, or production action occurred. Deployment remains **Unknown — private read authority pending**.
+
+### Cross-lane notes
+
+- This recap must be a fresh single-parent direct child of exact `ababf3f5ee228e26ae42d0fd0ec951539577951f`, preserve its 161,154-byte running-log prefix byte-for-byte, and modify only regular `100644` `RUNNING_LOG.md`. Its normal merge must have ordered parents `[ababf3f…,L2]` and tree exactly equal to `L2`.
+- The candidate and merge identities for this append are intentionally not self-embedded. No implementation candidate may interleave before normal L2 merge. The held `2c766088…` worktree and commit remain provenance only and must not be rewritten or published.
+- Repository merge, squash, and rebase methods are enabled; this recap and every later governed publication must explicitly use a normal merge commit with the expected head, required checks, and no admin or protection bypass.
+
+### Learned
+
+- Exact output-path identity is a control invariant when the output cardinality is closed. Matching semantic purpose cannot substitute for the required filename, and compatibility aliases would violate the exact three-file contract.
+- Separating the correction dossier, its successor record, and this recap preserves immutable history and avoids self-referential evidence. A green control suite does not waive the required evidence cadence.
+- A successful guard with limited required-check visibility is not itself proof of branch protection. The direct protection read is the separate evidence for strict required contexts; both facts must remain distinguishable.
+
+### Deployed / Released
+
+PRs #109-#111 normally published public/local recap and control-review evidence. Nothing was deployed or released. No executable R0 stage exists, and no governed R0 task-stage execution occurred.
+
+### Documents created or updated this period
+
+**Created on merged main:**
+- `docs/council/execution/control-reviews/dossiers/P0-SPK-R0-001-CANDIDATE-QA-OUTPUT-PATH-CORRECTION.md` — additive, single-filename supersession dossier from PR #110.
+- `docs/council/execution/control-reviews/P0-CONTROL-REVIEW-P0-SPK-R0-001-CANDIDATE-QA-OUTPUT-PATH-CORRECTION.json` — add-only five-seat non-authorizing successor record from PR #111.
+
+**Updated:**
+- `RUNNING_LOG.md` — L1 was published by PR #109; this candidate appends only the required L2 terminal recap while preserving every prior byte.
+
+The historical runtime-activation seed, frozen candidate-QA contract bytes, frozen module bytes, integrity manifest, registries, tasks, proposals, projections, workbook, and Wiki were not changed by PRs #110-#111 or this recap candidate.
+
+### Current remaining to-do
+
+1. Publish this one-path L2 recap through a normal required-check PR. Its candidate must directly parent exact `ababf3f5ee228e26ae42d0fd0ec951539577951f`; its merge `L2M` must have ordered parents `[ababf3f…,L2]` and tree exactly equal to `L2`. Stop and rebuild from fresh exact main on any moved base, extra path, failed check, wrong parent order/tree, or protection drift.
+2. Only after exact normal `L2M`, create a fresh single-parent implementation candidate `I'` that adds exactly the two frozen regular `100644` files above, byte-for-byte, while preserving all six proposal blobs and the corrected closed output contract. Do not reuse `2c766088…`, its tree, its `I12`, or its revision-derived evidence.
+3. Publish `I'` normally with ordered parents `[L2M,I']` and tree exactly equal to `I'`. Do not import or run the module for the fresh candidate before that merge.
+4. Only after exact normal `I'M` may registered evidence producer `codex-evidence-producer-01` run the 15 public/local/fictional/synthetic candidate-QA scenarios and produce the exact three-file bundle. Distinct Independent QA must then evaluate that bundle. Gate B and any governed invocation remain separate reviewed publications.
+
+### Open questions / decisions needed
+
+No new product-scope or private-owner decision is required for the next public/local L2 and fresh-candidate preparation steps. `P0-OA-001` and `R0-OA-001` remain unsatisfied and block every private-host lane. Credentials, provider terms, spend, authentic content, private targets, deployment, backup/restore/rollback, acceptance, release, and production actions remain separately owner-gated.
+
+### Session self-critique
+
+- The original candidate should not have been cut before the required recap, and its exact output list should have been cross-checked against the historical seed before a candidate identity existed. The independent pre-push audit contained the error before publication or candidate QA.
+- The two-PR additive repair preserves history and closes the filename contradiction, but it does not validate the later implementation or candidate-QA outputs. Fresh `I'` must repeat the exact closed-path check rather than relying only on this narrative.
+- This event cannot attest its own future candidate SHA, PR, checks, merge, or postmerge run. Those remain required publication evidence for L2. The recorded local D and R exact-head results were not rerun while drafting this recap; hosted run and Git topology facts were freshly read and the module was not run.
+
+### Claim audit
+
+- **Directly verified from exact local Git objects:** L1/D/DM/R/RM parents, trees, changed paths, modes, byte lengths, raw hashes, Git blobs, running-log prefix, record canonical digest, exact corrected filenames, pair absence at RM, and held-candidate parent/tree/two-file scope.
+- **Directly verified from read-only GitHub metadata and workflow logs:** PR #110 and #111 heads, bases, ready/merged states, exact merge SHAs, all listed attempt-1 run IDs and conclusions, hosted suite/result digests, guard states, RM postmerge result, branch-protection settings, and the continued absence of published commit `2c766088…`.
+- **Verified from retained local evidence, not rerun for this append:** D and R local two-pass Stage 0 results. Those suites are mechanical control/publication evidence only and did not import or run the absent module.
+- **Explicitly not claimed:** implementation acceptance, candidate QA, Independent QA execution, Gate B, module execution, private/authentic access, task or delivery transition, deployment, release, production readiness, or any R1-R10 effect.
+
+### Action items for the next agent
+
+1. Recompute the marker and body digests against exact `ababf3f…:RUNNING_LOG.md`, require a marker-first canonical append with the matching IST minute, and verify the resulting event as the eighth trusted append with zero findings and evidence-only effect.
+2. Freeze and review the one-path L2 candidate, run clean exact-head checks, publish through a normal protected PR, and verify `L2M` parent order, tree equality, and postmerge checks before selecting `I'`.
+3. Build `I'` from exact `L2M` using only the two frozen byte identities, normally merge it, and only then begin the separately governed candidate-QA and Independent-QA sequence.
+4. Keep every private, authentic-content, Gate B, execution, status, deployment, release, production, and R1-R10 lane closed.
+
+### State snapshot
+
+- **Current phase / version:** QA output-path correction dossier and add-only successor record normally published and postmerge verified; L2 recap publication pending; implementation candidate not accepted; Gate B not started.
+- **Exact L2 parent:** `ababf3f5ee228e26ae42d0fd0ec951539577951f`, normal merge of PR #111.
+- **Required L2 scope:** fresh single-parent candidate, sole modification `RUNNING_LOG.md`, exact 161,154-byte prefix preserved; candidate/PR/merge identities remain unfrozen.
+- **Held local candidate:** `2c766088f74e0d0b2ce05f83bf5afce6735688a5`; HOLD / abandoned, retained only in local Git provenance, and still absent from GitHub and unpublished.
+- **Roadmap/runtime:** 58 Incomplete, zero Ready, zero execution-allowed; 336 Draft and 12 In-review artifacts; lifecycle `1/1/1/1/0/0/0`; candidate pair absent from merged main; 50 R1-R10 tasks and 300 artifacts frozen.
+- **Deployed/runtime state:** no candidate QA, Independent QA execution, Gate B, governed R0 task-stage execution, or deployment occurred; no executable R0 stage exists; deployment remains `Unknown — private read authority pending`.
+- **Next milestone:** normal publication and postmerge verification of L2, followed by a fresh exact-byte `I'` candidate from `L2M`.
