@@ -1450,3 +1450,92 @@ No new product-scope or private-owner decision is required for the next public/l
 - **Roadmap/runtime:** 58 Incomplete, zero Ready, zero execution-allowed; 336 Draft and 12 In-review artifacts; lifecycle `1/1/1/1/0/0/0`; candidate pair absent from merged main; 50 R1-R10 tasks and 300 artifacts frozen.
 - **Deployed/runtime state:** no candidate QA, Independent QA execution, Gate B, governed R0 task-stage execution, or deployment occurred; no executable R0 stage exists; deployment remains `Unknown — private read authority pending`.
 - **Next milestone:** normal publication and postmerge verification of L2, followed by a fresh exact-byte `I'` candidate from `L2M`.
+<!-- P0-RUNNING-LOG-EVENT:{"authorId":"codex-primary-integrator-01","bodySha256":"d2a5a0edb899ff5066d8894fb98d1572856b40568ad61ae13af2e2e0c63113d0","eventId":"P0-R0-PAUSE-HANDOVER-20260818-001","eventType":"handoff","evidenceReference":"local-evidence:P0-R0-PAUSE-HANDOVER-20260818-001","parentRevision":"39daefc92aebeb5cf3a0cdfb565a150b74f6da5e","previousByteLength":179920,"previousSha256":"8099de8e2211f2d68c4cd0d666604356ae31c5b7659f5fc22d15d68693fe296a","recordedAt":"2026-08-18T21:25:17+05:30","schemaVersion":"1.0.0"} -->
+## 2026-08-18 21:25 IST — Product Owner pauses P0/R0; comprehensive handover and retrospective prepared
+
+**Entry author:** AI agent (Codex) · **Triggered by:** direct Product Owner instruction to stop the long-running effort, preserve its exact state, prepare a cold-start handover for another AI agent, reconcile GitHub truth, and write a separate candid self-critique.
+
+### Pause boundary
+
+Work is paused. This event and its two companion documents are public/local operational evidence only. They create no task approval, Gate B approval, execution permission, private authority, status or delivery transition, acceptance, deployment, release, production claim, or R1-R10 effect. A later agent must not continue automatically; only a later direct Product Owner instruction can resume the work.
+
+The exact source baseline for this handoff candidate is normal PR #113 merge `39daefc92aebeb5cf3a0cdfb565a150b74f6da5e`, with ordered parents `[372b167863a96142a9d90d177ef4f7373e30df9d,9d41f70849a6fb75f0c304b624f1783beb43ec21]` and tree `2bbf8987683407b419b8374db2124dab309d548f`. PR #113 added only the frozen candidate-QA contract and synthetic module. It did not produce candidate-QA evidence or authorize execution.
+
+### Exact state at pause
+
+- `SPK-R0-001` remains issue #4, open, Roadmap and Project Status `In progress`, artifact readiness `Incomplete`, execution decision `Hold`, and execution allowed `false`.
+- All 58 tasks remain Incomplete, zero are Ready, and zero are execution-allowed. The artifact distribution remains 336 Draft / 12 In-review. R1-R10 remains frozen at 50 tasks and 300 artifacts.
+- The lifecycle remains `1/1/1/1/0/0/0`: one preparation review, definition, module metadata record, and outcome verifier; zero callback, Gate B stage approval, or executable stage.
+- Candidate QA, Independent QA, governed stage execution, private/authentic access, deployment, acceptance, release, and production have not occurred. No candidate-QA output directory or three-file bundle exists.
+- Deployment remains `Unknown — private read authority pending`.
+
+### PR #112 and PR #113 evidence now captured
+
+The prior trusted L2 event was introduced by PR #112 but necessarily predates its own merge identity and all PR #113 outcomes. This fresh handoff records the missing terminal boundary without reusing the older interrupted recap candidate.
+
+- PR #112 normally merged L2 as `372b167863a96142a9d90d177ef4f7373e30df9d`; its exact-main run `32101398319`, attempt 1, passed.
+- PR #113 candidate `9d41f70849a6fb75f0c304b624f1783beb43ec21` passed local two-pass Stage 0 CI with result `sha256:1ebec0b96450383fe57aa04eaab025731cede8d3ac593b017426a306d74ddac8`.
+- Hosted push `32104624385`, pull-request `32104650591`, opening guard `32104650706`, and ready guard `32105236015` all passed on attempt 1 at exact candidate head. The two hosted suites reported result `sha256:5de05a1e0710d89d55ac2464bed1bd7e692773bbf4a76c69b5de6c686ecd034d`.
+- Exact-main run `32105396859` attempt 1 failed only at `stage_runner_fixtures`, status 1, stderr SHA-256 `84aefe0acec9e6f1ae9b6310adebf70b93e6f6893ceac249cf2648582cbbc7b1`. One unchanged-head failed-job retry was authorized. Attempt 2, job `95614957038`, passed with result `sha256:81a9f98a886cd79b2e3a6b7be8cf06d7fa5c0f666aea315cff2f1158becda4f3`. Attempt 1 remains part of the evidence.
+
+### Candidate-QA feasibility HOLD
+
+The module was not invoked for candidate QA. Independent feasibility review found three semantic blockers in the merged v1 contract:
+
+1. It requires a fresh current PR #70 dependency check during the QA interval while also describing one environment with `externalEgressPresent=false`, without defining separate acquisition and no-egress execution environments or an offline freshness capsule.
+2. It requires a retained-artifact scan to cover an independent attestation whose final bytes depend on already-final receipt and index hashes, but defines no acyclic projection/finalization rule.
+3. It does not freeze one complete shell-free harness, exact ordered command plan, repetition count, isolation mechanism, or digest domain for several evidence fields.
+
+No ad hoc procedure, copied digest, Stage 0 pass, or narrative interpretation can make those simultaneous claims truthful. The candidate-QA lane therefore remains HOLD before invocation.
+
+### Documents created in this handoff candidate
+
+- `docs/project/P0-R0-PAUSED-WORK-HANDOVER-2026-08-18.md` — exact source/GitHub/worktree state, blockers, preserved prototypes, resume procedure, and prohibited actions for a cold-start successor.
+- `docs/project/P0-R0-EXECUTION-RETROSPECTIVE-2026-08-18.md` — separate self-critique, quantitative chronology, root-cause analysis, and owner/action/metric improvement plan.
+- `RUNNING_LOG.md` — this one canonical handoff event; the existing 179,920-byte prefix is preserved byte-for-byte.
+
+The handover package's candidate, PR, checks, merge, postmerge run, and post-publication GitHub reconciliation are intentionally not self-attested here. They remain future publication evidence and must be verified separately.
+
+### Preserved local evidence
+
+- `d458b0bbb6df607334f3123e815905d52c8e768b` is an unpublished direct-child recap candidate that changes only `RUNNING_LOG.md`. Its correct exact-head Stage 0 invocation was interrupted and has no terminal result. Preserve it as noncanonical evidence; do not amend, publish, rebase, cherry-pick, delete, or call its interrupted run a pass or failure.
+- Worktree `Phase1-r0-spk-candidate-qa-tools-prototype` contains two untracked, incomplete producer/verifier prototypes. Their real modes intentionally fail closed because production assembly is not frozen.
+- Worktree `Phase1-r0-spk-candidate-qa-contract-v2-draft` contains one incomplete v2 JSON draft with four explicit unfrozen tool-identity sentinels.
+- Earlier local candidate `2c766088f74e0d0b2ce05f83bf5afce6735688a5` remains abandoned provenance only. Published I-prime candidate `9d41f708…` is historical preparation source, but its merged v1 QA protocol is not satisfiable and must not be run.
+- In the read-only pause snapshot taken before this handover worktree was edited, 58 worktrees were registered: 46 clean, 11 dirty, and one missing/prunable registration. The root checkout and stale local `main` are unsafe. Do not reset, clean, prune, remove, or consolidate any worktree as part of this pause.
+
+### GitHub reconciliation boundary
+
+The live pause state is already truthfully `In progress`, not Done, Next, Backlog, or a nonexistent `Paused` Project value. A read-only reconciliation found all Project values current. Only issue #4's generated body was stale at the older Draft artifact table while merged source has all six SPK artifacts `in-review`.
+
+After this handoff package is normally merged, the permitted reconciliation is the governed issue-body sync from a clean, attached, exact-main checkout: dry-run, `--apply --issues-only`, then two separate quiescent `--verify` passes. Do not use the disabled delivery-transition apply path, manual UI, raw API, or Project mutation to manufacture a pause status. The Project should be reported as verified current, not updated.
+
+### Retrospective conclusion
+
+The work preserved privacy, truthful evidence, protected history, and the R1-R10 freeze. It also optimized for control auditability rather than delivery. From bounded Goal merge `2dc4d05cdeca8cb9aeacf393076f6c6f946ff62b` to this source baseline, first-parent history contains 41 later merges, while candidate QA still could not begin.
+
+The coordinating failure was freezing governance before proving one minimal producer-to-independent-attester vertical slice. Repeated defects were answered with more integrity machinery, immutable records, and publication waves instead of an earlier strategic simplification. The next Product Owner decision must be explicit: simplify/rebaseline the QA control path, or accept the cost of salvaging the proposed v2 repair. The recommendation is simplify before salvage.
+
+### Claim audit
+
+- **Freshly verified for this handoff:** live and local remote-tracking main at `39daefc…`; PR #113 topology and exact two-file identities; canonical task/status/lifecycle/freeze state; worktree inventory; absence of active Stage 0/candidate-QA/module processes; prototype and interrupted-recap worktree state; live issue #4 and Project values; and the one generated issue-body mismatch.
+- **Bound from retained local/hosted evidence and independently rechecked where available:** the PR #112/#113 local, hosted, guard, merge, and postmerge attempt ledger above. Repository-control success is not candidate-QA success.
+- **Not claimed:** correctness or approval of v2; a candidate-QA or Independent-QA pass; Gate B; execution authority; private/provider state; backup, restore, rollback, migration, deployment, acceptance, release, production, task completion, or any R1-R10 effect.
+
+### Action items for the next agent after explicit resume
+
+1. Read root `AGENTS.md`, the bounded Gold Goal, the two handoff documents, this latest trusted event, the sync runbook, the v1 contract, and the relevant successor records.
+2. Refresh remote main, open PRs, branch protection, issue/Project state, processes, and all relevant worktrees before relying on any identity in this handoff.
+3. Create a new clean `codex/*` worktree at exact live main. Do not reuse the dirty root, stale local `main`, `d458…`, or prototype worktrees for integration.
+4. Require a direct Product Owner simplify-versus-salvage decision before any source edit, QA run, or control repair.
+5. Before freezing another contract, prove the complete evidence DAG and finalization order with a disposable producer and an independently implemented black-box verifier.
+6. Keep Gate B, governed execution, private/authentic access, delivery transition, deployment, acceptance, release, production, and all R1-R10 work closed until separately authorized and evidenced.
+
+### State snapshot
+
+- **Phase:** paused before candidate-QA invocation; implementation-preparation bytes are published, but QA protocol v1 is semantically blocked.
+- **Pre-handover source baseline:** `39daefc92aebeb5cf3a0cdfb565a150b74f6da5e`, normal merge of PR #113.
+- **Task truth:** `SPK-R0-001` / issue #4 remains open, `In progress`, `Incomplete`, `Hold`, and execution-disallowed.
+- **Evidence truth:** no candidate-QA bundle, Independent-QA pass, Gate B, or governed execution exists.
+- **Preserved local work:** interrupted recap `d458b0b…`, incomplete two-tool prototype, incomplete v2 contract draft, and earlier provenance worktrees; none is approved for publication or execution.
+- **Next milestone:** none while paused. After explicit resume, first choose simplify versus salvage and prove protocol satisfiability before another frozen candidate.
