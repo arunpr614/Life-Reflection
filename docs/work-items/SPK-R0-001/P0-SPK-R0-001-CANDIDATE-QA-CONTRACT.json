@@ -1,0 +1,1254 @@
+{
+  "schemaVersion": "1.0.0",
+  "contractId": "spk-r0-001-candidate-qa-contract-v1",
+  "contractState": "pre-execution-contract",
+  "authorityBoundary": {
+    "candidateReceiptKind": "candidate-qa-evidence-v1",
+    "lifecycle": "gate-a-preparation",
+    "taskStageInvoked": false,
+    "gateBStageReceiptSha256": null,
+    "executionAllowed": false,
+    "taskAcceptanceGranted": false,
+    "statusTransitionGranted": false,
+    "privateAccessAllowed": false,
+    "authenticContentAllowed": false,
+    "externalAccessAllowed": false,
+    "externalMutationAllowed": false,
+    "deploymentAllowed": false,
+    "releaseAllowed": false,
+    "productionClaimAllowed": false,
+    "contractContainsExecutedEvidence": false,
+    "boundary": "This contract defines future local, public, fictional, synthetic candidate-QA evidence only. It is not a candidate-QA result, a Gate B approval, a governed task-stage receipt, task acceptance, a status transition, private authority, deployment, release, or production evidence."
+  },
+  "bindings": {
+    "taskId": "SPK-R0-001",
+    "preparationReviewId": "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+    "acceptedPreparationRecordSha256": "70168f46a379bcbccd7b2afee15bfdbaa957247b30ca87ee671fcd3ca2d8164b",
+    "acceptedPreparationRegistryPath": "docs/council/execution/P0-R0-STAGE-APPROVAL-REGISTRY.json",
+    "dependency": {
+      "taskId": "PC-001",
+      "requiredEvidenceReference": "github-pr:pull-70",
+      "requiredState": "current-passing-at-candidate-qa",
+      "candidateQaReverificationRequired": true
+    },
+    "stageId": "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+    "scopeClass": "local-synthetic",
+    "actionClass": "synthetic-foundation",
+    "taskContractSha256": "f58e65c56e58dc4b1e12deab68f7349822f7f95dd33eee4fcd4872243170fa23",
+    "idempotencyKey": "P0-IDEMP-SPK-R0-001-SYNTHETIC-001",
+    "candidateQaContractPath": "docs/work-items/SPK-R0-001/P0-SPK-R0-001-CANDIDATE-QA-CONTRACT.json",
+    "module": {
+      "moduleId": "spk.synthetic",
+      "moduleClass": "serializable-child",
+      "path": "tools/spk-r0-001/P0-SPK-R0-001-synthetic-foundation.mjs",
+      "rawSha256": "e60d8e6398441a61812dd467ffcbdd292e01fb1198723e667e480d2cf453e47f",
+      "byteLength": 135119,
+      "mode": "100644",
+      "type": "blob",
+      "argumentSetId": "synthetic.v1",
+      "argumentSet": [],
+      "nodeBuiltins": [
+        "node:crypto",
+        "node:fs"
+      ],
+      "descriptorWrite": 3,
+      "ordinaryFilesystemAccess": false,
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "ambientEnvironmentRead": false,
+      "externalIo": false,
+      "dynamicCodeLoading": false
+    },
+    "stageBindingDigest": "sha256:fc172d2f8c1e5f9dccdf7a5c398fe0a2038591f7fb2903e54961879c73041983",
+    "governedEvidenceContractSha256": "sha256:38c8deeb899e87cfef731cc1932d3594f3cf4b7d6afa1aeff62cb343395931d8",
+    "fixture": {
+      "schemaVersion": "spk-r0-001.synthetic-foundation.fixture.v1",
+      "seedId": "spk-r0-001-fixed-seed-v1",
+      "sha256": "sha256:a5b51a5564523396c6c07c4a861de94ca594232af73336f283fa3b53a71e4022",
+      "fixtureClass": "local-public-fictional-synthetic",
+      "authenticContentExcluded": true
+    },
+    "canonicalVectors": {
+      "sourceRevision": "0000000000000000000000000000000000000000",
+      "expectedGovernedEvidenceSha256": "sha256:21a2b56022c4034d8ff6f1eed8c8933cb5980fb39191ed211e30209cbf954608",
+      "expectedChildResultTerminalLfSha256": "sha256:5edb9a81d6d75d36bde47f713cd38007e809236a19e54858d3cf3ae087188795",
+      "meaning": "These are canonical zero-revision test vectors. Future evidence must recompute source-revision-dependent evidence and child-result digests for the exact implementation candidate rather than copying these vector digests."
+    },
+    "participants": {
+      "implementer": {
+        "reviewerId": "codex-primary-integrator-01",
+        "reviewerRole": "implementation"
+      },
+      "evidenceProducer": {
+        "reviewerId": "codex-evidence-producer-01",
+        "reviewerRole": "evidence-producer"
+      },
+      "independentQa": {
+        "reviewerId": "codex-independent-qa-01",
+        "reviewerRole": "qa"
+      }
+    }
+  },
+  "candidateRevisionRule": {
+    "contractEmbedsBaseRevision": false,
+    "contractEmbedsCandidateRevision": false,
+    "contractEmbedsMergeRevision": false,
+    "reason": "The contract is a member of the future implementation candidate and cannot self-bind its own candidate or merge revision. No future B, I, or IM value is asserted by these bytes.",
+    "requiredLaterBindings": [
+      "baseRevision",
+      "candidateRevision",
+      "mergeRevision"
+    ],
+    "revisionFormat": "^[0-9a-f]{40}$",
+    "topologyRule": "The future candidate revision must be a single-parent direct child of the bound base revision. The future normal merge must have parents [baseRevision,candidateRevision] in that order and a tree exactly equal to candidateRevision.",
+    "artifactRule": "The receipt, evidence index, and independent-QA attestation must each bind the same exact baseRevision, candidateRevision, mergeRevision, candidate-QA-contract raw SHA-256, and module raw SHA-256 after those revisions exist.",
+    "changeInvalidationRule": "Any change to the candidate, module, contract, fixture, dependency closure, configuration, command set, or retained evidence invalidates the prior candidate-QA evidence and requires a fresh three-record bundle."
+  },
+  "requiredChecks": {
+    "allMustPass": true,
+    "orderedCheckIds": [
+      "module-source-and-obfuscated-loader-scan",
+      "closed-dependency-and-builtin-scan",
+      "child-result-and-retained-artifact-scan",
+      "independent-primitive-oracle-reconstruction"
+    ],
+    "checkExpectations": [
+      {
+        "checkId": "module-source-and-obfuscated-loader-scan",
+        "expectedResult": "pass",
+        "expectation": "Inspect the exact module and contract bytes for undeclared source behavior, encoded or obfuscated loading, dynamic evaluation, shell or subprocess launch, ambient-input use, private-target access, authentic-content paths, and external I/O; findings must be zero."
+      },
+      {
+        "checkId": "closed-dependency-and-builtin-scan",
+        "expectedResult": "pass",
+        "expectation": "Reconstruct the complete dependency closure and require exactly the declared node:crypto and node:fs builtins, descriptor 3 output, no ordinary filesystem access, no ambient environment read, no dynamic loading, and no network or external dependency."
+      },
+      {
+        "checkId": "child-result-and-retained-artifact-scan",
+        "expectedResult": "pass",
+        "expectation": "Verify the exact eight-key child result and scan child output plus every retained receipt, index, log, backup representation, restored-state representation, and evidence value for forbidden fields, sensitive sentinels, authentic content, media carriers, credentials, private targets, external calls, and unsupported claims; findings must be zero."
+      },
+      {
+        "checkId": "independent-primitive-oracle-reconstruction",
+        "expectedResult": "pass",
+        "expectation": "Without importing or calling the candidate module and without accepting copied expected digests as proof, independently reconstruct the canonical fixture, primitive recipes, component observations, 11 requirement results, 15 scenario results, 8 contract results, normalized evidence, and child-result binding; the deliberate semantic-drift negative must be rejected."
+      }
+    ],
+    "scenarioExpectations": [
+      {
+        "scenarioId": "SPK-R0-001-P-001",
+        "title": "Outcome",
+        "expectedAssertion": "The later stage produces the bounded fictional capacity/collision, isolation, encryption, recovery, health, replay, and receipt outcome without implying task or release completion.",
+        "requiredEvidence": "Exact candidate/stage binding, canonical fixture digest, per-contract results, and closed permitted claim",
+        "requiredComponentIds": [
+          "access",
+          "capacity",
+          "encryption",
+          "health",
+          "recovery",
+          "replay"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "scenarioId": "SPK-R0-001-P-002",
+        "title": "Boundary",
+        "expectedAssertion": "All 11 requirements are traced; deferred requirements remain absent; no private, authentic, human-only, provider, deployment, or external act is inferred.",
+        "requiredEvidence": "Requirement matrix, excluded-scope scan, authentic-content exclusion, and external-I/O proof",
+        "requiredComponentIds": [
+          "privateBoundary",
+          "requirements"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "scenarioId": "SPK-R0-001-P-003",
+        "title": "Evidence",
+        "expectedAssertion": "Evidence is retrievable, task/stage/candidate-bound, public-safe, independently reviewable, and no broader than the supported local-synthetic claim.",
+        "requiredEvidence": "Canonical receipt and evidence index with hashes, reviewer identity, limitations, and permitted claim",
+        "requiredComponentIds": [
+          "logging",
+          "requirements"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "scenarioId": "SPK-R0-001-T-001",
+        "title": "Boundary and failure",
+        "expectedAssertion": "Invalid, absent, repeated, interrupted, or out-of-order inputs fail safely and leave no partial or falsely successful state.",
+        "requiredEvidence": "Table-driven boundary/fault results, before/after digests, durable events, and no-success assertions",
+        "requiredComponentIds": [
+          "access",
+          "encryption",
+          "replay"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "scenarioId": "SPK-R0-001-T-002",
+        "title": "Recovery",
+        "expectedAssertion": "Every persistent synthetic shape introduced or changed by the candidate is inventoried, backed up, restored in a separate empty destination, compared, and rolled back or forward-fixed.",
+        "requiredEvidence": "Inventory/backup/restore/compare/rollback digests, separation proof, interruption cases, and elapsed time",
+        "requiredComponentIds": [
+          "encryption",
+          "recovery"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "scenarioId": "SPK-R0-001-T-003",
+        "title": "Isolation",
+        "expectedAssertion": "Privacy, security, resource, dependency, and co-resident failure cannot broaden access, leak forbidden data, or corrupt the accepted fictional baseline.",
+        "requiredEvidence": "Cross-surface denial, collision/capacity, dependency-failure, content-scan, and baseline comparison results",
+        "requiredComponentIds": [
+          "access",
+          "capacity",
+          "logging",
+          "privateBoundary",
+          "replay"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "scenarioId": "SPK-R0-001-D-001",
+        "title": "Complete states",
+        "expectedAssertion": "The applicable normal proposal/result, empty/never-run, loading/long-running, validation/dependency-error, interruption/timeout/stale-result, destructive restore/rollback-rehearsal, blocked-private, and unavailable/not-configured states have the exact truthful content and permitted actions defined by the Design specification; durable health within them uses only `unknown`, `never run`, `success`, `delayed`, `failed`, or `blocked`.",
+        "requiredEvidence": "State inventory and copy/transition review bound to durable evidence sources",
+        "requiredComponentIds": [
+          "health",
+          "statePresentation"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "scenarioId": "SPK-R0-001-D-002",
+        "title": "Responsive/accessibility",
+        "expectedAssertion": "Every human-facing candidate surface is understandable and operable under the declared responsive, keyboard, focus, screen-reader, contrast, zoom, theme, and motion conditions.",
+        "requiredEvidence": "Surface inventory plus applicable automated/manual accessibility results; absence of a rendered surface is stated, not generalized to R0",
+        "requiredComponentIds": [
+          "accessibility"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "scenarioId": "SPK-R0-001-D-003",
+        "title": "Truth/privacy",
+        "expectedAssertion": "Copy never claims success before durable evidence, never confuses backup with restore, and never exposes authentic/private data in review artifacts.",
+        "requiredEvidence": "Copy assertions, state-source trace, receipt/log scan, and forbidden-claim scan",
+        "requiredComponentIds": [
+          "logging",
+          "privateBoundary",
+          "recovery",
+          "statePresentation"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "scenarioId": "SPK-R0-001-QA-001",
+        "title": "Happy path and exact task outcome",
+        "expectedAssertion": "Canonical fictional inputs fit reserve, avoid collisions, preserve surface separation, round-trip authenticated ciphertext, restore/compare/rollback, reach evidence-backed health states, and emit one public-safe receipt.",
+        "requiredEvidence": "One complete deterministic happy-path record with exact expected/actual results and all intermediate digests",
+        "requiredComponentIds": [
+          "access",
+          "capacity",
+          "encryption",
+          "health",
+          "recovery",
+          "replay"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "scenarioId": "SPK-R0-001-QA-002",
+        "title": "Invalid, missing, duplicate, replayed, interrupted, timeout, stale, dependency-failure, and retry behavior",
+        "expectedAssertion": "Each isolated negative fails with the specified state, at-most-once effect, stable receipt identity where applicable, and no optimistic success.",
+        "requiredEvidence": "One-row-per-mutation negative matrix, crash-boundary injection, replay counters, durable events, and retry result",
+        "requiredComponentIds": [
+          "access",
+          "capacity",
+          "encryption",
+          "recovery",
+          "replay"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "scenarioId": "SPK-R0-001-QA-003",
+        "title": "Privacy/security/authorization, secret/log/cache/export/backup/evidence scans, and AI exclusions",
+        "expectedAssertion": "Human/callback authorization remains disjoint; wrong-key/tamper fails closed; cache and log rules hold; every retained artifact is public-safe; no AI path receives content.",
+        "requiredEvidence": "Authorization matrix, ciphertext canary scan, forbidden-field/sentinel scans, cache assertions, dependency/capability inventory",
+        "requiredComponentIds": [
+          "access",
+          "encryption",
+          "logging",
+          "privateBoundary"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "scenarioId": "SPK-R0-001-QA-004",
+        "title": "Schema, migration, compatibility, inventory, backup, separate-path restore, rollback/forward-fix",
+        "expectedAssertion": "Versioned fictional shapes reject unknown/incompatible input, restore only to a proved empty separate destination, compare exactly, and return to the baseline or an explicit non-success recovery state.",
+        "requiredEvidence": "Version matrix, canonical inventories, distinct-destination proof, before/after hashes, rollback and forward-fix decisions",
+        "requiredComponentIds": [
+          "encryption",
+          "recovery"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "scenarioId": "SPK-R0-001-QA-005",
+        "title": "Supported browsers, keyboard, focus, screen reader, contrast, 320 px, text/page zoom, landscape, themes, reduced motion",
+        "expectedAssertion": "Every declared human-facing surface passes its complete applicable accessibility matrix; a candidate with no rendered UI states that limitation and cannot claim R0 UI coverage.",
+        "requiredEvidence": "Declared surface/browser matrix, automated results, manual keyboard/screen-reader notes, renders, defects, or explicit bounded no-surface evidence",
+        "requiredComponentIds": [
+          "accessibility"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "scenarioId": "SPK-R0-001-QA-006",
+        "title": "Dependencies, co-resident/non-regression scope, performance/capacity bounds, observability and exact health states",
+        "expectedAssertion": "`PC-001` evidence is current; capacity/collision arithmetic is deterministic; synthetic baseline remains unchanged; health uses exactly the six durable values; no SLA, HA, live-fit, or production claim appears.",
+        "requiredEvidence": "Dependency record, boundary/overflow vectors, repeated-run digest equality, baseline comparison, health-state transitions, and claim scan",
+        "requiredComponentIds": [
+          "capacity",
+          "health",
+          "replay"
+        ],
+        "expectedResult": "pass"
+      }
+    ],
+    "requirementBindings": [
+      {
+        "requirementId": "LID-SCP-001",
+        "requiredComponentIds": [
+          "access",
+          "privateBoundary"
+        ],
+        "requiredScenarioIds": [
+          "SPK-R0-001-P-001",
+          "SPK-R0-001-P-002",
+          "SPK-R0-001-T-001",
+          "SPK-R0-001-T-003",
+          "SPK-R0-001-D-003",
+          "SPK-R0-001-QA-001",
+          "SPK-R0-001-QA-003"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "requirementId": "LID-OPS-001",
+        "requiredComponentIds": [
+          "access",
+          "replay"
+        ],
+        "requiredScenarioIds": [
+          "SPK-R0-001-T-001",
+          "SPK-R0-001-T-003",
+          "SPK-R0-001-D-001",
+          "SPK-R0-001-D-003",
+          "SPK-R0-001-QA-002",
+          "SPK-R0-001-QA-003"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "requirementId": "LID-OPS-002",
+        "requiredComponentIds": [
+          "access",
+          "replay"
+        ],
+        "requiredScenarioIds": [
+          "SPK-R0-001-T-001",
+          "SPK-R0-001-T-003",
+          "SPK-R0-001-QA-002",
+          "SPK-R0-001-QA-003"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "requirementId": "LID-OPS-003",
+        "requiredComponentIds": [
+          "logging",
+          "privateBoundary"
+        ],
+        "requiredScenarioIds": [
+          "SPK-R0-001-P-002",
+          "SPK-R0-001-P-003",
+          "SPK-R0-001-T-003",
+          "SPK-R0-001-D-003",
+          "SPK-R0-001-QA-003"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "requirementId": "LID-OPS-004",
+        "requiredComponentIds": [
+          "encryption",
+          "recovery"
+        ],
+        "requiredScenarioIds": [
+          "SPK-R0-001-T-001",
+          "SPK-R0-001-T-002",
+          "SPK-R0-001-T-003",
+          "SPK-R0-001-QA-003",
+          "SPK-R0-001-QA-004"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "requirementId": "LID-OPS-008",
+        "requiredComponentIds": [
+          "access",
+          "logging"
+        ],
+        "requiredScenarioIds": [
+          "SPK-R0-001-T-003",
+          "SPK-R0-001-D-003",
+          "SPK-R0-001-QA-003"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "requirementId": "LID-OPS-011",
+        "requiredComponentIds": [
+          "recovery"
+        ],
+        "requiredScenarioIds": [
+          "SPK-R0-001-P-001",
+          "SPK-R0-001-T-002",
+          "SPK-R0-001-D-003",
+          "SPK-R0-001-QA-001",
+          "SPK-R0-001-QA-004"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "requirementId": "LID-OPS-012",
+        "requiredComponentIds": [
+          "encryption",
+          "recovery",
+          "privateBoundary"
+        ],
+        "requiredScenarioIds": [
+          "SPK-R0-001-P-002",
+          "SPK-R0-001-T-002",
+          "SPK-R0-001-T-003",
+          "SPK-R0-001-QA-003",
+          "SPK-R0-001-QA-004"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "requirementId": "LID-OPS-014",
+        "requiredComponentIds": [
+          "health",
+          "replay"
+        ],
+        "requiredScenarioIds": [
+          "SPK-R0-001-P-001",
+          "SPK-R0-001-T-001",
+          "SPK-R0-001-D-001",
+          "SPK-R0-001-D-003",
+          "SPK-R0-001-QA-001",
+          "SPK-R0-001-QA-002",
+          "SPK-R0-001-QA-006"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "requirementId": "LID-OPS-016",
+        "requiredComponentIds": [
+          "logging",
+          "privateBoundary"
+        ],
+        "requiredScenarioIds": [
+          "SPK-R0-001-P-003",
+          "SPK-R0-001-T-003",
+          "SPK-R0-001-D-003",
+          "SPK-R0-001-QA-003"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "requirementId": "LID-OPS-018",
+        "requiredComponentIds": [
+          "capacity",
+          "recovery",
+          "replay"
+        ],
+        "requiredScenarioIds": [
+          "SPK-R0-001-T-001",
+          "SPK-R0-001-T-003",
+          "SPK-R0-001-D-001",
+          "SPK-R0-001-QA-002",
+          "SPK-R0-001-QA-006"
+        ],
+        "expectedResult": "pass"
+      }
+    ],
+    "contractBindings": [
+      {
+        "contractId": "surface-isolation",
+        "requiredComponentIds": [
+          "access"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "contractId": "capacity-and-collision",
+        "requiredComponentIds": [
+          "capacity"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "contractId": "authenticated-encryption",
+        "requiredComponentIds": [
+          "encryption"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "contractId": "backup-restore-rollback",
+        "requiredComponentIds": [
+          "recovery"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "contractId": "durable-health",
+        "requiredComponentIds": [
+          "health"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "contractId": "sanitized-logging",
+        "requiredComponentIds": [
+          "logging"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "contractId": "replay-interruption-crash",
+        "requiredComponentIds": [
+          "replay"
+        ],
+        "expectedResult": "pass"
+      },
+      {
+        "contractId": "receipt-boundary",
+        "requiredComponentIds": [
+          "accessibility",
+          "privateBoundary",
+          "statePresentation"
+        ],
+        "expectedResult": "pass"
+      }
+    ]
+  },
+  "requiredCardinality": {
+    "requirementCount": 11,
+    "orderedRequirementIds": [
+      "LID-SCP-001",
+      "LID-OPS-001",
+      "LID-OPS-002",
+      "LID-OPS-003",
+      "LID-OPS-004",
+      "LID-OPS-008",
+      "LID-OPS-011",
+      "LID-OPS-012",
+      "LID-OPS-014",
+      "LID-OPS-016",
+      "LID-OPS-018"
+    ],
+    "scenarioCount": 15,
+    "scenarioGroupCounts": {
+      "product": 3,
+      "technical": 3,
+      "design": 3,
+      "qa": 6
+    },
+    "orderedScenarioIds": [
+      "SPK-R0-001-P-001",
+      "SPK-R0-001-P-002",
+      "SPK-R0-001-P-003",
+      "SPK-R0-001-T-001",
+      "SPK-R0-001-T-002",
+      "SPK-R0-001-T-003",
+      "SPK-R0-001-D-001",
+      "SPK-R0-001-D-002",
+      "SPK-R0-001-D-003",
+      "SPK-R0-001-QA-001",
+      "SPK-R0-001-QA-002",
+      "SPK-R0-001-QA-003",
+      "SPK-R0-001-QA-004",
+      "SPK-R0-001-QA-005",
+      "SPK-R0-001-QA-006"
+    ],
+    "contractCount": 8,
+    "orderedContractIds": [
+      "surface-isolation",
+      "capacity-and-collision",
+      "authenticated-encryption",
+      "backup-restore-rollback",
+      "durable-health",
+      "sanitized-logging",
+      "replay-interruption-crash",
+      "receipt-boundary"
+    ],
+    "candidateCheckCount": 4,
+    "resultEvidenceRecordCount": 34,
+    "outputFileCount": 3,
+    "implementerCount": 1,
+    "evidenceProducerCount": 1,
+    "independentQaCount": 1,
+    "participantIdsMustBeUnique": true,
+    "aggregatePassCountCannotSubstituteForIndividualRecords": true
+  },
+  "outputPathRule": {
+    "directoryTemplate": "outputs/P0-SPK-R0-001-CANDIDATE-QA-<I12>",
+    "i12Rule": "I12 is the first 12 lower-case hexadecimal characters of the exact bound candidateRevision.",
+    "exactFileNames": [
+      "P0-SPK-R0-001-CANDIDATE-QA-RECEIPT.json",
+      "P0-SPK-R0-001-CANDIDATE-QA-EVIDENCE-INDEX.json",
+      "P0-SPK-R0-001-CANDIDATE-QA-INDEPENDENT-QA-ATTESTATION.json"
+    ],
+    "receiptPathTemplate": "outputs/P0-SPK-R0-001-CANDIDATE-QA-<I12>/P0-SPK-R0-001-CANDIDATE-QA-RECEIPT.json",
+    "evidenceIndexPathTemplate": "outputs/P0-SPK-R0-001-CANDIDATE-QA-<I12>/P0-SPK-R0-001-CANDIDATE-QA-EVIDENCE-INDEX.json",
+    "independentQaAttestationPathTemplate": "outputs/P0-SPK-R0-001-CANDIDATE-QA-<I12>/P0-SPK-R0-001-CANDIDATE-QA-INDEPENDENT-QA-ATTESTATION.json",
+    "mode": "100644",
+    "type": "blob",
+    "encoding": "UTF-8",
+    "format": "strict JSON with no duplicate keys",
+    "terminalLfRequired": true,
+    "additionalFilesAllowed": false,
+    "absolutePathsAllowed": false,
+    "symlinksAllowed": false
+  },
+  "receiptSchema": {
+    "exactTopLevelKeys": [
+      "schemaVersion",
+      "receiptKind",
+      "lifecycle",
+      "taskStageInvoked",
+      "gateBStageReceiptSha256",
+      "taskId",
+      "preparationReviewId",
+      "acceptedPreparationRecordSha256",
+      "dependency",
+      "stageId",
+      "scopeClass",
+      "actionClass",
+      "taskContractSha256",
+      "baseRevision",
+      "candidateRevision",
+      "mergeRevision",
+      "idempotencyKey",
+      "candidateQaContract",
+      "module",
+      "fixture",
+      "requirementResults",
+      "scenarioResults",
+      "contractResults",
+      "checkResults",
+      "startedAt",
+      "endedAt",
+      "environment",
+      "toolVersions",
+      "commands",
+      "stateDigests",
+      "durableHealth",
+      "safety",
+      "unresolvedFindings",
+      "defectRetests",
+      "limitations",
+      "conclusion",
+      "permittedClaim"
+    ],
+    "fixedValues": {
+      "schemaVersion": "1.0.0",
+      "receiptKind": "candidate-qa-evidence-v1",
+      "lifecycle": "gate-a-preparation",
+      "taskStageInvoked": false,
+      "gateBStageReceiptSha256": null,
+      "taskId": "SPK-R0-001",
+      "preparationReviewId": "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+      "acceptedPreparationRecordSha256": "70168f46a379bcbccd7b2afee15bfdbaa957247b30ca87ee671fcd3ca2d8164b",
+      "stageId": "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+      "scopeClass": "local-synthetic",
+      "actionClass": "synthetic-foundation",
+      "taskContractSha256": "f58e65c56e58dc4b1e12deab68f7349822f7f95dd33eee4fcd4872243170fa23",
+      "idempotencyKey": "P0-IDEMP-SPK-R0-001-SYNTHETIC-001",
+      "permittedClaim": "Exact local, public, fictional, synthetic foundation checks passed; live-host fit, private access, deployment, task acceptance, status transition, release, and production readiness remain unproven."
+    },
+    "nestedExactKeys": {
+      "dependency": [
+        "taskId",
+        "requiredEvidenceReference",
+        "evidenceSha256",
+        "verifiedAt",
+        "result"
+      ],
+      "candidateQaContract": [
+        "path",
+        "rawSha256",
+        "byteLength",
+        "mode"
+      ],
+      "module": [
+        "moduleId",
+        "path",
+        "rawSha256",
+        "byteLength",
+        "mode",
+        "argumentSetId",
+        "argumentSet",
+        "stageBindingDigest",
+        "governedEvidenceContractSha256",
+        "governedEvidenceSha256",
+        "childResultTerminalLfSha256"
+      ],
+      "fixture": [
+        "schemaVersion",
+        "seedId",
+        "sha256",
+        "fixtureClass",
+        "authenticContentExcluded"
+      ],
+      "requirementExpected": [
+        "requiredComponentIds",
+        "requiredScenarioIds",
+        "result"
+      ],
+      "scenarioExpected": [
+        "assertion",
+        "requiredEvidence",
+        "requiredComponentIds",
+        "result"
+      ],
+      "contractExpected": [
+        "requiredComponentIds",
+        "result"
+      ],
+      "resultActual": [
+        "governedEvidenceResult",
+        "governedObservationDigest",
+        "oracleResult",
+        "oracleObservationDigest",
+        "evidenceSha256"
+      ],
+      "requirementResult": [
+        "requirementId",
+        "expected",
+        "actual",
+        "result",
+        "evidenceReference",
+        "defectIds",
+        "retestIds"
+      ],
+      "scenarioResult": [
+        "scenarioId",
+        "expected",
+        "actual",
+        "result",
+        "evidenceReference",
+        "defectIds",
+        "retestIds"
+      ],
+      "contractResult": [
+        "contractId",
+        "expected",
+        "actual",
+        "result",
+        "evidenceReference",
+        "defectIds",
+        "retestIds"
+      ],
+      "checkResult": [
+        "checkId",
+        "result",
+        "evidenceReference",
+        "evidenceSha256",
+        "findingCount"
+      ],
+      "environment": [
+        "environmentClass",
+        "environmentSha256",
+        "local",
+        "public",
+        "fictional",
+        "synthetic",
+        "privateTargetsPresent",
+        "externalEgressPresent"
+      ],
+      "toolVersion": [
+        "toolId",
+        "version"
+      ],
+      "command": [
+        "commandId",
+        "argv",
+        "result",
+        "stdoutBytes",
+        "stdoutSha256",
+        "stderrBytes",
+        "stderrSha256",
+        "descriptor3Bytes",
+        "descriptor3Sha256"
+      ],
+      "stateDigests": [
+        "beforeSha256",
+        "afterSha256",
+        "backupSha256",
+        "restoreSha256",
+        "comparisonSha256",
+        "rollbackSha256"
+      ],
+      "durableHealth": [
+        "backup",
+        "restoreVerification",
+        "overall"
+      ],
+      "safety": [
+        "local",
+        "public",
+        "fictional",
+        "synthetic",
+        "authenticMediaAccessed",
+        "privateNetworkAccessed",
+        "externalMutationPerformed",
+        "aiContentPathUsed",
+        "forbiddenContentFindings"
+      ],
+      "unresolvedFinding": [
+        "findingId",
+        "severity",
+        "findingClass",
+        "evidenceReference"
+      ],
+      "defectRetest": [
+        "defectId",
+        "severity",
+        "initialResult",
+        "retestResult",
+        "evidenceReference"
+      ]
+    },
+    "arrayRules": {
+      "requirementResults": "Exactly 11 records in orderedRequirementIds order with no duplicate or missing ID.",
+      "scenarioResults": "Exactly 15 records in orderedScenarioIds order with no duplicate or missing ID.",
+      "contractResults": "Exactly 8 records in orderedContractIds order with no duplicate or missing ID.",
+      "checkResults": "Exactly 4 records in orderedCheckIds order with no duplicate or missing ID.",
+      "toolVersions": "At least one exact public-safe runtime/tool version record.",
+      "commands": "Every executed candidate-QA command in execution order, expressed as a public-safe argv array with no shell interpolation or absolute/private path.",
+      "unresolvedFindings": "Empty for a passing receipt; any entry forces a non-pass conclusion.",
+      "defectRetests": "Every discovered defect and any retest retained individually; an unresolved severity 1 or 2 finding forces a non-pass conclusion."
+    },
+    "dependencyRule": "dependency must bind taskId PC-001, requiredEvidenceReference github-pr:pull-70, one sha256:<64 lower-hex> public-safe evidence digest verified during this candidate-QA run, verifiedAt within startedAt and endedAt, and result pass. Missing, stale, non-passing, or differently bound PC-001 evidence forces a non-pass receipt.",
+    "bindingRule": "baseRevision, candidateRevision, and mergeRevision satisfy candidateRevisionRule; candidateQaContract binds the exact future candidate and merge bytes at bindings.candidateQaContractPath; module and fixture bind every frozen value under bindings; all dynamic governed evidence and child-result digests are recomputed for candidateRevision; and no field predicts or copies a Gate B terminal receipt.",
+    "durableHealthRule": "A passing receipt requires durableHealth to canonical-equal {backup:success, restoreVerification:success, overall:success} and every state digest to equal the independently reconstructed exact module-contract value for candidateRevision.",
+    "safetyRule": "safety must canonical-equal safetyBoundary.requiredFacts and environment must bind local/public/fictional/synthetic true with privateTargetsPresent and externalEgressPresent false.",
+    "limitationsRule": "limitations must canonical-equal the contract's top-level limitations array in the same order; omission, addition, reordering, or weakening forces a non-pass receipt.",
+    "resultBindingRules": {
+      "requirementResult": "Resolve requirementId to exactly one requiredChecks.requirementBindings entry. expected must canonical-equal {requiredComponentIds: entry.requiredComponentIds, requiredScenarioIds: entry.requiredScenarioIds, result: entry.expectedResult}. actual uses the exact resultActual keys and may pass only when the governed evidence and separately reconstructed oracle both pass with equal observation digests, the evidence digest is retained, every bound scenario passes, evidenceReference resolves in the evidence index, and defectIds plus unresolved retestIds are empty.",
+      "scenarioResult": "Resolve scenarioId to exactly one requiredChecks.scenarioExpectations entry. expected must canonical-equal {assertion: entry.expectedAssertion, requiredEvidence: entry.requiredEvidence, requiredComponentIds: entry.requiredComponentIds, result: entry.expectedResult}. actual uses the exact resultActual keys and may pass only when the governed evidence and separately reconstructed oracle both pass with equal observation digests, the named required evidence is retained, evidenceReference resolves in the evidence index, and defectIds plus unresolved retestIds are empty.",
+      "contractResult": "Resolve contractId to exactly one requiredChecks.contractBindings entry. expected must canonical-equal {requiredComponentIds: entry.requiredComponentIds, result: entry.expectedResult}. actual uses the exact resultActual keys and may pass only when the governed evidence and separately reconstructed oracle both pass with equal observation digests, evidenceReference resolves in the evidence index, and defectIds plus unresolved retestIds are empty.",
+      "checkResult": "Resolve checkId to exactly one requiredChecks.checkExpectations entry. result pass requires the frozen expectation to be executed against the exact bound B/I/IM candidate, one retained public-safe evidence reference and sha256 digest, and findingCount zero."
+    },
+    "evidenceReferenceFormat": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,511}$",
+    "timestampRule": "startedAt and endedAt are RFC 3339 UTC timestamps; endedAt must be later than or equal to startedAt.",
+    "digestEncodingRules": {
+      "nullOnlyFields": [
+        "gateBStageReceiptSha256"
+      ],
+      "rawLowerHexFields": [
+        "acceptedPreparationRecordSha256",
+        "taskContractSha256",
+        "candidateQaContract.rawSha256",
+        "module.rawSha256"
+      ],
+      "sha256PrefixedFields": [
+        "dependency.evidenceSha256",
+        "module.stageBindingDigest",
+        "module.governedEvidenceContractSha256",
+        "module.governedEvidenceSha256",
+        "module.childResultTerminalLfSha256",
+        "fixture.sha256",
+        "requirementResults[].actual.governedObservationDigest",
+        "requirementResults[].actual.oracleObservationDigest",
+        "requirementResults[].actual.evidenceSha256",
+        "scenarioResults[].actual.governedObservationDigest",
+        "scenarioResults[].actual.oracleObservationDigest",
+        "scenarioResults[].actual.evidenceSha256",
+        "contractResults[].actual.governedObservationDigest",
+        "contractResults[].actual.oracleObservationDigest",
+        "contractResults[].actual.evidenceSha256",
+        "checkResults[].evidenceSha256",
+        "environment.environmentSha256",
+        "commands[].stdoutSha256",
+        "commands[].stderrSha256",
+        "commands[].descriptor3Sha256",
+        "stateDigests.beforeSha256",
+        "stateDigests.afterSha256",
+        "stateDigests.backupSha256",
+        "stateDigests.restoreSha256",
+        "stateDigests.comparisonSha256",
+        "stateDigests.rollbackSha256"
+      ],
+      "rawLowerHexFormat": "^[0-9a-f]{64}$",
+      "sha256PrefixedFormat": "^sha256:[0-9a-f]{64}$"
+    },
+    "canonicalizationRule": "UTF-8 JSON, exact key sets, array order preserved, duplicate keys rejected, recursively lexical object-key canonicalization for digest inputs, and exactly one terminal LF for the retained file."
+  },
+  "evidenceIndexSchema": {
+    "exactTopLevelKeys": [
+      "schemaVersion",
+      "indexKind",
+      "lifecycle",
+      "taskStageInvoked",
+      "gateBStageReceiptSha256",
+      "taskId",
+      "preparationReviewId",
+      "dependency",
+      "stageId",
+      "scopeClass",
+      "actionClass",
+      "baseRevision",
+      "candidateRevision",
+      "mergeRevision",
+      "candidateQaContract",
+      "module",
+      "outputDirectory",
+      "receipt",
+      "evidenceProducer",
+      "evidenceRecords",
+      "checkRecords",
+      "resultCardinality",
+      "startedAt",
+      "endedAt",
+      "unresolvedFindings",
+      "limitations",
+      "permittedClaim"
+    ],
+    "fixedValues": {
+      "schemaVersion": "1.0.0",
+      "indexKind": "candidate-qa-evidence-index-v1",
+      "lifecycle": "gate-a-preparation",
+      "taskStageInvoked": false,
+      "gateBStageReceiptSha256": null,
+      "taskId": "SPK-R0-001",
+      "preparationReviewId": "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+      "stageId": "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+      "scopeClass": "local-synthetic",
+      "actionClass": "synthetic-foundation",
+      "permittedClaim": "Exact local, public, fictional, synthetic foundation checks passed; live-host fit, private access, deployment, task acceptance, status transition, release, and production readiness remain unproven."
+    },
+    "nestedExactKeys": {
+      "dependency": [
+        "taskId",
+        "requiredEvidenceReference",
+        "evidenceSha256",
+        "verifiedAt",
+        "result"
+      ],
+      "candidateQaContract": [
+        "path",
+        "rawSha256",
+        "byteLength",
+        "mode"
+      ],
+      "module": [
+        "moduleId",
+        "path",
+        "rawSha256",
+        "byteLength",
+        "mode"
+      ],
+      "receipt": [
+        "path",
+        "rawSha256",
+        "byteLength",
+        "mode"
+      ],
+      "evidenceProducer": [
+        "reviewerId",
+        "reviewerRole"
+      ],
+      "evidenceRecord": [
+        "evidenceReference",
+        "evidenceClass",
+        "subjectId",
+        "receiptJsonPointer",
+        "evidenceSha256",
+        "result",
+        "findingCount"
+      ],
+      "checkRecord": [
+        "checkId",
+        "result",
+        "evidenceReference",
+        "evidenceSha256",
+        "findingCount"
+      ],
+      "resultCardinality": [
+        "requirementCount",
+        "scenarioCount",
+        "contractCount",
+        "candidateCheckCount",
+        "resultEvidenceRecordCount"
+      ]
+    },
+    "identityRule": "evidenceProducer is exactly codex-evidence-producer-01 with role evidence-producer and is distinct from codex-primary-integrator-01 and codex-independent-qa-01.",
+    "dependencyRule": "dependency must canonical-equal the receipt dependency record and therefore bind current passing PC-001 evidence to this exact candidate-QA interval.",
+    "evidenceRecordRule": "evidenceRecords contains exactly 34 unique records ordered as the 11 requirement IDs, then 15 scenario IDs, then 8 contract IDs. Each record's evidenceClass and subjectId select exactly one receipt result, receiptJsonPointer resolves to that result, evidenceReference equals the result's evidenceReference, evidenceSha256 equals the sha256 digest of the exact canonical result actual object, result equals the result record, and findingCount is zero for pass. No record points outside the retained receipt.",
+    "resultCardinalityRule": "resultCardinality must be exactly {requirementCount:11, scenarioCount:15, contractCount:8, candidateCheckCount:4, resultEvidenceRecordCount:34} and must equal the receipt and index arrays rather than serving as independent proof.",
+    "limitationsRule": "limitations must canonical-equal the contract's top-level limitations array and the bound receipt limitations in the same order.",
+    "bindingRule": "The index binds the exact contract, module, receipt, B/I/IM revisions, current PC-001 evidence, all 34 result-evidence records, all four check records, all required result cardinalities, and its evidence producer. It must not contain or predict the later independent-QA attestation digest or any Gate B stage receipt.",
+    "digestEncodingRules": {
+      "nullOnlyFields": [
+        "gateBStageReceiptSha256"
+      ],
+      "rawLowerHexFields": [
+        "candidateQaContract.rawSha256",
+        "module.rawSha256",
+        "receipt.rawSha256"
+      ],
+      "sha256PrefixedFields": [
+        "dependency.evidenceSha256",
+        "evidenceRecords[].evidenceSha256",
+        "checkRecords[].evidenceSha256"
+      ],
+      "rawLowerHexFormat": "^[0-9a-f]{64}$",
+      "sha256PrefixedFormat": "^sha256:[0-9a-f]{64}$"
+    },
+    "canonicalizationRule": "UTF-8 JSON, exact key sets, array order preserved, duplicate keys rejected, recursively lexical object-key canonicalization for digest inputs, and exactly one terminal LF for the retained file."
+  },
+  "independentQaAttestationSchema": {
+    "exactTopLevelKeys": [
+      "schemaVersion",
+      "attestationKind",
+      "lifecycle",
+      "taskStageInvoked",
+      "gateBStageReceiptSha256",
+      "taskId",
+      "preparationReviewId",
+      "dependency",
+      "stageId",
+      "scopeClass",
+      "actionClass",
+      "baseRevision",
+      "candidateRevision",
+      "mergeRevision",
+      "candidateQaContract",
+      "module",
+      "receipt",
+      "evidenceIndex",
+      "reviewer",
+      "independence",
+      "checkResults",
+      "resultCardinality",
+      "safety",
+      "unresolvedFindings",
+      "verdict",
+      "rationale",
+      "evidenceReference",
+      "attestationDigest",
+      "limitations",
+      "permittedClaim"
+    ],
+    "fixedValues": {
+      "schemaVersion": "1.0.0",
+      "attestationKind": "candidate-qa-independent-attestation-v1",
+      "lifecycle": "gate-a-preparation",
+      "taskStageInvoked": false,
+      "gateBStageReceiptSha256": null,
+      "taskId": "SPK-R0-001",
+      "preparationReviewId": "P0-PREP-SPK-R0-001-SYNTHETIC-FOUNDATION",
+      "stageId": "P0-STAGE-SPK-R0-001-SYNTHETIC-FOUNDATION",
+      "scopeClass": "local-synthetic",
+      "actionClass": "synthetic-foundation",
+      "permittedClaim": "Exact local, public, fictional, synthetic foundation checks passed; live-host fit, private access, deployment, task acceptance, status transition, release, and production readiness remain unproven."
+    },
+    "nestedExactKeys": {
+      "dependency": [
+        "taskId",
+        "requiredEvidenceReference",
+        "evidenceSha256",
+        "verifiedAt",
+        "result"
+      ],
+      "candidateQaContract": [
+        "path",
+        "rawSha256",
+        "byteLength",
+        "mode"
+      ],
+      "module": [
+        "moduleId",
+        "path",
+        "rawSha256",
+        "byteLength",
+        "mode"
+      ],
+      "receipt": [
+        "path",
+        "rawSha256",
+        "byteLength",
+        "mode"
+      ],
+      "evidenceIndex": [
+        "path",
+        "rawSha256",
+        "byteLength",
+        "mode"
+      ],
+      "reviewer": [
+        "reviewerId",
+        "reviewerRole"
+      ],
+      "independence": [
+        "implementerId",
+        "evidenceProducerId",
+        "reviewerDistinctFromImplementer",
+        "reviewerDistinctFromEvidenceProducer",
+        "reviewerDidNotAuthorCandidate",
+        "reviewerDidNotAuthorReceiptOrIndex"
+      ],
+      "checkResult": [
+        "checkId",
+        "result",
+        "evidenceReference",
+        "evidenceSha256",
+        "findingCount"
+      ],
+      "resultCardinality": [
+        "requirementCount",
+        "requirementPassCount",
+        "scenarioCount",
+        "scenarioPassCount",
+        "contractCount",
+        "contractPassCount",
+        "candidateCheckCount",
+        "candidateCheckPassCount",
+        "resultEvidenceRecordCount",
+        "resultEvidenceRecordPassCount"
+      ],
+      "safety": [
+        "local",
+        "public",
+        "fictional",
+        "synthetic",
+        "authenticMediaAccessed",
+        "privateNetworkAccessed",
+        "externalMutationPerformed",
+        "aiContentPathUsed",
+        "forbiddenContentFindings"
+      ]
+    },
+    "identityRule": "reviewer is exactly codex-independent-qa-01 with role qa, is distinct from codex-primary-integrator-01 and codex-evidence-producer-01, and authors only this independent attestation rather than the candidate, receipt, or evidence index.",
+    "verdictValues": [
+      "pass",
+      "hold"
+    ],
+    "passingRule": "pass requires exact B/I/IM, contract, module, receipt, index, and current PC-001 evidence bindings; all 11 requirement, 15 scenario, 8 contract, 4 candidate-check, and 34 result-evidence records passing; zero unresolved findings; all safety facts exact; independent reconstruction and the deliberate negative passing; and the exact permitted claim. Any other state is hold.",
+    "dependencyRule": "dependency must canonical-equal the receipt and evidence-index dependency records and independently verify current passing PC-001 evidence during the exact candidate-QA interval.",
+    "resultCardinalityRule": "resultCardinality must be exactly {requirementCount:11, requirementPassCount:11, scenarioCount:15, scenarioPassCount:15, contractCount:8, contractPassCount:8, candidateCheckCount:4, candidateCheckPassCount:4, resultEvidenceRecordCount:34, resultEvidenceRecordPassCount:34} for pass and is only a cross-check against the bound receipt and index records.",
+    "resultVerificationRule": "Independent QA must resolve every receipt result through receiptSchema.resultBindingRules and the frozen requiredChecks bindings, recompute rather than trust the candidate or producer's expected and actual values, require checkResults to canonical-equal the receipt and index check records, and treat resultCardinality only as a cross-check rather than proof.",
+    "safetyRule": "safety must canonical-equal safetyBoundary.requiredFacts and the bound receipt safety; any difference forces hold.",
+    "limitationsRule": "limitations must canonical-equal the contract's top-level limitations array and the bound receipt and evidence-index limitations in the same order.",
+    "attestationDigestRule": "attestationDigest is sha256:<64 lower-hex> over recursively lexical canonical JSON of every attestation top-level field except attestationDigest itself.",
+    "digestEncodingRules": {
+      "nullOnlyFields": [
+        "gateBStageReceiptSha256"
+      ],
+      "rawLowerHexFields": [
+        "candidateQaContract.rawSha256",
+        "module.rawSha256",
+        "receipt.rawSha256",
+        "evidenceIndex.rawSha256"
+      ],
+      "sha256PrefixedFields": [
+        "dependency.evidenceSha256",
+        "checkResults[].evidenceSha256",
+        "attestationDigest"
+      ],
+      "rawLowerHexFormat": "^[0-9a-f]{64}$",
+      "sha256PrefixedFormat": "^sha256:[0-9a-f]{64}$"
+    },
+    "canonicalizationRule": "UTF-8 JSON, exact key sets, array order preserved, duplicate keys rejected, recursively lexical object-key canonicalization for digest inputs, and exactly one terminal LF for the retained file."
+  },
+  "resultPolicy": {
+    "contractResultState": "not-executed",
+    "allowedItemResults": [
+      "pass",
+      "fail",
+      "blocked"
+    ],
+    "allowedConclusions": [
+      "synthetic foundation passes",
+      "synthetic foundation fails",
+      "blocked — private evidence required"
+    ],
+    "passRule": "A candidate-QA pass exists only when every one of the 11 requirement records, 15 scenario records, 8 contract records, and 4 required check records individually passes; repeated deterministic runs agree; the exact child result and independently reconstructed evidence agree; safety findings and unresolved findings are zero; and Independent QA records pass against the exact immutable bundle.",
+    "failClosedRule": "A missing, duplicate, renamed, reordered, substituted, malformed, unbound, stale, non-deterministic, unsafe, or non-passing required record forces fail or hold. No aggregate pass count, copied digest, prior run, proposal review, or Gate A record can waive an individual result.",
+    "severityRule": "Any unresolved severity 1 or 2 defect or critical or high security or privacy finding forces hold.",
+    "privateBoundaryRule": "Discovery of a private, authentic, external, provider, credential, recovery-custody, human-only, or deployment prerequisite produces blocked — private evidence required with no such access or mutation attempted.",
+    "authorityEffect": "A passing candidate-QA bundle is preparation evidence for later Gate B review only. It does not invoke the task stage, create execution permission, satisfy Gate B, complete SPK-R0-001, change roadmap or artifact state, prove live-host fit, or authorize a private follow-on."
+  },
+  "safetyBoundary": {
+    "requiredFacts": {
+      "local": true,
+      "public": true,
+      "fictional": true,
+      "synthetic": true,
+      "authenticMediaAccessed": false,
+      "privateNetworkAccessed": false,
+      "externalMutationPerformed": false,
+      "aiContentPathUsed": false,
+      "forbiddenContentFindings": 0
+    },
+    "privateTargetsPresent": false,
+    "externalEgressPresent": false,
+    "forbiddenEvidenceClasses": [
+      "raw fixture content",
+      "real host values",
+      "routes or listener numbers",
+      "absolute filesystem paths",
+      "private topology",
+      "account or provider details",
+      "credentials or tokens",
+      "keys or assertions",
+      "recovery values or custody locations",
+      "private service responses",
+      "authentic memories",
+      "photos or photo-derived data",
+      "runtime-owned Gate B terminal fields"
+    ],
+    "scanScope": [
+      "candidate module source",
+      "candidate QA contract",
+      "dependency closure",
+      "child result",
+      "candidate-QA receipt",
+      "evidence index",
+      "independent-QA attestation",
+      "local logs",
+      "backup representation",
+      "restored-state representation",
+      "all retained evidence values"
+    ],
+    "findingRule": "Any suspected forbidden or sensitive value is investigated without printing it. A confirmed finding forces hold and the affected public-safe artifact must be regenerated after correction."
+  },
+  "limitations": [
+    "The cipher uses deterministic test-only material and nonce derivation for reproducible synthetic checks; it is not a production cryptography or key-custody selection.",
+    "Recovery is an in-memory fictional model with no filesystem path, repository, provider, or private backup access.",
+    "Capacity values are fixed fictional assumptions and are not host measurements, an SLA, HA evidence, or coexistence acceptance.",
+    "The serializable module has no rendered product UI, so product UI accessibility remains untested.",
+    "Source, dependency-closure, runtime-output, and retained-artifact safety require separately bound candidate QA; this governed digest reports only exercised in-memory synthetic observations.",
+    "A passing result does not complete SPK-R0-001 or authorize a private follow-on, deployment, acceptance, status change, release, or production use."
+  ],
+  "permittedClaim": "Exact local, public, fictional, synthetic foundation checks passed; live-host fit, private access, deployment, task acceptance, status transition, release, and production readiness remain unproven."
+}
