@@ -23,7 +23,7 @@
       "path": "docs/INDEX.md",
       "mode": "100644",
       "type": "blob",
-      "sha256": "cd9cb73a85f9fbe9fbc6c923896768922f6a5b467e3d5ad15bc2d8a59df779d8"
+      "sha256": "66d9a0a344e302776b13c540ce5b973433afe03f38a9ccb7f40eb07e41d5f26a"
     },
     {
       "path": "docs/council/PHASE1-COUNCIL-DECISION-RECORD.md",
@@ -332,15 +332,5 @@
       "sha256": "e231adce514fb8631ec794e8d578d852fcd45629594201620d2e390e638d1fc7"
     }
   ],
-  "next": {
-    "changes": [
-      {
-        "operation": "modify",
-        "path": "docs/INDEX.md",
-        "mode": "100644",
-        "type": "blob",
-        "sha256": "66d9a0a344e302776b13c540ce5b973433afe03f38a9ccb7f40eb07e41d5f26a"
-      }
-    ]
-  }
+  "next": null
 }
