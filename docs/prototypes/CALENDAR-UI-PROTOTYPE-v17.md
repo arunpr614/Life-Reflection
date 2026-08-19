@@ -1,10 +1,12 @@
 # Life in Days calendar UI prototype v17 — Atomic Redating
 
-> **Round 2 held pre-QA candidate · P=A · D=A · C=A · I=A · Q=Round 2 pending · F=Pending · deterministic fictional data · browser-memory state · no backend, persistence, provider, security, deployment, or production claim**
+> **Documentation-only post-QA local-freeze successor · P=A · D=A · C=A · I=A · Q=A · F=A locally at candidate commit · remote push/readback Pending · deterministic fictional data · browser-memory state · no backend, persistence, provider, security, deployment, or production claim**
 
-V17 is the additive `PVA-012 Atomic Redating` prototype candidate built on the exact frozen v16 archive commit `01d1f054a12773e07f91096b8d76b0c5f4064329`. It represents one deliberate Source Item Journal Date change, an immutable Original Timestamp, a complete two-day consequence preview, future/same-day rejection, zero-effect failure and unknown-result handling, one-effect success, and duplicate-result protection.
+V17 is the additive `PVA-012 Atomic Redating` prototype built on the exact frozen v16 archive commit `01d1f054a12773e07f91096b8d76b0c5f4064329`. It represents one deliberate Source Item Journal Date change, an immutable Original Timestamp, a complete two-day consequence preview, future/same-day rejection, zero-effect failure and unknown-result handling, one-effect success, and duplicate-result protection.
 
-This is the repaired Round 2 candidate hold. Independent QA Round 1 remains a durable **FAIL — C0/H2/M3/L0** and closes no requirement. Product and Design have accepted the final repaired bytes for a new independent run; they have not supplied a QA verdict. Fresh read-only assignee `/root/qa_v17_round2` must judge the exact 35-file roster in [the replacement candidate manifest](v17/CANDIDATE-MANIFEST-v17.md) from zero. Any held file or manifest-byte change invalidates that run.
+This handoff is a documentation-only successor created after fresh independent QA Round 2 returned **PASS — C0/H0/M0/L0** on the exact 35-file roster in [the replacement candidate manifest](v17/CANDIDATE-MANIFEST-v17.md). That tested roster and manifest are locally frozen in candidate implementation commit `571308f678ba92a159b95b5093c68ee4b283fe4a`; a committed-blob comparison reproduces every listed hash, the held aggregate, and the manifest self-hash. The pre-QA handoff blob remains preserved inside that commit.
+
+Independent QA Round 1 remains a durable **FAIL — C0/H2/M3/L0** and closed no requirement. Its rejected identity and all repair/readiness history remain intact below. Round 2 supersedes those obsolete bytes for the freeze decision only; it does not erase the first result. Remote push and remote readback are still pending, so v18 remains blocked.
 
 ## Open locally
 
@@ -51,9 +53,17 @@ All five Round 1 findings were repaired in the same v17 package. A later Product
 
 A subsequent Design review found the light-theme `--lid-faint` normal-text token `#727d76` at only `4.2068:1` against its surface. It was not accepted or deferred. The token is now `#6b766e`, measured at `4.650835:1`, and the entire evidence set was recaptured after the final CSS bytes.
 
-The superseding final readiness decision is **P=A · D=A · C=A · I=A**, with fresh Product and Design severity ledgers **C0/H0/M0/L0**. Historical independent QA remains `Q=F` for Round 1 only; **Round 2 is pending and has no verdict**. The complete failed-recheck and superseding acceptance history is [PRODUCT-DESIGN-RECHECK-v17.md](v17/PRODUCT-DESIGN-RECHECK-v17.md).
+The superseding final readiness decision was **P=A · D=A · C=A · I=A**, with fresh Product and Design severity ledgers **C0/H0/M0/L0**. Historical independent QA remains `Q=F` for Round 1 only; a new sealed identity was then assigned to a fresh independent agent. The complete failed-recheck and superseding acceptance history is [PRODUCT-DESIGN-RECHECK-v17.md](v17/PRODUCT-DESIGN-RECHECK-v17.md).
 
-## Exact held prototype assets
+## Independent QA Round 2 — accepted
+
+Fresh read-only agent `/root/qa_v17_round2` independently tested the repaired 35-file candidate from zero and returned **PASS — Critical 0 · High 0 · Medium 0 · Low 0**. The manifest SHA-256 was `6405f86c8074d142dc6f2d120549e34db69e7c97b0d92288657f5104717fa471`, the complete held aggregate was `e7fe4250510958c155726753ba8247be594e8592d03a690282ab4f59da5bc2ec`, and the final unchanged rehash completed at `2026-08-19T15:41:16+0530`.
+
+The bounded run passed all ten PNG/JSON chronology and **20/20 invariant** checks; all ten fixtures and coherent `date-required`; five natural accepted-intent outcomes; cardinality, retry, status, competing-revision, duplicate-result, and resulting-day-link paths; exact inherited uploaded-journal, Voice Journal, Daily Photo, and completed-capture contexts; fresh openings and incomplete-source fail-closed behavior; Cancel, Back, Escape, blocked-abandonment, exact return focus, and scroll-settlement behavior; launcher visibility/hit/non-overlap across nine tested widths; breakpoint, hierarchy, landmark, heading, focus, target, metadata, contrast, reduced-motion, and forced-colour checks; and the generic-URL, history, storage, network, console, frozen-v16, direct-v16, and stale-copy guards.
+
+The exact independent report, including the proof boundary, is [DESIGN-QA-v17-round2.md](v17/DESIGN-QA-v17-round2.md). Native zoom, real screen-reader/assistive-technology sessions, mobile OS/browser coverage, formal accessibility conformance, and all backend, persistence, recovery, provider, security, deployment, and production concerns remain explicitly unproven.
+
+## Exact frozen candidate assets
 
 | Artifact | SHA-256 |
 | --- | --- |
@@ -111,7 +121,7 @@ Every sidecar records **20/20 passing current-state invariants**, the exact requ
 
 Both archive sidecars additionally record a visible main-document Back control used by CDP mouse input, an inactive empty feature host, launcher focus after return, a fully visible launcher of at least 44×44 CSS pixels, successful center and four inset-corner hit tests, and zero intersections with visible inherited controls. The `390×844` launcher rectangle is `358×89.5` at `x=16–374`, `y=78–167.5`; the `320×900` rectangle is `288×91.5` at `x=16–304`, `y=78–169.5`.
 
-## Pre-QA checks completed
+## Candidate-owner checks preserved
 
 - `node --check` passed for `runtime-v17.js`, `app-v17.js`, `check-v17.mjs`, and `capture-phase2-evidence-v17.mjs`.
 - `node check-v17.mjs` passed with all twelve frozen v16/package dependency hashes unchanged.
@@ -120,21 +130,23 @@ Both archive sidecars additionally record a visible main-document Back control u
 - Exact file rehashes reproduce the seven-asset, four-authority, and twenty-file evidence aggregates in this handoff.
 - `git diff --check` passed. No v1–v16 file, `package.json`, `serve.mjs`, `origin/main`, archive branch, or GitHub issue/project state was changed by the v17 work.
 
-These are candidate-owner prechecks, not independent QA Round 2. The new QA agent must independently rehash the sealed roster and repeat the bounded behavioral, responsive, accessibility-oriented, privacy, archive, and inherited-v16 checks.
+These were candidate-owner prechecks and were not used as a substitute for independent QA. Round 2 subsequently repeated the sealed-roster, behavioral, responsive, accessibility-oriented, privacy, archive, and inherited-v16 checks described in its independent report.
 
 ## Deliberate proof limits
 
-This candidate is a static frontend representation with fictional fixtures and browser-memory transitions. It does not prove actual VoiceNotes or Telegram behavior, server persistence, transactionality, concurrency, idempotency across processes, restart recovery, provider access, Generated Artwork handling, authentication, authorization, encryption, export/restore, deployment, operations, production privacy, production readiness, formal accessibility conformance, native page/text zoom, or a real assistive-technology session. The evidence set is not a substitute for independent behavioral QA, and Product/Design readiness acceptance is not a QA verdict.
+This prototype is a static frontend representation with fictional fixtures and browser-memory transitions. It does not prove actual VoiceNotes or Telegram behavior, server persistence, transactionality, concurrency, idempotency across processes, rollback, restart recovery, provider access, Generated Artwork handling, authentication, authorization, encryption, export/restore, deployment, operations, production privacy, production security, production readiness, formal accessibility conformance, native page/text zoom, mobile operating systems or browsers, or a real assistive-technology session. The accepted independent verdict is bounded to the exact synthetic frontend candidate and must not be broadened into any of those claims.
 
 ## Gate state
 
 - Product acceptance: **A**
 - Experience acceptance: **A**
 - Council approval: **A**
-- Prototype implementation and evidence: **A — exact repaired candidate held**
+- Prototype implementation and evidence: **A — exact repaired candidate locally frozen at `571308f678ba92a159b95b5093c68ee4b283fe4a`**
 - Independent QA Round 1: **FAIL — C0/H2/M3/L0**, durable and superseded only by a new independent result
-- Independent QA Round 2: **Pending — `/root/qa_v17_round2`; no verdict claimed**
-- Requirement closure: **Pending** for `LID-SCP-002`, `LID-SRC-003`, and the redating portion of `LID-SRC-004`
-- Freeze, commits, push, and remote readback: **Pending**
+- Independent QA Round 2: **PASS — C0/H0/M0/L0** by fresh read-only `/root/qa_v17_round2`
+- QA acceptance boundary: **A** for `LID-SCP-002`, `LID-SRC-003`, and the redating portion of `LID-SRC-004`; formal tracker closure remains a Project Manager successor action
+- Local candidate freeze: **A** — every manifest-listed committed blob and aggregate matches the independently tested identity
+- Documentation-only post-QA successor: **this file and `v17/DESIGN-QA-v17-round2.md`; outside the tested 35-file roster and changes no tested implementation/evidence byte**
+- Remote push and remote readback: **Pending**
 
-The only permitted current statement is: **V17 is a repaired, Product/Design-accepted, sealed synthetic frontend-prototype candidate for Atomic Redating awaiting fresh independent QA Round 2. It is not independently verified, frozen, committed, pushed, or production-ready.**
+The permitted current statement is: **V17 Atomic Redating passed fresh independent QA Round 2 at C0/H0/M0/L0 and its exact synthetic frontend-prototype candidate is frozen locally at commit `571308f678ba92a159b95b5093c68ee4b283fe4a`. Remote push/readback, tracker closure, and the v18 start gate remain pending. V17 is not a backend, provider, security, deployment, accessibility-conformance, or production-readiness proof.**
