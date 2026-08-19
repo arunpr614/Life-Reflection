@@ -1,0 +1,343 @@
+{
+  "schemaVersion": 1,
+  "tool": "capture-phase2-evidence-v17.mjs",
+  "toolVersion": 17,
+  "targetVersion": 17,
+  "capturedAt": "2026-08-19T09:23:22.675Z",
+  "capture": {
+    "requestedUrl": "http://127.0.0.1:4317/index-v17.html",
+    "view": "active",
+    "viewport": {
+      "width": 568,
+      "height": 320,
+      "scaleFactor": 1
+    },
+    "fixture": "pending",
+    "theme": "light",
+    "media": {
+      "requested": {
+        "motion": "reduce",
+        "forcedColors": "none"
+      },
+      "observed": {
+        "reducedMotion": true,
+        "motionNoPreference": false,
+        "forcedColorsActive": false,
+        "forcedColorsNone": true,
+        "colorSchemeLight": false,
+        "colorSchemeDark": true
+      }
+    },
+    "selector": {
+      "selector": ".lid-synthetic-controls-v17",
+      "tagName": "div",
+      "id": null,
+      "visible": true
+    },
+    "png": {
+      "file": "v17-07-pending-landscape-light.png",
+      "width": 568,
+      "height": 320,
+      "bytes": 26264,
+      "sha256": "005c1dff29ad80882efc1da801a32773d70a027c9c7988521867ba01b5e237f7"
+    }
+  },
+  "page": {
+    "title": "Life in Days",
+    "url": {
+      "generic": "http://127.0.0.1:4317/index-v17.html",
+      "origin": "http://127.0.0.1:4317",
+      "pathname": "/index-v17.html",
+      "hasQuery": false,
+      "hasHash": false
+    },
+    "history": {
+      "length": 2,
+      "state": null,
+      "stateType": "null"
+    }
+  },
+  "qa": {
+    "manifest": {
+      "version": 17,
+      "feature": "PVA-012 Atomic Redating",
+      "requirements": [
+        "LID-SCP-002",
+        "LID-SRC-003",
+        "LID-SRC-004 redating portion"
+      ],
+      "authority": {
+        "fixedClock": "2026-08-19T10:00:00+05:30",
+        "timezone": "Asia/Kolkata",
+        "sourceItem": "src-journal-monsoon-walk",
+        "currentDate": "2026-08-18",
+        "validDestination": "2026-08-17",
+        "originalTimestamp": "17 Aug 2026, 11:42 pm IST"
+      },
+      "fixtures": [
+        "ready",
+        "future-rejected",
+        "same-day-rejected",
+        "pending",
+        "failure",
+        "unknown",
+        "interrupted",
+        "competing-revision",
+        "success",
+        "rapid-repeat"
+      ],
+      "files": [
+        "index-v17.html",
+        "runtime-v17.js",
+        "app-v17.js",
+        "styles-v17.css",
+        "README-v17.md",
+        "check-v17.mjs",
+        "capture-phase2-evidence-v17.mjs"
+      ],
+      "boundary": "Synthetic deterministic frontend representation in browser memory only.",
+      "qaFeature": "v17",
+      "loadedVersions": [
+        17
+      ],
+      "features": [
+        {
+          "key": "v17",
+          "version": 17,
+          "title": "Atomic Redating",
+          "launcherTitle": "Atomic Redating · fixed synthetic demo"
+        }
+      ]
+    },
+    "invariants": {
+      "pass": true,
+      "assertions": [
+        {
+          "name": "Original Timestamp is immutable",
+          "pass": true
+        },
+        {
+          "name": "At most one intent exists",
+          "pass": true
+        },
+        {
+          "name": "At most one archive effect exists",
+          "pass": true
+        },
+        {
+          "name": "Typed-event cardinality equals effect cardinality",
+          "pass": true
+        },
+        {
+          "name": "No provider request is queued",
+          "pass": true
+        },
+        {
+          "name": "Source launch context is complete",
+          "pass": true
+        },
+        {
+          "name": "Invalid destinations cannot create an intent",
+          "pass": true
+        },
+        {
+          "name": "Date-required state is coherent and unpressed",
+          "pass": true
+        },
+        {
+          "name": "No-effect states retain the exact source date",
+          "pass": true
+        },
+        {
+          "name": "No-effect states retain the exact current-day source set",
+          "pass": true
+        },
+        {
+          "name": "Success moves the Source Item to the destination exactly once",
+          "pass": true
+        },
+        {
+          "name": "Success retains one historical artwork version",
+          "pass": true
+        },
+        {
+          "name": "Success keeps real-photo precedence on both resulting days",
+          "pass": true
+        },
+        {
+          "name": "Success appends the exact typed history event",
+          "pass": true
+        },
+        {
+          "name": "Fixture state is absent from the URL",
+          "pass": true
+        },
+        {
+          "name": "Page title is generic",
+          "pass": true
+        },
+        {
+          "name": "Live regions omit fixture identity and dates",
+          "pass": true
+        },
+        {
+          "name": "Active workspace exposes one feature heading",
+          "pass": true
+        },
+        {
+          "name": "Task workspace precedes prototype console",
+          "pass": true
+        },
+        {
+          "name": "Active workspace has no horizontal page overflow",
+          "pass": true
+        }
+      ]
+    },
+    "snapshotSummary": {
+      "version": 17,
+      "feature": "PVA-012 Atomic Redating",
+      "fixture": "pending",
+      "phase": "pending",
+      "timezone": "Asia/Kolkata",
+      "selectedDestination": "2026-08-17",
+      "destinationValidation": {
+        "kind": "valid",
+        "valid": true,
+        "message": "Destination accepted for consequence review."
+      },
+      "intentCount": 1,
+      "effectCount": 0,
+      "providerRequests": 0,
+      "deliveredResults": 0,
+      "historyEventCount": 0,
+      "dayView": null,
+      "theme": "light"
+    }
+  },
+  "archiveDiagnostics": null,
+  "viewport": {
+    "innerWidth": 568,
+    "innerHeight": 320,
+    "devicePixelRatio": 1,
+    "visualWidth": 568,
+    "visualHeight": 320,
+    "scrollX": 0,
+    "scrollY": 3101
+  },
+  "overflow": {
+    "documentClientWidth": 568,
+    "documentScrollWidth": 568,
+    "documentDelta": 0,
+    "documentHorizontal": false,
+    "bodyClientWidth": 568,
+    "bodyScrollWidth": 568,
+    "bodyHorizontal": false,
+    "featureClientWidth": 568,
+    "featureScrollWidth": 568,
+    "featureHorizontal": false
+  },
+  "browserState": {
+    "localStorage": 0,
+    "sessionStorage": 0,
+    "indexedDB": 0,
+    "caches": 0,
+    "serviceWorkers": 0
+  },
+  "events": {
+    "console": [],
+    "exceptions": [],
+    "networkRequests": [
+      {
+        "requestId": "DD5CF0A27F1EB356B52AB667EED4A721",
+        "url": "http://127.0.0.1:4317/index-v17.html",
+        "method": "GET",
+        "type": "Document"
+      },
+      {
+        "requestId": "51394.2",
+        "url": "http://127.0.0.1:4317/styles-v16.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "51394.3",
+        "url": "http://127.0.0.1:4317/styles-v16-almanac.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "51394.4",
+        "url": "http://127.0.0.1:4317/styles-v16-readiness.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "51394.5",
+        "url": "http://127.0.0.1:4317/styles-v16-resilience.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "51394.6",
+        "url": "http://127.0.0.1:4317/styles-v16-date-review.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "51394.7",
+        "url": "http://127.0.0.1:4317/styles-v16-telegram.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "51394.8",
+        "url": "http://127.0.0.1:4317/styles-v16-upload.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "51394.9",
+        "url": "http://127.0.0.1:4317/styles-v16-correction.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "51394.10",
+        "url": "http://127.0.0.1:4317/styles-v16-conflict.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "51394.11",
+        "url": "http://127.0.0.1:4317/styles-v17.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "51394.12",
+        "url": "http://127.0.0.1:4317/app-v16.js",
+        "method": "GET",
+        "type": "Script"
+      },
+      {
+        "requestId": "51394.13",
+        "url": "http://127.0.0.1:4317/runtime-v17.js",
+        "method": "GET",
+        "type": "Script"
+      },
+      {
+        "requestId": "51394.14",
+        "url": "http://127.0.0.1:4317/app-v17.js",
+        "method": "GET",
+        "type": "Script"
+      },
+      {
+        "requestId": "51394.28",
+        "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNSIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjZmZmZmZmIiBkPSJNMjAgM2gtMVYxaC0ydjJIN1YxSDV2Mkg0Yy0xLjEgMC0yIC45LTIgMnYxNmMwIDEuMS45IDIgMiAyaDE2YzEuMSAwIDItLjkgMi0yVjVjMC0xLjEtLjktMi0yLTJ6bTAgMThINFY4aDE2djEzeiIvPjxwYXRoIGZpbGw9Im5vbmUiIGQ9Ik0wIDBoMjR2MjRIMHoiLz48L3N2Zz4=",
+        "method": "GET",
+        "type": "Image"
+      }
+    ]
+  }
+}
