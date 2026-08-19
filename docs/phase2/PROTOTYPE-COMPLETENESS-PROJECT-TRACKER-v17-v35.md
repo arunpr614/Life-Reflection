@@ -4,12 +4,15 @@
 - **Tracker owner:** Project Manager agent
 - **Product owner and final product decision-maker:** Arun
 - **Program state at initialization:** `Queued`
+- **Current program state:** v17 `Completed locally`; remote publication/readback pending; v18 is gated
 - **Frozen source baseline:** v16 archive/tracker commit `01d1f054a12773e07f91096b8d76b0c5f4064329`
 - **Execution worktree:** `/Users/arun.prakash/Documents/ArunVault2026-2/Initiatives/Arun_AI_Projects/AI_Life_reflect-phase2-v17-v35`
 - **Execution branch:** `codex/prototype-completeness-v17-v35`
 - **Intended remote destination:** `origin/codex/prototype-completeness-v17-v35`
 - **Remote state at initialization:** branch absent; local branch has no upstream
 - **Scope:** 19 consecutive additive prototype packages, v17 through v35, closing 41 still-open prototype-representable rows from the v5 audit
+- **Current audit progress:** 19/57 prototype-representable rows closed locally; 38/57 remain open
+- **Current package progress:** v17 completed locally; 18 packages (v18–v35) remain queued
 
 This is the living, additive execution tracker for the v17–v35 prototype-completeness loop. It does not replace or edit the frozen [prototype completeness tracker](../project/PROTOTYPE-COMPLETENESS-TRACKER.md), the frozen v1–v16 prototype files, or their historical ledger. The frozen tracker remains the authority for work through v16 and for the original audit-to-version mapping. This file records only work after that frozen boundary.
 
@@ -85,12 +88,13 @@ Therefore:
 | `Repair in progress` | QA failed; the same unfrozen vN is being repaired before complete recapture, reseal, and fresh independent QA. |
 | `Held candidate preparation` | Product, Design, Council, and implementation gates pass for repaired working bytes; an exact replacement manifest is being prepared before a fresh independent QA run. |
 | `Freeze/publish in progress` | QA passed; exact tested bytes and records are being committed, pushed, and read back. |
+| `Completed locally` | P/D/C/I/Q/F are `A` for the exact local commit chain, but publication and remote readback remain pending. This is not remote `Complete` and does not open the successor-version gate. |
 | `Complete` | All six gates passed and the remote branch contains the exact recorded chain. |
 | `Blocked` | A named dependency, conflict, authority issue, or evidence failure prevents safe progress. |
 
 ### Gate notation
 
-`—` = not started; `IP` = in progress; `A` = approved/passed; `F` = failed; `B` = blocked.
+`—` = not started; `IP` = in progress; `A` = approved/passed; `A (local)` = locally passed but awaiting the publication/readback portion of the gate; `F` = failed; `B` = blocked.
 
 | Gate | Accountable role | Required exit evidence |
 | --- | --- | --- |
@@ -107,7 +111,7 @@ All packages are initially queued. Gate values must change only when their named
 
 | Version | Stable feature package | Primary audit gap(s) | Dependency | Status | P | D | C | I | Q | F |
 | --- | --- | --- | --- | --- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **v17** | **PVA-012 Atomic Redating** | 5, redating portion | frozen v16 `01d1f054…` | `Held candidate preparation` | A | A | A | A | F (R1; R2 pending) | — |
+| **v17** | **PVA-012 Atomic Redating** | 5, redating portion | frozen v16 `01d1f054…` | `Completed locally` | A | A | A | A | A | A (local) |
 | **v18** | **PVA-013 History and Provenance** | 4 History; 5 provenance | v17 | `Queued` | — | — | — | — | — | — |
 | **v19** | **PVA-014 Trash** | 4 Trash | v18 | `Queued` | — | — | — | — | — | — |
 | **v20** | **PVA-015 Suppressions** | 4 Suppressions | v19 | `Queued` | — | — | — | — | — | — |
@@ -131,11 +135,13 @@ All packages are initially queued. Gate values must change only when their named
 
 `Open` means the v5 audit gap has not yet passed its assigned v17–v35 package. Closure is bounded to frontend-prototype representation and inherits every proof limitation in Section 1.
 
+Current arithmetic after local v17 completion: the frozen v1–v16 program had closed 16/57 prototype-representable audit rows; v17 closes exactly three more, yielding **19/57 closed locally and 38/57 open**. Publication/readback remains pending and v18 remains queued.
+
 | # | Version | Requirement | V5 state | Observable closure required | State |
 | ---: | --- | --- | --- | --- | --- |
-| 1 | v17 | `LID-SCP-002` | Partial | Item-level redating with immutable Original Timestamp and correct two-day effects | Open |
-| 2 | v17 | `LID-SRC-003` | Placeholder | Atomic preview, failure/success, old/new day links, unchanged Original Timestamp | Open |
-| 3 | v17 | `LID-SRC-004` | Partial | Exact source-set binding, stale/invalidated derived results, retained art/history after redating | Open |
+| 1 | v17 | `LID-SCP-002` | Partial | Item-level redating with immutable Original Timestamp and correct two-day effects | Closed (v17 local) |
+| 2 | v17 | `LID-SRC-003` | Placeholder | Atomic preview, failure/success, old/new day links, unchanged Original Timestamp | Closed (v17 local) |
+| 3 | v17 | `LID-SRC-004` | Partial | Exact source-set binding, stale/invalidated derived results, retained art/history after redating | Closed (redating portion; v17 local) |
 | 4 | v18 | `LID-SCP-003` | Partial | Navigable source, Correction, revision, and Derived Artifact separation and provenance | Open |
 | 5 | v18 | `LID-VN-006` | Partial | Revised, untagged, and deleted upstream lifecycle with retained revisions and conflict state | Open |
 | 6 | v18 | `LID-REF-004` | Partial | Journal Day exposes functioning history/provenance and exceptional management states | Open |
@@ -276,7 +282,7 @@ Populate each row append-only as the version progresses. `Pending` is not eviden
 
 | Version | Candidate identity / aggregate | QA agent | Verdict and C/H/M/L | Lower-severity disposition | Implementation/evidence commit | Freeze commit | Tracker commit | Remote head/readback | Completion |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| v17 | Round 1 manifest `51f8e49fe588c139d3c542da22833cf9dd2bd840cdac39fe7b6ab1efde570466` and held aggregate `14abca5efb18c2887fb4790a481abe26acafc9674317d6d20a45f093f75e6bbe` are obsolete and will be replaced. Final repaired UI/tool aggregate `e4bfec90d9a7aa56f8d2a437c23edbd24fa6c229c10c7d7b78250ba82571ed49`; 20-file evidence aggregate `2b8307f01db583cab9ed324dfc852e6a44a907a28754f3ad4ffc2ac16c5ae296`; replacement manifest pending. | Round 1 `/root/qa_v17`; fresh Round 2 assignee pending | Round 1 **FAIL — C0/H2/M3/L0**; fresh Round 2 pending, no verdict claimed | All five Round 1 findings, compact-launcher occlusion, below-1024 card layout, and later `#727d76` contrast finding repaired; final Product and Design readiness rechecks **C0/H0/M0/L0**, not QA | Pending | Pending | Pending | Pending | Open — held candidate preparation |
+| v17 | Round 1 manifest `51f8e49fe588c139d3c542da22833cf9dd2bd840cdac39fe7b6ab1efde570466` / aggregate `14abca5efb18c2887fb4790a481abe26acafc9674317d6d20a45f093f75e6bbe` remain rejected history. Accepted Round 2 manifest `6405f86c8074d142dc6f2d120549e34db69e7c97b0d92288657f5104717fa471`; 35-file aggregate `e7fe4250510958c155726753ba8247be594e8592d03a690282ab4f59da5bc2ec`. | Round 1 `/root/qa_v17`; Round 2 `/root/qa_v17_round2` | Round 1 **FAIL — C0/H2/M3/L0**; Round 2 **PASS — C0/H0/M0/L0** | Every Round 1 and later readiness finding was fixed; none accepted or deferred; Round 2 found no lower-severity defect | `571308f678ba92a159b95b5093c68ee4b283fe4a` | `6c6fe10b2fa575447704ca94f319c258f480999c` | Pending (this tracker-only successor) | Pending — publication/readback gate; v18 blocked | Completed locally; P/D/C/I/Q/F=A locally |
 | v18 | Pending | Pending | Pending | Pending | Pending | Pending | Pending | Pending | Pending |
 | v19 | Pending | Pending | Pending | Pending | Pending | Pending | Pending | Pending | Pending |
 | v20 | Pending | Pending | Pending | Pending | Pending | Pending | Pending | Pending | Pending |
@@ -463,3 +469,29 @@ Append one start record and one or more disposition records per version. Never r
 - Remaining blockers: create and validate the replacement exact candidate manifest; assign a fresh read-only QA agent; obtain Round 2 Pass and disposition any lower-severity findings; complete the required commit, push, and readback sequence.
 - Next action: replace the obsolete Round 1 manifest with the exact final candidate identity, then begin fresh independent QA Round 2. Do not start v18.
 - Package status / F gate: `Held candidate preparation`; `P=A`; `D=A`; `C=A`; `I=A`; `Q=F` for Round 1 with fresh Round 2 pending; `F=—`.
+
+### 2026-08-19 — v17 — PVA-012 Atomic Redating — completed locally; publication pending
+
+- Baseline full SHA: `01d1f054a12773e07f91096b8d76b0c5f4064329`.
+- Worktree and branch identity: the isolated execution worktree and `codex/prototype-completeness-v17-v35` branch recorded in the tracker header.
+- Product Manager / P gate: **A locally** — the final accepted Atomic Redating meaning and bounded closure remain unchanged.
+- UI/UX Designer / D gate: **A locally** — the repaired experience contract passed final readiness review and Round 2 found no design defect.
+- Project Manager / Council / C gate: **A locally** — the exact local commit chain is accepted for publication; no v18 start is authorized before remote push/readback.
+- Implementing agent / I gate: **A locally** — the exact independently tested candidate is committed at `571308f678ba92a159b95b5093c68ee4b283fe4a`.
+- Candidate identity and exact roster: replacement candidate manifest SHA-256 `6405f86c8074d142dc6f2d120549e34db69e7c97b0d92288657f5104717fa471`; exact 35-file aggregate SHA-256 `e7fe4250510958c155726753ba8247be594e8592d03a690282ab4f59da5bc2ec`. The implementation commit reproduces every manifest-listed blob, the aggregate, and the manifest self-hash.
+- Evidence roster and aggregate: ten final PNG/JSON pairs remain the accepted Round 2 set; ordered 20-file aggregate SHA-256 `2b8307f01db583cab9ed324dfc852e6a44a907a28754f3ad4ffc2ac16c5ae296`.
+- Independent QA agent / Q gate: fresh read-only `/root/qa_v17_round2`; **A locally**.
+- Verdict and Critical/High/Medium/Low counts: Round 2 **PASS — C0/H0/M0/L0**. Historical Round 1 remains **FAIL — C0/H2/M3/L0** and is not erased or reclassified.
+- Lower-severity finding dispositions: every Round 1 and later readiness finding was fixed before reseal; none was accepted or deferred. Round 2 reported no Medium or Low finding requiring disposition.
+- Durable QA and handoff identities: Round 2 QA record SHA-256 `aa6a07778f0e686742d2d8526ca6bba72a7a076d7be1406a5cf36605d4f5108a`; current documentation-only handoff SHA-256 `5a7f58e1470a6f81e29b264b21750910d17b0337324a6e90dae7a37dd88def31`.
+- Limitations and proof boundary: deterministic synthetic frontend representation only. Round 2 did not verify native browser/page zoom, a real screen-reader or assistive-technology session, mobile operating systems/browsers, or formal accessibility conformance, and it proves no backend atomicity or durability, persistence, rollback, restart recovery, concurrency, cross-process idempotency, provider/VoiceNotes behavior, authentication, authorization, encryption, production privacy/security, deployment, operations, or production readiness.
+- Implementation/evidence commit: `571308f678ba92a159b95b5093c68ee4b283fe4a`.
+- Freeze commit: documentation-only QA/handoff successor `6c6fe10b2fa575447704ca94f319c258f480999c`; it changes no tested candidate byte.
+- Tracker commit: Pending; this append-only local-completion record is the tracker-only successor awaiting commit.
+- Explicit push destination and result: `origin/codex/prototype-completeness-v17-v35`; **Pending**. No remote publication is claimed.
+- Remote head and blob readback: **Pending**. `F=A locally` records only the completed local freeze chain; it is not remote `Complete`.
+- Frozen/archive/main/unrelated-work guards: the accepted manifest and committed-blob comparison preserve the exact v16 baseline and tested candidate identity. Remote/archive/main/unrelated-work checks remain mandatory at publication readback.
+- Requirement rows closed: exactly `LID-SCP-002`, `LID-SRC-003`, and the redating portion of `LID-SRC-004`, bounded to the synthetic frontend prototype. Program arithmetic is now 19/57 prototype-representable rows closed locally and 38/57 open.
+- Remaining blockers: tracker-only successor commit, explicit branch push, remote-head parity, immutable committed-blob readback, and final v17 publication disposition.
+- Next action: commit this tracker-only successor, push the complete v17 chain explicitly, and verify remote head/blob parity. Do not start v18 until that readback passes.
+- Package status / F gate: `Completed locally`; `P=A`; `D=A`; `C=A`; `I=A`; `Q=A`; `F=A (local)`; remote publication/readback pending. Eighteen packages, v18–v35, remain `Queued`.
