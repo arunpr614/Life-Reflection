@@ -332,5 +332,64 @@
       "sha256": "e231adce514fb8631ec794e8d578d852fcd45629594201620d2e390e638d1fc7"
     }
   ],
-  "next": null
+  "next": {
+    "changes": [
+      {
+        "operation": "add",
+        "path": "docs/council/execution/P0-GENERATION0-BOOTSTRAP-LEDGER.json",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "61a88c3db36ae6b9d4c4218e2b747b81744132a133269ae96c087a66688c4114"
+      },
+      {
+        "operation": "modify",
+        "path": "tools/P0-stage-runner.mjs",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "e4e640895f7dfb814ae045a41f89fa6a96b2a84f8d6db68fed7d8f2c3d29086a"
+      },
+      {
+        "operation": "modify",
+        "path": "tools/P0-stage0-ci.mjs",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "b1739ad53cc93390bae52e34023e226b1cd147c725326da088fa34ea5a4fa41d"
+      },
+      {
+        "operation": "modify",
+        "path": "tools/P0-staged-actions.mjs",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "2ee64077dc712ce85c136a5aa7a6e9706ea1618e97bb7239c9815d793916304b"
+      },
+      {
+        "operation": "add",
+        "path": "tools/P0-taskrun-coordinator.mjs",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "ca13661328a345aff234b3e2427506d956af03046b5b82aef45f0b34da25538e"
+      },
+      {
+        "operation": "modify",
+        "path": "tools/P0-test-stage-runner.mjs",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "33302bac538f777fe5eef64e35caab477f3d939d61123ed69faad03a0b6e2831"
+      },
+      {
+        "operation": "modify",
+        "path": "tools/P0-test-staged-actions.mjs",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "12d352be71bc436d7cd5d34d31b024b07034431963ebc82e701d15de7a98ea16"
+      },
+      {
+        "operation": "add",
+        "path": "tools/P0-test-taskrun-coordinator.mjs",
+        "mode": "100644",
+        "type": "blob",
+        "sha256": "512d5c4ec30618ff23dd3092a6c79cf474dbf56f69807fa136d013a37bb55b8c"
+      }
+    ]
+  }
 }
