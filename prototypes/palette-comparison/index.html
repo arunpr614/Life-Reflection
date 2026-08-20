@@ -1,0 +1,316 @@
+<!--
+  PROTOTYPE — throwaway, not for production. Never merged to main.
+  Question: does the calendar month view read better as (A) UX-SPECIFICATION.md
+  §28.1's warm-brown/no-rail system, or (B) reference/prototype-v10's green/238px-rail
+  system? Two variants, switchable via ?variant=A|B and the floating bottom bar.
+  Fictional data only — no real journal text or photos (CLAUDE.md privacy boundary).
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Palette comparison prototype — Life in Days</title>
+<style>
+  :root {
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-6: 24px; --space-8: 32px;
+    --radius-card: 12px; --radius-media: 10px; --radius-control: 8px;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+  /* ---------- Variant A: UX-SPECIFICATION.md §28.1 ---------- */
+  body.variant-A {
+    --canvas: #F7F1E8; --surface: #FFFDF8; --surface-raised: #FFFFFF;
+    --text: #211F1B; --text-muted: #665F55; --border: #D8CEBF;
+    --accent: #70543D; --focus: #175CD3;
+    background: var(--canvas); color: var(--text);
+  }
+  body.variant-A .app-shell { display: block; }
+  body.variant-A .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--space-4) var(--space-6);
+    background: var(--surface); border-bottom: 1px solid var(--border);
+  }
+  body.variant-A .topbar-title { font-size: 22px; font-weight: 600; }
+  body.variant-A .topbar-nav { display: flex; gap: var(--space-4); }
+  body.variant-A .topbar-nav a {
+    color: var(--text-muted); text-decoration: none; font-size: 14px; padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-control);
+  }
+  body.variant-A .topbar-nav a.active { color: var(--accent); font-weight: 600; background: var(--canvas); }
+  body.variant-A .content { max-width: 960px; margin: 0 auto; padding: var(--space-6); }
+  body.variant-A .month-heading {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4);
+  }
+  body.variant-A .month-heading h1 { font-size: 28px; margin: 0; }
+  body.variant-A .month-nav button {
+    background: var(--surface); border: 1px solid var(--border); color: var(--accent);
+    border-radius: var(--radius-control); padding: var(--space-2) var(--space-3); cursor: pointer;
+  }
+  body.variant-A .calendar-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2);
+  }
+  body.variant-A .weekday-label {
+    font-size: 13px; color: var(--text-muted); text-align: center; padding-bottom: var(--space-1);
+  }
+  body.variant-A .day-cell {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card);
+    min-height: 92px; padding: var(--space-2); position: relative; cursor: pointer;
+  }
+  body.variant-A .day-cell:hover { border-color: var(--accent); }
+  body.variant-A .day-cell:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  body.variant-A .day-cell.outside { opacity: 0.4; }
+  body.variant-A .day-number { font-size: 14px; font-weight: 600; }
+  body.variant-A .day-cell.today .day-number {
+    background: var(--accent); color: var(--surface-raised); border-radius: 50%;
+    width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
+  }
+  body.variant-A .day-photo {
+    width: 100%; height: 40px; border-radius: var(--radius-media); margin-top: var(--space-1);
+    background: linear-gradient(135deg, var(--accent), var(--border));
+  }
+  body.variant-A .day-dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+    margin-top: var(--space-1);
+  }
+
+  /* ---------- Variant B: reference/prototype-v10 ---------- */
+  body.variant-B {
+    --rail-width: 238px;
+    --canvas: #F4F6F4; --surface: #FFFFFF; --surface-raised: #FFFFFF;
+    --text: #16241F; --text-muted: #5B6B64; --border: #D3DED8;
+    --accent: #255949; --focus: #0a7762;
+    background: var(--canvas); color: var(--text);
+  }
+  body.variant-B .app-shell { display: flex; min-height: 100vh; }
+  body.variant-B .rail {
+    width: var(--rail-width); flex-shrink: 0; background: var(--accent); color: #fff;
+    padding: var(--space-6) var(--space-4); display: flex; flex-direction: column; gap: var(--space-2);
+  }
+  body.variant-B .rail-brand { font-size: 18px; font-weight: 700; margin-bottom: var(--space-6); }
+  body.variant-B .rail a {
+    color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px;
+    padding: var(--space-2) var(--space-3); border-radius: var(--radius-control);
+  }
+  body.variant-B .rail a.active { background: rgba(255,255,255,0.15); color: #fff; font-weight: 600; }
+  body.variant-B .main { flex: 1; padding: var(--space-6); }
+  body.variant-B .month-heading {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4);
+  }
+  body.variant-B .month-heading h1 { font-size: 26px; margin: 0; color: var(--accent); }
+  body.variant-B .month-nav button {
+    background: #fff; border: 1px solid var(--border); color: var(--accent);
+    border-radius: var(--radius-control); padding: var(--space-2) var(--space-3); cursor: pointer;
+  }
+  body.variant-B .calendar-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-3);
+  }
+  body.variant-B .weekday-label {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--text-muted); text-align: center; padding-bottom: var(--space-1);
+  }
+  body.variant-B .day-cell {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    min-height: 96px; padding: var(--space-2); position: relative; cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  body.variant-B .day-cell:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+  body.variant-B .day-cell:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  body.variant-B .day-cell.outside { opacity: 0.4; }
+  body.variant-B .day-number { font-size: 14px; font-weight: 600; }
+  body.variant-B .day-cell.today .day-number {
+    background: var(--focus); color: #fff; border-radius: 4px;
+    padding: 0 var(--space-1); display: inline-block;
+  }
+  body.variant-B .day-photo {
+    width: 100%; height: 40px; border-radius: 4px; margin-top: var(--space-1);
+    background: linear-gradient(135deg, var(--accent), var(--focus));
+  }
+  body.variant-B .day-dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--focus);
+    margin-top: var(--space-1);
+  }
+
+  /* ---------- Floating switcher (identical in both variants) ---------- */
+  .switcher {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 12px;
+    background: #111; color: #fff; padding: 8px 16px; border-radius: 999px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3); font-family: -apple-system, sans-serif;
+    font-size: 14px; z-index: 999;
+  }
+  .switcher button {
+    background: rgba(255,255,255,0.15); border: none; color: #fff; width: 28px; height: 28px;
+    border-radius: 50%; cursor: pointer; font-size: 16px; line-height: 1;
+  }
+  .switcher button:hover { background: rgba(255,255,255,0.3); }
+  .switcher .label { min-width: 220px; text-align: center; }
+</style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Variant B rail (hidden by CSS in variant A) -->
+    <nav class="rail" style="display:none">
+      <div class="rail-brand">Life in Days</div>
+      <a href="#" class="active">Calendar</a>
+      <a href="#">Almanac</a>
+      <a href="#">Search</a>
+      <a href="#">Upload</a>
+      <a href="#">Needs Date Review</a>
+    </nav>
+
+    <div class="main">
+      <!-- Variant A topbar (hidden by CSS in variant B) -->
+      <header class="topbar" style="display:none">
+        <div class="topbar-title">Life in Days</div>
+        <nav class="topbar-nav">
+          <a href="#" class="active">Calendar</a>
+          <a href="#">Almanac</a>
+          <a href="#">Search</a>
+          <a href="#">Upload</a>
+          <a href="#">Needs Date Review</a>
+        </nav>
+      </header>
+
+      <div class="content">
+        <div class="month-heading">
+          <div class="month-nav"><button aria-label="Previous month">&larr;</button></div>
+          <h1>August 2026</h1>
+          <div class="month-nav"><button aria-label="Next month">&rarr;</button></div>
+        </div>
+        <div class="calendar-grid" id="calendar-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="switcher" role="navigation" aria-label="Prototype variant switcher">
+    <button id="prev" aria-label="Previous variant">&larr;</button>
+    <span class="label" id="switcher-label"></span>
+    <button id="next" aria-label="Next variant">&rarr;</button>
+  </div>
+
+<script>
+  // Fictional month grid: August 2026, Monday-first, per WF-02.
+  // A handful of days carry a fictional photo or journal marker so the
+  // grid isn't empty — none of this is real journal content.
+  const WEEKDAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const DAYS = [
+    { date: '2026-07-27', outside: true },
+    { date: '2026-07-28', outside: true },
+    { date: '2026-07-29', outside: true },
+    { date: '2026-07-30', outside: true },
+    { date: '2026-07-31', outside: true },
+    { date: '2026-08-01', photo: true },
+    { date: '2026-08-02' },
+    { date: '2026-08-03', journal: true },
+    { date: '2026-08-04' },
+    { date: '2026-08-05', photo: true },
+    { date: '2026-08-06' },
+    { date: '2026-08-07' },
+    { date: '2026-08-08', journal: true, photo: true },
+    { date: '2026-08-09' },
+    { date: '2026-08-10' },
+    { date: '2026-08-11', photo: true },
+    { date: '2026-08-12' },
+    { date: '2026-08-13' },
+    { date: '2026-08-14', journal: true },
+    { date: '2026-08-15', photo: true },
+    { date: '2026-08-16' },
+    { date: '2026-08-17' },
+    { date: '2026-08-18', photo: true },
+    { date: '2026-08-19' },
+    { date: '2026-08-20', today: true, journal: true, photo: true },
+    { date: '2026-08-21' },
+    { date: '2026-08-22' },
+    { date: '2026-08-23', photo: true },
+    { date: '2026-08-24' },
+    { date: '2026-08-25', journal: true },
+    { date: '2026-08-26' },
+    { date: '2026-08-27' },
+    { date: '2026-08-28', photo: true },
+    { date: '2026-08-29' },
+    { date: '2026-08-30' },
+    { date: '2026-08-31', photo: true },
+    { date: '2026-09-01', outside: true },
+    { date: '2026-09-02', outside: true },
+    { date: '2026-09-03', outside: true },
+    { date: '2026-09-04', outside: true },
+    { date: '2026-09-05', outside: true },
+    { date: '2026-09-06', outside: true },
+  ];
+
+  function renderGrid() {
+    const grid = document.getElementById('calendar-grid');
+    grid.innerHTML = '';
+    WEEKDAYS.forEach(w => {
+      const el = document.createElement('div');
+      el.className = 'weekday-label';
+      el.textContent = w;
+      grid.appendChild(el);
+    });
+    DAYS.forEach(d => {
+      const cell = document.createElement('div');
+      cell.className = 'day-cell' + (d.outside ? ' outside' : '') + (d.today ? ' today' : '');
+      cell.tabIndex = 0;
+      const num = document.createElement('div');
+      num.className = 'day-number';
+      num.textContent = d.date.slice(-2).replace(/^0/, '');
+      cell.appendChild(num);
+      if (d.photo) {
+        const photo = document.createElement('div');
+        photo.className = 'day-photo';
+        cell.appendChild(photo);
+      } else if (d.journal) {
+        const dot = document.createElement('div');
+        dot.className = 'day-dot';
+        cell.appendChild(dot);
+      }
+      grid.appendChild(cell);
+    });
+  }
+
+  const VARIANTS = {
+    A: { name: 'UX-SPECIFICATION.md §28.1 — warm brown, no rail' },
+    B: { name: 'prototype-v10 — green, 238px rail' },
+  };
+  const ORDER = ['A', 'B'];
+
+  function applyVariant(key) {
+    document.body.className = 'variant-' + key;
+    document.querySelector('.rail').style.display = key === 'B' ? 'flex' : 'none';
+    document.querySelector('.topbar').style.display = key === 'A' ? 'flex' : 'none';
+    document.getElementById('switcher-label').textContent = key + ' (' + VARIANTS[key].name + ')';
+    const url = new URL(window.location);
+    url.searchParams.set('variant', key);
+    window.history.replaceState({}, '', url);
+  }
+
+  function currentVariant() {
+    const param = new URL(window.location).searchParams.get('variant');
+    return ORDER.includes(param) ? param : 'A';
+  }
+
+  function cycle(delta) {
+    const idx = ORDER.indexOf(currentVariant());
+    const next = ORDER[(idx + delta + ORDER.length) % ORDER.length];
+    applyVariant(next);
+  }
+
+  document.getElementById('prev').addEventListener('click', () => cycle(-1));
+  document.getElementById('next').addEventListener('click', () => cycle(1));
+  document.addEventListener('keydown', (e) => {
+    const active = document.activeElement;
+    const tag = active && active.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || (active && active.isContentEditable)) return;
+    if (e.key === 'ArrowLeft') cycle(-1);
+    if (e.key === 'ArrowRight') cycle(1);
+  });
+
+  renderGrid();
+  applyVariant(currentVariant());
+</script>
+</body>
+</html>
