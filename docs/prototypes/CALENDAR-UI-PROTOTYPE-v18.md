@@ -1,10 +1,10 @@
 # Life in Days calendar UI prototype v18 — History and Provenance
 
-> **QA Round 3 held-candidate handoff · P=A · D=A · C=A · I=A locally · C0/H0/M0/L0 · historical Rounds 1–2 remain F · Round 3 pending · F=—**
+> **QA Round 3 PASS · P=A · D=A · C=A · I=A · Q=A · F=A locally · C0/H0/M0/L0 · publication pending**
 
 V18 is the additive `PVA-013 History and Provenance` capsule built on frozen V16 and the immutable V17 compatibility runtime. It renders separate Source and Derived history lanes; complete event and record lineage; revised, conflict, untagged, and deleted-upstream states; hidden-day history; filters; bounded pagination; exact focus/return behavior; and a read-only provenance model without changing the archive.
 
-This handoff preserves both rejected candidate rounds. [Independent QA Round 1](v18/DESIGN-QA-v18-round1.md) failed the original held manifest with three Medium visual-evidence findings. [Independent QA Round 2](v18/DESIGN-QA-v18-round2.md) failed the unchanged 48-record replacement with one formal Medium blocker; supplemental adversarial review expanded the repair ledger to three Medium and two Low defects. All findings are repaired, definitive repository evidence is recaptured, and the 49-record [Round 3 checksum manifest](v18/V18-CANDIDATE-MANIFEST.sha256) is held. Independent Round 3, freeze, commit, push, readback, GitHub closure, and V19 remain pending.
+This handoff preserves both rejected candidate rounds. [Independent QA Round 1](v18/DESIGN-QA-v18-round1.md) failed the original held manifest with three Medium visual-evidence findings. [Independent QA Round 2](v18/DESIGN-QA-v18-round2.md) failed the unchanged 48-record replacement with one formal Medium blocker; supplemental adversarial review expanded the repair ledger to three Medium and two Low defects. All findings were repaired, the definitive repository evidence was recaptured, and [independent QA Round 3](v18/DESIGN-QA-v18-round3.md) passed the exact 49-record [Round 3 checksum manifest](v18/V18-CANDIDATE-MANIFEST.sha256) at **C0/H0/M0/L0**. Candidate commit `a6f463214801275d628c19b94472d4066c8df657` has exact 49/49 Git-blob readback. Local freeze is accepted; push, remote readback, GitHub publication, and V19 remain pending.
 
 ## Open locally
 
@@ -195,3 +195,19 @@ All **400/400 invariant assertions** and **96/96 privacy assertions** pass. Reco
 `V18-CANDIDATE-MANIFEST.sha256` lists exactly 49 held records and no self-record: five authority documents; pre-gate failure; Product/Design recheck; tracker; this handoff; both prior QA reports; 32 definitive evidence files; and six final assets. The manifest's held aggregate and self-hash are external assignment identities, avoiding circularity.
 
 Round 1 and Round 2 reports, manifests, aggregates, findings, and limits remain rejected history. Current gates are `P=A`, `D=A`, `C=A`, `I=A` locally, fresh Round 3 `Q=—` pending with historical Rounds 1–2 `F`, and `F=—`. All three target rows remain open, arithmetic remains **19/57 closed / 38/57 open**, and V19–V35 remain queued. V19 is additionally user-gated. No QA3 report, verdict, freeze, stage, commit, push, remote readback, GitHub mutation, or closure exists.
+
+## QA Round 3 PASS and local freeze successor — current controlling status
+
+[Independent QA Round 3](v18/DESIGN-QA-v18-round3.md) returned **PASS — Product A / Design A / Critical 0 / High 0 / Medium 0 / Low 0** against the self-reference-free 49-record manifest and held aggregate:
+
+`85bfe3c277dfe3bebdae49312f619c5295e980d29d5c3538c009dcdc7b382578`
+
+All 49 records and the manifest matched at independent-QA start and end, staged paths remained zero, and no candidate byte drift occurred. The exact 32-file evidence aggregate remains `11297ee0c6d3ff251e611d0cea1d65da56fe632d807cf12a7c18b4008a0c710f`. Native-size inspection passed all 16 PNGs; 400/400 sidecar invariants and 96/96 privacy assertions passed; browser logs, prohibited storage/registrations/OPFS residue, external requests, and horizontal overflow remained zero.
+
+Fresh live QA passed all 14 fixtures with 350/350 live invariant assertions; exact filtered pagination and truthful Clear behavior; 128/128 invalid-generation no-ops; 21/21 valid terminal/duplicate paths; pointer and click-only pagination anchors; all six Back/Escape origins; the 320/960/961/1023/1024 responsive-origin matrix; inherited-control negatives; More shielding and restored v16 modal wrapping; responsive/media/privacy coverage; and direct regression of all 10 v17 fixtures. The QA report records the in-app browser keyboard-API limitation and the bounded proof exclusions; it makes no assistive-technology, browser-zoom, backend, persistence, deployment, security, formal-accessibility, or production claim.
+
+After the verdict, candidate commit `a6f463214801275d628c19b94472d4066c8df657` bound the exact tested bytes. Direct Git-object readback matches all 49/49 held records and preserves manifest SHA-256 `85bfe3c277dfe3bebdae49312f619c5295e980d29d5c3538c009dcdc7b382578`.
+
+Round 1 remains **FAIL — C0/H0/M3/L0** on obsolete manifest `c1b938e59b8db0904bd6899eb852af263a58f718d06c55b7b3e7770fd552c127` / aggregate `8b08849523b49cbe06a9b915b6aa577ee171799acd3ea52517e1ed6bc1c6d962`. Round 2 remains formal **FAIL — C0/H0/M1/L0**, consolidated **C0/H0/M3/L2**, on obsolete manifest `8746079b78e361e3402e1487f1561a87532dd3b0240fe7d8e90ad95a4856a5ab` / aggregate `eb27347306389ca69168b5e6eb0b229159f57dd63fac50e2c4d3105ecaec03ca`. No earlier finding or limitation is erased, reclassified, accepted, or deferred.
+
+Local gates are now `P=A`, `D=A`, `C=A`, `I=A`, `Q=A`, and `F=A`. Exactly `LID-SCP-003`, `LID-VN-006`, and `LID-REF-004` close at the bounded frontend-prototype level; `LID-SRC-004` remains supporting inherited regression and `LID-VN-005` remains external evidence. Arithmetic is **22/57 closed / 35/57 open**. Push, remote readback, GitHub publication, and the post-publication receipt are still pending. V19 remains Backlog and user-gated, and no V19 work has started.
