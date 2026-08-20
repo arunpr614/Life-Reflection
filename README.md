@@ -8,6 +8,8 @@ This repo was reset to a clean slate on 2026-08-20. The prior effort (58-task go
 
 No app exists yet. Building the smallest possible vertical slice: a local calendar view backed by a real journal entry and a real photo.
 
+Phase 1.5 (implementation planning, work tickets, and UI prototypes) is being picked up by a new agent — see [HANDOVER-PHASE-1.5.md](HANDOVER-PHASE-1.5.md).
+
 ## Reference material
 
 `reference/` holds notes salvaged from the archived effort — domain glossary, product requirements, UX spec, a static v10 prototype, and Hetzner deployment research. Background reading, not a spec to satisfy.

@@ -2,6 +2,18 @@
 
 > **Throwaway UI prototype · fictional data · browser-memory mutations · no integrations connected**
 
+> [!NOTE]
+> **Salvaged copy.** This is the v10 prototype carried into the post-reset repo as a *visual* reference only.
+> Files were renamed (`index-v10.html` → `index.html`, `app-v10.js` → `app.js`, `styles-v10*.css` → `styles*.css`)
+> and the asset links in `index.html` were updated to match. The "Run", "Review artifacts", and `../../`
+> links below point at governance files that were **not** carried forward — they resolve only in the
+> `archive/generation-0` branch / `gen0-final` tag. To run this copy, serve this directory statically:
+>
+> ```sh
+> cd reference/prototype-v10 && python3 -m http.server 4173 --bind 127.0.0.1
+> # then open http://127.0.0.1:4173/index.html?view=calendar&month=2026-08
+> ```
+
 V10 preserves the frozen v6 private Search, v7 Calendar, v8 Cross-month Almanac, and v9 First-use Readiness. It adds one stable package: `PVA-005 Resilient Application Shell`—a coordinated frontend state model for loading, scoped failures, interruption, unsaved work, session expiry, and explicit Retry.
 
 Independent QA passed the exact six-file UI fingerprint recorded in [`../../design-qa-v10.md`](../../design-qa-v10.md), with 0 Critical, 0 High, 0 Medium, and 0 Low findings. Any byte change to those UI artifacts invalidates that disposition. No current file should be treated as production, integration, persistence, authentication, or formal accessibility-conformance evidence.
