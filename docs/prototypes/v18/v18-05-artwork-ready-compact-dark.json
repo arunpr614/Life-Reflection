@@ -1,0 +1,875 @@
+{
+  "schemaVersion": 1,
+  "tool": "capture-phase2-evidence-v18.mjs",
+  "toolVersion": 18,
+  "driver": {
+    "file": "capture-phase2-evidence-v18.mjs",
+    "sha256": "f3b66d390d3e8c1a814507376c82a893af52f812c592b30dfbdab9f315d2ba78",
+    "toolVersion": 18
+  },
+  "targetVersion": 18,
+  "capturedAt": "2026-08-20T08:55:36.391Z",
+  "capture": {
+    "requestedUrl": "http://127.0.0.1:4317/index-v18.html",
+    "view": "active",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "scaleFactor": 1
+    },
+    "fixture": "artwork-ready",
+    "scenario": null,
+    "seedFixture": "artwork-ready",
+    "theme": "dark",
+    "media": {
+      "requested": {
+        "motion": "no-preference",
+        "forcedColors": "none"
+      },
+      "observed": {
+        "reducedMotion": false,
+        "motionNoPreference": true,
+        "forcedColorsActive": false,
+        "forcedColorsNone": true,
+        "colorSchemeLight": false,
+        "colorSchemeDark": true
+      }
+    },
+    "governedEntrySetup": {
+      "channel": "CDP visible canonical-entry pointer activation",
+      "actualUserStep": true,
+      "kind": "canonical",
+      "originToken": "artwork",
+      "controlId": "lid-v18-canonical-entry-artwork",
+      "initialFixture": "artwork-ready"
+    },
+    "selector": null,
+    "framing": {
+      "frameKey": "v18-05-artwork-ready-compact-dark",
+      "method": "passive pre-capture scroll only",
+      "safeViewport": {
+        "top": 12,
+        "bottom": 828,
+        "left": 0,
+        "right": 390
+      },
+      "unionDocument": {
+        "top": 620.578125,
+        "bottom": 1149.375,
+        "height": 528.796875
+      },
+      "requestedScrollY": 464.9765625,
+      "maximumScroll": 3496,
+      "observed": {
+        "scroll": {
+          "x": 0,
+          "y": 465
+        },
+        "targets": [
+          {
+            "key": "artwork-current-facts",
+            "selector": ".lid-scope-summary-v18",
+            "rectangle": {
+              "left": 12,
+              "top": 155.578,
+              "right": 378,
+              "bottom": 684.375,
+              "width": 366,
+              "height": 528.797
+            },
+            "fullyVisible": true,
+            "fixedOrStickyOverlaps": []
+          }
+        ],
+        "focus": null
+      },
+      "stateUnchanged": true,
+      "loadingContract": null,
+      "assertions": [
+        {
+          "name": "Every authority-required framing target is fully visible",
+          "pass": true
+        },
+        {
+          "name": "No fixed or sticky surface overlaps a framing target",
+          "pass": true
+        },
+        {
+          "name": "Framing changed scroll only and preserved state and focus",
+          "pass": true
+        },
+        {
+          "name": "Required final focus indicator is visible",
+          "pass": true
+        }
+      ],
+      "result": "PASS"
+    },
+    "png": {
+      "file": "v18-05-artwork-ready-compact-dark.png",
+      "width": 390,
+      "height": 844,
+      "bytes": 62505,
+      "sha256": "9cc2f3aade3f8e42bca5ab009fdc22384d485942869d49d79c3f31757978b2c4"
+    }
+  },
+  "page": {
+    "title": "Life in Days",
+    "url": {
+      "generic": "http://127.0.0.1:4317/index-v18.html",
+      "origin": "http://127.0.0.1:4317",
+      "pathname": "/index-v18.html",
+      "hasQuery": false,
+      "hasHash": false
+    },
+    "history": {
+      "length": 2,
+      "state": null,
+      "stateType": "null"
+    }
+  },
+  "qa": {
+    "manifest": {
+      "version": 18,
+      "feature": "PVA-013 History and Provenance",
+      "requirements": [
+        "LID-SCP-003",
+        "LID-VN-006",
+        "LID-REF-004"
+      ],
+      "supportingRegression": [
+        "LID-SRC-004 retained history/source binding",
+        "Frozen v17 Atomic Redating"
+      ],
+      "outsideUi": [
+        "LID-VN-005 · external reconciliation evidence required"
+      ],
+      "fixtures": [
+        "global-ready",
+        "day-ready",
+        "item-ready",
+        "field-ready",
+        "artwork-ready",
+        "hidden-day",
+        "upstream-revised",
+        "upstream-conflict",
+        "upstream-untagged",
+        "upstream-deleted",
+        "empty",
+        "loading",
+        "failure",
+        "interrupted"
+      ],
+      "captureScenarios": [
+        "compact-filtered-open",
+        "pagination-both-success"
+      ],
+      "eventCorpus": [
+        "E01",
+        "E02",
+        "E03",
+        "E04",
+        "E05",
+        "E06",
+        "E07",
+        "E08",
+        "E09",
+        "E10",
+        "E11",
+        "E12",
+        "E13",
+        "E14",
+        "E15",
+        "E16",
+        "E17"
+      ],
+      "canonicalTotalOrder": [
+        "E10",
+        "E14",
+        "E13",
+        "E12",
+        "E11",
+        "E09",
+        "E08",
+        "E07",
+        "E06",
+        "E05",
+        "E04",
+        "E03",
+        "E02",
+        "E01",
+        "E17",
+        "E16",
+        "E15"
+      ],
+      "sourceOrder": [
+        "E10",
+        "E14",
+        "E13",
+        "E12",
+        "E11",
+        "E05",
+        "E04",
+        "E01",
+        "E17",
+        "E15"
+      ],
+      "derivedOrder": [
+        "E09",
+        "E08",
+        "E07",
+        "E06",
+        "E03",
+        "E02",
+        "E16"
+      ],
+      "scopeCounts": {
+        "global": 17,
+        "day": 14,
+        "item": 14,
+        "field": 3,
+        "artwork": 3,
+        "hiddenDay": 3
+      },
+      "transitionActions": {
+        "filterOpenApplied": [
+          {
+            "type": "open-filter"
+          },
+          {
+            "type": "draft-lane",
+            "payload": {
+              "value": "source"
+            }
+          },
+          {
+            "type": "draft-attention",
+            "payload": {
+              "value": "needs"
+            }
+          },
+          {
+            "type": "apply-filters"
+          },
+          {
+            "type": "open-filter"
+          }
+        ],
+        "sourcePaginationSuccess": [
+          {
+            "type": "enter-pagination"
+          },
+          {
+            "type": "load-source"
+          },
+          {
+            "type": "deliver-source-success"
+          },
+          {
+            "type": "pagination-duplicate",
+            "payload": {
+              "lane": "source"
+            }
+          }
+        ],
+        "derivedPaginationSuccess": [
+          {
+            "type": "enter-pagination"
+          },
+          {
+            "type": "load-derived"
+          },
+          {
+            "type": "deliver-derived-success"
+          },
+          {
+            "type": "pagination-duplicate",
+            "payload": {
+              "lane": "derived"
+            }
+          }
+        ],
+        "upstreamStatusUnavailable": [
+          {
+            "type": "status-unavailable"
+          },
+          {
+            "type": "retry-status"
+          }
+        ],
+        "scopeSpecificEmpty": [
+          {
+            "type": "scope-empty"
+          }
+        ]
+      },
+      "captureScenarioActions": {
+        "compact-filtered-open": [
+          {
+            "type": "open-filter"
+          },
+          {
+            "type": "draft-lane",
+            "payload": {
+              "value": "source"
+            }
+          },
+          {
+            "type": "draft-attention",
+            "payload": {
+              "value": "needs"
+            }
+          },
+          {
+            "type": "apply-filters"
+          },
+          {
+            "type": "open-filter"
+          }
+        ],
+        "pagination-both-success": [
+          {
+            "type": "enter-pagination"
+          },
+          {
+            "type": "load-source"
+          },
+          {
+            "type": "deliver-source-success"
+          },
+          {
+            "type": "load-derived"
+          },
+          {
+            "type": "deliver-derived-success"
+          }
+        ]
+      },
+      "files": [
+        "index-v18.html",
+        "app-v18.js",
+        "styles-v18.css",
+        "README-v18.md",
+        "check-v18.mjs",
+        "capture-phase2-evidence-v18.mjs"
+      ],
+      "boundary": "Synthetic deterministic read-only frontend representation in browser memory only.",
+      "qaFeature": "v18",
+      "loadedVersions": [
+        17,
+        18
+      ],
+      "features": [
+        {
+          "key": "v17",
+          "version": 17,
+          "title": "Atomic Redating",
+          "launcherTitle": "Atomic Redating · fixed synthetic demo"
+        },
+        {
+          "key": "v18",
+          "version": 18,
+          "title": "History and Provenance",
+          "launcherTitle": "History & provenance · fixed synthetic demo"
+        }
+      ]
+    },
+    "freshInactive": {
+      "activeFeature": null,
+      "hostHidden": true,
+      "hostChildCount": 0,
+      "canonicalEntry": {
+        "count": 1,
+        "placementFailed": false,
+        "directBodyChild": true,
+        "afterPrototypeRoot": true,
+        "beforeModalRoot": true,
+        "activeFeature": null,
+        "display": "block",
+        "visibleInLayout": true,
+        "accessibilityExposed": true,
+        "hitTestable": false,
+        "eyebrow": "PROTOTYPE V18 · FIXED SYNTHETIC CONTEXTS",
+        "heading": "Open canonical History contexts",
+        "body": "These controls open the fixed fictional 17 Aug 2026 history for Monsoon walk note. They do not represent the Journal Days, Source Items, generated fields, or artwork shown elsewhere in the frozen v16 archive.",
+        "listTag": "ol",
+        "facts": [
+          "Journal Day · 17 Aug 2026",
+          "Source Item · Monsoon walk note",
+          "Generated field · Summary",
+          "Generated Artwork · Artwork version 2"
+        ],
+        "buttons": [
+          {
+            "id": "lid-v18-canonical-entry-day",
+            "token": "day",
+            "text": "History & provenance",
+            "describedBy": "lid-v18-canonical-entry-fact-day",
+            "minimum44By44": true
+          },
+          {
+            "id": "lid-v18-canonical-entry-item",
+            "token": "item",
+            "text": "View source history",
+            "describedBy": "lid-v18-canonical-entry-fact-item",
+            "minimum44By44": true
+          },
+          {
+            "id": "lid-v18-canonical-entry-summary",
+            "token": "field",
+            "text": "View Summary history",
+            "describedBy": "lid-v18-canonical-entry-fact-summary",
+            "minimum44By44": true
+          },
+          {
+            "id": "lid-v18-canonical-entry-artwork",
+            "token": "artwork",
+            "text": "View artwork history",
+            "describedBy": "lid-v18-canonical-entry-fact-artwork",
+            "minimum44By44": true
+          }
+        ]
+      },
+      "inheritedContextPatchedCount": 0,
+      "launcherUserSurfaceAbsent": true,
+      "counters": {
+        "mutationIntents": 0,
+        "mutationEffects": 0,
+        "providerRequests": 0
+      },
+      "launcher": {
+        "presentCount": 1,
+        "visibleCount": 0,
+        "focusableCount": 0,
+        "hitCount": 0,
+        "focusedCount": 0,
+        "axCount": 0,
+        "accessibilityCount": 0,
+        "launcherUserSurfaceAbsent": true,
+        "compatibility": {
+          "presentForCompatibility": true,
+          "hidden": true,
+          "disabled": true,
+          "ariaHidden": "true",
+          "tabIndex": -1,
+          "inert": true,
+          "display": "none",
+          "visible": false,
+          "focusable": false,
+          "hitTestable": false,
+          "accessibilityExposed": false,
+          "userSurfaceAbsent": true
+        }
+      },
+      "panelAccessibility": {
+        "present": true,
+        "axCount": 60,
+        "accessibilityCount": 60,
+        "names": [
+          "Open canonical History contexts",
+          "PROTOTYPE V18 · FIXED SYNTHETIC CONTEXTS",
+          "PROTOTYPE V18 · FIXED SYNTHETIC",
+          "CONTEXTS",
+          "Open canonical History contexts",
+          "Open canonical History contexts",
+          "Open canonical",
+          "History contexts",
+          "These controls open the fixed fictional 17 Aug 2026 history for Monsoon walk note. They do not represent the Journal Days, Source Items, generated fields, or artwork shown elsewhere in the frozen v16 archive.",
+          "These controls open the fixed fictional 17 Aug",
+          "2026 history for Monsoon walk note. They do not",
+          "represent the Journal Days, Source Items,",
+          "generated fields, or artwork shown elsewhere in",
+          "the frozen v16 archive.",
+          "Journal Day",
+          "Journal Day"
+        ],
+        "roles": [
+          "region",
+          "paragraph",
+          "StaticText",
+          "InlineTextBox",
+          "InlineTextBox",
+          "heading",
+          "StaticText",
+          "InlineTextBox",
+          "InlineTextBox",
+          "paragraph",
+          "StaticText",
+          "InlineTextBox",
+          "InlineTextBox",
+          "InlineTextBox",
+          "InlineTextBox",
+          "InlineTextBox"
+        ]
+      }
+    },
+    "invariants": {
+      "pass": true,
+      "assertions": [
+        {
+          "name": "Exact E01-E17 corpus membership",
+          "pass": true
+        },
+        {
+          "name": "Canonical Source and Derived orders are exact",
+          "pass": true
+        },
+        {
+          "name": "Exactly fourteen top-level fixture keys",
+          "pass": true
+        },
+        {
+          "name": "Fresh Item history opens only E12 provenance by default",
+          "pass": true
+        },
+        {
+          "name": "Source and Derived records remain disjoint",
+          "pass": true
+        },
+        {
+          "name": "Revision, Correction, field, and Artwork lineage is exact",
+          "pass": true
+        },
+        {
+          "name": "E10 and Source Revision copy match frozen truth",
+          "pass": true
+        },
+        {
+          "name": "Summary and Artwork current facts are exact",
+          "pass": true
+        },
+        {
+          "name": "Lifecycle current facts remain fixture-scoped",
+          "pass": true
+        },
+        {
+          "name": "Hidden day identity and banner are exact",
+          "pass": true
+        },
+        {
+          "name": "All History operations are read-only",
+          "pass": true
+        },
+        {
+          "name": "Canonical entry panel has exact copy, order, placement, and active exposure",
+          "pass": true
+        },
+        {
+          "name": "Inherited contextual controls remain native and unpatched",
+          "pass": true
+        },
+        {
+          "name": "Exact 2 Aug and Before sleep native negative anchors remain unchanged",
+          "pass": true
+        },
+        {
+          "name": "Compatibility launcher is absent from the v18 user surface",
+          "pass": true
+        },
+        {
+          "name": "Canonical entry token and exact return evidence are safe",
+          "pass": true
+        },
+        {
+          "name": "Pagination anchors are lane- and request-generation-scoped",
+          "pass": true
+        },
+        {
+          "name": "Unavailable upstream status adds no provider work",
+          "pass": true
+        },
+        {
+          "name": "Current source prose is confined to Day or Item task content",
+          "pass": true
+        },
+        {
+          "name": "Safe source-context variant is exact and prose-free in structured state",
+          "pass": true
+        },
+        {
+          "name": "Loading is a single named busy Source lane",
+          "pass": true
+        },
+        {
+          "name": "One feature h1 and task before prototype console",
+          "pass": true
+        },
+        {
+          "name": "Generic route, title, null history, and no horizontal overflow",
+          "pass": true
+        },
+        {
+          "name": "Runtime chain is exactly v17 then v18",
+          "pass": true
+        },
+        {
+          "name": "Visible keys are unique valid ordered subsets",
+          "pass": true
+        }
+      ]
+    },
+    "snapshotSha256": "ec25081e9be57425266a749b2c6dba01b14330636eeaa27711a4b8f1b98b934f",
+    "snapshotSummary": {
+      "version": 18,
+      "feature": "PVA-013 History and Provenance",
+      "fixture": "artwork-ready",
+      "transitionBranch": "ready",
+      "scope": "artwork",
+      "theme": "dark",
+      "loadedVersions": [
+        17,
+        18
+      ],
+      "visibleSourceKeys": [],
+      "visibleDerivedKeys": [
+        "E09",
+        "E08",
+        "E03"
+      ],
+      "laneCounts": {
+        "source": 0,
+        "derived": 3
+      },
+      "totalCount": 3,
+      "appliedFilters": {
+        "lane": "all",
+        "recordType": "all",
+        "eventType": "all",
+        "attention": "all",
+        "journalDate": ""
+      },
+      "draftFilters": {
+        "lane": "all",
+        "recordType": "all",
+        "eventType": "all",
+        "attention": "all",
+        "journalDate": ""
+      },
+      "activeFilterCount": 0,
+      "filterOpen": false,
+      "consoleOpen": false,
+      "disclosureDefaultIntact": true,
+      "initialPresentation": false,
+      "sourceContextVariant": "none",
+      "openDisclosureKeys": [],
+      "pagination": {
+        "source": {
+          "stage": "complete",
+          "added": 0,
+          "duplicateIgnored": false,
+          "requestGeneration": 0,
+          "terminalGeneration": null,
+          "initialCount": 7,
+          "currentCount": 0,
+          "endReached": true,
+          "anchor": {
+            "baseline": null,
+            "lastRestoration": null
+          }
+        },
+        "derived": {
+          "stage": "complete",
+          "added": 0,
+          "duplicateIgnored": false,
+          "requestGeneration": 0,
+          "terminalGeneration": null,
+          "initialCount": 4,
+          "currentCount": 3,
+          "endReached": true,
+          "anchor": {
+            "baseline": null,
+            "lastRestoration": null
+          }
+        }
+      },
+      "domain": {
+        "beforeEqualsCurrent": true,
+        "beforeSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932",
+        "currentSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932"
+      },
+      "counters": {
+        "mutationIntents": 0,
+        "mutationEffects": 0,
+        "providerRequests": 0
+      },
+      "announcementMatches": {
+        "empty": true,
+        "representedCount3": false,
+        "sourceAdded3": false,
+        "derivedAdded3": false
+      },
+      "stableFocusKey": "#lid-v18-theme"
+    },
+    "qa2PaginationRegression": null
+  },
+  "scenario": null,
+  "archiveDiagnostics": null,
+  "viewport": {
+    "innerWidth": 390,
+    "innerHeight": 844,
+    "devicePixelRatio": 1,
+    "visualWidth": 390,
+    "visualHeight": 844,
+    "scrollX": 0,
+    "scrollY": 465
+  },
+  "overflow": {
+    "documentClientWidth": 390,
+    "documentScrollWidth": 390,
+    "documentDelta": 0,
+    "documentHorizontal": false,
+    "bodyClientWidth": 390,
+    "bodyScrollWidth": 390,
+    "bodyHorizontal": false,
+    "featureClientWidth": 390,
+    "featureScrollWidth": 390,
+    "featureHorizontal": false
+  },
+  "browserState": {
+    "localStorage": 0,
+    "sessionStorage": 0,
+    "indexedDB": 0,
+    "caches": 0,
+    "serviceWorkers": 0,
+    "opfs": {
+      "supported": true,
+      "accessible": true,
+      "entryCount": 0,
+      "errorName": null
+    }
+  },
+  "privacyAssertions": [
+    {
+      "name": "Generic title, query-free path, and null private history payload",
+      "pass": true
+    },
+    {
+      "name": "Zero local, session, IndexedDB, Cache Storage, and service-worker state",
+      "pass": true
+    },
+    {
+      "name": "OPFS inspection is supported, accessible, and has zero root entries",
+      "pass": true,
+      "observation": {
+        "supported": true,
+        "accessible": true,
+        "entryCount": 0,
+        "errorName": null
+      }
+    },
+    {
+      "name": "All captured requests remain on localhost or data URLs",
+      "pass": true
+    },
+    {
+      "name": "Zero console and browser exception events",
+      "pass": true
+    },
+    {
+      "name": "Protected fictional source prose is absent from diagnostics",
+      "pass": true
+    }
+  ],
+  "events": {
+    "console": [],
+    "exceptions": [],
+    "networkRequests": [
+      {
+        "requestId": "99BB00F80EF021C505A83FCC78922D75",
+        "url": "http://127.0.0.1:4317/index-v18.html",
+        "method": "GET",
+        "type": "Document"
+      },
+      {
+        "requestId": "46852.2",
+        "url": "http://127.0.0.1:4317/styles-v16.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "46852.3",
+        "url": "http://127.0.0.1:4317/styles-v16-almanac.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "46852.4",
+        "url": "http://127.0.0.1:4317/styles-v16-readiness.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "46852.5",
+        "url": "http://127.0.0.1:4317/styles-v16-resilience.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "46852.6",
+        "url": "http://127.0.0.1:4317/styles-v16-date-review.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "46852.7",
+        "url": "http://127.0.0.1:4317/styles-v16-telegram.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "46852.8",
+        "url": "http://127.0.0.1:4317/styles-v16-upload.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "46852.9",
+        "url": "http://127.0.0.1:4317/styles-v16-correction.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "46852.10",
+        "url": "http://127.0.0.1:4317/styles-v16-conflict.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "46852.11",
+        "url": "http://127.0.0.1:4317/styles-v17.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "46852.12",
+        "url": "http://127.0.0.1:4317/styles-v18.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "46852.13",
+        "url": "http://127.0.0.1:4317/app-v16.js",
+        "method": "GET",
+        "type": "Script"
+      },
+      {
+        "requestId": "46852.14",
+        "url": "http://127.0.0.1:4317/runtime-v17.js",
+        "method": "GET",
+        "type": "Script"
+      },
+      {
+        "requestId": "46852.15",
+        "url": "http://127.0.0.1:4317/app-v17.js",
+        "method": "GET",
+        "type": "Script"
+      },
+      {
+        "requestId": "46852.16",
+        "url": "http://127.0.0.1:4317/app-v18.js",
+        "method": "GET",
+        "type": "Script"
+      }
+    ]
+  }
+}

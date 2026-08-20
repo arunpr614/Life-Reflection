@@ -1,0 +1,2924 @@
+{
+  "schemaVersion": 1,
+  "tool": "capture-phase2-evidence-v18.mjs",
+  "toolVersion": 18,
+  "driver": {
+    "file": "capture-phase2-evidence-v18.mjs",
+    "sha256": "f3b66d390d3e8c1a814507376c82a893af52f812c592b30dfbdab9f315d2ba78",
+    "toolVersion": 18
+  },
+  "targetVersion": 18,
+  "capturedAt": "2026-08-20T08:55:52.728Z",
+  "capture": {
+    "requestedUrl": "http://127.0.0.1:4317/index-v18.html",
+    "view": "active",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "scaleFactor": 1
+    },
+    "fixture": null,
+    "scenario": "pagination-both-success",
+    "seedFixture": "global-ready",
+    "theme": "dark",
+    "media": {
+      "requested": {
+        "motion": "no-preference",
+        "forcedColors": "none"
+      },
+      "observed": {
+        "reducedMotion": false,
+        "motionNoPreference": true,
+        "forcedColorsActive": false,
+        "forcedColorsNone": true,
+        "colorSchemeLight": false,
+        "colorSchemeDark": true
+      }
+    },
+    "governedEntrySetup": {
+      "channel": "CDP visible native Settings History pointer activation",
+      "actualUserStep": true,
+      "kind": "global",
+      "originToken": "settings",
+      "controlId": null,
+      "initialFixture": "global-ready"
+    },
+    "selector": null,
+    "framing": {
+      "frameKey": "v18-14-load-earlier-wide-dark",
+      "method": "passive pre-capture scroll only",
+      "safeViewport": {
+        "top": 84,
+        "bottom": 884,
+        "left": 0,
+        "right": 1440
+      },
+      "unionDocument": {
+        "top": 7868.546875,
+        "bottom": 8239.59375,
+        "height": 371.046875
+      },
+      "requestedScrollY": 7570.0703125,
+      "maximumScroll": 7948,
+      "observed": {
+        "scroll": {
+          "x": 0,
+          "y": 7570
+        },
+        "targets": [
+          {
+            "key": "focused-derived-beginning",
+            "selector": "#lid-v18-load-derived",
+            "rectangle": {
+              "left": 475,
+              "top": 298.547,
+              "right": 1257,
+              "bottom": 342.047,
+              "width": 782,
+              "height": 43.5
+            },
+            "fullyVisible": true,
+            "fixedOrStickyOverlaps": []
+          },
+          {
+            "key": "both-lane-completion-summary",
+            "selector": ".lid-pagination-completion-v18",
+            "rectangle": {
+              "left": 475,
+              "top": 452.047,
+              "right": 1257,
+              "bottom": 669.594,
+              "width": 782,
+              "height": 217.547
+            },
+            "fullyVisible": true,
+            "fixedOrStickyOverlaps": []
+          }
+        ],
+        "focus": {
+          "selector": "#lid-v18-load-derived",
+          "focused": true,
+          "focusVisible": false,
+          "visibleIndicator": true,
+          "outline": {
+            "style": "solid",
+            "width": 3,
+            "offset": 3
+          },
+          "boxShadow": "none",
+          "fullyVisible": true
+        }
+      },
+      "stateUnchanged": true,
+      "loadingContract": null,
+      "assertions": [
+        {
+          "name": "Every authority-required framing target is fully visible",
+          "pass": true
+        },
+        {
+          "name": "No fixed or sticky surface overlaps a framing target",
+          "pass": true
+        },
+        {
+          "name": "Framing changed scroll only and preserved state and focus",
+          "pass": true
+        },
+        {
+          "name": "Required final focus indicator is visible",
+          "pass": true
+        }
+      ],
+      "result": "PASS"
+    },
+    "png": {
+      "file": "v18-14-load-earlier-wide-dark.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 146474,
+      "sha256": "bdc236e9fc8de497361863bea2cbbd61927ff6d29e07ba95cd2783a023a63b60"
+    }
+  },
+  "page": {
+    "title": "Life in Days",
+    "url": {
+      "generic": "http://127.0.0.1:4317/index-v18.html",
+      "origin": "http://127.0.0.1:4317",
+      "pathname": "/index-v18.html",
+      "hasQuery": false,
+      "hasHash": false
+    },
+    "history": {
+      "length": 3,
+      "state": null,
+      "stateType": "null"
+    }
+  },
+  "qa": {
+    "manifest": {
+      "version": 18,
+      "feature": "PVA-013 History and Provenance",
+      "requirements": [
+        "LID-SCP-003",
+        "LID-VN-006",
+        "LID-REF-004"
+      ],
+      "supportingRegression": [
+        "LID-SRC-004 retained history/source binding",
+        "Frozen v17 Atomic Redating"
+      ],
+      "outsideUi": [
+        "LID-VN-005 · external reconciliation evidence required"
+      ],
+      "fixtures": [
+        "global-ready",
+        "day-ready",
+        "item-ready",
+        "field-ready",
+        "artwork-ready",
+        "hidden-day",
+        "upstream-revised",
+        "upstream-conflict",
+        "upstream-untagged",
+        "upstream-deleted",
+        "empty",
+        "loading",
+        "failure",
+        "interrupted"
+      ],
+      "captureScenarios": [
+        "compact-filtered-open",
+        "pagination-both-success"
+      ],
+      "eventCorpus": [
+        "E01",
+        "E02",
+        "E03",
+        "E04",
+        "E05",
+        "E06",
+        "E07",
+        "E08",
+        "E09",
+        "E10",
+        "E11",
+        "E12",
+        "E13",
+        "E14",
+        "E15",
+        "E16",
+        "E17"
+      ],
+      "canonicalTotalOrder": [
+        "E10",
+        "E14",
+        "E13",
+        "E12",
+        "E11",
+        "E09",
+        "E08",
+        "E07",
+        "E06",
+        "E05",
+        "E04",
+        "E03",
+        "E02",
+        "E01",
+        "E17",
+        "E16",
+        "E15"
+      ],
+      "sourceOrder": [
+        "E10",
+        "E14",
+        "E13",
+        "E12",
+        "E11",
+        "E05",
+        "E04",
+        "E01",
+        "E17",
+        "E15"
+      ],
+      "derivedOrder": [
+        "E09",
+        "E08",
+        "E07",
+        "E06",
+        "E03",
+        "E02",
+        "E16"
+      ],
+      "scopeCounts": {
+        "global": 17,
+        "day": 14,
+        "item": 14,
+        "field": 3,
+        "artwork": 3,
+        "hiddenDay": 3
+      },
+      "transitionActions": {
+        "filterOpenApplied": [
+          {
+            "type": "open-filter"
+          },
+          {
+            "type": "draft-lane",
+            "payload": {
+              "value": "source"
+            }
+          },
+          {
+            "type": "draft-attention",
+            "payload": {
+              "value": "needs"
+            }
+          },
+          {
+            "type": "apply-filters"
+          },
+          {
+            "type": "open-filter"
+          }
+        ],
+        "sourcePaginationSuccess": [
+          {
+            "type": "enter-pagination"
+          },
+          {
+            "type": "load-source"
+          },
+          {
+            "type": "deliver-source-success"
+          },
+          {
+            "type": "pagination-duplicate",
+            "payload": {
+              "lane": "source"
+            }
+          }
+        ],
+        "derivedPaginationSuccess": [
+          {
+            "type": "enter-pagination"
+          },
+          {
+            "type": "load-derived"
+          },
+          {
+            "type": "deliver-derived-success"
+          },
+          {
+            "type": "pagination-duplicate",
+            "payload": {
+              "lane": "derived"
+            }
+          }
+        ],
+        "upstreamStatusUnavailable": [
+          {
+            "type": "status-unavailable"
+          },
+          {
+            "type": "retry-status"
+          }
+        ],
+        "scopeSpecificEmpty": [
+          {
+            "type": "scope-empty"
+          }
+        ]
+      },
+      "captureScenarioActions": {
+        "compact-filtered-open": [
+          {
+            "type": "open-filter"
+          },
+          {
+            "type": "draft-lane",
+            "payload": {
+              "value": "source"
+            }
+          },
+          {
+            "type": "draft-attention",
+            "payload": {
+              "value": "needs"
+            }
+          },
+          {
+            "type": "apply-filters"
+          },
+          {
+            "type": "open-filter"
+          }
+        ],
+        "pagination-both-success": [
+          {
+            "type": "enter-pagination"
+          },
+          {
+            "type": "load-source"
+          },
+          {
+            "type": "deliver-source-success"
+          },
+          {
+            "type": "load-derived"
+          },
+          {
+            "type": "deliver-derived-success"
+          }
+        ]
+      },
+      "files": [
+        "index-v18.html",
+        "app-v18.js",
+        "styles-v18.css",
+        "README-v18.md",
+        "check-v18.mjs",
+        "capture-phase2-evidence-v18.mjs"
+      ],
+      "boundary": "Synthetic deterministic read-only frontend representation in browser memory only.",
+      "qaFeature": "v18",
+      "loadedVersions": [
+        17,
+        18
+      ],
+      "features": [
+        {
+          "key": "v17",
+          "version": 17,
+          "title": "Atomic Redating",
+          "launcherTitle": "Atomic Redating · fixed synthetic demo"
+        },
+        {
+          "key": "v18",
+          "version": 18,
+          "title": "History and Provenance",
+          "launcherTitle": "History & provenance · fixed synthetic demo"
+        }
+      ]
+    },
+    "freshInactive": {
+      "activeFeature": null,
+      "hostHidden": true,
+      "hostChildCount": 0,
+      "canonicalEntry": {
+        "count": 1,
+        "placementFailed": false,
+        "directBodyChild": true,
+        "afterPrototypeRoot": true,
+        "beforeModalRoot": true,
+        "activeFeature": null,
+        "display": "block",
+        "visibleInLayout": true,
+        "accessibilityExposed": true,
+        "hitTestable": false,
+        "eyebrow": "PROTOTYPE V18 · FIXED SYNTHETIC CONTEXTS",
+        "heading": "Open canonical History contexts",
+        "body": "These controls open the fixed fictional 17 Aug 2026 history for Monsoon walk note. They do not represent the Journal Days, Source Items, generated fields, or artwork shown elsewhere in the frozen v16 archive.",
+        "listTag": "ol",
+        "facts": [
+          "Journal Day · 17 Aug 2026",
+          "Source Item · Monsoon walk note",
+          "Generated field · Summary",
+          "Generated Artwork · Artwork version 2"
+        ],
+        "buttons": [
+          {
+            "id": "lid-v18-canonical-entry-day",
+            "token": "day",
+            "text": "History & provenance",
+            "describedBy": "lid-v18-canonical-entry-fact-day",
+            "minimum44By44": true
+          },
+          {
+            "id": "lid-v18-canonical-entry-item",
+            "token": "item",
+            "text": "View source history",
+            "describedBy": "lid-v18-canonical-entry-fact-item",
+            "minimum44By44": true
+          },
+          {
+            "id": "lid-v18-canonical-entry-summary",
+            "token": "field",
+            "text": "View Summary history",
+            "describedBy": "lid-v18-canonical-entry-fact-summary",
+            "minimum44By44": true
+          },
+          {
+            "id": "lid-v18-canonical-entry-artwork",
+            "token": "artwork",
+            "text": "View artwork history",
+            "describedBy": "lid-v18-canonical-entry-fact-artwork",
+            "minimum44By44": true
+          }
+        ]
+      },
+      "inheritedContextPatchedCount": 0,
+      "launcherUserSurfaceAbsent": true,
+      "counters": {
+        "mutationIntents": 0,
+        "mutationEffects": 0,
+        "providerRequests": 0
+      },
+      "launcher": {
+        "presentCount": 1,
+        "visibleCount": 0,
+        "focusableCount": 0,
+        "hitCount": 0,
+        "focusedCount": 0,
+        "axCount": 0,
+        "accessibilityCount": 0,
+        "launcherUserSurfaceAbsent": true,
+        "compatibility": {
+          "presentForCompatibility": true,
+          "hidden": true,
+          "disabled": true,
+          "ariaHidden": "true",
+          "tabIndex": -1,
+          "inert": true,
+          "display": "none",
+          "visible": false,
+          "focusable": false,
+          "hitTestable": false,
+          "accessibilityExposed": false,
+          "userSurfaceAbsent": true
+        }
+      },
+      "panelAccessibility": {
+        "present": true,
+        "axCount": 57,
+        "accessibilityCount": 57,
+        "names": [
+          "Open canonical History contexts",
+          "PROTOTYPE V18 · FIXED SYNTHETIC CONTEXTS",
+          "PROTOTYPE V18 · FIXED SYNTHETIC CONTEXTS",
+          "Open canonical History contexts",
+          "Open canonical History contexts",
+          "Open canonical History contexts",
+          "These controls open the fixed fictional 17 Aug 2026 history for Monsoon walk note. They do not represent the Journal Days, Source Items, generated fields, or artwork shown elsewhere in the frozen v16 archive.",
+          "These controls open the fixed fictional 17 Aug 2026 history for Monsoon walk note. They do not represent",
+          "the Journal Days, Source Items, generated fields, or artwork shown elsewhere in the frozen v16 archive.",
+          "Journal Day",
+          "Journal Day",
+          "·",
+          "·",
+          "17 Aug 2026",
+          "17 Aug 2026",
+          "History & provenance"
+        ],
+        "roles": [
+          "region",
+          "paragraph",
+          "StaticText",
+          "InlineTextBox",
+          "heading",
+          "StaticText",
+          "InlineTextBox",
+          "paragraph",
+          "StaticText",
+          "InlineTextBox",
+          "InlineTextBox",
+          "list",
+          "listitem",
+          "paragraph",
+          "strong",
+          "StaticText"
+        ]
+      }
+    },
+    "invariants": {
+      "pass": true,
+      "assertions": [
+        {
+          "name": "Exact E01-E17 corpus membership",
+          "pass": true
+        },
+        {
+          "name": "Canonical Source and Derived orders are exact",
+          "pass": true
+        },
+        {
+          "name": "Exactly fourteen top-level fixture keys",
+          "pass": true
+        },
+        {
+          "name": "Fresh Item history opens only E12 provenance by default",
+          "pass": true
+        },
+        {
+          "name": "Source and Derived records remain disjoint",
+          "pass": true
+        },
+        {
+          "name": "Revision, Correction, field, and Artwork lineage is exact",
+          "pass": true
+        },
+        {
+          "name": "E10 and Source Revision copy match frozen truth",
+          "pass": true
+        },
+        {
+          "name": "Summary and Artwork current facts are exact",
+          "pass": true
+        },
+        {
+          "name": "Lifecycle current facts remain fixture-scoped",
+          "pass": true
+        },
+        {
+          "name": "Hidden day identity and banner are exact",
+          "pass": true
+        },
+        {
+          "name": "All History operations are read-only",
+          "pass": true
+        },
+        {
+          "name": "Canonical entry panel has exact copy, order, placement, and active exposure",
+          "pass": true
+        },
+        {
+          "name": "Inherited contextual controls remain native and unpatched",
+          "pass": true
+        },
+        {
+          "name": "Exact 2 Aug and Before sleep native negative anchors remain unchanged",
+          "pass": true
+        },
+        {
+          "name": "Compatibility launcher is absent from the v18 user surface",
+          "pass": true
+        },
+        {
+          "name": "Canonical entry token and exact return evidence are safe",
+          "pass": true
+        },
+        {
+          "name": "Pagination anchors are lane- and request-generation-scoped",
+          "pass": true
+        },
+        {
+          "name": "Unavailable upstream status adds no provider work",
+          "pass": true
+        },
+        {
+          "name": "Current source prose is confined to Day or Item task content",
+          "pass": true
+        },
+        {
+          "name": "Safe source-context variant is exact and prose-free in structured state",
+          "pass": true
+        },
+        {
+          "name": "Loading is a single named busy Source lane",
+          "pass": true
+        },
+        {
+          "name": "One feature h1 and task before prototype console",
+          "pass": true
+        },
+        {
+          "name": "Generic route, title, null history, and no horizontal overflow",
+          "pass": true
+        },
+        {
+          "name": "Runtime chain is exactly v17 then v18",
+          "pass": true
+        },
+        {
+          "name": "Visible keys are unique valid ordered subsets",
+          "pass": true
+        }
+      ]
+    },
+    "snapshotSha256": "ad48b992b20d262236144eff6066820e46b5722b69ca4b1b3a1e2db7dcc9626e",
+    "snapshotSummary": {
+      "version": 18,
+      "feature": "PVA-013 History and Provenance",
+      "fixture": "global-ready",
+      "transitionBranch": "derived-pagination-success",
+      "scope": "global",
+      "theme": "dark",
+      "loadedVersions": [
+        17,
+        18
+      ],
+      "visibleSourceKeys": [
+        "E10",
+        "E14",
+        "E13",
+        "E12",
+        "E11",
+        "E05",
+        "E04",
+        "E01",
+        "E17",
+        "E15"
+      ],
+      "visibleDerivedKeys": [
+        "E09",
+        "E08",
+        "E07",
+        "E06",
+        "E03",
+        "E02",
+        "E16"
+      ],
+      "laneCounts": {
+        "source": 10,
+        "derived": 7
+      },
+      "totalCount": 17,
+      "appliedFilters": {
+        "lane": "all",
+        "recordType": "all",
+        "eventType": "all",
+        "attention": "all",
+        "journalDate": ""
+      },
+      "draftFilters": {
+        "lane": "all",
+        "recordType": "all",
+        "eventType": "all",
+        "attention": "all",
+        "journalDate": ""
+      },
+      "activeFilterCount": 0,
+      "filterOpen": false,
+      "consoleOpen": false,
+      "disclosureDefaultIntact": true,
+      "initialPresentation": false,
+      "sourceContextVariant": "none",
+      "openDisclosureKeys": [],
+      "pagination": {
+        "source": {
+          "stage": "complete-delivered",
+          "added": 3,
+          "duplicateIgnored": false,
+          "requestGeneration": 1,
+          "terminalGeneration": 1,
+          "initialCount": 7,
+          "currentCount": 10,
+          "endReached": true,
+          "anchor": {
+            "baseline": null,
+            "lastRestoration": {
+              "generation": 1,
+              "input": "pointer",
+              "beforeTop": 427.90625,
+              "finalTop": 428.34375,
+              "delta": 0.4375,
+              "targetId": "lid-v18-load-source",
+              "terminalStage": "complete-delivered",
+              "focused": true,
+              "consumed": true
+            }
+          }
+        },
+        "derived": {
+          "stage": "complete-delivered",
+          "added": 3,
+          "duplicateIgnored": false,
+          "requestGeneration": 1,
+          "terminalGeneration": 1,
+          "initialCount": 4,
+          "currentCount": 7,
+          "endReached": true,
+          "anchor": {
+            "baseline": null,
+            "lastRestoration": {
+              "generation": 1,
+              "input": "pointer",
+              "beforeTop": 427.796875,
+              "finalTop": 427.546875,
+              "delta": -0.25,
+              "targetId": "lid-v18-load-derived",
+              "terminalStage": "complete-delivered",
+              "focused": true,
+              "consumed": true
+            }
+          }
+        }
+      },
+      "domain": {
+        "beforeEqualsCurrent": true,
+        "beforeSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932",
+        "currentSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932"
+      },
+      "counters": {
+        "mutationIntents": 0,
+        "mutationEffects": 0,
+        "providerRequests": 0
+      },
+      "announcementMatches": {
+        "empty": false,
+        "representedCount3": false,
+        "sourceAdded3": false,
+        "derivedAdded3": true
+      },
+      "stableFocusKey": "#lid-v18-load-derived"
+    },
+    "qa2PaginationRegression": {
+      "scope": "bounded frame-14 pre-scenario regression; safe metadata only",
+      "transcriptRecordCountAdded": 0,
+      "terminalGenerations": {
+        "strictNoOpCount": 22,
+        "strictNoOps": [
+          {
+            "label": "direct success omitted payload",
+            "type": "deliver-source-success",
+            "payload": {
+              "omitted": true
+            },
+            "beforeSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "afterSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "direct failure missing generation",
+            "type": "deliver-source-failure",
+            "payload": {
+              "lane": "source"
+            },
+            "beforeSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "afterSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "direct interruption missing lane",
+            "type": "deliver-source-interruption",
+            "payload": {
+              "requestGeneration": 1
+            },
+            "beforeSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "afterSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "missing generation",
+            "type": "pagination-success",
+            "payload": {
+              "lane": "source"
+            },
+            "beforeSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "afterSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "zero generation",
+            "type": "pagination-failure",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 0
+            },
+            "beforeSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "afterSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "negative generation",
+            "type": "pagination-interrupted",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": -1
+            },
+            "beforeSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "afterSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "fractional generation",
+            "type": "pagination-success",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 1.5
+            },
+            "beforeSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "afterSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "string generation",
+            "type": "pagination-success",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": "1"
+            },
+            "beforeSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "afterSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "future generation",
+            "type": "pagination-success",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 2
+            },
+            "beforeSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "afterSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "cross-lane direct terminal",
+            "type": "deliver-source-success",
+            "payload": {
+              "lane": "derived",
+              "requestGeneration": 1
+            },
+            "beforeSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "afterSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "conflicting generation aliases",
+            "type": "pagination-success",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 1,
+              "generation": 2
+            },
+            "beforeSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "afterSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "duplicate while pending",
+            "type": "pagination-duplicate",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 1
+            },
+            "beforeSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "afterSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "settle missing outcome",
+            "type": "settle-pagination",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 1
+            },
+            "beforeSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "afterSha256": "279c3718fbf037c152c82558a05d050cddfaafbc493b4d0b1764182d9aa56845",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "consumed failure generation",
+            "type": "deliver-source-failure",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 1
+            },
+            "beforeSha256": "51566dfd6818a270eee2ac6bad5fff47f303ab6f403c9243e453ef195edd55f1",
+            "afterSha256": "51566dfd6818a270eee2ac6bad5fff47f303ab6f403c9243e453ef195edd55f1",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "stale generation after retry",
+            "type": "pagination-interrupted",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 1
+            },
+            "beforeSha256": "50ee2d9381e858e358fc0d9a50072f0d3866f3744d95c0dc3160e6054064150c",
+            "afterSha256": "50ee2d9381e858e358fc0d9a50072f0d3866f3744d95c0dc3160e6054064150c",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "future generation after retry",
+            "type": "settle-pagination",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 3,
+              "outcome": "interruption"
+            },
+            "beforeSha256": "50ee2d9381e858e358fc0d9a50072f0d3866f3744d95c0dc3160e6054064150c",
+            "afterSha256": "50ee2d9381e858e358fc0d9a50072f0d3866f3744d95c0dc3160e6054064150c",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "duplicate missing generation",
+            "type": "duplicate-source",
+            "payload": {
+              "lane": "source"
+            },
+            "beforeSha256": "d10d3f2a9583feac8a1f577bd806df8a2cf8db3d95a68326a4be898d664ce961",
+            "afterSha256": "d10d3f2a9583feac8a1f577bd806df8a2cf8db3d95a68326a4be898d664ce961",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "duplicate stale generation",
+            "type": "pagination-duplicate",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 3
+            },
+            "beforeSha256": "d10d3f2a9583feac8a1f577bd806df8a2cf8db3d95a68326a4be898d664ce961",
+            "afterSha256": "d10d3f2a9583feac8a1f577bd806df8a2cf8db3d95a68326a4be898d664ce961",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "duplicate future generation",
+            "type": "pagination-duplicate",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 5
+            },
+            "beforeSha256": "d10d3f2a9583feac8a1f577bd806df8a2cf8db3d95a68326a4be898d664ce961",
+            "afterSha256": "d10d3f2a9583feac8a1f577bd806df8a2cf8db3d95a68326a4be898d664ce961",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "duplicate cross-lane",
+            "type": "duplicate-source",
+            "payload": {
+              "lane": "derived",
+              "requestGeneration": 4
+            },
+            "beforeSha256": "d10d3f2a9583feac8a1f577bd806df8a2cf8db3d95a68326a4be898d664ce961",
+            "afterSha256": "d10d3f2a9583feac8a1f577bd806df8a2cf8db3d95a68326a4be898d664ce961",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "consumed duplicate generation",
+            "type": "duplicate-source",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 4
+            },
+            "beforeSha256": "641a77aae43380972f2888cdc8de99e7db3c99bf16c6d08d89b0fea098e623ee",
+            "afterSha256": "641a77aae43380972f2888cdc8de99e7db3c99bf16c6d08d89b0fea098e623ee",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "same-number cross-lane alias",
+            "type": "pagination-success",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 1
+            },
+            "beforeSha256": "df63341d171f4734e2a37504c58f150f51219cab6ec79dc9ec82f07c1b23c941",
+            "afterSha256": "df63341d171f4734e2a37504c58f150f51219cab6ec79dc9ec82f07c1b23c941",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          }
+        ],
+        "acceptedTerminalPath": [
+          "Source alias failure g1",
+          "Source settle interruption g2",
+          "Source direct success g3",
+          "Source alias duplicate g4",
+          "Derived direct interruption g1",
+          "Derived alias success g2",
+          "Derived settle duplicate g3"
+        ],
+        "explicitPositiveExactSameLaneGenerationRequired": true,
+        "result": "PASS"
+      },
+      "activations": {
+        "inputs": [
+          "pointer",
+          "enter",
+          "space",
+          "click-only"
+        ],
+        "records": [
+          {
+            "input": "pointer",
+            "baselineTop": 427.906,
+            "requestGeneration": 1,
+            "terminalGeneration": 1,
+            "terminalMethod": "visible bound success control",
+            "restoration": {
+              "generation": 1,
+              "input": "pointer",
+              "beforeTop": 427.90625,
+              "finalTop": 428.34375,
+              "delta": 0.4375,
+              "targetId": "lid-v18-load-source",
+              "terminalStage": "complete-delivered",
+              "focused": true,
+              "consumed": true
+            },
+            "duplicate": null,
+            "postBaselineHelperFocusScrollCompensation": false,
+            "assistiveTechnologyClaim": false,
+            "result": "PASS"
+          },
+          {
+            "input": "enter",
+            "baselineTop": 427.906,
+            "requestGeneration": 1,
+            "terminalGeneration": 1,
+            "terminalMethod": "explicit QA success with exact generation",
+            "restoration": {
+              "generation": 1,
+              "input": "enter",
+              "beforeTop": 427.90625,
+              "finalTop": 428.34375,
+              "delta": 0.4375,
+              "targetId": "lid-v18-load-source",
+              "terminalStage": "complete-delivered",
+              "focused": true,
+              "consumed": true
+            },
+            "duplicate": null,
+            "postBaselineHelperFocusScrollCompensation": false,
+            "assistiveTechnologyClaim": false,
+            "result": "PASS"
+          },
+          {
+            "input": "space",
+            "baselineTop": 427.906,
+            "requestGeneration": 1,
+            "terminalGeneration": 1,
+            "terminalMethod": "explicit QA success with exact generation",
+            "restoration": {
+              "generation": 1,
+              "input": "space",
+              "beforeTop": 427.90625,
+              "finalTop": 428.34375,
+              "delta": 0.4375,
+              "targetId": "lid-v18-load-source",
+              "terminalStage": "complete-delivered",
+              "focused": true,
+              "consumed": true
+            },
+            "duplicate": null,
+            "postBaselineHelperFocusScrollCompensation": false,
+            "assistiveTechnologyClaim": false,
+            "result": "PASS"
+          },
+          {
+            "input": "click-only",
+            "baselineTop": 427.906,
+            "requestGeneration": 1,
+            "terminalGeneration": 1,
+            "terminalMethod": "explicit QA success with exact generation",
+            "restoration": {
+              "generation": 1,
+              "input": "click-only",
+              "beforeTop": 427.90625,
+              "finalTop": 428.34375,
+              "delta": 0.4375,
+              "targetId": "lid-v18-load-source",
+              "terminalStage": "complete-delivered",
+              "focused": true,
+              "consumed": true
+            },
+            "duplicate": {
+              "beforeTop": 428.344,
+              "generation": 2,
+              "restoration": {
+                "generation": 2,
+                "input": "click-only",
+                "beforeTop": 428.34375,
+                "finalTop": 428.34375,
+                "delta": 0,
+                "targetId": "lid-v18-load-source",
+                "terminalStage": "complete-duplicate",
+                "focused": true,
+                "consumed": true
+              },
+              "result": "PASS"
+            },
+            "postBaselineHelperFocusScrollCompensation": false,
+            "assistiveTechnologyClaim": false,
+            "result": "PASS"
+          }
+        ],
+        "anchoredStrictNoOps": [
+          {
+            "label": "pointer confirmed-anchor future terminal",
+            "type": "deliver-source-success",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 2
+            },
+            "beforeSha256": "7a4a2c8b4a9b91d012c76538cca0e73ed6fb78ecf9dd8997006dcb4a1b614b93",
+            "afterSha256": "7a4a2c8b4a9b91d012c76538cca0e73ed6fb78ecf9dd8997006dcb4a1b614b93",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "enter confirmed-anchor future terminal",
+            "type": "deliver-source-success",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 2
+            },
+            "beforeSha256": "48611cfd3d9244433c92de260a4f220c21fa71b3f5cd07a84772dfa65386fbd4",
+            "afterSha256": "48611cfd3d9244433c92de260a4f220c21fa71b3f5cd07a84772dfa65386fbd4",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "space confirmed-anchor future terminal",
+            "type": "deliver-source-success",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 2
+            },
+            "beforeSha256": "eb7eea924ce8baf3e0d7f8bc86f16f95b1958b1bd551c70e075677d5f89cbb3e",
+            "afterSha256": "eb7eea924ce8baf3e0d7f8bc86f16f95b1958b1bd551c70e075677d5f89cbb3e",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          },
+          {
+            "label": "click-only confirmed-anchor future terminal",
+            "type": "deliver-source-success",
+            "payload": {
+              "lane": "source",
+              "requestGeneration": 2
+            },
+            "beforeSha256": "bf2d09de4e7b5aa2de168141d22243ca3f714a1f01438a1437e81b55ffc544c1",
+            "afterSha256": "bf2d09de4e7b5aa2de168141d22243ca3f714a1f01438a1437e81b55ffc544c1",
+            "exactStateFocusAnnouncementAnchorDigestCountersNoOp": true
+          }
+        ],
+        "confirmedAnchorNoOpCount": 4,
+        "result": "PASS"
+      },
+      "filteredCompletion": {
+        "unfiltered": {
+          "totalCount": 17,
+          "sourceCount": 10,
+          "derivedCount": 7,
+          "completionDomCount": 1,
+          "completionAxCount": 31
+        },
+        "filtered": {
+          "keys": [
+            "E14",
+            "E13",
+            "E12"
+          ],
+          "totalCount": 3,
+          "completionDomCount": 0,
+          "completionAxCount": 0
+        },
+        "cleared": {
+          "totalCount": 17,
+          "sourceCount": 10,
+          "derivedCount": 7,
+          "completionDomCount": 1,
+          "completionAxCount": 31
+        },
+        "paginationBeforeSha256": "5963ad5541ecc1a7d2583c93ae97e3d88627920ae8eb4d97c6e1298b8150be86",
+        "paginationFilteredSha256": "5963ad5541ecc1a7d2583c93ae97e3d88627920ae8eb4d97c6e1298b8150be86",
+        "paginationClearedSha256": "5963ad5541ecc1a7d2583c93ae97e3d88627920ae8eb4d97c6e1298b8150be86",
+        "noDeliveryResetGenerationDrift": true,
+        "result": "PASS"
+      },
+      "result": "PASS"
+    }
+  },
+  "scenario": {
+    "scenario": "pagination-both-success",
+    "seedFixture": "global-ready",
+    "transcript": [
+      {
+        "ordinal": 1,
+        "transition": {
+          "channel": "window.__LID_QA__.dispatch",
+          "kind": "qa-transition",
+          "actualUserStep": false,
+          "type": "enter-pagination"
+        },
+        "control": null,
+        "before": {
+          "snapshotSha256": "3a6dfd6dd319d66490dc4199f9ae076126d83d2f24078375a010e7daaf17617a",
+          "summary": {
+            "version": 18,
+            "feature": "PVA-013 History and Provenance",
+            "fixture": "global-ready",
+            "transitionBranch": "ready",
+            "scope": "global",
+            "theme": "dark",
+            "loadedVersions": [
+              17,
+              18
+            ],
+            "visibleSourceKeys": [
+              "E10",
+              "E14",
+              "E13",
+              "E12",
+              "E11",
+              "E05",
+              "E04",
+              "E01",
+              "E17",
+              "E15"
+            ],
+            "visibleDerivedKeys": [
+              "E09",
+              "E08",
+              "E07",
+              "E06",
+              "E03",
+              "E02",
+              "E16"
+            ],
+            "laneCounts": {
+              "source": 10,
+              "derived": 7
+            },
+            "totalCount": 17,
+            "appliedFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "draftFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "activeFilterCount": 0,
+            "filterOpen": false,
+            "consoleOpen": false,
+            "disclosureDefaultIntact": true,
+            "initialPresentation": true,
+            "sourceContextVariant": "none",
+            "openDisclosureKeys": [],
+            "pagination": {
+              "source": {
+                "stage": "complete",
+                "added": 0,
+                "duplicateIgnored": false,
+                "requestGeneration": 0,
+                "terminalGeneration": null,
+                "initialCount": 7,
+                "currentCount": 10,
+                "endReached": true,
+                "anchor": {
+                  "baseline": null,
+                  "lastRestoration": null
+                }
+              },
+              "derived": {
+                "stage": "complete",
+                "added": 0,
+                "duplicateIgnored": false,
+                "requestGeneration": 0,
+                "terminalGeneration": null,
+                "initialCount": 4,
+                "currentCount": 7,
+                "endReached": true,
+                "anchor": {
+                  "baseline": null,
+                  "lastRestoration": null
+                }
+              }
+            },
+            "domain": {
+              "beforeEqualsCurrent": true,
+              "beforeSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932",
+              "currentSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932"
+            },
+            "counters": {
+              "mutationIntents": 0,
+              "mutationEffects": 0,
+              "providerRequests": 0
+            },
+            "announcementMatches": {
+              "empty": true,
+              "representedCount3": false,
+              "sourceAdded3": false,
+              "derivedAdded3": false
+            },
+            "stableFocusKey": "#lid-v18-title"
+          },
+          "focus": {
+            "tagName": "h1",
+            "id": "lid-v18-title",
+            "role": null,
+            "action": null,
+            "eventKey": null,
+            "focusKey": null
+          },
+          "scroll": {
+            "x": 0,
+            "y": 2071
+          }
+        },
+        "after": {
+          "snapshotSha256": "2e7e15ff11f83698120605e597972b2c16f5a3f49b1d217ee96e617887189dee",
+          "summary": {
+            "version": 18,
+            "feature": "PVA-013 History and Provenance",
+            "fixture": "global-ready",
+            "transitionBranch": "pagination-ready",
+            "scope": "global",
+            "theme": "dark",
+            "loadedVersions": [
+              17,
+              18
+            ],
+            "visibleSourceKeys": [
+              "E10",
+              "E14",
+              "E13",
+              "E12",
+              "E11",
+              "E05",
+              "E04"
+            ],
+            "visibleDerivedKeys": [
+              "E09",
+              "E08",
+              "E07",
+              "E06"
+            ],
+            "laneCounts": {
+              "source": 7,
+              "derived": 4
+            },
+            "totalCount": 11,
+            "appliedFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "draftFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "activeFilterCount": 0,
+            "filterOpen": false,
+            "consoleOpen": false,
+            "disclosureDefaultIntact": true,
+            "initialPresentation": false,
+            "sourceContextVariant": "none",
+            "openDisclosureKeys": [],
+            "pagination": {
+              "source": {
+                "stage": "ready",
+                "added": 0,
+                "duplicateIgnored": false,
+                "requestGeneration": 0,
+                "terminalGeneration": null,
+                "initialCount": 7,
+                "currentCount": 7,
+                "endReached": false,
+                "anchor": {
+                  "baseline": null,
+                  "lastRestoration": null
+                }
+              },
+              "derived": {
+                "stage": "ready",
+                "added": 0,
+                "duplicateIgnored": false,
+                "requestGeneration": 0,
+                "terminalGeneration": null,
+                "initialCount": 4,
+                "currentCount": 4,
+                "endReached": false,
+                "anchor": {
+                  "baseline": null,
+                  "lastRestoration": null
+                }
+              }
+            },
+            "domain": {
+              "beforeEqualsCurrent": true,
+              "beforeSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932",
+              "currentSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932"
+            },
+            "counters": {
+              "mutationIntents": 0,
+              "mutationEffects": 0,
+              "providerRequests": 0
+            },
+            "announcementMatches": {
+              "empty": true,
+              "representedCount3": false,
+              "sourceAdded3": false,
+              "derivedAdded3": false
+            },
+            "stableFocusKey": "#lid-v18-load-source"
+          },
+          "focus": {
+            "tagName": "button",
+            "id": "lid-v18-load-source",
+            "role": null,
+            "action": "load-source",
+            "eventKey": null,
+            "focusKey": null
+          },
+          "scroll": {
+            "x": 0,
+            "y": 2071
+          }
+        },
+        "presentation": {
+          "filterOpenChanged": false,
+          "consoleOpenChanged": false
+        },
+        "anchor": null,
+        "result": "PASS"
+      },
+      {
+        "ordinal": 2,
+        "transition": {
+          "channel": "CDP visible-control pointer activation",
+          "kind": "visible-control",
+          "actualUserStep": true,
+          "type": "load-source"
+        },
+        "control": {
+          "role": "button",
+          "name": "Load earlier Source events",
+          "key": "source-page",
+          "visible": true,
+          "enabled": true,
+          "centerHitWithinControl": true,
+          "value": null
+        },
+        "before": {
+          "snapshotSha256": "2e7e15ff11f83698120605e597972b2c16f5a3f49b1d217ee96e617887189dee",
+          "summary": {
+            "version": 18,
+            "feature": "PVA-013 History and Provenance",
+            "fixture": "global-ready",
+            "transitionBranch": "pagination-ready",
+            "scope": "global",
+            "theme": "dark",
+            "loadedVersions": [
+              17,
+              18
+            ],
+            "visibleSourceKeys": [
+              "E10",
+              "E14",
+              "E13",
+              "E12",
+              "E11",
+              "E05",
+              "E04"
+            ],
+            "visibleDerivedKeys": [
+              "E09",
+              "E08",
+              "E07",
+              "E06"
+            ],
+            "laneCounts": {
+              "source": 7,
+              "derived": 4
+            },
+            "totalCount": 11,
+            "appliedFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "draftFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "activeFilterCount": 0,
+            "filterOpen": false,
+            "consoleOpen": false,
+            "disclosureDefaultIntact": true,
+            "initialPresentation": false,
+            "sourceContextVariant": "none",
+            "openDisclosureKeys": [],
+            "pagination": {
+              "source": {
+                "stage": "ready",
+                "added": 0,
+                "duplicateIgnored": false,
+                "requestGeneration": 0,
+                "terminalGeneration": null,
+                "initialCount": 7,
+                "currentCount": 7,
+                "endReached": false,
+                "anchor": {
+                  "baseline": null,
+                  "lastRestoration": null
+                }
+              },
+              "derived": {
+                "stage": "ready",
+                "added": 0,
+                "duplicateIgnored": false,
+                "requestGeneration": 0,
+                "terminalGeneration": null,
+                "initialCount": 4,
+                "currentCount": 4,
+                "endReached": false,
+                "anchor": {
+                  "baseline": null,
+                  "lastRestoration": null
+                }
+              }
+            },
+            "domain": {
+              "beforeEqualsCurrent": true,
+              "beforeSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932",
+              "currentSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932"
+            },
+            "counters": {
+              "mutationIntents": 0,
+              "mutationEffects": 0,
+              "providerRequests": 0
+            },
+            "announcementMatches": {
+              "empty": true,
+              "representedCount3": false,
+              "sourceAdded3": false,
+              "derivedAdded3": false
+            },
+            "stableFocusKey": "#lid-v18-load-source"
+          },
+          "focus": {
+            "tagName": "button",
+            "id": "lid-v18-load-source",
+            "role": null,
+            "action": "load-source",
+            "eventKey": null,
+            "focusKey": null
+          },
+          "scroll": {
+            "x": 0,
+            "y": 3393
+          }
+        },
+        "after": {
+          "snapshotSha256": "b276babfcc95cf7e8971a674d264d2f414d5558eeae6692de1ab776eb3523b80",
+          "summary": {
+            "version": 18,
+            "feature": "PVA-013 History and Provenance",
+            "fixture": "global-ready",
+            "transitionBranch": "source-pagination-pending",
+            "scope": "global",
+            "theme": "dark",
+            "loadedVersions": [
+              17,
+              18
+            ],
+            "visibleSourceKeys": [
+              "E10",
+              "E14",
+              "E13",
+              "E12",
+              "E11",
+              "E05",
+              "E04"
+            ],
+            "visibleDerivedKeys": [
+              "E09",
+              "E08",
+              "E07",
+              "E06"
+            ],
+            "laneCounts": {
+              "source": 7,
+              "derived": 4
+            },
+            "totalCount": 11,
+            "appliedFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "draftFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "activeFilterCount": 0,
+            "filterOpen": false,
+            "consoleOpen": false,
+            "disclosureDefaultIntact": true,
+            "initialPresentation": false,
+            "sourceContextVariant": "none",
+            "openDisclosureKeys": [],
+            "pagination": {
+              "source": {
+                "stage": "pending",
+                "added": 0,
+                "duplicateIgnored": false,
+                "requestGeneration": 1,
+                "terminalGeneration": null,
+                "initialCount": 7,
+                "currentCount": 7,
+                "endReached": false,
+                "anchor": {
+                  "baseline": {
+                    "generation": 1,
+                    "kind": "load",
+                    "input": "pointer",
+                    "top": 427.90625,
+                    "confirmed": true,
+                    "restoring": false
+                  },
+                  "lastRestoration": null
+                }
+              },
+              "derived": {
+                "stage": "ready",
+                "added": 0,
+                "duplicateIgnored": false,
+                "requestGeneration": 0,
+                "terminalGeneration": null,
+                "initialCount": 4,
+                "currentCount": 4,
+                "endReached": false,
+                "anchor": {
+                  "baseline": null,
+                  "lastRestoration": null
+                }
+              }
+            },
+            "domain": {
+              "beforeEqualsCurrent": true,
+              "beforeSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932",
+              "currentSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932"
+            },
+            "counters": {
+              "mutationIntents": 0,
+              "mutationEffects": 0,
+              "providerRequests": 0
+            },
+            "announcementMatches": {
+              "empty": true,
+              "representedCount3": false,
+              "sourceAdded3": false,
+              "derivedAdded3": false
+            },
+            "stableFocusKey": "#lid-v18-load-source"
+          },
+          "focus": {
+            "tagName": "div",
+            "id": "lid-v18-load-source",
+            "role": null,
+            "action": null,
+            "eventKey": null,
+            "focusKey": null
+          },
+          "scroll": {
+            "x": 0,
+            "y": 3393
+          }
+        },
+        "presentation": {
+          "filterOpenChanged": false,
+          "consoleOpenChanged": false
+        },
+        "anchor": {
+          "lane": "source",
+          "key": "source-page",
+          "targetId": "lid-v18-load-source",
+          "beforeTop": 427.906,
+          "afterTop": 427.906,
+          "topDelta": 0,
+          "tolerancePx": 1,
+          "scrollYBefore": 3393,
+          "scrollYAfter": 3393,
+          "scrollYCompensation": 0,
+          "visibleBefore": true,
+          "visibleAfter": true,
+          "focusedAfter": true,
+          "app": {
+            "requestGeneration": 1,
+            "terminalGeneration": null,
+            "baseline": {
+              "generation": 1,
+              "kind": "load",
+              "input": "pointer",
+              "top": 427.90625,
+              "confirmed": true,
+              "restoring": false
+            },
+            "restoration": null,
+            "pass": true
+          },
+          "pass": true
+        },
+        "result": "PASS"
+      },
+      {
+        "ordinal": 3,
+        "transition": {
+          "channel": "window.__LID_QA__.dispatch",
+          "kind": "qa-transition",
+          "actualUserStep": false,
+          "type": "deliver-source-success"
+        },
+        "control": null,
+        "before": {
+          "snapshotSha256": "b276babfcc95cf7e8971a674d264d2f414d5558eeae6692de1ab776eb3523b80",
+          "summary": {
+            "version": 18,
+            "feature": "PVA-013 History and Provenance",
+            "fixture": "global-ready",
+            "transitionBranch": "source-pagination-pending",
+            "scope": "global",
+            "theme": "dark",
+            "loadedVersions": [
+              17,
+              18
+            ],
+            "visibleSourceKeys": [
+              "E10",
+              "E14",
+              "E13",
+              "E12",
+              "E11",
+              "E05",
+              "E04"
+            ],
+            "visibleDerivedKeys": [
+              "E09",
+              "E08",
+              "E07",
+              "E06"
+            ],
+            "laneCounts": {
+              "source": 7,
+              "derived": 4
+            },
+            "totalCount": 11,
+            "appliedFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "draftFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "activeFilterCount": 0,
+            "filterOpen": false,
+            "consoleOpen": false,
+            "disclosureDefaultIntact": true,
+            "initialPresentation": false,
+            "sourceContextVariant": "none",
+            "openDisclosureKeys": [],
+            "pagination": {
+              "source": {
+                "stage": "pending",
+                "added": 0,
+                "duplicateIgnored": false,
+                "requestGeneration": 1,
+                "terminalGeneration": null,
+                "initialCount": 7,
+                "currentCount": 7,
+                "endReached": false,
+                "anchor": {
+                  "baseline": {
+                    "generation": 1,
+                    "kind": "load",
+                    "input": "pointer",
+                    "top": 427.90625,
+                    "confirmed": true,
+                    "restoring": false
+                  },
+                  "lastRestoration": null
+                }
+              },
+              "derived": {
+                "stage": "ready",
+                "added": 0,
+                "duplicateIgnored": false,
+                "requestGeneration": 0,
+                "terminalGeneration": null,
+                "initialCount": 4,
+                "currentCount": 4,
+                "endReached": false,
+                "anchor": {
+                  "baseline": null,
+                  "lastRestoration": null
+                }
+              }
+            },
+            "domain": {
+              "beforeEqualsCurrent": true,
+              "beforeSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932",
+              "currentSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932"
+            },
+            "counters": {
+              "mutationIntents": 0,
+              "mutationEffects": 0,
+              "providerRequests": 0
+            },
+            "announcementMatches": {
+              "empty": true,
+              "representedCount3": false,
+              "sourceAdded3": false,
+              "derivedAdded3": false
+            },
+            "stableFocusKey": "#lid-v18-load-source"
+          },
+          "focus": {
+            "tagName": "div",
+            "id": "lid-v18-load-source",
+            "role": null,
+            "action": null,
+            "eventKey": null,
+            "focusKey": null
+          },
+          "scroll": {
+            "x": 0,
+            "y": 3393
+          }
+        },
+        "after": {
+          "snapshotSha256": "6aacd76cbf90d88cd2af1df031307955e0b868a59714f4e053ddb53525393713",
+          "summary": {
+            "version": 18,
+            "feature": "PVA-013 History and Provenance",
+            "fixture": "global-ready",
+            "transitionBranch": "source-pagination-success",
+            "scope": "global",
+            "theme": "dark",
+            "loadedVersions": [
+              17,
+              18
+            ],
+            "visibleSourceKeys": [
+              "E10",
+              "E14",
+              "E13",
+              "E12",
+              "E11",
+              "E05",
+              "E04",
+              "E01",
+              "E17",
+              "E15"
+            ],
+            "visibleDerivedKeys": [
+              "E09",
+              "E08",
+              "E07",
+              "E06"
+            ],
+            "laneCounts": {
+              "source": 10,
+              "derived": 4
+            },
+            "totalCount": 14,
+            "appliedFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "draftFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "activeFilterCount": 0,
+            "filterOpen": false,
+            "consoleOpen": false,
+            "disclosureDefaultIntact": true,
+            "initialPresentation": false,
+            "sourceContextVariant": "none",
+            "openDisclosureKeys": [],
+            "pagination": {
+              "source": {
+                "stage": "complete-delivered",
+                "added": 3,
+                "duplicateIgnored": false,
+                "requestGeneration": 1,
+                "terminalGeneration": 1,
+                "initialCount": 7,
+                "currentCount": 10,
+                "endReached": true,
+                "anchor": {
+                  "baseline": null,
+                  "lastRestoration": {
+                    "generation": 1,
+                    "input": "pointer",
+                    "beforeTop": 427.90625,
+                    "finalTop": 428.34375,
+                    "delta": 0.4375,
+                    "targetId": "lid-v18-load-source",
+                    "terminalStage": "complete-delivered",
+                    "focused": true,
+                    "consumed": true
+                  }
+                }
+              },
+              "derived": {
+                "stage": "ready",
+                "added": 0,
+                "duplicateIgnored": false,
+                "requestGeneration": 0,
+                "terminalGeneration": null,
+                "initialCount": 4,
+                "currentCount": 4,
+                "endReached": false,
+                "anchor": {
+                  "baseline": null,
+                  "lastRestoration": null
+                }
+              }
+            },
+            "domain": {
+              "beforeEqualsCurrent": true,
+              "beforeSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932",
+              "currentSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932"
+            },
+            "counters": {
+              "mutationIntents": 0,
+              "mutationEffects": 0,
+              "providerRequests": 0
+            },
+            "announcementMatches": {
+              "empty": false,
+              "representedCount3": false,
+              "sourceAdded3": true,
+              "derivedAdded3": false
+            },
+            "stableFocusKey": "#lid-v18-load-source"
+          },
+          "focus": {
+            "tagName": "p",
+            "id": "lid-v18-load-source",
+            "role": null,
+            "action": null,
+            "eventKey": null,
+            "focusKey": null
+          },
+          "scroll": {
+            "x": 0,
+            "y": 4540
+          }
+        },
+        "presentation": {
+          "filterOpenChanged": false,
+          "consoleOpenChanged": false
+        },
+        "anchor": {
+          "lane": "source",
+          "key": "source-page",
+          "targetId": "lid-v18-load-source",
+          "beforeTop": 427.906,
+          "afterTop": 428.344,
+          "topDelta": 0.438,
+          "tolerancePx": 1,
+          "scrollYBefore": 3393,
+          "scrollYAfter": 4540,
+          "scrollYCompensation": 1147,
+          "visibleBefore": true,
+          "visibleAfter": true,
+          "focusedAfter": true,
+          "app": {
+            "requestGeneration": 1,
+            "terminalGeneration": 1,
+            "baseline": null,
+            "restoration": {
+              "generation": 1,
+              "input": "pointer",
+              "beforeTop": 427.90625,
+              "finalTop": 428.34375,
+              "delta": 0.4375,
+              "targetId": "lid-v18-load-source",
+              "terminalStage": "complete-delivered",
+              "focused": true,
+              "consumed": true
+            },
+            "pass": true
+          },
+          "pass": true
+        },
+        "result": "PASS"
+      },
+      {
+        "ordinal": 4,
+        "transition": {
+          "channel": "CDP visible-control pointer activation",
+          "kind": "visible-control",
+          "actualUserStep": true,
+          "type": "load-derived"
+        },
+        "control": {
+          "role": "button",
+          "name": "Load earlier Derived events",
+          "key": "derived-page",
+          "visible": true,
+          "enabled": true,
+          "centerHitWithinControl": true,
+          "value": null
+        },
+        "before": {
+          "snapshotSha256": "6aacd76cbf90d88cd2af1df031307955e0b868a59714f4e053ddb53525393713",
+          "summary": {
+            "version": 18,
+            "feature": "PVA-013 History and Provenance",
+            "fixture": "global-ready",
+            "transitionBranch": "source-pagination-success",
+            "scope": "global",
+            "theme": "dark",
+            "loadedVersions": [
+              17,
+              18
+            ],
+            "visibleSourceKeys": [
+              "E10",
+              "E14",
+              "E13",
+              "E12",
+              "E11",
+              "E05",
+              "E04",
+              "E01",
+              "E17",
+              "E15"
+            ],
+            "visibleDerivedKeys": [
+              "E09",
+              "E08",
+              "E07",
+              "E06"
+            ],
+            "laneCounts": {
+              "source": 10,
+              "derived": 4
+            },
+            "totalCount": 14,
+            "appliedFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "draftFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "activeFilterCount": 0,
+            "filterOpen": false,
+            "consoleOpen": false,
+            "disclosureDefaultIntact": true,
+            "initialPresentation": false,
+            "sourceContextVariant": "none",
+            "openDisclosureKeys": [],
+            "pagination": {
+              "source": {
+                "stage": "complete-delivered",
+                "added": 3,
+                "duplicateIgnored": false,
+                "requestGeneration": 1,
+                "terminalGeneration": 1,
+                "initialCount": 7,
+                "currentCount": 10,
+                "endReached": true,
+                "anchor": {
+                  "baseline": null,
+                  "lastRestoration": {
+                    "generation": 1,
+                    "input": "pointer",
+                    "beforeTop": 427.90625,
+                    "finalTop": 428.34375,
+                    "delta": 0.4375,
+                    "targetId": "lid-v18-load-source",
+                    "terminalStage": "complete-delivered",
+                    "focused": true,
+                    "consumed": true
+                  }
+                }
+              },
+              "derived": {
+                "stage": "ready",
+                "added": 0,
+                "duplicateIgnored": false,
+                "requestGeneration": 0,
+                "terminalGeneration": null,
+                "initialCount": 4,
+                "currentCount": 4,
+                "endReached": false,
+                "anchor": {
+                  "baseline": null,
+                  "lastRestoration": null
+                }
+              }
+            },
+            "domain": {
+              "beforeEqualsCurrent": true,
+              "beforeSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932",
+              "currentSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932"
+            },
+            "counters": {
+              "mutationIntents": 0,
+              "mutationEffects": 0,
+              "providerRequests": 0
+            },
+            "announcementMatches": {
+              "empty": false,
+              "representedCount3": false,
+              "sourceAdded3": true,
+              "derivedAdded3": false
+            },
+            "stableFocusKey": "#lid-v18-load-source"
+          },
+          "focus": {
+            "tagName": "p",
+            "id": "lid-v18-load-source",
+            "role": null,
+            "action": null,
+            "eventKey": null,
+            "focusKey": null
+          },
+          "scroll": {
+            "x": 0,
+            "y": 6359
+          }
+        },
+        "after": {
+          "snapshotSha256": "cf9a317ed69f4c733da927356e9a4cf9b24279dd0e1b2bb2784bbab71424d331",
+          "summary": {
+            "version": 18,
+            "feature": "PVA-013 History and Provenance",
+            "fixture": "global-ready",
+            "transitionBranch": "derived-pagination-pending",
+            "scope": "global",
+            "theme": "dark",
+            "loadedVersions": [
+              17,
+              18
+            ],
+            "visibleSourceKeys": [
+              "E10",
+              "E14",
+              "E13",
+              "E12",
+              "E11",
+              "E05",
+              "E04",
+              "E01",
+              "E17",
+              "E15"
+            ],
+            "visibleDerivedKeys": [
+              "E09",
+              "E08",
+              "E07",
+              "E06"
+            ],
+            "laneCounts": {
+              "source": 10,
+              "derived": 4
+            },
+            "totalCount": 14,
+            "appliedFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "draftFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "activeFilterCount": 0,
+            "filterOpen": false,
+            "consoleOpen": false,
+            "disclosureDefaultIntact": true,
+            "initialPresentation": false,
+            "sourceContextVariant": "none",
+            "openDisclosureKeys": [],
+            "pagination": {
+              "source": {
+                "stage": "complete-delivered",
+                "added": 3,
+                "duplicateIgnored": false,
+                "requestGeneration": 1,
+                "terminalGeneration": 1,
+                "initialCount": 7,
+                "currentCount": 10,
+                "endReached": true,
+                "anchor": {
+                  "baseline": null,
+                  "lastRestoration": {
+                    "generation": 1,
+                    "input": "pointer",
+                    "beforeTop": 427.90625,
+                    "finalTop": 428.34375,
+                    "delta": 0.4375,
+                    "targetId": "lid-v18-load-source",
+                    "terminalStage": "complete-delivered",
+                    "focused": true,
+                    "consumed": true
+                  }
+                }
+              },
+              "derived": {
+                "stage": "pending",
+                "added": 0,
+                "duplicateIgnored": false,
+                "requestGeneration": 1,
+                "terminalGeneration": null,
+                "initialCount": 4,
+                "currentCount": 4,
+                "endReached": false,
+                "anchor": {
+                  "baseline": {
+                    "generation": 1,
+                    "kind": "load",
+                    "input": "pointer",
+                    "top": 427.796875,
+                    "confirmed": true,
+                    "restoring": false
+                  },
+                  "lastRestoration": null
+                }
+              }
+            },
+            "domain": {
+              "beforeEqualsCurrent": true,
+              "beforeSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932",
+              "currentSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932"
+            },
+            "counters": {
+              "mutationIntents": 0,
+              "mutationEffects": 0,
+              "providerRequests": 0
+            },
+            "announcementMatches": {
+              "empty": true,
+              "representedCount3": false,
+              "sourceAdded3": false,
+              "derivedAdded3": false
+            },
+            "stableFocusKey": "#lid-v18-load-derived"
+          },
+          "focus": {
+            "tagName": "div",
+            "id": "lid-v18-load-derived",
+            "role": null,
+            "action": null,
+            "eventKey": null,
+            "focusKey": null
+          },
+          "scroll": {
+            "x": 0,
+            "y": 6359
+          }
+        },
+        "presentation": {
+          "filterOpenChanged": false,
+          "consoleOpenChanged": false
+        },
+        "anchor": {
+          "lane": "derived",
+          "key": "derived-page",
+          "targetId": "lid-v18-load-derived",
+          "beforeTop": 427.797,
+          "afterTop": 427.797,
+          "topDelta": 0,
+          "tolerancePx": 1,
+          "scrollYBefore": 6359,
+          "scrollYAfter": 6359,
+          "scrollYCompensation": 0,
+          "visibleBefore": true,
+          "visibleAfter": true,
+          "focusedAfter": true,
+          "app": {
+            "requestGeneration": 1,
+            "terminalGeneration": null,
+            "baseline": {
+              "generation": 1,
+              "kind": "load",
+              "input": "pointer",
+              "top": 427.796875,
+              "confirmed": true,
+              "restoring": false
+            },
+            "restoration": null,
+            "pass": true
+          },
+          "pass": true
+        },
+        "result": "PASS"
+      },
+      {
+        "ordinal": 5,
+        "transition": {
+          "channel": "window.__LID_QA__.dispatch",
+          "kind": "qa-transition",
+          "actualUserStep": false,
+          "type": "deliver-derived-success"
+        },
+        "control": null,
+        "before": {
+          "snapshotSha256": "cf9a317ed69f4c733da927356e9a4cf9b24279dd0e1b2bb2784bbab71424d331",
+          "summary": {
+            "version": 18,
+            "feature": "PVA-013 History and Provenance",
+            "fixture": "global-ready",
+            "transitionBranch": "derived-pagination-pending",
+            "scope": "global",
+            "theme": "dark",
+            "loadedVersions": [
+              17,
+              18
+            ],
+            "visibleSourceKeys": [
+              "E10",
+              "E14",
+              "E13",
+              "E12",
+              "E11",
+              "E05",
+              "E04",
+              "E01",
+              "E17",
+              "E15"
+            ],
+            "visibleDerivedKeys": [
+              "E09",
+              "E08",
+              "E07",
+              "E06"
+            ],
+            "laneCounts": {
+              "source": 10,
+              "derived": 4
+            },
+            "totalCount": 14,
+            "appliedFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "draftFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "activeFilterCount": 0,
+            "filterOpen": false,
+            "consoleOpen": false,
+            "disclosureDefaultIntact": true,
+            "initialPresentation": false,
+            "sourceContextVariant": "none",
+            "openDisclosureKeys": [],
+            "pagination": {
+              "source": {
+                "stage": "complete-delivered",
+                "added": 3,
+                "duplicateIgnored": false,
+                "requestGeneration": 1,
+                "terminalGeneration": 1,
+                "initialCount": 7,
+                "currentCount": 10,
+                "endReached": true,
+                "anchor": {
+                  "baseline": null,
+                  "lastRestoration": {
+                    "generation": 1,
+                    "input": "pointer",
+                    "beforeTop": 427.90625,
+                    "finalTop": 428.34375,
+                    "delta": 0.4375,
+                    "targetId": "lid-v18-load-source",
+                    "terminalStage": "complete-delivered",
+                    "focused": true,
+                    "consumed": true
+                  }
+                }
+              },
+              "derived": {
+                "stage": "pending",
+                "added": 0,
+                "duplicateIgnored": false,
+                "requestGeneration": 1,
+                "terminalGeneration": null,
+                "initialCount": 4,
+                "currentCount": 4,
+                "endReached": false,
+                "anchor": {
+                  "baseline": {
+                    "generation": 1,
+                    "kind": "load",
+                    "input": "pointer",
+                    "top": 427.796875,
+                    "confirmed": true,
+                    "restoring": false
+                  },
+                  "lastRestoration": null
+                }
+              }
+            },
+            "domain": {
+              "beforeEqualsCurrent": true,
+              "beforeSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932",
+              "currentSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932"
+            },
+            "counters": {
+              "mutationIntents": 0,
+              "mutationEffects": 0,
+              "providerRequests": 0
+            },
+            "announcementMatches": {
+              "empty": true,
+              "representedCount3": false,
+              "sourceAdded3": false,
+              "derivedAdded3": false
+            },
+            "stableFocusKey": "#lid-v18-load-derived"
+          },
+          "focus": {
+            "tagName": "div",
+            "id": "lid-v18-load-derived",
+            "role": null,
+            "action": null,
+            "eventKey": null,
+            "focusKey": null
+          },
+          "scroll": {
+            "x": 0,
+            "y": 6359
+          }
+        },
+        "after": {
+          "snapshotSha256": "ad48b992b20d262236144eff6066820e46b5722b69ca4b1b3a1e2db7dcc9626e",
+          "summary": {
+            "version": 18,
+            "feature": "PVA-013 History and Provenance",
+            "fixture": "global-ready",
+            "transitionBranch": "derived-pagination-success",
+            "scope": "global",
+            "theme": "dark",
+            "loadedVersions": [
+              17,
+              18
+            ],
+            "visibleSourceKeys": [
+              "E10",
+              "E14",
+              "E13",
+              "E12",
+              "E11",
+              "E05",
+              "E04",
+              "E01",
+              "E17",
+              "E15"
+            ],
+            "visibleDerivedKeys": [
+              "E09",
+              "E08",
+              "E07",
+              "E06",
+              "E03",
+              "E02",
+              "E16"
+            ],
+            "laneCounts": {
+              "source": 10,
+              "derived": 7
+            },
+            "totalCount": 17,
+            "appliedFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "draftFilters": {
+              "lane": "all",
+              "recordType": "all",
+              "eventType": "all",
+              "attention": "all",
+              "journalDate": ""
+            },
+            "activeFilterCount": 0,
+            "filterOpen": false,
+            "consoleOpen": false,
+            "disclosureDefaultIntact": true,
+            "initialPresentation": false,
+            "sourceContextVariant": "none",
+            "openDisclosureKeys": [],
+            "pagination": {
+              "source": {
+                "stage": "complete-delivered",
+                "added": 3,
+                "duplicateIgnored": false,
+                "requestGeneration": 1,
+                "terminalGeneration": 1,
+                "initialCount": 7,
+                "currentCount": 10,
+                "endReached": true,
+                "anchor": {
+                  "baseline": null,
+                  "lastRestoration": {
+                    "generation": 1,
+                    "input": "pointer",
+                    "beforeTop": 427.90625,
+                    "finalTop": 428.34375,
+                    "delta": 0.4375,
+                    "targetId": "lid-v18-load-source",
+                    "terminalStage": "complete-delivered",
+                    "focused": true,
+                    "consumed": true
+                  }
+                }
+              },
+              "derived": {
+                "stage": "complete-delivered",
+                "added": 3,
+                "duplicateIgnored": false,
+                "requestGeneration": 1,
+                "terminalGeneration": 1,
+                "initialCount": 4,
+                "currentCount": 7,
+                "endReached": true,
+                "anchor": {
+                  "baseline": null,
+                  "lastRestoration": {
+                    "generation": 1,
+                    "input": "pointer",
+                    "beforeTop": 427.796875,
+                    "finalTop": 427.546875,
+                    "delta": -0.25,
+                    "targetId": "lid-v18-load-derived",
+                    "terminalStage": "complete-delivered",
+                    "focused": true,
+                    "consumed": true
+                  }
+                }
+              }
+            },
+            "domain": {
+              "beforeEqualsCurrent": true,
+              "beforeSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932",
+              "currentSha256": "cf421caaeb316859beeec5d5db53b378d7b2db4b23396a8952dc0080881ca932"
+            },
+            "counters": {
+              "mutationIntents": 0,
+              "mutationEffects": 0,
+              "providerRequests": 0
+            },
+            "announcementMatches": {
+              "empty": false,
+              "representedCount3": false,
+              "sourceAdded3": false,
+              "derivedAdded3": true
+            },
+            "stableFocusKey": "#lid-v18-load-derived"
+          },
+          "focus": {
+            "tagName": "p",
+            "id": "lid-v18-load-derived",
+            "role": null,
+            "action": null,
+            "eventKey": null,
+            "focusKey": null
+          },
+          "scroll": {
+            "x": 0,
+            "y": 7441
+          }
+        },
+        "presentation": {
+          "filterOpenChanged": false,
+          "consoleOpenChanged": false
+        },
+        "anchor": {
+          "lane": "derived",
+          "key": "derived-page",
+          "targetId": "lid-v18-load-derived",
+          "beforeTop": 427.797,
+          "afterTop": 427.547,
+          "topDelta": -0.25,
+          "tolerancePx": 1,
+          "scrollYBefore": 6359,
+          "scrollYAfter": 7441,
+          "scrollYCompensation": 1082,
+          "visibleBefore": true,
+          "visibleAfter": true,
+          "focusedAfter": true,
+          "app": {
+            "requestGeneration": 1,
+            "terminalGeneration": 1,
+            "baseline": null,
+            "restoration": {
+              "generation": 1,
+              "input": "pointer",
+              "beforeTop": 427.796875,
+              "finalTop": 427.546875,
+              "delta": -0.25,
+              "targetId": "lid-v18-load-derived",
+              "terminalStage": "complete-delivered",
+              "focused": true,
+              "consumed": true
+            },
+            "pass": true
+          },
+          "pass": true
+        },
+        "result": "PASS"
+      }
+    ],
+    "finalAssertions": [
+      {
+        "name": "Exact complete Source order",
+        "pass": true
+      },
+      {
+        "name": "Exact complete Derived order",
+        "pass": true
+      },
+      {
+        "name": "Exactly three events added once to each lane",
+        "pass": true
+      },
+      {
+        "name": "Both beginnings reached with 10/7/17 counts",
+        "pass": true
+      },
+      {
+        "name": "Exact bounded Source and Derived success announcements observed",
+        "pass": true
+      },
+      {
+        "name": "Lane load and delivery transitions retained logical visual anchors",
+        "pass": true
+      },
+      {
+        "name": "Lane focus remained on its stable page target",
+        "pass": true
+      },
+      {
+        "name": "Read-only domain and counters remained stable",
+        "pass": true
+      },
+      {
+        "name": "Only partial-page entry and synthetic deliveries used QA dispatch after seed",
+        "pass": true
+      },
+      {
+        "name": "Final focus is the Derived beginning marker",
+        "pass": true
+      },
+      {
+        "name": "Initial and final domain digests match",
+        "pass": true
+      }
+    ]
+  },
+  "archiveDiagnostics": null,
+  "viewport": {
+    "innerWidth": 1440,
+    "innerHeight": 900,
+    "devicePixelRatio": 1,
+    "visualWidth": 1440,
+    "visualHeight": 900,
+    "scrollX": 0,
+    "scrollY": 7570
+  },
+  "overflow": {
+    "documentClientWidth": 1440,
+    "documentScrollWidth": 1440,
+    "documentDelta": 0,
+    "documentHorizontal": false,
+    "bodyClientWidth": 1440,
+    "bodyScrollWidth": 1440,
+    "bodyHorizontal": false,
+    "featureClientWidth": 1440,
+    "featureScrollWidth": 1440,
+    "featureHorizontal": false
+  },
+  "browserState": {
+    "localStorage": 0,
+    "sessionStorage": 0,
+    "indexedDB": 0,
+    "caches": 0,
+    "serviceWorkers": 0,
+    "opfs": {
+      "supported": true,
+      "accessible": true,
+      "entryCount": 0,
+      "errorName": null
+    }
+  },
+  "privacyAssertions": [
+    {
+      "name": "Generic title, query-free path, and null private history payload",
+      "pass": true
+    },
+    {
+      "name": "Zero local, session, IndexedDB, Cache Storage, and service-worker state",
+      "pass": true
+    },
+    {
+      "name": "OPFS inspection is supported, accessible, and has zero root entries",
+      "pass": true,
+      "observation": {
+        "supported": true,
+        "accessible": true,
+        "entryCount": 0,
+        "errorName": null
+      }
+    },
+    {
+      "name": "All captured requests remain on localhost or data URLs",
+      "pass": true
+    },
+    {
+      "name": "Zero console and browser exception events",
+      "pass": true
+    },
+    {
+      "name": "Protected fictional source prose is absent from diagnostics",
+      "pass": true
+    }
+  ],
+  "events": {
+    "console": [],
+    "exceptions": [],
+    "networkRequests": [
+      {
+        "requestId": "C34BA91F0236A1BBC7A273523F582906",
+        "url": "http://127.0.0.1:4317/index-v18.html",
+        "method": "GET",
+        "type": "Document"
+      },
+      {
+        "requestId": "47018.2",
+        "url": "http://127.0.0.1:4317/styles-v16.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "47018.3",
+        "url": "http://127.0.0.1:4317/styles-v16-almanac.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "47018.4",
+        "url": "http://127.0.0.1:4317/styles-v16-readiness.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "47018.5",
+        "url": "http://127.0.0.1:4317/styles-v16-resilience.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "47018.6",
+        "url": "http://127.0.0.1:4317/styles-v16-date-review.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "47018.7",
+        "url": "http://127.0.0.1:4317/styles-v16-telegram.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "47018.8",
+        "url": "http://127.0.0.1:4317/styles-v16-upload.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "47018.9",
+        "url": "http://127.0.0.1:4317/styles-v16-correction.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "47018.10",
+        "url": "http://127.0.0.1:4317/styles-v16-conflict.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "47018.11",
+        "url": "http://127.0.0.1:4317/styles-v17.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "47018.12",
+        "url": "http://127.0.0.1:4317/styles-v18.css",
+        "method": "GET",
+        "type": "Stylesheet"
+      },
+      {
+        "requestId": "47018.13",
+        "url": "http://127.0.0.1:4317/app-v16.js",
+        "method": "GET",
+        "type": "Script"
+      },
+      {
+        "requestId": "47018.14",
+        "url": "http://127.0.0.1:4317/runtime-v17.js",
+        "method": "GET",
+        "type": "Script"
+      },
+      {
+        "requestId": "47018.15",
+        "url": "http://127.0.0.1:4317/app-v17.js",
+        "method": "GET",
+        "type": "Script"
+      },
+      {
+        "requestId": "47018.16",
+        "url": "http://127.0.0.1:4317/app-v18.js",
+        "method": "GET",
+        "type": "Script"
+      },
+      {
+        "requestId": "47018.32",
+        "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNSIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjZmZmZmZmIiBkPSJNMjAgM2gtMVYxaC0ydjJIN1YxSDV2Mkg0Yy0xLjEgMC0yIC45LTIgMnYxNmMwIDEuMS45IDIgMiAyaDE2YzEuMSAwIDItLjkgMi0yVjVjMC0xLjEtLjktMi0yLTJ6bTAgMThINFY4aDE2djEzeiIvPjxwYXRoIGZpbGw9Im5vbmUiIGQ9Ik0wIDBoMjR2MjRIMHoiLz48L3N2Zz4=",
+        "method": "GET",
+        "type": "Image"
+      }
+    ]
+  }
+}
