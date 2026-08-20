@@ -79,7 +79,7 @@ This respects the requirements that matter — Original Timestamp is immutable, 
 
 Journal text has a specified path and keeps it: manual upload of one UTF-8 `.txt`/`.md` per submission, ≤1 MiB (`UX-UPLOAD-02`). That is a real product surface and it is built at M4. Before M4, journals arrive through the same ingest command so that M3 can demonstrate the DoD.
 
-**This needs the owner's confirmation.** It is the one place where the plan invents behaviour rather than implementing it.
+**Decided (2026-08-20): approved as designed.** Daily Photo capture in v0.1 is the local filesystem ingest above — not Telegram, not web upload. It is the one place where the plan invents behaviour rather than implementing it, so before it is ever pointed at real photos, the date-inference fallback chain (filename → EXIF → mtime) and the SHA-256 dedup get tests of their own, ahead of and independent from the rest of M3.
 
 ---
 
@@ -247,9 +247,9 @@ Search and Monthly Almanac are the two most tempting, because they're browsing f
 
 Ordered by how much damage they do, not how likely they are.
 
-### 8.1 The two reference documents disagree about the visual design — decision needed
+### 8.1 The two reference documents disagree about the visual design — decided
 
-This is not a minor mismatch. The v10 prototype and UX §28.1 specify different palettes:
+This was not a minor mismatch. The v10 prototype and UX §28.1 specify different palettes:
 
 | | Prototype v10 | UX §28.1 |
 | --- | --- | --- |
@@ -259,11 +259,13 @@ This is not a minor mismatch. The v10 prototype and UX §28.1 specify different 
 
 The accent hues are not adjacent — one archive reads green, the other reads brown. They also disagree structurally: the prototype defines `--rail-width: 238px` and ships a navigation rail, while `WF-01` says _"Do not add overlay badges or a persistent primary-navigation rail."_
 
-Both artifacts are non-authoritative reference notes, so neither wins by default. **Owner decision required before M1's token layer is written.** My recommendation: follow UX §28.1, because it is the more recent and more considered artifact, it states its contrast obligations explicitly, and its structural guidance (no rail, no overlay chips) is the one the spec repeats elsewhere. The prototype then serves as a layout and interaction reference, which is what `RESET-DECISION.md` salvaged it as.
+Both artifacts are non-authoritative reference notes, so neither won by default; a side-by-side prototype (`prototype/palette-comparison`, two variants of the month grid, never merged) was built to compare them directly rather than in the abstract.
 
-### 8.2 Photo ingestion is unspecified
+**Decided (2026-08-20): prototype v10 — green palette (`#255949` accent, `#0a7762` focus) with the persistent 238px navigation rail.** This overrides `WF-01`'s ban on a persistent primary-navigation rail; that wireframe rule is superseded for v0.1 by this decision, not silently ignored. M1's token layer and top-level layout are written against v10, not UX §28.1's palette section.
 
-Covered in §4. The gap is real, the proposal is mine, and it needs confirmation. If the owner would rather wait for Telegram capture, then v0.1's DoD cannot be met and the DoD should change — not the plan silently.
+### 8.2 Photo ingestion is unspecified — decided
+
+Covered in §4. The gap was real, the proposal was mine, and it is now approved as designed (2026-08-20): a local `npm run ingest` command, not Telegram, not web upload.
 
 ### 8.3 Scope gravity from the PRD
 
@@ -285,9 +287,9 @@ IST has no DST, which removes the whole class of ambiguous-local-time bugs. What
 
 ### 8.7 The prototype CSS is a trap
 
-`styles.css` is 6,277 lines and 122 KB; with the other three files it is over 8,000 lines. The class names are versioned to prototype generations (`.almanac-chapter-v9`, `.almanac-shell-v9`) and much of the volume implements prototype-only state theatre — simulated session expiry, fixture switchers, synthetic failure banners — plus the navigation rail `WF-01` forbids.
+`styles.css` is 6,277 lines and 122 KB; with the other three files it is over 8,000 lines. The class names are versioned to prototype generations (`.almanac-chapter-v9`, `.almanac-shell-v9`) and much of the volume implements prototype-only state theatre — simulated session expiry, fixture switchers, synthetic failure banners — plus (now that §8.1 has decided the rail stays) a fair amount that's directly reusable.
 
-Importing it wholesale would deliver a fast-looking M1 and then cost weeks. The plan is to extract roughly 150 lines of token definitions, and write the Calendar and Journal Day rules fresh against them. Where the prototype's *layout* decisions are good — and the calendar tile and day-detail structure are good — read it and reimplement, using it as the visual target it was salvaged to be. Expect M1's CSS to look plainer than the prototype. That is the correct trade at this stage.
+Importing it wholesale would still deliver a fast-looking M1 and then cost weeks — the state-theatre classes and version-pinned selectors don't belong in production regardless of which palette won. The plan is to extract the token definitions and the rail/calendar-tile/day-detail *structure*, and write them fresh rather than importing the file. Expect M1's CSS to look plainer than the prototype. That is the correct trade at this stage.
 
 ### 8.8 `sharp` may not be worth its cost at M3
 
@@ -297,12 +299,12 @@ It is a second native dependency, and the PRD wants untrusted images decoded in 
 
 ## 9. Decisions needed before ticket-writing starts
 
-1. **Palette and structure** (§8.1) — UX §28.1 or prototype v10? Blocks M1.
-2. **Photo ingest** (§4, §8.2) — is a local `npm run ingest` command an acceptable v0.1 path? Blocks M3, and blocks the DoD.
+1. ~~**Palette and structure** (§8.1) — UX §28.1 or prototype v10?~~ **Decided 2026-08-20: prototype v10** (green, 238px rail).
+2. ~~**Photo ingest** (§4, §8.2) — is a local `npm run ingest` command an acceptable v0.1 path?~~ **Decided 2026-08-20: approved as designed.**
 3. **Issues #174–181** (`mvp`, no milestone) — fold into the Phase 1.5 milestones, or close and replace? Blocks ticket creation.
 4. **Hetzner access** — needed only at M6, but if credentials take time to arrange, that is worth knowing now.
 
-Questions 1 and 2 are the ones that change what gets built. 3 and 4 are logistics.
+Questions 3 and 4 remain; they are logistics, not design.
 
 ---
 
