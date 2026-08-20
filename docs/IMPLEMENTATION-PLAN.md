@@ -191,9 +191,9 @@ Roughly 40 lines. This is the mechanism behind `UX-UPLOAD-04` — uploaded Markd
 
 ### 5.6 CSS
 
-One stylesheet built in two layers: a token layer transcribed from UX §28.1–28.4 (colours, type scale, 4px spacing steps, 12/10/8px radii, 120/180/240ms motion with a `prefers-reduced-motion` override), then component rules for the Calendar grid and Journal Day written against those tokens.
+One stylesheet built in two layers: a token layer, then component rules for the Calendar grid and Journal Day written against those tokens. Per §8.1's decision, colour and structure tokens come from `reference/prototype-v10` (`--forest: #255949` accent, `#0a7762` focus, `--rail-width: 238px` persistent rail) — **not** UX §28.1's palette. Type scale, 4px spacing steps, 12/10/8px radii, and 120/180/240ms motion with a `prefers-reduced-motion` override are undisputed between the two references and come from UX §28.2–28.4 as originally planned.
 
-The Calendar stays a 7-column Monday-first grid down to 320px (`WF-02`) — that is `grid-template-columns: repeat(7, 1fr)` and it never becomes a list. Responsive bands per UX §25: compact 320–599, medium 600–1023, wide ≥1024.
+The Calendar stays a 7-column Monday-first grid down to 320px (`WF-02`) — that is `grid-template-columns: repeat(7, 1fr)` and it never becomes a list, rendered in the content area to the right of the rail. Responsive bands per UX §25: compact 320–599, medium 600–1023, wide ≥1024. Below the medium breakpoint the rail's own responsive behaviour is v10's to define — mine it from the prototype rather than inventing new collapse rules.
 
 On reusing the v10 prototype CSS: see §8.7. Short version — take the tokens, not the 8,000 lines.
 
