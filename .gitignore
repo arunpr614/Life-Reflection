@@ -1,0 +1,20 @@
+# Real personal data. Never commit journals, photos, or exports.
+data/
+*.sqlite
+*.sqlite3
+*.db
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+
+# Local environment and secrets
+.env
+.env.*
+*.pem
+*.key
+
+# OS / editor noise
+.DS_Store
+*.log
