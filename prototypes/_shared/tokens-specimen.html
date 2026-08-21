@@ -33,6 +33,9 @@
     font-size: var(--text-body);
     line-height: var(--lh-body);
   }
+  @media (max-width: 480px) {
+    body { padding: var(--s6) var(--pad-compact) var(--s12); }
+  }
   h1 {
     margin: 0 0 var(--s2);
     font-family: var(--font-display);
@@ -73,12 +76,24 @@
     font: inherit; font-size: var(--text-small);
     cursor: pointer;
   }
+  @media (max-width: 480px) {
+    /* Fixed top-right collides with the h1 at this width — there's no room
+       for both. In flow, above the heading, instead of floating over it. */
+    .toggle { position: static; display: inline-block; margin-bottom: var(--s4); }
+  }
 
   /* ── Colour: OKLCH token beside the decided hex ───────────────────── */
   .swatches { display: grid; gap: var(--s3); grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); }
+  @media (max-width: 480px) {
+    .swatches { grid-template-columns: repeat(2, 1fr); gap: var(--s2); }
+    .swatch .pair { height: 52px; }
+  }
   .swatch { border: 1px solid var(--line); border-radius: var(--radius-card); overflow: hidden; }
   .swatch .pair { display: flex; height: 68px; }
-  .swatch .pair > div { flex: 1; }
+  /* A fixed-gray inset frame, not a token: --paper and --paper-raised sit so
+     close to this card's own background that they'd otherwise be unjudgeable
+     in dark theme. Diagnostic chrome only, not part of the design system. */
+  .swatch .pair > div { flex: 1; box-shadow: inset 0 0 0 1px oklch(0.5 0 0 / 0.35); }
   .swatch .meta {
     padding: var(--s2) var(--s3) var(--s3);
     border-top: 1px solid var(--line);
@@ -111,6 +126,14 @@
   /* ── Measured contrast ────────────────────────────────────────────── */
   table { border-collapse: collapse; width: 100%; max-width: 720px; font-size: var(--text-small); }
   th, td { padding: var(--s2) var(--s3); text-align: left; border-bottom: 1px solid var(--line); }
+  @media (max-width: 480px) {
+    /* table-layout: auto never shrinks columns below their content's
+       min-width, so this table alone forced the whole page to ~418px on a
+       375px viewport. Fixed layout divides the available width instead and
+       lets cell text wrap into it. */
+    table { table-layout: fixed; }
+    th, td { padding: var(--s1) var(--s2); overflow-wrap: break-word; }
+  }
   th { color: var(--ink-muted); font-size: var(--text-meta); letter-spacing: var(--tracking-label); text-transform: uppercase; font-weight: 650; }
   td.ratio { font-variant-numeric: tabular-nums; font-weight: 650; }
   .verdict-pass { color: var(--accent); }
@@ -192,7 +215,7 @@
     display: inline-block; padding: var(--s2) var(--s4);
     border: 1px solid transparent; border-radius: var(--radius-control);
     background: var(--accent); color: var(--ink-on-accent);
-    font: inherit; font-size: var(--text-small); font-weight: 600;
+    font: inherit; font-size: var(--text-small); line-height: var(--lh-small); font-weight: 600;
     cursor: pointer;
   }
   .btn--quiet { background: transparent; border-color: var(--line-control); color: var(--ink); }
@@ -214,6 +237,11 @@
     font: inherit; font-size: var(--text-small);
   }
   .input:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; border-color: var(--accent); }
+  /* type=date exposes its calendar-icon sub-control in UA shadow DOM, which
+     our light-DOM :focus-visible selector can never reach — tabbing to it
+     produced no visible outline at all. :focus-within fires on the host
+     input when that internal part is focused, so it's the fallback. */
+  .input:focus-within { outline: 2px solid var(--focus); outline-offset: 1px; border-color: var(--accent); }
 </style>
 </head>
 <body>
@@ -323,7 +351,7 @@
       </button>
       <div class="tile tile--quiet"><span class="tile__date">9</span></div>
       <div class="tile tile--quiet"><span class="tile__date">10</span></div>
-      <button class="tile tile--day tile--cover" type="button">
+      <button class="tile tile--day tile--cover" type="button" aria-label="11 August 2026, 1 photo, no journal">
         <canvas class="tile__cover" width="80" height="100" data-synth="11"></canvas>
         <span class="tile__date">11</span>
       </button>
