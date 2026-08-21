@@ -39,11 +39,12 @@
   --line:         oklch(0.860 0.020 var(--paper-hue)); /* #d7d0c3 tonal separation */
   --line-strong:  oklch(0.771 0.024 var(--paper-hue)); /* #bbb4a4 a visible edge, not a control */
   --line-control: oklch(0.620 0.024 var(--paper-hue)); /* #8d8576 form-control borders only — measures 3:1 */
-  /* Accent/focus need more chroma than a straight hue-rotation of the old
-   * values carried over: at hue ~120 the sRGB gamut caps out fast, so the
-   * old chroma (0.062/0.094) rendered as a muddy olive, not apple green.
-   * Boosted chroma + re-measured lightness to land back on real vivid green
-   * while still clearing 4.5:1 / 3:1 against --paper. Measured, not assumed. */
+  /* Accent/focus default to the apple-green theme below. Each colour theme
+   * needed its own hand-tuned chroma, not just a hue swap of the same
+   * numbers — the sRGB gamut ceiling is different at every hue, so the same
+   * chroma reads vivid at one hue and muddy at another. Measured per theme,
+   * not assumed. See §"Colour themes" below for all four, and
+   * tokens-specimen.html for the rendered, measured proof of each. */
   --accent:       oklch(0.50 0.16 var(--brand-hue)); /* #596e00 primary action + selection — 5.05:1 on paper */
   --focus:        oklch(0.60 0.15 calc(var(--brand-hue) + 8)); /* #708e00 — 3.32:1 on paper */
 
@@ -163,6 +164,64 @@
 
   /* Dark mode uses borders and tonal shift rather than heavy glow (§28.3). */
   --shadow-raised: 0 8px 28px oklch(0 0 0 / 0.35);
+}
+
+/* ── Colour themes ─────────────────────────────────────────────────────
+ * Exploration requested 2026-08-21: hold the shell (Editorial) fixed, vary
+ * only --brand-hue and the hand-tuned accent/focus that go with it. `apple`
+ * above is the default/fallback (bare :root, no data-color-theme needed) —
+ * these four blocks make it selectable alongside three genuinely different
+ * hue families, not four shades of the same idea. Paper stays warm cream
+ * (--paper-hue: 86) in every theme; only the "cool" side of the palette
+ * moves. Every value below is measured in tokens-specimen.html, not
+ * assumed — same discipline as the apple-green rotation.
+ *
+ * Each theme needed a different chroma to read as intentional rather than
+ * washed-out or acid: green hues (apple, sage) hit the sRGB gamut ceiling
+ * fast and need care not to drift into the banned near-black+acid-green
+ * cluster in dark mode; blue and magenta-violet hues (indigo, plum) have
+ * far more gamut room and risk reading as generic "corporate blue" or
+ * neon-pink if pushed too far instead. */
+
+:root[data-color-theme="apple"] {
+  --brand-hue: 115;
+  --accent: oklch(0.50 0.16 var(--brand-hue)); /* #596e00 — 5.05:1 on paper */
+  --focus:  oklch(0.60 0.15 calc(var(--brand-hue) + 8)); /* #708e00 — 3.32:1 on paper */
+}
+:root[data-color-theme="apple"][data-theme="dark"] {
+  --accent: oklch(0.70 0.13 calc(var(--brand-hue) + 3)); /* #97a941 — 6.86:1 on dark paper */
+  --focus:  oklch(0.85 0.13 calc(var(--brand-hue) + 7)); /* #bfdb78 — 11.59:1 on dark paper */
+}
+
+:root[data-color-theme="sage"] {
+  --brand-hue: 150; /* cooler, more muted than apple — pine/sage, not fruit */
+  --accent: oklch(0.50 0.10 var(--brand-hue)); /* #337344 — 5.02:1 on paper */
+  --focus:  oklch(0.60 0.10 calc(var(--brand-hue) + 3)); /* #4c9163 — 3.33:1 on paper */
+}
+:root[data-color-theme="sage"][data-theme="dark"] {
+  --accent: oklch(0.65 0.09 var(--brand-hue)); /* #669f72 — 5.75:1 on dark paper */
+  --focus:  oklch(0.82 0.10 calc(var(--brand-hue) + 3)); /* #91d7a5 — 10.59:1 on dark paper */
+}
+
+:root[data-color-theme="indigo"] {
+  --brand-hue: 255; /* the one non-green option: calm, cool, archive/ledger */
+  --accent: oklch(0.50 0.18 var(--brand-hue)); /* #005fc6 — 5.35:1 on paper */
+  --focus:  oklch(0.62 0.16 calc(var(--brand-hue) + 3)); /* #4385e5 — 3.23:1 on paper */
+}
+:root[data-color-theme="indigo"][data-theme="dark"] {
+  --accent: oklch(0.65 0.14 calc(var(--brand-hue) + 7)); /* #5f8de4 — 5.48:1 on dark paper */
+  --focus:  oklch(0.80 0.14 calc(var(--brand-hue) + 10)); /* #91bbff — 9.19:1 on dark paper */
+}
+
+:root[data-color-theme="plum"] {
+  --brand-hue: 335; /* warm-cool crossover; nowhere near vermilion (~20) or
+    terracotta (~30-40) — checked deliberately against §3's banned cluster 1 */
+  --accent: oklch(0.48 0.15 var(--brand-hue)); /* #8e357e — 6.24:1 on paper */
+  --focus:  oklch(0.58 0.15 calc(var(--brand-hue) + 3)); /* #b15299 — 4.07:1 on paper */
+}
+:root[data-color-theme="plum"][data-theme="dark"] {
+  --accent: oklch(0.65 0.13 var(--brand-hue)); /* #bf6fae — 5.22:1 on dark paper */
+  --focus:  oklch(0.82 0.13 calc(var(--brand-hue) + 3)); /* #fba2e1 — 9.72:1 on dark paper */
 }
 
 @media (prefers-reduced-motion: reduce) {

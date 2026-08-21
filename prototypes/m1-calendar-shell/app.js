@@ -1,8 +1,9 @@
 /* Life in Days — M1 Calendar shell + month view
  * PROTOTYPE ARTIFACT · fictional data · in-memory only · not production.
  * Milestone: M1. Issues: #187, #189, #195.
- * Three structurally distinct variants of the shell + calendar, switchable
- * via the ?variant= bar. See docs/design/M1-BUILD-INSTRUCTIONS.md.
+ * Shell is Editorial (approved 2026-08-21). The switcher now cycles COLOR
+ * THEMES, not structure — the owner asked to hold the shell fixed and
+ * explore --brand-hue. See docs/design/M1-BUILD-INSTRUCTIONS.md.
  */
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -76,35 +77,9 @@ function coverStyle(photo) {
   return `background: linear-gradient(155deg, hsl(${photo.hue} 28% ${light + 12}%), hsl(${(photo.hue + 30) % 360} 34% ${light - 14}%));`;
 }
 
-function weekOfToday(cells) {
-  const idx = cells.findIndex(c => c.isToday);
-  return idx === -1 ? -1 : Math.floor(idx / 7);
-}
+/* ---------- tile + rail rendering — Editorial, the approved shell ---------- */
 
-/* ---------- tile rendering, one function per variant ---------- */
-
-function tileA(cell) {
-  if (cell.blank) return '<div class="tile tile--blank" aria-hidden="true"></div>';
-  const name = accessibleName(cell);
-  if (!cell.entries.length) {
-    const cls = cell.isFuture ? 'tile tile--quiet tile--future' : 'tile tile--quiet';
-    return `<button type="button" class="${cls}" data-date="${cell.date}" aria-label="${name}"><span class="tile__date">${Number(cell.date.slice(-2))}</span></button>`;
-  }
-  const cover = cell.entries[0].photos[0];
-  const style = cover ? coverStyle(cover) : '';
-  const covered = cover ? 'tile--cover' : 'tile--day';
-  const today = cell.isToday ? ' tile--today' : '';
-  const { title } = cell.entries[0];
-  // A visible fallback string here would need to appear in the accessible
-  // name too (WCAG 2.5.3); keep any no-title marker decorative instead.
-  const titleHtml = cover ? '' : title ? `<span class="tile__title">${title}</span>` : '<span class="tile__mark" aria-hidden="true"></span>';
-  return `<button type="button" class="tile ${covered}${today}" style="${style}" data-date="${cell.date}" aria-label="${name}">
-    <span class="tile__date">${Number(cell.date.slice(-2))}</span>
-    ${titleHtml}
-  </button>`;
-}
-
-function tileB(cell) {
+function tile(cell) {
   if (cell.blank) return '<div class="tile tile--blank" aria-hidden="true"></div>';
   const name = accessibleName(cell);
   const dateNum = `<span class="tile__date">${Number(cell.date.slice(-2))}</span>`;
@@ -122,38 +97,7 @@ function tileB(cell) {
   </button>`;
 }
 
-function tileC(cell, emphasize) {
-  if (cell.blank) return '<div class="tile tile--blank" aria-hidden="true"></div>';
-  const name = accessibleName(cell);
-  const dateNum = `<span class="tile__date">${Number(cell.date.slice(-2))}</span>`;
-  const emphCls = emphasize ? ' tile--thisweek' : '';
-  if (!cell.entries.length) {
-    const cls = cell.isFuture ? 'tile tile--quiet tile--future' : 'tile tile--quiet';
-    return `<button type="button" class="${cls}${emphCls}" data-date="${cell.date}" aria-label="${name}">${dateNum}</button>`;
-  }
-  const { title } = cell.entries[0];
-  const cover = cell.entries[0].photos[0];
-  const today = cell.isToday ? ' tile--today' : '';
-  const badge = cover
-    ? `<span class="tile__badge" style="${coverStyle(cover)}"></span>`
-    : `<span class="tile__badge tile__badge--empty"></span>`;
-  const titleHtml = title ? `<span class="tile__title">${title}</span>` : '';
-  return `<button type="button" class="tile tile--day tile--ledger${today}${emphCls}" data-date="${cell.date}" aria-label="${name}">
-    ${badge} ${dateNum} ${titleHtml}
-  </button>`;
-}
-
-/* ---------- rail, one per variant ---------- */
-
-function railA() {
-  return `
-    <div class="rail__brand">Life in Days</div>
-    <nav class="rail__nav" aria-label="Primary">
-      <a class="rail__item rail__item--active" href="#" aria-current="page">Calendar</a>
-    </nav>`;
-}
-
-function railB() {
+function rail() {
   const g = buildGrid(state.monthKey);
   const journaled = g.cells.filter(c => !c.blank && c.entries.length).length;
   const photos = g.cells.reduce((n, c) => n + (c.blank ? 0 : dayCounts(c.entries).photos), 0);
@@ -168,18 +112,6 @@ function railB() {
       <dd>${journaled} journaled days · ${photos} photos</dd>
     </dl>
     ${ndr ? `<a class="rail__item rail__item--muted" href="#" data-stub="needs-date-review">Needs Date Review <span class="rail__count">${ndr}</span></a>` : ''}`;
-}
-
-function railC() {
-  return `
-    <div class="rail__brand">Life in Days</div>
-    <nav class="rail__nav" aria-label="Primary">
-      <a class="rail__item rail__item--active" href="#" aria-current="page">Calendar</a>
-    </nav>
-    <div class="rail__later">
-      <p class="rail__later-label">Coming later</p>
-      <p class="rail__later-list">Almanac · Search · Settings · History · Trash · Export</p>
-    </div>`;
 }
 
 /* ---------- margin (Museum Margin) ---------- */
@@ -212,11 +144,7 @@ function renderMargin(cell) {
 
 function render() {
   const app = document.getElementById('app');
-  const variant = document.body.dataset.variant;
   const grid = buildGrid(state.monthKey);
-  const thisWeek = weekOfToday(grid.cells);
-
-  const railHtml = variant === 'a' ? railA() : variant === 'b' ? railB() : railC();
 
   let mainHtml;
   if (state.demo === 'first-use') {
@@ -243,8 +171,6 @@ function render() {
     const noData = !state.demo.match(/error/) && grid.cells.every(c => c.blank || !c.entries.length)
       ? '<p class="no-days-note">No journaled days in this month.</p>' : '';
 
-    const tileFn = variant === 'a' ? tileA : variant === 'b' ? tileB : (c, i) => tileC(c, Math.floor(grid.cells.indexOf(c) / 7) === thisWeek);
-
     mainHtml = `
       <div class="month-header">
         <button type="button" class="btn btn--quiet" data-action="prev-month" aria-label="Previous month">←</button>
@@ -255,7 +181,7 @@ function render() {
       ${errorBanner}
       <div class="grid-fragment${state.demo === 'error' ? ' grid-fragment--dimmed' : ''}" aria-label="${grid.label}, calendar">
         ${WEEKDAYS.map(w => `<div class="weekday">${w}</div>`).join('')}
-        ${grid.cells.map(c => tileFn(c)).join('')}
+        ${grid.cells.map(c => tile(c)).join('')}
       </div>
       ${noData}`;
   }
@@ -267,7 +193,7 @@ function render() {
   app.innerHTML = `
     <a class="skip-link" href="#lid-main">Skip to calendar</a>
     <div class="shell" data-lid-app>
-      <aside class="rail" aria-label="Application">${railHtml}</aside>
+      <aside class="rail" aria-label="Application">${rail()}</aside>
       <div class="${stageClass}">
         <main class="main" id="lid-main">${mainHtml}</main>
         ${marginHtml}
@@ -385,7 +311,7 @@ function announce(msg) {
   live.textContent = msg;
 }
 
-/* ---------- chrome: theme + demo-state controls ---------- */
+/* ---------- chrome: theme (light/dark) + demo-state controls ---------- */
 
 function initControls() {
   const wrap = document.createElement('div');
@@ -414,19 +340,26 @@ function initControls() {
   });
 }
 
-function boot(variant) {
-  document.body.dataset.variant = variant.key;
+/* ---------- chrome: colour-theme switcher (the axis under review now) ---------- */
+
+const COLOR_THEMES = [
+  { key: 'apple',  name: 'Apple green' },
+  { key: 'sage',   name: 'Sage' },
+  { key: 'indigo', name: 'Indigo' },
+  { key: 'plum',   name: 'Plum' }
+];
+
+function applyColorTheme(theme) {
+  document.documentElement.dataset.colorTheme = theme.key;
+}
+
+function boot() {
   const params = new URLSearchParams(location.search);
   const day = params.get('day');
   if (day) { state.selectedDay = day; state.monthKey = day.slice(0, 7); }
   render();
 }
 
-const VARIANTS = [
-  { key: 'b', name: 'Editorial — approved' },
-  { key: 'a', name: 'Contact Sheet' },
-  { key: 'c', name: 'Ledger' }
-];
-
 initControls();
-initSwitcher(VARIANTS, boot);
+boot();
+initSwitcher(COLOR_THEMES, applyColorTheme);
