@@ -1,0 +1,148 @@
+/* Life in Days — design token layer
+ * PROTOTYPE ARTIFACT. Not production code, but written to be dropped into the
+ * app's single stylesheet. This file is the design input to issue #187.
+ *
+ * Colour: prototype-v10's decided palette (accent #255949, focus #0a7762),
+ *         re-expressed in OKLCH off two hue variables. UX §28.1 is superseded.
+ * Type / spacing / shape / motion: UX-SPECIFICATION.md §28.2–28.4.
+ *
+ * Two hues, not one. The archive is warm paper and cool ink: the paper
+ * surfaces sit at hue ~86 (warm), the greens and the green-tinted inks at
+ * hue ~171. Driving both from one number would flatten that, so there are
+ * two knobs. Each still shifts a whole family.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ── The two knobs ───────────────────────────────────────────────── */
+  --brand-hue: 171; /* forest: accent, focus, ink, lines in dark theme */
+  --paper-hue: 86;  /* warm paper: canvas, raised surfaces, light lines */
+
+  /* ── Colour · 6 chosen values + focus (given) ─────────────────────
+   * Trailing comment is the decided hex this OKLCH value reproduces.
+   * Verified side by side in tokens-specimen.html, not by trusting math. */
+  --paper:        oklch(0.956 0.013 var(--paper-hue)); /* #f4f0e7 canvas */
+  --paper-raised: oklch(0.994 0.007 var(--paper-hue)); /* #fffdf8 cards, media frames, dialogs */
+  --ink:          oklch(0.274 0.016 var(--brand-hue)); /* #1f2a27 the work: journal prose, dates */
+  --ink-muted:    oklch(0.510 0.016 var(--brand-hue)); /* #5e6964 the margin: provenance, meta */
+  --line:         oklch(0.860 0.020 var(--paper-hue)); /* #d8d0c3 tonal separation */
+  --line-strong:  oklch(0.771 0.024 var(--paper-hue)); /* #bdb3a4 a visible edge, not a control */
+  --line-control: oklch(0.620 0.024 var(--paper-hue)); /* form-control borders only — measures 3:1 */
+  --accent:       oklch(0.423 0.062 var(--brand-hue)); /* #255949 primary action + selection */
+  --focus:        oklch(0.509 0.094 calc(var(--brand-hue) + 3)); /* #0a7762 given; +3 keeps it exact */
+
+  /* Why --line-control exists, measured not assumed.
+   * --line-strong is 1.70:1 on --paper (2.66:1 dark). WCAG 1.4.11 / UX-A11Y-10
+   * want 3:1 for any visual information REQUIRED to identify a control or its
+   * state. Two ways out, and they are different designs:
+   *   (a) darken --line-strong to ~0.62 L so it passes. But it borders 31
+   *       calendar tiles, and a grid of hard rules everywhere is exactly the
+   *       broadsheet pastiche §3 bans. Rejected.
+   *   (b) stop asking the resting border to be the affordance. A calendar tile
+   *       is identified by its content — the date numeral at 13:1, the title in
+   *       the display serif — and its interactive STATES (hover, focus,
+   *       selected) are carried by --accent and --focus, which measure 7.09:1
+   *       and 4.82:1. The border is then decorative tonal separation, and 3:1
+   *       does not apply to it. Chosen.
+   * Real form controls still need a 3:1 border, because there the border IS
+   * the thing that says "type here". That is --line-control, and nothing else. */
+
+  /* Ink that sits on top of the accent, and on top of a photograph. */
+  --ink-on-accent: oklch(0.994 0.007 var(--paper-hue));
+  --ink-on-media:  oklch(1 0 0);
+  --scrim-media:   oklch(0.20 0.010 var(--brand-hue) / 0.55);
+
+  /* State colour is deliberately absent until M4, where the first error
+   * state appears. Until then states are carried by label and shape
+   * (UX-A11Y-11), which they must be anyway. */
+
+  /* ── Type ─────────────────────────────────────────────────────────
+   * UX §28.2 mandates a privacy-safe system serif for display and a system
+   * sans for UI: no third-party font request may receive authenticated
+   * page or referrer data (§28.2, UX-PRIV-04). Georgia is a deliberate
+   * choice inside that constraint, not a fallback — it has old-style
+   * figures, so the date numerals in 31 calendar tiles sit inside the line
+   * instead of shouting. Inter is not referenced: v10 names it but does not
+   * host it, so it silently falls back or costs a network request. */
+  --font-display: Georgia, "Iowan Old Style", Palatino, "Times New Roman", serif;
+  --font-ui: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* Scale is UX §28.2 verbatim. --text-month is the one stated exception:
+   * the Calendar's month title is the archive's anchor and is allowed past
+   * the display role. Nothing else exceeds it. */
+  --text-month:   clamp(2.75rem, 5vw, 4.25rem);
+  --lh-month:     1.02;
+  --text-display: 2.25rem;   --lh-display: 2.75rem;   /* 36/44 */
+  --text-h1:      1.75rem;   --lh-h1:      2.25rem;   /* 28/36 */
+  --text-h2:      1.375rem;  --lh-h2:      1.875rem;  /* 22/30 */
+  --text-body:    1rem;      --lh-body:    1.625rem;  /* 16/26 */
+  --text-small:   0.875rem;  --lh-small:   1.25rem;   /* 14/20 */
+  --text-meta:    0.8125rem; --lh-meta:    1.125rem;  /* 13/18 — the floor. Never smaller
+                                                       * for provenance or errors. */
+  --tracking-label: 0.09em; /* the margin's uppercase section labels only */
+
+  /* Reading measure — UX-RESP-04: 60–72 characters on wide screens. */
+  --measure: 66ch;
+
+  /* ── Spacing · 4px base, UX §28.3 ─────────────────────────────────── */
+  --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
+  --s6: 24px; --s8: 32px; --s12: 48px; --s16: 64px;
+  --pad-compact: 16px;
+  --gutter-wide: 32px;
+
+  /* ── Shape · UX §28.3 ─────────────────────────────────────────────── */
+  --radius-card:    12px;
+  --radius-media:   10px;
+  --radius-control: 8px;
+  --radius-pill:    999px; /* tags and status only */
+
+  /* One restrained raised-surface shadow. Borders and tonal separation
+   * carry hierarchy before shadows do (§28.3). */
+  --shadow-raised: 0 8px 28px oklch(0.30 0.02 var(--paper-hue) / 0.10);
+
+  /* ── Structure ────────────────────────────────────────────────────── */
+  --rail-width: 238px; /* decided 2026-08-20 */
+  --margin-width: 300px; /* the Museum Margin */
+
+  /* ── Motion · UX §28.4. Default to none; each use must say what it
+   * communicates. Only two do: the margin opening (spatial relationship)
+   * and the gallery crossfade (continuity). ─────────────────────────── */
+  --motion-fast:     120ms;
+  --motion-standard: 180ms;
+  --motion-slow:     240ms;
+  --ease-enter: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit:  cubic-bezier(0.4, 0, 1, 1);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Dark is deep green-tinted ink, not near-black, and the accent is a
+   * desaturated sage, not acid green. Both are deliberate: near-black plus
+   * one saturated green accent is a recognisable generated-design cluster
+   * and this palette sits one step away from it. */
+  --paper:        oklch(0.205 0.013 var(--brand-hue)); /* #111917 */
+  --paper-raised: oklch(0.240 0.017 var(--brand-hue)); /* #17221f */
+  --ink:          oklch(0.953 0.009 var(--brand-hue)); /* #edf1eb */
+  --ink-muted:    oklch(0.792 0.014 var(--brand-hue)); /* #b4beb8 */
+  --line:         oklch(0.362 0.018 var(--brand-hue)); /* #34413d */
+  --line-strong:  oklch(0.479 0.019 var(--brand-hue)); /* #53615c */
+  --line-control: oklch(0.530 0.019 var(--brand-hue)); /* measures 3:1 on dark --paper */
+  --accent:       oklch(0.734 0.077 var(--brand-hue)); /* #75b9a2 */
+  --focus:        oklch(0.859 0.074 var(--brand-hue)); /* #9fe1ca */
+
+  --ink-on-accent: oklch(0.205 0.013 var(--brand-hue));
+  --scrim-media:   oklch(0.15 0.010 var(--brand-hue) / 0.62);
+
+  /* Dark mode uses borders and tonal shift rather than heavy glow (§28.3). */
+  --shadow-raised: 0 8px 28px oklch(0 0 0 / 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast:     1ms;
+    --motion-standard: 1ms;
+    --motion-slow:     1ms;
+  }
+}

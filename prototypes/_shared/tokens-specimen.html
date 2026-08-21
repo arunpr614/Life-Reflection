@@ -1,0 +1,543 @@
+<!doctype html>
+<!--
+  Life in Days — token specimen
+  PROTOTYPE ARTIFACT · fictional data · in-memory only · not production.
+  Milestone: pre-M1 (the design system of UI-DESIGN-INSTRUCTIONS.md §2).
+  Issue: design input to #187 (CSS token layer).
+
+  Purpose: make the OKLCH re-expression of the decided palette checkable by
+  eye rather than by trusting conversion math, print measured contrast
+  ratios rather than asserting them, and show the signature element at
+  real size before any screen is built.
+
+  Zero third-party requests. System fonts only.
+
+  Run: cd prototypes/_shared && python3 -m http.server 4173 --bind 127.0.0.1
+-->
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Life in Days</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: var(--s8) var(--gutter-wide) var(--s16);
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: var(--text-body);
+    line-height: var(--lh-body);
+  }
+  h1 {
+    margin: 0 0 var(--s2);
+    font-family: var(--font-display);
+    font-size: var(--text-display);
+    line-height: var(--lh-display);
+    font-weight: 400;
+  }
+  h2 {
+    margin: var(--s12) 0 var(--s4);
+    padding-bottom: var(--s2);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-muted);
+    font-family: var(--font-ui);
+    font-size: var(--text-meta);
+    line-height: var(--lh-meta);
+    font-weight: 650;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+  p { max-width: var(--measure); }
+  .lede { margin: 0 0 var(--s6); color: var(--ink-muted); }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; }
+
+  /* Every focusable thing, one rule. */
+  :where(a, button, [tabindex]):focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: var(--radius-control);
+  }
+
+  .toggle {
+    position: fixed; top: var(--s4); right: var(--s4); z-index: 10;
+    padding: var(--s2) var(--s4);
+    border: 1px solid var(--line-control);
+    border-radius: var(--radius-control);
+    background: var(--paper-raised);
+    color: var(--ink);
+    font: inherit; font-size: var(--text-small);
+    cursor: pointer;
+  }
+
+  /* ── Colour: OKLCH token beside the decided hex ───────────────────── */
+  .swatches { display: grid; gap: var(--s3); grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); }
+  .swatch { border: 1px solid var(--line); border-radius: var(--radius-card); overflow: hidden; }
+  .swatch .pair { display: flex; height: 68px; }
+  .swatch .pair > div { flex: 1; }
+  .swatch .meta {
+    padding: var(--s2) var(--s3) var(--s3);
+    border-top: 1px solid var(--line);
+    background: var(--paper-raised);
+    font-size: var(--text-meta);
+    line-height: var(--lh-meta);
+  }
+  .swatch .meta strong { display: block; font-weight: 650; }
+  .swatch .meta span { color: var(--ink-muted); }
+  .seam { color: var(--ink-muted); font-size: var(--text-meta); }
+
+  /* ── Type ─────────────────────────────────────────────────────────── */
+  .specimen { border-top: 1px solid var(--line); padding: var(--s4) 0; display: grid; gap: var(--s2); }
+  .specimen .role {
+    color: var(--ink-muted); font-size: var(--text-meta); line-height: var(--lh-meta);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+  }
+  .t-month   { font-family: var(--font-display); font-size: var(--text-month);   line-height: var(--lh-month); }
+  .t-display { font-family: var(--font-display); font-size: var(--text-display); line-height: var(--lh-display); }
+  .t-h1      { font-family: var(--font-display); font-size: var(--text-h1);      line-height: var(--lh-h1); }
+  .t-h2      { font-family: var(--font-display); font-size: var(--text-h2);      line-height: var(--lh-h2); }
+  .t-body    { font-family: var(--font-display); font-size: var(--text-body);    line-height: var(--lh-body); max-width: var(--measure); }
+  .t-small   { font-family: var(--font-ui); font-size: var(--text-small); line-height: var(--lh-small); }
+  .t-meta    { font-family: var(--font-ui); font-size: var(--text-meta);  line-height: var(--lh-meta); color: var(--ink-muted); }
+  /* No .figures / oldstyle-num rule. Georgia's DEFAULT figures are old-style;
+     it ships no 'onum' feature to switch on, so the declaration computed to
+     'normal' and did nothing. The figures below are old-style because of the
+     font choice, which is the point — verify by eye, not by property. */
+
+  /* ── Measured contrast ────────────────────────────────────────────── */
+  table { border-collapse: collapse; width: 100%; max-width: 720px; font-size: var(--text-small); }
+  th, td { padding: var(--s2) var(--s3); text-align: left; border-bottom: 1px solid var(--line); }
+  th { color: var(--ink-muted); font-size: var(--text-meta); letter-spacing: var(--tracking-label); text-transform: uppercase; font-weight: 650; }
+  td.ratio { font-variant-numeric: tabular-nums; font-weight: 650; }
+  .verdict-pass { color: var(--accent); }
+  .verdict-fail { color: var(--ink); text-decoration: underline; text-decoration-thickness: 2px; }
+
+  /* ── The signature element, at real size ──────────────────────────── */
+  .stage { display: grid; gap: var(--gutter-wide); grid-template-columns: minmax(0, 1fr) var(--margin-width); align-items: start; }
+  @media (max-width: 900px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+
+  .grid-fragment { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--s2); }
+  .weekday {
+    padding-bottom: var(--s2);
+    color: var(--ink-muted); font-size: var(--text-meta); line-height: var(--lh-meta);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+  }
+  .tile {
+    position: relative; display: flex; flex-direction: column;
+    aspect-ratio: 4 / 5;
+    padding: var(--s2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-media);
+    background: var(--paper-raised);
+    overflow: hidden;
+    font: inherit; text-align: left; color: inherit;
+    cursor: pointer;
+  }
+  /* The tile's border is NOT its affordance — it measures 1.70:1 and cannot
+     carry that job. What identifies a tile as a control is its content and its
+     states: --accent at 7.09:1 for today/selected, --focus at 4.82:1 on focus.
+     --line-strong here only separates a day that has content from one that
+     doesn't. See the contrast table and the note in tokens.css. */
+  .tile--day { border-color: var(--line-strong); }
+  .tile--quiet { border-color: var(--line); background: transparent; cursor: default; }
+  .tile__date { font-family: var(--font-display); font-size: var(--text-small); }
+  .tile__title {
+    margin-top: auto;
+    font-family: var(--font-display); font-size: var(--text-small); line-height: 1.2;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .tile--cover { border-color: transparent; }
+  .tile--cover .tile__cover { position: absolute; inset: 0; z-index: 0; }
+  .tile--cover .tile__date, .tile--cover .tile__title { position: relative; z-index: 2; color: var(--ink-on-media); }
+  .tile--cover::after {
+    content: ""; position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(to top, var(--scrim-media) 0%, transparent 58%);
+  }
+  .tile--today { box-shadow: inset 0 0 0 2px var(--accent); }
+  .tile--selected { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--accent); }
+
+  /* The Museum Margin */
+  .margin { border-left: 1px solid var(--line); padding-left: var(--gutter-wide); }
+  @media (max-width: 900px) { .margin { border-left: 0; border-top: 1px solid var(--line); padding: var(--s6) 0 0; } }
+  .margin__label {
+    margin: 0 0 var(--s4);
+    color: var(--ink-muted); font-size: var(--text-meta); line-height: var(--lh-meta);
+    letter-spacing: var(--tracking-label); text-transform: uppercase; font-weight: 650;
+  }
+  .margin dl { margin: 0; display: grid; gap: var(--s3); }
+  .margin dt {
+    color: var(--ink-muted); font-size: var(--text-meta); line-height: var(--lh-meta);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+  }
+  .margin dd { margin: var(--s1) 0 0; font-size: var(--text-small); line-height: var(--lh-small); }
+  .margin__date { margin: 0 0 var(--s4); font-family: var(--font-display); font-size: var(--text-h2); line-height: var(--lh-h2); }
+  .badge {
+    display: inline-block; padding: 2px var(--s2);
+    border: 1px solid var(--line-control); border-radius: var(--radius-pill);
+    font-size: var(--text-meta); line-height: var(--lh-meta);
+  }
+  .work {
+    padding: var(--s6);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--paper-raised);
+  }
+  .work h3 { margin: 0 0 var(--s3); font-family: var(--font-display); font-size: var(--text-h1); line-height: var(--lh-h1); font-weight: 400; }
+  .work p { margin: 0; font-family: var(--font-display); font-size: var(--text-body); line-height: var(--lh-body); max-width: var(--measure); }
+  .btn {
+    display: inline-block; padding: var(--s2) var(--s4);
+    border: 1px solid transparent; border-radius: var(--radius-control);
+    background: var(--accent); color: var(--ink-on-accent);
+    font: inherit; font-size: var(--text-small); font-weight: 600;
+    cursor: pointer;
+  }
+  .btn--quiet { background: transparent; border-color: var(--line-control); color: var(--ink); }
+
+  /* ── Control borders ──────────────────────────────────────────────── */
+  .controls-demo { display: flex; flex-wrap: wrap; gap: var(--s4); align-items: flex-end; }
+  .field { display: grid; gap: var(--s1); }
+  .field__label {
+    display: block;
+    color: var(--ink-muted); font-size: var(--text-meta); line-height: var(--lh-meta);
+    letter-spacing: var(--tracking-label); text-transform: uppercase;
+  }
+  .input {
+    padding: var(--s2) var(--s3);
+    border: 1px solid var(--line-control);
+    border-radius: var(--radius-control);
+    background: var(--paper-raised);
+    color: var(--ink);
+    font: inherit; font-size: var(--text-small);
+  }
+  .input:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; border-color: var(--accent); }
+</style>
+</head>
+<body>
+<button class="toggle" id="theme-toggle" type="button">Use dark theme</button>
+
+<h1>Token specimen</h1>
+<p class="lede">
+  The decided palette re-expressed in OKLCH off two hue variables, the UX §28.2
+  type scale at real size, measured contrast, and the signature element.
+  Fictional content throughout.
+</p>
+
+<h2>Colour — OKLCH token beside the decided hex</h2>
+<p class="lede">
+  Each swatch is split: the left half is the <code>oklch()</code> token, the right half is the
+  decided hex literal. If the seam is visible, the conversion drifted.
+  <span class="seam" id="seam-report"></span>
+</p>
+<div class="swatches" id="swatches"></div>
+
+<h2>Type — display is Georgia, UI is the system sans</h2>
+<div class="specimen">
+  <div class="role">text.month · the one stated exception to §28.2</div>
+  <div class="t-month">August 2026</div>
+</div>
+<div class="specimen">
+  <div class="role">text.display 36/44</div>
+  <div class="t-display">Your archive begins here.</div>
+</div>
+<div class="specimen">
+  <div class="role">text.h1 28/36 · a Journal Day</div>
+  <div class="t-h1">A useful kind of quiet</div>
+</div>
+<div class="specimen">
+  <div class="role">text.h2 22/30 · old-style figures, the reason for Georgia</div>
+  <div class="t-h2">Saturday, 8 August 2026 · 1234567890</div>
+</div>
+<div class="specimen">
+  <div class="role">text.body 16/26 · journal prose at the 66ch measure</div>
+  <p class="t-body">
+    The rain came in from the west just after four and the whole terrace went
+    the colour of wet slate. I moved the chairs in, then moved them back out
+    twenty minutes later when it stopped, which felt like the sort of small
+    surrender a Saturday is for.
+  </p>
+</div>
+<div class="specimen">
+  <div class="role">text.small 14/20 · UI sans</div>
+  <div class="t-small">Uploaded journal · 2 photos · 1 journal</div>
+</div>
+<div class="specimen">
+  <div class="role">text.meta 13/18 · the floor. Provenance and errors never go smaller.</div>
+  <div class="t-meta">Original Timestamp 8 August 2026, 21:04 IST · Journal Date 8 August 2026</div>
+</div>
+
+<h2>Measured contrast — not asserted</h2>
+<table>
+  <thead><tr><th>Pair</th><th>Requirement</th><th>Ratio</th><th>Verdict</th></tr></thead>
+  <tbody id="contrast"></tbody>
+</table>
+
+<h2>Control borders — where 3:1 actually applies</h2>
+<p class="lede">
+  On a form control the border <em>is</em> the affordance, so it must reach 3:1:
+  that is <code>--line-control</code>. On a calendar tile the border is not the
+  affordance, so it stays quiet. Tab through both to compare the resting border
+  against the focus ring.
+</p>
+<div class="controls-demo">
+  <div class="field">
+    <label class="field__label" for="f-date">Journal Date</label>
+    <input class="input" id="f-date" name="journal-date" type="date" value="2026-08-08">
+  </div>
+  <div class="field">
+    <label class="field__label" for="f-caption">Photo Caption</label>
+    <input class="input" id="f-caption" name="photo-caption" type="text" value="Rain on the balcony rail" size="28">
+  </div>
+  <span class="badge">Needs Date Review</span>
+  <button class="btn btn--quiet" type="button">Quiet action</button>
+  <button class="btn" type="button">Primary action</button>
+</div>
+
+<h2>Signature element — the Museum Margin</h2>
+<p class="lede">
+  The work never shares a column with what the system says about it. Left: the
+  work, in the display serif. Right: the margin, in the UI sans at meta size,
+  always in the same place, always in the same voice.
+</p>
+<div class="stage">
+  <div>
+    <div class="grid-fragment" style="margin-bottom: var(--s6)">
+      <div class="weekday">Mon</div><div class="weekday">Tue</div><div class="weekday">Wed</div>
+      <div class="weekday">Thu</div><div class="weekday">Fri</div><div class="weekday">Sat</div>
+      <div class="weekday">Sun</div>
+      <div class="tile tile--quiet"><span class="tile__date">3</span></div>
+      <div class="tile tile--quiet"><span class="tile__date">4</span></div>
+      <div class="tile tile--quiet"><span class="tile__date">5</span></div>
+      <button class="tile tile--day tile--cover" type="button">
+        <canvas class="tile__cover" width="80" height="100" data-synth="6"></canvas>
+        <span class="tile__date">6</span>
+        <span class="tile__title">Three kites over the water tank</span>
+      </button>
+      <div class="tile tile--quiet"><span class="tile__date">7</span></div>
+      <button class="tile tile--day tile--selected" type="button">
+        <span class="tile__date">8</span>
+        <span class="tile__title">A useful kind of quiet</span>
+      </button>
+      <div class="tile tile--quiet"><span class="tile__date">9</span></div>
+      <div class="tile tile--quiet"><span class="tile__date">10</span></div>
+      <button class="tile tile--day tile--cover" type="button">
+        <canvas class="tile__cover" width="80" height="100" data-synth="11"></canvas>
+        <span class="tile__date">11</span>
+      </button>
+      <div class="tile tile--quiet"><span class="tile__date">12</span></div>
+      <button class="tile tile--day tile--cover tile--today" type="button">
+        <canvas class="tile__cover" width="80" height="100" data-synth="13"></canvas>
+        <span class="tile__date">13</span>
+        <span class="tile__title">Late train, empty platform</span>
+      </button>
+      <div class="tile tile--quiet"><span class="tile__date">14</span></div>
+      <div class="tile tile--quiet"><span class="tile__date">15</span></div>
+      <div class="tile tile--quiet"><span class="tile__date">16</span></div>
+    </div>
+    <div class="work">
+      <h3>A useful kind of quiet</h3>
+      <p>
+        Nobody rang all morning. I made coffee twice because I forgot the first
+        one on the shelf by the door, and drank it cold at eleven standing up,
+        reading the back of a seed packet I have no intention of planting.
+      </p>
+      <p style="margin-top: var(--s4)">
+        <button class="btn" type="button">Read day</button>
+        <button class="btn btn--quiet" type="button">Upload journal</button>
+      </p>
+    </div>
+  </div>
+
+  <aside class="margin">
+    <p class="margin__label">Selected Journal Day</p>
+    <p class="margin__date">Saturday,<br>8 August 2026</p>
+    <dl>
+      <dt>Calendar Cover</dt>
+      <dd>No cover image · journal only</dd>
+      <dt>Source Items</dt>
+      <dd>1 Uploaded journal<br>0 Daily Photos</dd>
+      <dt>Original Timestamp</dt>
+      <dd>8 August 2026, 21:04 IST</dd>
+      <dt>Journal Date</dt>
+      <dd>8 August 2026 <span class="badge">Edited</span></dd>
+    </dl>
+  </aside>
+</div>
+
+<script>
+/* Prototype furniture. In-memory only; reload returns to the first state. */
+
+/* The decided palette, as literals, so the swatch can compare against them. */
+const DECIDED = {
+  light: {
+    paper: '#f4f0e7', 'paper-raised': '#fffdf8', ink: '#1f2a27',
+    'ink-muted': '#5e6964', line: '#d8d0c3', 'line-strong': '#bdb3a4',
+    accent: '#255949', focus: '#0a7762'
+  },
+  dark: {
+    paper: '#111917', 'paper-raised': '#17221f', ink: '#edf1eb',
+    'ink-muted': '#b4beb8', line: '#34413d', 'line-strong': '#53615c',
+    accent: '#75b9a2', focus: '#9fe1ca'
+  }
+};
+/* --line-control has no v10 equivalent: it was derived here to satisfy the
+   3:1 control-border requirement that --line-strong measurably fails. It gets
+   a plain swatch, not a split one — there is no decided hex to compare to. */
+const DERIVED = ['line-control'];
+
+const JOBS = {
+  paper: 'canvas', 'paper-raised': 'cards, media frames, dialogs',
+  ink: 'the work', 'ink-muted': 'the margin', line: 'tonal separation',
+  'line-strong': 'a visible edge, not a control',
+  'line-control': 'form-control borders only',
+  accent: 'primary action + selection', focus: 'focus ring (given)'
+};
+
+function theme() { return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'; }
+
+function renderSwatches() {
+  const host = document.getElementById('swatches');
+  host.innerHTML = '';
+  const decided = DECIDED[theme()];
+  for (const [name, hex] of Object.entries(decided)) {
+    const el = document.createElement('div');
+    el.className = 'swatch';
+    el.innerHTML =
+      '<div class="pair">' +
+        '<div style="background: var(--' + name + ')"></div>' +
+        '<div style="background: ' + hex + '"></div>' +
+      '</div>' +
+      '<div class="meta"><strong>--' + name + '</strong>' +
+      '<span>' + JOBS[name] + '<br>' + hex + '</span></div>';
+    host.appendChild(el);
+  }
+  for (const name of DERIVED) {
+    const el = document.createElement('div');
+    el.className = 'swatch';
+    el.innerHTML =
+      '<div class="pair"><div style="background: var(--' + name + '); grid-column: span 2"></div></div>' +
+      '<div class="meta"><strong>--' + name + '</strong>' +
+      '<span>' + JOBS[name] + '<br>derived here, no v10 hex</span></div>';
+    host.appendChild(el);
+  }
+  reportSeam(decided);
+}
+
+/* Measure the actual drift between token and literal, in sRGB steps. */
+function reportSeam(decided) {
+  let worst = 0, worstName = '';
+  for (const [name, hex] of Object.entries(decided)) {
+    const a = resolveToken('--' + name);
+    const b = rgb(hex);
+    const d = Math.max(Math.abs(a[0]-b[0]), Math.abs(a[1]-b[1]), Math.abs(a[2]-b[2]));
+    if (d > worst) { worst = d; worstName = name; }
+  }
+  document.getElementById('seam-report').textContent =
+    'Largest drift from the decided hex: ' + worst + '/255, on --' + worstName + '.';
+}
+
+/* Resolve any CSS colour — including oklch(), which Chrome computes as
+   oklch() and not rgb() — to true sRGB bytes by painting one pixel. */
+const _probeCanvas = document.createElement('canvas');
+_probeCanvas.width = _probeCanvas.height = 1;
+const _probeCtx = _probeCanvas.getContext('2d', { willReadFrequently: true });
+
+function rgb(cssColor) {
+  _probeCtx.clearRect(0, 0, 1, 1);
+  _probeCtx.fillStyle = '#000';
+  _probeCtx.fillStyle = cssColor;
+  _probeCtx.fillRect(0, 0, 1, 1);
+  const d = _probeCtx.getImageData(0, 0, 1, 1).data;
+  return [d[0], d[1], d[2]];
+}
+
+/* Read a custom property and resolve it against the live theme. Custom
+   properties come back as declared text (with var() references intact), so
+   resolve through a real element's computed style first. */
+function resolveToken(token) {
+  const el = document.createElement('div');
+  el.style.color = getComputedStyle(document.documentElement).getPropertyValue(token);
+  document.body.appendChild(el);
+  const computed = getComputedStyle(el).color;
+  el.remove();
+  return rgb(computed);
+}
+function lum([r, g, b]) {
+  const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+function ratio(fg, bg) {
+  const [a, b] = [lum(fg), lum(bg)].sort((x, y) => y - x);
+  return (a + 0.05) / (b + 0.05);
+}
+
+const PAIRS = [
+  ['--ink',         '--paper',        4.5, 'Journal prose on canvas'],
+  ['--ink',         '--paper-raised', 4.5, 'Journal prose on a card'],
+  ['--ink-muted',   '--paper',        4.5, 'Provenance text on canvas'],
+  ['--ink-muted',   '--paper-raised', 4.5, 'Margin text on a card'],
+  ['--accent',      '--paper',        4.5, 'Accent text / link on canvas'],
+  ['--ink-on-accent','--accent',      4.5, 'Label on a primary button'],
+  ['--focus',       '--paper',        3.0, 'Focus ring against canvas'],
+  ['--accent',      '--paper',        3.0, 'Today / selected tile outline'],
+  ['--line-control','--paper',        3.0, 'Text input / quiet button border'],
+  ['--line-control','--paper-raised', 3.0, 'Input border inside a dialog'],
+  ['--line-strong', '--paper',        3.0, 'Tile edge (decorative, 3:1 not required)'],
+  ['--line',        '--paper',        3.0, 'Divider (decorative, 3:1 not required)']
+];
+
+function renderContrast() {
+  const rows = PAIRS.map(([fg, bg, need, label]) => {
+    const r = ratio(resolveToken(fg), resolveToken(bg));
+    const decorative = label.indexOf('not required') !== -1;
+    const pass = r >= need || decorative;
+    return '<tr><td>' + label + '<br><span class="t-meta">' + fg + ' on ' + bg + '</span></td>' +
+      '<td>' + need.toFixed(1) + ':1</td>' +
+      '<td class="ratio">' + r.toFixed(2) + ':1</td>' +
+      '<td class="' + (pass ? 'verdict-pass' : 'verdict-fail') + '">' +
+      (decorative ? 'n/a — tonal only' : (pass ? 'Pass' : 'Fails — fix before build')) + '</td></tr>';
+  });
+  document.getElementById('contrast').innerHTML = rows.join('');
+}
+
+/* Synthetic covers. Local canvas, no network, varied hue and tone so the
+   scrim and the date overlay are actually tested. Real photographs are the
+   honest limitation — see the M1 handover. */
+function paintCovers() {
+  const hues = { 6: 196, 11: 32, 13: 258 };
+  document.querySelectorAll('canvas[data-synth]').forEach(c => {
+    const key = c.dataset.synth;
+    const h = hues[key] || 120;
+    const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, c.width, c.height);
+    g.addColorStop(0, 'hsl(' + h + ' 22% 78%)');
+    g.addColorStop(1, 'hsl(' + ((h + 40) % 360) + ' 30% 34%)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.fillStyle = 'hsl(' + h + ' 18% 92% / 0.5)';
+    for (let i = 0; i < 5; i++) {
+      ctx.fillRect(0, (i * 23 + Number(key) * 3) % c.height, c.width, 1.5);
+    }
+    c.style.width = '100%'; c.style.height = '100%';
+    c.style.objectFit = 'cover'; c.style.display = 'block';
+  });
+}
+
+function render() { renderSwatches(); renderContrast(); }
+
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const next = theme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  document.getElementById('theme-toggle').textContent =
+    next === 'dark' ? 'Use light theme' : 'Use dark theme';
+  render();
+});
+
+paintCovers();
+render();
+</script>
+</body>
+</html>
