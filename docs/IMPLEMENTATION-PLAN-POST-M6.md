@@ -508,3 +508,37 @@ The boundary lives in three places, in this order of trust:
 3. **The contract test** (§4.2) — catches the case where someone widens the type or the serializer later without re-reading this section.
 
 Ticket-writing note for M10/M11 (also stated in the controlling brief §8.4): every ticket that touches an AI provider states this boundary in its `## Scope`, not only its `## Technical notes` — what is sent, and cites this section's enumerated "never" list rather than restating it.
+
+---
+
+## 5. Milestones M7–M19
+
+Named and sequenced per the controlling brief §10, which the owner has already seen the outline of. Each paragraph states the user-visible outcome first, then requirement IDs, dependencies, and what the milestone deliberately does not do — the same four things every ticket inside it must trace back to.
+
+### M7 — Find any day, and browse the archive like a book
+
+**Outcome:** typing a phrase or a tag into Search returns the days that contain it, with a snippet showing why each matched; the Almanac reads the archive as one continuous scroll of days instead of a grid the owner has to page through month by month. **Requirement IDs:** `LID-REF-002`, `LID-REF-003`, `LID-TG-009` (Photo Captions become searchable here). **Depends on:** nothing outside M1–M6 — the four existing tables and #185's migration runner already hold everything M7 reads; §3.15's FTS5 index is the only new schema. **Deliberately does not:** build semantic or conversational search (`LID-DEF-003` stays out), or a competing Timeline tab — the Almanac *is* the timeline, per `UX-REF-002`.
+
+### M8 — Photos arrive from the phone over Telegram
+
+**Outcome:** the owner sends a photo in his private Telegram chat and it is on the right Journal Day moments later, with a reply naming the date and a link to change it — no filesystem, no laptop, and the M3 ingest command keeps working exactly as before for anything he still wants to drop in by hand. **Requirement IDs:** `LID-TG-001` through `LID-TG-010`, `LID-OPS-002`. **Depends on:** `media_asset` and the local storage backend (#196, #199, M3); `telegram_origin` (§3.2) is new. **Deliberately does not:** replace or deprecate the M3 ingest command, validate against any sender/chat other than the one exact configured pair, or fall back to receipt-date guessing for an invalid or future caption date — that goes to Needs Date Review, same as M4's existing queue.
+
+### M9 — Journals arrive by voice, without trusting an unproven integration
+
+**Outcome:** the owner speaks into VoiceNotes, tags it `life-in-days`, and the transcript appears on the right Journal Day without him doing anything else — but only after a synthetic spike has actually proven the integration behaves the way this plan assumes, because guessing at an undocumented webhook contract is exactly how a real journal entry gets silently lost. **Requirement IDs:** `LID-VN-001` through `LID-VN-007`. **Depends on:** the spike (`LID-VN-001`) gates every other ticket in the milestone; `voicenotes_origin` and `source_suppression` (§3.3, §3.7) are new; the widened `source_item.kind` CHECK (§3.1) lands here. **Deliberately does not:** treat a webhook payload as authoritative (the MCP surface always is), backdate Integration Activation, or attempt fuzzy tag matching (`LID-DEF-006` stays out).
+
+### M10 — Every day gets a title, a summary, and tags
+
+**Outcome:** each Journal Day quietly grows a one-line title, a short factual summary, and a few tags the owner never typed — and the moment he edits one himself, that field stops being touched by automation until he explicitly asks for it back. **Requirement IDs:** `LID-AIT-001` through `LID-AIT-007`. **Depends on:** the evaluation gate (`LID-AIT-001`) and the scheduler ADR (§2.1) are the first two tickets, in that order, and every other M10 ticket depends on both; `derived_field`, `derived_field_version`, `visual_brief` (§3.4, §3.5), `provider_config`, `provider_selection` (§3.10), and `ai_usage_ledger` (§3.11) are new. **Deliberately does not:** send anything a real photo touched to any provider (§4 governs this milestone directly), retry past three attempts or past one schema-invalid retry, or let the $15 evaluation ceiling in `LID-AIT-001` run independently of M11's — the two share one budget.
+
+### M11 — Days without a photo still have a face
+
+**Outcome:** a day with words but no photo gets a piece of warm, painterly artwork instead of a blank calendar tile, generated from nothing more than a 150–300-token Visual Brief — and the instant a real photo exists for that day, the artwork steps aside as cover but stays visible in the gallery, clearly labeled. **Requirement IDs:** `LID-AIA-001` through `LID-AIA-011`. **Depends on:** M10's Visual Brief (§3.5) is the only personal-content input this milestone is allowed to read (§4.1); the evaluation gate (`LID-AIA-001`) shares M10's $15 ceiling and is this milestone's first ticket; `artwork_asset`, `artwork_version` (§3.6), and `artwork_suppression` (§3.7) are new. **Deliberately does not:** auto-retry a safety refusal, switch providers on failure, let artwork outrank a real photo for Calendar Cover under any state transition (`LID-AIA-008`), or regenerate automatically on a late text change — that's manual only.
+
+### M12 — Upstream edits and your Corrections stop fighting
+
+**Outcome:** correcting a journal never risks losing what VoiceNotes says upstream, and if the two disagree, the owner gets a clear side-by-side choice — keep the correction, take the newer upstream version, or write a new correction that accounts for both — never a silent merge. **Requirement IDs:** `LID-SRC-001` through `LID-SRC-004`. **Depends on:** `source_revision` and its `origin = 'correction'` rows (existing plan §5.1) need no new table for the Correction itself; `source_conflict` (§3.8) is new; the redate transaction (#210, extended here) recalculates cover, search visibility, and artwork staleness on both the old and new day atomically. **Deliberately does not:** offer a fourth resolution action, auto-merge personal journal text under any circumstance, or let a same-day staleness (new revision, same day) hide artwork the way a cross-day removal (redating away) does — those are two different states and the ticket set keeps them that way.
+
+### M13 — The archive is unreadable without the key
+
+**Outcome:** if the Hetzner disk were copied or the server compromised while offline, the database and every photo would be unreadable without a key the owner holds — and the app now validates his own login at the boundary instead of trusting Cloudflare Access alone, closing the gap #216 deliberately left open. **Requirement IDs:** `LID-OPS-001`, `LID-OPS-003`, `LID-OPS-004`, `LID-OPS-005`. **Depends on:** the encryption/key-design ADR is this milestone's first ticket and every other M13 ticket depends on it; nothing in M8–M11's schema additions (§3) assumes an encryption mechanism, so M13 can adopt whichever the ADR chooses without a schema rewrite. **Deliberately does not:** claim end-to-end or zero-knowledge encryption (the PRD is explicit this is application-controlled only), build a second username/password layer alongside Cloudflare Access, or let a single unreviewed premium provider decision leak into this milestone's scope — that boundary stays in M10/M11.
