@@ -131,3 +131,333 @@ data/                          # gitignored. Never committed.
 ```
 
 `data/media/artwork/` is separate from `originals/` on purpose. Originals are the one unrecoverable asset in the system (existing plan §8.5); artwork is regenerable and must never be mistaken for a captured photo by a backup policy, a storage watermark, or a person reading a directory listing.
+
+---
+
+## 3. Schema additions — extending existing plan §5.1
+
+The four v0.1 tables (`journal_day`, `source_item`, `source_revision`, `media_asset`) are not touched structurally except one CHECK constraint (§3.1). Everything else below is additive: new tables, referencing the existing ones by their existing column names. Migrations remain numbered `.sql` files applied by the existing runner (#185) — nothing here authorises a migration framework.
+
+### 3.1 One CHECK constraint has to widen: Voice Journals are a new `source_item.kind`
+
+```sql
+-- source_item.kind was CHECK (kind IN ('uploaded_journal','daily_photo')).
+-- M9 adds a third kind. SQLite cannot ALTER a CHECK constraint in place, so this migration
+-- rebuilds the table (recreate, copy, drop, rename) rather than fighting for an ALTER syntax
+-- that does not exist. With ~36 fixture rows in dev and no production data yet, this is cheap.
+CREATE TABLE source_item_new (
+  id                 TEXT PRIMARY KEY,
+  kind               TEXT NOT NULL CHECK (kind IN ('uploaded_journal','daily_photo','voice_journal')),
+  journal_date       TEXT REFERENCES journal_day(journal_date),
+  original_timestamp TEXT NOT NULL,
+  source_title       TEXT,
+  content_sha256     TEXT NOT NULL,
+  trashed_at         TEXT,
+  created_at         TEXT NOT NULL
+);
+INSERT INTO source_item_new SELECT * FROM source_item;
+DROP TABLE source_item;
+ALTER TABLE source_item_new RENAME TO source_item;
+```
+
+### 3.2 Telegram provenance — one row per Daily Photo `source_item`
+
+```sql
+-- Identity needed for LID-TG-004's idempotent acknowledgement and LID-TG-005's media-group dating.
+-- Not columns on source_item, because nothing else in the schema needs to know a photo came
+-- from Telegram specifically — this table is the only thing that does.
+CREATE TABLE telegram_origin (
+  source_item_id  TEXT PRIMARY KEY REFERENCES source_item(id),
+  update_id       INTEGER NOT NULL,
+  message_id      INTEGER NOT NULL,
+  chat_id         INTEGER NOT NULL,
+  media_group_id  TEXT,                     -- NULL for a photo sent outside an album
+  UNIQUE (chat_id, message_id)              -- the idempotency key for LID-TG-004
+);
+```
+
+### 3.3 VoiceNotes provenance — one row per Voice Journal `source_item`
+
+```sql
+-- upstream_note_id is the opaque MCP identity from the spike (LID-VN-001). It is the one field
+-- retained by source_suppression (§3.6) after a permanent local deletion, per LID-VN-007.
+CREATE TABLE voicenotes_origin (
+  source_item_id      TEXT PRIMARY KEY REFERENCES source_item(id),
+  upstream_note_id    TEXT NOT NULL UNIQUE,
+  upstream_created_at TEXT NOT NULL,        -- as retrieved through MCP, never webhook receipt time (LID-VN-004)
+  upstream_tag        TEXT NOT NULL DEFAULT 'life-in-days',
+  last_reconciled_at  TEXT
+);
+```
+
+### 3.4 Derived text fields — current value plus full attempt history
+
+The PRD's per-field protection (`LID-AIT-005`) needs a "what's showing now" row and a "every attempt, including failures" history, kept apart so a failed attempt never overwrites what's displayed:
+
+```sql
+-- One row per (journal_date, field): the value actually displayed, and its protection state.
+-- Visual Brief is deliberately not here — see §3.5, it has no "protected" state, only current/stale.
+CREATE TABLE derived_field (
+  journal_date        TEXT NOT NULL REFERENCES journal_day(journal_date),
+  field               TEXT NOT NULL CHECK (field IN ('title','summary','tags')),
+  value               TEXT,                  -- NULL until first successful generation; tags = JSON array
+  status              TEXT NOT NULL DEFAULT 'absent'
+                      CHECK (status IN ('absent','generating','current','protected','stale')),
+  current_version_id  TEXT,                  -- REFERENCES derived_field_version(id); the attempt that produced `value`
+  protected_at        TEXT,                  -- non-NULL iff status = 'protected'
+  updated_at          TEXT NOT NULL,
+  PRIMARY KEY (journal_date, field)
+);
+
+-- Every generation attempt for a field, successful or not — the provenance LID-AIT-007 requires.
+CREATE TABLE derived_field_version (
+  id                   TEXT PRIMARY KEY,
+  journal_date         TEXT NOT NULL,
+  field                TEXT NOT NULL,
+  value                TEXT,                  -- NULL on refusal/failure/schema_invalid
+  source_revision_ids  TEXT NOT NULL,         -- JSON array, the exact ordered set this attempt read (LID-SRC-004)
+  provider             TEXT NOT NULL,
+  requested_model_id   TEXT NOT NULL,
+  returned_model_id    TEXT,                  -- what the provider actually reported back
+  request_id           TEXT,
+  outcome              TEXT NOT NULL CHECK (outcome IN ('succeeded','refused','failed','schema_invalid')),
+  cost_usd             REAL,
+  latency_ms           INTEGER,
+  created_at           TEXT NOT NULL
+);
+```
+
+`Resume automatic updates` (LID-AIT-005) is `UPDATE derived_field SET status = 'current' WHERE journal_date = ? AND field = ?` — it only ever touches the one field named, never its siblings.
+
+### 3.5 Visual Brief — the sole personal-content input to the Artwork Provider
+
+```sql
+-- No "protected" state: the Visual Brief is never manually edited (LID-AIA-002 forbids free-form
+-- editing in MVP). Only current/superseded exist. `is_current` lets an artwork_version (§3.6) always
+-- resolve "the brief in force right now" without a self-join on max(created_at).
+CREATE TABLE visual_brief (
+  id                   TEXT PRIMARY KEY,
+  journal_date         TEXT NOT NULL REFERENCES journal_day(journal_date),
+  value                TEXT NOT NULL,          -- 150–300 tokens
+  source_revision_ids  TEXT NOT NULL,          -- JSON array
+  provider             TEXT NOT NULL,
+  requested_model_id   TEXT NOT NULL,
+  returned_model_id    TEXT,
+  request_id           TEXT,
+  is_current           INTEGER NOT NULL DEFAULT 1,
+  created_at           TEXT NOT NULL
+);
+```
+
+### 3.6 Generated Artwork — its own byte store, deliberately not `media_asset`
+
+`media_asset` (existing plan §5.1) is Daily Photo bytes — authentic, captured content. Artwork bytes are derived, not captured. Reusing `media_asset` for both is exactly the "collapse source and AI output into one row" the PRD forbids (Technical Considerations, `reference/PRODUCT-REQUIREMENTS.md`); keeping them apart is also what makes §2.4's `data/media/artwork/` directory split enforceable in code, not just in a comment.
+
+```sql
+-- Parallel to media_asset, for Generated Artwork bytes only.
+CREATE TABLE artwork_asset (
+  id             TEXT PRIMARY KEY,
+  backend        TEXT NOT NULL DEFAULT 'local_fs',
+  original_key   TEXT NOT NULL,
+  derivative_key TEXT,
+  sha256         TEXT NOT NULL UNIQUE,
+  mime           TEXT NOT NULL,
+  bytes          INTEGER NOT NULL,
+  width          INTEGER,
+  height         INTEGER,
+  created_at     TEXT NOT NULL
+);
+
+-- One row per generation attempt. Exactly one succeeded row per journal_date may have is_active = 1.
+CREATE TABLE artwork_version (
+  id                 TEXT PRIMARY KEY,
+  journal_date       TEXT NOT NULL REFERENCES journal_day(journal_date),
+  visual_brief_id    TEXT NOT NULL REFERENCES visual_brief(id),
+  artwork_asset_id   TEXT REFERENCES artwork_asset(id),   -- NULL unless outcome = 'succeeded'
+  provider           TEXT NOT NULL,
+  requested_model_id TEXT NOT NULL,
+  returned_model_id  TEXT,
+  request_id         TEXT,
+  trigger            TEXT NOT NULL CHECK (trigger IN ('manual','sweep')),
+  outcome            TEXT NOT NULL CHECK (outcome IN ('succeeded','refused','failed')),
+  refusal_category   TEXT,               -- coarse only — never the raw journal or prompt (LID-AIA-006)
+  is_active          INTEGER NOT NULL DEFAULT 0,
+  is_stale           INTEGER NOT NULL DEFAULT 0,
+  cost_usd           REAL,
+  created_at         TEXT NOT NULL
+);
+```
+
+`journal_day.cover_media_id` (existing plan §5.1) already encodes "a real photo is the cover." Add one nullable column for the artwork case, with the precedence rule (`LID-AIA-008`) enforced by the cover-selection transaction (extends #210's redate transaction), never by a CHECK constraint that can't see sibling rows:
+
+```sql
+ALTER TABLE journal_day ADD COLUMN cover_artwork_id TEXT REFERENCES artwork_asset(id) ON DELETE SET NULL;
+-- Invariant, enforced in src/domain/redate.ts and the cover-selection path, not the schema:
+-- cover_artwork_id is only ever read when cover_media_id IS NULL.
+```
+
+### 3.7 Suppressions — two, deliberately not the same table
+
+`Source Suppression` and `Artwork Suppression` block different automation (VoiceNotes reconciliation vs. the Artwork Sweep) and have different retention rules (Source Suppression outlives permanent deletion; Artwork Suppression is keyed to a Journal Day that still exists). Conflating them was tempting and wrong.
+
+```sql
+-- LID-VN-007. upstream_identifier is the one thing retained after a Voice Journal is permanently deleted.
+CREATE TABLE source_suppression (
+  id                   TEXT PRIMARY KEY,
+  upstream_identifier  TEXT NOT NULL UNIQUE,
+  created_at           TEXT NOT NULL,
+  removed_at           TEXT              -- non-NULL after explicit "Allow re-import"
+);
+
+-- LID-AIA-009. Blocks only the 01:00 sweep; a manual Artwork Request is unaffected.
+CREATE TABLE artwork_suppression (
+  journal_date  TEXT PRIMARY KEY REFERENCES journal_day(journal_date),
+  created_at    TEXT NOT NULL,
+  removed_at    TEXT              -- non-NULL after explicit "Allow generation"
+);
+```
+
+### 3.8 Source/Correction conflicts (M12)
+
+Corrections themselves need no new table — a Correction is already a `source_revision` row with `origin = 'correction'` (existing plan §5.1). Only the *conflict* — a Correction and a newer upstream revision both pending — needs a marker, and only while unresolved:
+
+```sql
+-- Present only between LID-SRC-002 detecting a conflict and one of its three actions resolving it.
+-- Resolution deletes this row; it never accumulates history of its own.
+CREATE TABLE source_conflict (
+  source_item_id          TEXT PRIMARY KEY REFERENCES source_item(id),
+  correction_revision_id  TEXT NOT NULL REFERENCES source_revision(id),
+  upstream_revision_id    TEXT NOT NULL REFERENCES source_revision(id),
+  detected_at             TEXT NOT NULL
+);
+```
+
+### 3.9 The `job` table — a sketch, not a decision
+
+Referenced from §2.1. This table is created only if the scheduler ADR (first ticket of M10) chooses the job-table or hybrid option. It exists here solely so that ADR can price the option concretely instead of estimating it from memory.
+
+```sql
+-- SKETCH — not authorised by this document. See §2.1.
+CREATE TABLE job (
+  id            TEXT PRIMARY KEY,
+  kind          TEXT NOT NULL,      -- 'ai_text_refresh' | 'artwork_sweep' | 'voicenotes_reconcile' | 'backup_snapshot' | ...
+  payload       TEXT NOT NULL,      -- small JSON
+  status        TEXT NOT NULL CHECK (status IN ('pending','leased','done','failed')),
+  leased_until  TEXT,
+  attempts      INTEGER NOT NULL DEFAULT 0,
+  run_after     TEXT NOT NULL,
+  created_at    TEXT NOT NULL
+);
+```
+
+### 3.10 Provider configuration (M10, M11)
+
+```sql
+-- Typed, versioned. No free-form model strings from the settings UI (LID-AIA-011).
+CREATE TABLE provider_config (
+  id                        TEXT PRIMARY KEY,
+  role                      TEXT NOT NULL CHECK (role IN ('text','artwork')),
+  provider                  TEXT NOT NULL,          -- 'openai' | 'google' | ...
+  display_label             TEXT NOT NULL,
+  model_id                  TEXT NOT NULL,           -- exact model/snapshot, never a moving alias
+  endpoint                  TEXT NOT NULL,
+  api_version               TEXT,
+  region                    TEXT,
+  size                      TEXT,                    -- artwork only
+  quality                   TEXT,                    -- artwork only
+  format                    TEXT,                    -- artwork only
+  safety_setting            TEXT,
+  unit_cost_usd             REAL NOT NULL,
+  lifecycle_review_date     TEXT NOT NULL,
+  enabled                   INTEGER NOT NULL DEFAULT 0,
+  automatic_sweep_eligible  INTEGER NOT NULL DEFAULT 0,   -- any premium/manual-only model: must stay 0
+  created_at                TEXT NOT NULL
+);
+
+-- Which configuration each role currently points at. Changing this affects future generations only.
+CREATE TABLE provider_selection (
+  role                TEXT PRIMARY KEY CHECK (role IN ('text','artwork')),
+  provider_config_id  TEXT NOT NULL REFERENCES provider_config(id),
+  updated_at          TEXT NOT NULL
+);
+```
+
+### 3.11 AI spend ledger (M10, M11, M17)
+
+```sql
+-- One row per metered attempt, whether it succeeded or not. billing_month uses the same
+-- Asia/Kolkata accounting rule as everywhere else in this schema — no separate UTC ledger.
+CREATE TABLE ai_usage_ledger (
+  id                  TEXT PRIMARY KEY,
+  role                TEXT NOT NULL CHECK (role IN ('text','artwork')),
+  journal_date        TEXT,                 -- NULL for evaluation-phase spend (LID-AIT-001/LID-AIA-001)
+  provider_config_id  TEXT REFERENCES provider_config(id),
+  cost_usd            REAL NOT NULL,
+  billing_month       TEXT NOT NULL,        -- 'YYYY-MM'
+  created_at          TEXT NOT NULL
+);
+```
+
+### 3.12 System Health (M17)
+
+```sql
+-- System Health reads the latest row per domain. detail_code is opaque and allowlisted —
+-- never a message string, per LID-OPS-016's "allowlist-first" requirement.
+CREATE TABLE health_event (
+  id           TEXT PRIMARY KEY,
+  domain       TEXT NOT NULL CHECK (domain IN (
+                 'telegram_capture','voicenotes_reconciliation',
+                 'backup_snapshot','backup_restore_sample',
+                 'r2_migration','ai_text','ai_artwork'
+               )),
+  state        TEXT NOT NULL CHECK (state IN ('unknown','never_run','success','delayed','failed','blocked')),
+  detail_code  TEXT,
+  occurred_at  TEXT NOT NULL
+);
+```
+
+### 3.13 Storage migration inventory (M14)
+
+```sql
+-- One row per media_asset once R2 migration begins. LID-OPS-007 requires this reconciliation
+-- to be provably complete before any root copy is evicted — root_evictable is the one flag
+-- that authorises eviction, and nothing sets it before r2_verified_at is non-NULL.
+CREATE TABLE storage_migration_state (
+  media_asset_id    TEXT PRIMARY KEY REFERENCES media_asset(id),
+  root_verified_at  TEXT NOT NULL,
+  r2_key            TEXT,             -- random opaque key — no dates, filenames, or hashes (LID-OPS-007)
+  r2_written_at     TEXT,
+  r2_verified_at    TEXT,             -- hash-confirmed durable
+  root_evictable    INTEGER NOT NULL DEFAULT 0
+);
+```
+
+### 3.14 Export requests (M16)
+
+```sql
+-- Ephemeral by design: the row and the ZIP disappear together (LID-OPS-013).
+CREATE TABLE export_request (
+  id             TEXT PRIMARY KEY,
+  status         TEXT NOT NULL CHECK (status IN ('preparing','ready','downloaded','expired')),
+  artifact_key   TEXT,
+  requested_at   TEXT NOT NULL,
+  expires_at     TEXT NOT NULL,       -- requested_at + 1 hour
+  downloaded_at  TEXT
+);
+```
+
+### 3.15 Search index (M7)
+
+```sql
+-- Illustrative, not final DDL — the exact contentless-vs-external-content FTS5 shape is
+-- M7's own ticket to decide and prove (existing plan §2's "must be proven present, not assumed").
+-- The four source columns stay authoritative; this is a derived, rebuildable cache.
+CREATE VIRTUAL TABLE search_index USING fts5(
+  journal_date UNINDEXED,
+  field,        -- 'journal_text' | 'title' | 'summary' | 'tags' | 'photo_caption'
+  content,
+  tokenize = 'porter unicode61'
+);
+```
+
+Index maintenance is transactional with every Correction, redate, Trash/restore, and field-protection change (Technical Considerations, `reference/PRODUCT-REQUIREMENTS.md`, "Search" — index updates must be transactional or recoverably queued). Photo Captions are indexed here and nowhere near an AI request payload — the one field that is searchable but never sent to a provider (`LID-TG-009`).
