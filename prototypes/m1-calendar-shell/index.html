@@ -1,0 +1,31 @@
+<!doctype html>
+<!--
+  Life in Days — M1 Calendar shell + month view
+  PROTOTYPE ARTIFACT · fictional data · in-memory only · not production.
+  Milestone: M1. Issues: #187 (tokens), #189 (calendar grid), #195 (keyboard nav).
+  Purpose: three structurally distinct variants of the application shell and
+  the Calendar month view, for owner review before M1 is approved.
+  Zero third-party requests. System fonts only.
+  Run: cd prototypes && python3 -m http.server 4173 --bind 127.0.0.1
+  Then open http://127.0.0.1:4173/m1-calendar-shell/?variant=a
+  (serve from prototypes/, not this folder — see _shared/ references below)
+-->
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Life in Days</title>
+<link rel="stylesheet" href="../_shared/tokens.css">
+<link rel="stylesheet" href="../_shared/base.css">
+<link rel="stylesheet" href="../_shared/prototype-chrome.css">
+<link rel="stylesheet" href="variants.css">
+</head>
+<body>
+<div id="app"></div>
+<script src="../_shared/fixtures.js"></script>
+<script src="../_shared/switcher.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

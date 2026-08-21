@@ -1,0 +1,58 @@
+/* Life in Days — shared base layer
+ * PROTOTYPE ARTIFACT. Reset, type defaults, and layout primitives used by
+ * every milestone prototype. Pair with tokens.css. Not production CSS.
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+}
+
+h1, h2, h3, p, dl, figure { margin: 0; }
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+a { color: var(--accent); }
+
+:where(a, button, [tabindex], input, select, [role="button"]):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-control);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--s4);
+  top: -100px;
+  padding: var(--s2) var(--s4);
+  background: var(--accent);
+  color: var(--ink-on-accent);
+  border-radius: var(--radius-control);
+  z-index: 100;
+  transition: top var(--motion-standard) var(--ease-enter);
+}
+.skip-link:focus-visible { top: var(--s4); outline: 2px solid var(--focus); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .skip-link { transition: none; }
+}

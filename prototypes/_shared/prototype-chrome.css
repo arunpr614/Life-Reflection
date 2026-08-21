@@ -1,0 +1,64 @@
+/* Life in Days — prototype furniture
+ * PROTOTYPE ARTIFACT. The variant switcher and state readout are review
+ * tools, not part of the design under review. Deliberately un-themed
+ * (monospace, fixed dark chrome) so they never read as part of the app.
+ */
+
+.lid-chrome {
+  position: fixed;
+  z-index: 1000;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.3;
+  color: #f2f2f0;
+}
+
+.lid-switcher {
+  bottom: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px 16px;
+  background: #1a1a1a;
+  border-top: 1px solid #3a3a3a;
+}
+.lid-switcher button {
+  color: #f2f2f0;
+  border: 1px solid #4a4a4a;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font: inherit;
+}
+.lid-switcher button:hover { background: #2a2a2a; }
+.lid-switcher button:focus-visible { outline: 2px solid #6fd6b0; outline-offset: 2px; }
+.lid-switcher .variant-label { min-width: 220px; text-align: center; }
+.lid-switcher .hint { color: #999; margin-left: 12px; }
+
+.lid-controls {
+  top: 0; right: 0;
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  background: #1a1a1a;
+  border-bottom-left-radius: 6px;
+}
+.lid-controls select, .lid-controls button {
+  color: #f2f2f0;
+  background: #262626;
+  border: 1px solid #4a4a4a;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font: inherit;
+  max-width: 150px;
+}
+.lid-controls button:focus-visible, .lid-controls select:focus-visible {
+  outline: 2px solid #6fd6b0; outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .lid-switcher { flex-wrap: wrap; gap: 8px; padding: 8px; }
+  .lid-switcher .variant-label { min-width: 0; }
+  .lid-switcher .hint { display: none; }
+  .lid-controls { flex-wrap: wrap; }
+}
