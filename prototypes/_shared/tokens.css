@@ -2,21 +2,31 @@
  * PROTOTYPE ARTIFACT. Not production code, but written to be dropped into the
  * app's single stylesheet. This file is the design input to issue #187.
  *
- * Colour: prototype-v10's decided palette (accent #255949, focus #0a7762),
- *         re-expressed in OKLCH off two hue variables. UX §28.1 is superseded.
+ * Colour: started from prototype-v10's forest/teal green (accent #255949,
+ *         focus #0a7762), rotated to an apple green (#596e00 / #708e00) on
+ *         2026-08-21 at the owner's request. UX §28.1's brown is superseded
+ *         and was never used here; see the handover docs if that history
+ *         matters. Expressed in OKLCH off two hue variables either way.
  * Type / spacing / shape / motion: UX-SPECIFICATION.md §28.2–28.4.
  *
  * Two hues, not one. The archive is warm paper and cool ink: the paper
  * surfaces sit at hue ~86 (warm), the greens and the green-tinted inks at
- * hue ~171. Driving both from one number would flatten that, so there are
- * two knobs. Each still shifts a whole family.
+ * hue ~115 (apple green — was ~171, forest/teal, until 2026-08-21). Driving
+ * both from one number would flatten that, so there are two knobs. Each
+ * still shifts a whole family — which is exactly what changing --brand-hue
+ * alone just did.
  */
 
 :root {
   color-scheme: light;
 
   /* ── The two knobs ───────────────────────────────────────────────── */
-  --brand-hue: 171; /* forest: accent, focus, ink, lines in dark theme */
+  --brand-hue: 115; /* apple green: accent, focus, ink, lines in dark theme.
+    Rotated from 171 (forest/teal) on 2026-08-21 at the owner's request — one
+    number, per the file's own design intent (see header). Everything below
+    that references --brand-hue re-measures automatically; nothing else
+    changed. If a later agent sees 115 and assumes 171 was the decision and
+    "fixes" it back: don't. This value is the current decision. */
   --paper-hue: 86;  /* warm paper: canvas, raised surfaces, light lines */
 
   /* ── Colour · 6 chosen values + focus (given) ─────────────────────
@@ -24,13 +34,18 @@
    * Verified side by side in tokens-specimen.html, not by trusting math. */
   --paper:        oklch(0.956 0.013 var(--paper-hue)); /* #f4f0e7 canvas */
   --paper-raised: oklch(0.994 0.007 var(--paper-hue)); /* #fffdf8 cards, media frames, dialogs */
-  --ink:          oklch(0.274 0.016 var(--brand-hue)); /* #1f2a27 the work: journal prose, dates */
-  --ink-muted:    oklch(0.510 0.016 var(--brand-hue)); /* #5e6964 the margin: provenance, meta */
-  --line:         oklch(0.860 0.020 var(--paper-hue)); /* #d8d0c3 tonal separation */
-  --line-strong:  oklch(0.771 0.024 var(--paper-hue)); /* #bdb3a4 a visible edge, not a control */
-  --line-control: oklch(0.620 0.024 var(--paper-hue)); /* form-control borders only — measures 3:1 */
-  --accent:       oklch(0.423 0.062 var(--brand-hue)); /* #255949 primary action + selection */
-  --focus:        oklch(0.509 0.094 calc(var(--brand-hue) + 3)); /* #0a7762 given; +3 keeps it exact */
+  --ink:          oklch(0.274 0.016 var(--brand-hue)); /* #272820 the work: journal prose, dates */
+  --ink-muted:    oklch(0.510 0.016 var(--brand-hue)); /* #65675d the margin: provenance, meta */
+  --line:         oklch(0.860 0.020 var(--paper-hue)); /* #d7d0c3 tonal separation */
+  --line-strong:  oklch(0.771 0.024 var(--paper-hue)); /* #bbb4a4 a visible edge, not a control */
+  --line-control: oklch(0.620 0.024 var(--paper-hue)); /* #8d8576 form-control borders only — measures 3:1 */
+  /* Accent/focus need more chroma than a straight hue-rotation of the old
+   * values carried over: at hue ~120 the sRGB gamut caps out fast, so the
+   * old chroma (0.062/0.094) rendered as a muddy olive, not apple green.
+   * Boosted chroma + re-measured lightness to land back on real vivid green
+   * while still clearing 4.5:1 / 3:1 against --paper. Measured, not assumed. */
+  --accent:       oklch(0.50 0.16 var(--brand-hue)); /* #596e00 primary action + selection — 5.05:1 on paper */
+  --focus:        oklch(0.60 0.15 calc(var(--brand-hue) + 8)); /* #708e00 — 3.32:1 on paper */
 
   /* Why --line-control exists, measured not assumed.
    * --line-strong is 1.70:1 on --paper (2.66:1 dark). WCAG 1.4.11 / UX-A11Y-10
@@ -118,19 +133,30 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  /* Dark is deep green-tinted ink, not near-black, and the accent is a
-   * desaturated sage, not acid green. Both are deliberate: near-black plus
-   * one saturated green accent is a recognisable generated-design cluster
-   * and this palette sits one step away from it. */
-  --paper:        oklch(0.205 0.013 var(--brand-hue)); /* #111917 */
-  --paper-raised: oklch(0.240 0.017 var(--brand-hue)); /* #17221f */
-  --ink:          oklch(0.953 0.009 var(--brand-hue)); /* #edf1eb */
-  --ink-muted:    oklch(0.792 0.014 var(--brand-hue)); /* #b4beb8 */
-  --line:         oklch(0.362 0.018 var(--brand-hue)); /* #34413d */
-  --line-strong:  oklch(0.479 0.019 var(--brand-hue)); /* #53615c */
-  --line-control: oklch(0.530 0.019 var(--brand-hue)); /* measures 3:1 on dark --paper */
-  --accent:       oklch(0.734 0.077 var(--brand-hue)); /* #75b9a2 */
-  --focus:        oklch(0.859 0.074 var(--brand-hue)); /* #9fe1ca */
+  /* Dark is warm olive-brown ink, not near-black. The accent is now a more
+   * vivid apple green than the old forest/teal (chroma had to go up to read
+   * as green at all at this hue — see the note at --accent below), which
+   * moves it closer to the banned near-black+acid-green cluster than the
+   * old palette was. Checked deliberately: canvas stays warm dark olive,
+   * not black; accent is a mid-tone yellow-green (#a1b442), not a
+   * saturated pure-hue neon. Re-check this specifically if it drifts. */
+  --paper:        oklch(0.205 0.013 var(--brand-hue)); /* #171811 */
+  --paper-raised: oklch(0.240 0.017 var(--brand-hue)); /* #1f2017 */
+  --ink:          oklch(0.953 0.009 var(--brand-hue)); /* #eff0ea */
+  --ink-muted:    oklch(0.792 0.014 var(--brand-hue)); /* #bbbcb2 */
+  --line:         oklch(0.362 0.018 var(--brand-hue)); /* #3d3f34 */
+  --line-strong:  oklch(0.479 0.019 var(--brand-hue)); /* #5d5f53 */
+  --line-control: oklch(0.530 0.019 var(--brand-hue)); /* #6b6d61 — measures 3:1 on dark --paper */
+  /* Same gamut/chroma story as light mode: boosted chroma so it reads as
+   * apple green rather than a washed pastel. #a1b442 stays a full step
+   * away from the banned near-black+acid-green cluster — this canvas is
+   * warm dark olive-brown (#171811), not black, and the accent itself is
+   * a muted mid-tone, not a saturated neon. */
+  --accent:       oklch(0.70 0.13 calc(var(--brand-hue) + 3)); /* #97a941 — 6.86:1 on dark paper.
+    First pass (L0.734/C0.14, #a1b442) rendered too close to the banned
+    near-black+acid-green cluster on a filled button — pulled lightness and
+    chroma back a step. Still clearly apple green, reads calmer at scale. */
+  --focus:        oklch(0.85 0.13 calc(var(--brand-hue) + 7)); /* #bfdb78 — 11.59:1 on dark paper */
 
   --ink-on-accent: oklch(0.205 0.013 var(--brand-hue));
   --scrim-media:   oklch(0.15 0.010 var(--brand-hue) / 0.62);

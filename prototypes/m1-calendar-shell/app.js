@@ -423,8 +423,8 @@ function boot(variant) {
 }
 
 const VARIANTS = [
+  { key: 'b', name: 'Editorial — approved' },
   { key: 'a', name: 'Contact Sheet' },
-  { key: 'b', name: 'Editorial' },
   { key: 'c', name: 'Ledger' }
 ];
 
