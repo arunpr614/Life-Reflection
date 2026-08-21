@@ -137,7 +137,7 @@ Prices captured **2026-08-21**. Hetzner figures come from its own public price A
 |---|---|---|
 | **Cloudflare Pages + R2 + Workers + Access** | **Yes, ~$0** (+ $0.30–0.60 R2 above 10 GB) | **Not a fatal problem — a different architecture.** See §9.1 |
 | **Home box + Cloudflare Tunnel** | **Yes** — electricity only | Availability tracks your house. See §9.2 |
-| Google Cloud Always Free (e2-micro) | Technically yes, indefinitely | **Three independent disqualifiers**: (a) **30 GB-months** of standard persistent disk — cannot hold §4's archive; (b) **1 GB/month egress** from North America — a single afternoon of scrolling photos exceeds the monthly allowance for the whole account; (c) **us-west1 / us-central1 / us-east1 only** — US-only, so ~230–280 ms from Bengaluru, materially *worse* than the 177 ms you have. e2-micro is also 0.25 vCPU burst / 1 GB RAM, which `sharp` will thrash. **Reject** |
+| Google Cloud Always Free (e2-micro) | **No — ~$3.65/month** | The instance, the 30 GB disk and 1 GiB of egress are free; **the external IPv4 it needs to be reachable is not** ($0.005/hr ≈ $3.65/mo). Plus **1 GB RAM / 0.25 baseline vCPU**, HDD-backed standard PD, and **US regions only** (measured 210–240 ms from Bengaluru, *worse* than today's 177 ms). Fully costed and compared in **§9.3** — it loses to §9.0 on price *and* on every technical axis. **Reject** |
 | Render free web service | Yes, with limits | **No persistent disks on the free plan** — the filesystem is ephemeral, so SQLite is impossible. Also spins down after **15 minutes idle** with a **~1 minute** cold start, **750 instance-hours** per workspace per month, and free Postgres **expires 30 days after creation** (1 GB, no backups). **Reject** |
 | Koyeb | **No free tier** | Lowest plan is **Pro at $29/month** (+$10 included compute). Only a "Free 5h" Postgres trial. **Reject** |
 | AWS Free Tier | **No longer** | Changed to credits: **$100 immediately + up to $100 more**, and the **account closes 6 months after opening or when credits run out**. That is a 6-month trial, not a home for a 14-year archive. **Reject as a permanent host** |
@@ -157,6 +157,13 @@ Measured from the dev machine (Bengaluru, Tata Play Broadband, AS134674) on 2026
 | **Current host, Helsinki (`hel1-dc2`)** | **176.8 ms** | baseline |
 | DigitalOcean **Bangalore** (`blr1`) | **7.1 ms** | **−170 ms (25× better)** |
 | DigitalOcean **Singapore** (`sgp1`) | **42.7 ms** | −134 ms (4× better) |
+| Frankfurt (`fra1`) | 139 ms | −38 ms |
+| Amsterdam (`ams3`) | 144 ms | −33 ms |
+| **US East** (`nyc3`) — proxy for GCP `us-east1` | **210 ms** | **+33 ms worse** |
+| **US West** (`sfo3`) — proxy for GCP `us-west1` | **240 ms** | **+63 ms worse** |
+| Toronto (`tor1`) | 244 ms | +67 ms worse |
+
+The last three rows are **TCP-handshake RTT to DigitalOcean's regional (non-anycast) Spaces endpoints**, used as a stand-in for the metros GCP's free tier is confined to. They are network-distance proxies, not GCP measurements — see the methodology note in §11.
 
 This was absent from the parallel survey on `spike/m0.1-host-limits`, and it matters more than any price on this page.
 
@@ -287,6 +294,67 @@ Run the exact planned stack — Node 22, Fastify, `better-sqlite3`, FTS5, `sharp
 
 ---
 
+### 9.3 GCP Always Free `e2-micro` versus staying put — the direct comparison
+
+The parallel survey on `spike/m0.1-host-limits` recommends this path and ships a 236-line setup guide for it, so it deserves a full costing rather than a one-line rejection. Every figure below was verified live on 2026-08-21 against Google's own pricing pages.
+
+**What Always Free actually includes**, quoted from Google's free-tier documentation:
+
+> "1 non-preemptible `e2-micro` VM instance per month in one of the following US regions: Oregon: `us-west1`. Iowa: `us-central1`. South Carolina: `us-east1`."
+> "30 GB-months standard persistent disk"
+> "1 GB of outbound data transfer from North America to all region destinations (excluding China and Australia) per month"
+
+**The machine**, from Google's machine-type table: `e2-micro` = **2 vCPUs, 0.25 fractional (baseline) vCPU, 1 GB memory**. The 2 vCPUs are a burst ceiling, not an allocation.
+
+**The charge the free-tier page does not mention.** From Google's network pricing page, External IP address pricing:
+
+> "Static and ephemeral IP addresses in use on standard VM instances — **$0.005 / 1 hour**"
+
+An always-on VM needs one. That is **$0.005 × 730 h = $3.65/month**, and it is not covered by any Always Free line item. "Always Free" is not free.
+
+**Egress, priced exactly.** Premium Tier (the default) data transfer out to Asia: **0–1 GiB free, then $0.12/GiB** to 1,024 GiB. Ingress is free. And the escape hatch is closed explicitly — the Standard Tier section states:
+
+> "Always Free usage limits do not apply to Standard Tier."
+
+#### The two honest configurations, costed
+
+| | **G1 — e2-micro, photos on its disk** | **G2 — e2-micro + R2 for photos** | **A (§9.0) — stay on Hetzner + R2** |
+|---|---|---|---|
+| Instance | $0 | $0 | $0 (sunk) |
+| Disk | 30 GB free **cannot hold §4's 26–52 GB** → +30–50 GB pd-standard ≈ **$1.20–2.00** | 3–5 GB, fits free | fits free (22 GB free) |
+| **External IPv4** | **$3.65** | **$3.65** | $0 (already have one) |
+| Egress | photos served from VM: 2–5 GiB/mo ≈ **$0.12–0.48** | HTML/JSON only, under 1 GiB ≈ **$0** | **$0** (R2 egress free) |
+| R2 | — | **$0.24–0.63** | **$0.24–0.63** |
+| **Total/month** | **~$5.00–6.15** | **~$3.89–4.28** | **$0.24–0.63** |
+
+**G2 is the strongest form of the GCP argument, and it still costs 6–17× option A.**
+
+#### Why it loses on the technical axes too
+
+- **It saves nothing, because the $10 is sunk.** AI Brain and `hackathon-review` keep running on the Hetzner host either way. GCP does not replace that machine — it *adds a second one*, with a second set of unattended-upgrades, firewall rules, backup jobs, systemd timers and tunnel credentials, for a single-user journal app.
+- **1 GB RAM against 3,819 MB measured.** `sharp`/libvips decoding 8 MB originals, plus Node's heap, Fastify, and SQLite's page cache, on 1 GB with no swap by default. Survivable if you serialise ingest and add swap — on an HDD.
+- **0.25 baseline vCPU is the real backfill problem.** E2 shared-core accrues burst credit; it cannot hold 2 vCPU indefinitely. The one-time derivative generation across ~5,100 days is hours on the current 2-vCPU host (which `sar` shows peaking at **9.4%** CPU) and plausibly an order of magnitude longer when throttled to a quarter core. *Estimate, not measured — no e2-micro was provisioned.*
+- **Standard persistent disk is HDD.** The free allowance is explicitly `pd-standard`, not balanced or SSD. pd-standard IOPS scale with provisioned capacity, so 30 GB is at the very bottom of the curve — poor for SQLite's random reads and for building the FTS5 index. *The exact IOPS-per-GB figure is unverified; see §11.*
+- **US-only, which fights the storage decision.** `LID-OPS-007` requires R2 in the **EU jurisdiction**, and forbids public `r2.dev` — media must be served through same-origin authenticated app routes. So in G2 every image fetch is **R2 (EU) → app server (US) → Cloudflare edge → Bengaluru**, a transatlantic hop added per image. From Helsinki, server-to-R2 is a short intra-EU hop. Putting the compute in Iowa while the bytes are in Europe is architecturally backwards for this product.
+- **Latency regresses.** 210–240 ms to the free regions against a measured 177 ms today (§6). Moving hosts to get *slower* is a hard sell.
+- **The tier is revocable, and a card is attached.** Google's own wording:
+
+  > "The Free Tier has no end date, but Google reserves the right to change the offering, including changing or eliminating usage limits, with 30 days' advance notice."
+
+  A billing account is required, so an overage bills silently rather than failing closed. For an archive intended to last decades, 30 days' notice is a weak foundation.
+
+#### What GCP genuinely offers, stated fairly
+
+One real thing: **isolation**. It removes the shared-host coexistence risk that §7.8 of the post-M6 plan raises and that `SHARED-HOST-AUDIT-FAILURE-2026-08-21.md` shows is not hypothetical. Snapshots are easy, and Premium Tier rides Google's backbone.
+
+There is also **one route to a genuine $0**: an IPv6-only VM with no external IPv4, reached purely by outbound `cloudflared`. The IP pricing table charges IPv4 only. But the VM still needs egress to package mirrors, and I did not verify that path works end to end — treat it as unproven and fragile, not as the plan.
+
+**But if isolation is what you are buying, GCP is the wrong way to buy it.** Netcup (§8, Scenario F, ~$6/month) is roughly **$2/month more than G2's real cost** and gives several times the RAM, dedicated-quality CPU, NVMe instead of HDD, an EU region next to the R2 bucket, and no metered egress to reason about. GCP e2-micro sits in the worst available middle: **not actually free, and materially weaker than a cheap paid VPS.**
+
+**Verdict: reject.** It is the second-best *free-ish* option on this page and it is beaten on price by option A, on capability by Netcup, and on architecture by both.
+
+---
+
 ## 10. Risks, and what would change the answer
 
 | Risk / open question | Effect on the recommendation |
@@ -313,7 +381,10 @@ Because a survey like this is only as good as its sourcing, here is exactly what
 - **Hetzner Storage Box** (BX11–BX41), **Hetzner Object Storage** base price, the **€0.50/$0.60 IPv4 surcharge**, and extra-traffic rates (**€1.00/TB EU**, **€7.40/TB Singapore**) — same API.
 - Cloudflare **R2** pricing and free tier, Cloudflare **Workers** free/paid limits, Cloudflare **Pages** limits — Cloudflare's own developer docs.
 - **Backblaze B2** pricing, free 10 GB, 3× egress rule, no minimum retention — Backblaze's pricing page.
-- **Google Cloud Always Free** allowances (e2-micro regions, 30 GB-months PD, **1 GB/month egress**) — Google's own free-tier documentation.
+- **Google Cloud Always Free** allowances (e2-micro regions, 30 GB-months standard PD, **1 GB/month egress**), and the "30 days' advance notice" revocability clause — Google's own free-tier documentation.
+- **GCP external IPv4 charge — `$0.005 / 1 hour` for static *and ephemeral* IPs in use on standard VM instances** — Google's network pricing page, rendered DOM (the page truncates under plain fetch). This is the figure that makes "Always Free" cost ~$3.65/month, and it appears nowhere on the free-tier page.
+- **GCP Premium Tier egress to Asia — 0–1 GiB free, then $0.12/GiB** to 1,024 GiB; ingress free; and **"Always Free usage limits do not apply to Standard Tier"** — same page, same method.
+- **`e2-micro` = 2 vCPUs / 0.25 fractional baseline vCPU / 1 GB memory** — Google's general-purpose machine-types table, rendered DOM.
 - **Render** free-tier limits (15-minute spin-down, 750 instance-hours, **no persistent disks**, Postgres expiring at 30 days) — Render docs.
 - **AWS Free Tier** having changed to a **credit model with 6-month account closure** — AWS's own free-tier page.
 - **Koyeb** having no free tier (Pro from $29/mo) — Koyeb pricing.
@@ -330,6 +401,11 @@ Because a survey like this is only as good as its sourcing, here is exactly what
 - **Hetzner Object Storage overage rates** beyond the €6.49 base.
 - **VAT treatment** for an Indian customer at Netcup and Contabo.
 - **Hostinger's India datacenter** — the page says "Asia" without enumerating.
+- **`pd-standard` IOPS per provisioned GB.** §9.3 argues the 30 GB free disk is at the bottom of the IOPS curve. The direction is right (standard PD is HDD-backed and scales with size) but I did not verify the coefficient.
+- **`e2-micro` real-world `sharp` throughput.** §9.3's "order of magnitude slower backfill" is an inference from the 0.25 baseline vCPU, not a benchmark. No e2-micro was provisioned.
+- **The IPv6-only, no-external-IPv4 route to a genuine $0 on GCP.** Plausible from the pricing table (IPv4 only is charged) but not tested; package-mirror reachability over IPv6 unconfirmed.
+
+**A methodology note on the US latency figures in §6.** My first attempt measured TCP-connect time to `gcping.com`'s regional Cloud Run endpoints and returned ~12 ms for every region including Iowa and Oregon — because those endpoints sit behind Google's **anycast** load balancer, so the handshake terminates at the Mumbai edge PoP, not in the region. Switching to application-level round trip (`time_starttransfer − time_appconnect`) gave 268/258/275 ms for `us-central1`/`us-west1`/`us-east1` but also **730–760 ms for `europe-north1`**, which is irreconcilable with the direct 176.8 ms ICMP measurement to Hetzner `hel1-dc2` in the same geography — so that harness carries large per-region application overhead and is unusable as a network measurement. §6 therefore reports TCP handshake RTT to DigitalOcean's regional, non-anycast Spaces endpoints in the same metros. **If you need true GCP region latency, measure it from a provisioned VM; do not trust anycast endpoints.**
 
 **One trap worth recording, because it will catch the next person.** Both `hetzner.com/cloud/cost-optimized/` and `hetzner.com/cloud/shared-cpu/` rendered, in my browser session, a blank price (`from  /month`) and the text **"This product is currently unavailable. Please check back later."** next to every single plan. That is **not** a stock shortage — it is the fallback state of a widget whose price/availability fetch had not hydrated. The price API reports `active: true` for all of them. Do not conclude from the rendered page that Hetzner is out of stock; check the API, or the console.
 
@@ -342,6 +418,8 @@ A second agent worked the same milestone in parallel on branch `spike/m0.1-host-
 Where we differ:
 
 **The one substantive error.** Its GCP path claims that routing through Cloudflare Tunnel means "egress stays strictly within free boundaries." **It does not.** Tunnel traffic from the origin to Cloudflare's edge *is* billable outbound egress from the VM — `cloudflared` avoids the *static IP* charge, not the *data transfer* charge. Against GCP's verified **1 GB/month** free egress and ~$0.12/GB beyond it, serving 30 GB of photos in a month costs roughly **$3.60** — more than Hetzner CX23 saves, on a plan whose whole premise is $0.00. Combined with a 30 GB disk against §4's 26–52 GB archive, the "Absolute Zero Cost" path does not hold, and the 236-line `M0.1-GCP-FREE-TIER-SETUP-GUIDE.md` builds on it.
+
+**A second gap, found while costing that path properly (§9.3).** Neither survey caught the **external IPv4 charge of `$0.005/hour` (~$3.65/month)** on an in-use address. It is on Google's network pricing page, not on the free-tier page, so a reader who checks only the latter concludes $0.00. This is the single largest line item in the GCP scenario — larger than the egress error above — and it means the "Absolute Zero Cost" plan is misnamed even in the configuration where photos live in R2 and egress genuinely stays inside the free gibibyte. To be fair to the parallel survey: it *did* catch the Standard-PD-versus-Balanced billing trap, which I had not thought to look for.
 
 The remaining differences are smaller but each moves a decision:
 
