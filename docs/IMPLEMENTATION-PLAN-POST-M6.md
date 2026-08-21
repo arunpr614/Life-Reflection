@@ -566,3 +566,22 @@ Named and sequenced per the controlling brief §10, which the owner has already 
 ### M19 — Ready to trust with fourteen years of days
 
 **Outcome:** the owner gets one session where everything built across M7–M18 is walked against the PRD's own acceptance summary and traceability matrix, the Recovery Ceremony gate is confirmed to have actually passed, and the six deferred boundaries (`LID-DEF-*`) are written down in one place so nobody drifts into building them by accident. **Requirement IDs:** none new — this milestone consumes the PRD's UX §34/§35 (traceability matrix, acceptance summary) and Provider/Privacy Risk Checklist and Legal sections. **Depends on:** every other M7–M18 ticket; M15's Recovery Ceremony gate specifically, since it is the one gate in the whole plan that cannot be bypassed. **Deliberately does not:** implement anything — this is a release-acceptance milestone, and its `LID-DEF-*` ticket (§6 below) is a record, not machinery.
+
+---
+
+## 6. What this plan still does not build
+
+`LID-DEF-001` through `LID-DEF-006` were out of scope for M1–M6 and stay out of scope here too — the owner's expansion of Phase 1.5 (§0.1) widened the boundary to cover the full v1 product, but v1 was never defined as "everything in the PRD." Each is a deferral boundary, not a specification a future agent can quietly half-build from:
+
+| ID | Deferred |
+| --- | --- |
+| `LID-DEF-001` | Historical or bulk VoiceNotes import |
+| `LID-DEF-002` | Reflection surfaces — On This Day, weekly themes/reports |
+| `LID-DEF-003` | Semantic or conversational search |
+| `LID-DEF-004` | Year mosaic, media wall, maps, native app, offline |
+| `LID-DEF-005` | PDF/Word/OCR ingestion, printing |
+| `LID-DEF-006` | Additional VoiceNotes tags, fuzzy tag matching |
+
+One ticket in M19, `type:product-definition`, records all six and — for each — what a future specification would have to cover before it becomes buildable (for `LID-DEF-001`: preview, exact selection, privacy, deduplication, spend, rollback). That is one ticket, not six, and it is a record, not machinery, consistent with `CLAUDE.md`'s no-meta-tooling rule.
+
+Two things beyond `LID-DEF-*` that this plan also does not build, named so no ticket quietly reaches for them: a public product, multi-user access, or anything resembling sharing (`LID-SCP-001` still holds unchanged from M1–M6); and a mobile-native app of any kind, which `LID-DEF-004` already covers but is worth restating because M18's responsive/accessibility work could otherwise be mistaken for a step toward one. It is not — M18 makes the existing web surfaces usable on a phone's browser, nothing more.
