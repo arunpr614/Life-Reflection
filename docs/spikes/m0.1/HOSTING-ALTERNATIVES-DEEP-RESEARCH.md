@@ -316,14 +316,21 @@ Because a survey like this is only as good as its sourcing, here is exactly what
 
 ## 12. Reconciliation with the parallel survey on `spike/m0.1-host-limits`
 
-A second agent produced `docs/M0.1-HOSTING-ALTERNATIVES-DEEP-RESEARCH.md` on branch `spike/m0.1-host-limits` at 19:28 today, covering the same issue. Where our numbers differ, here is why — none of these are large, but all of them move a decision:
+A second agent worked the same milestone in parallel on branch `spike/m0.1-host-limits`, producing four documents between 19:23 and 19:52 today: `M0.1-HOST-INVENTORY-AUDIT.md` (a second take on #316), `M0.1-HOSTING-ALTERNATIVES-DEEP-RESEARCH.md`, `M0.1-GCP-VS-HETZNER-VS-CLOUDFLARE-ANALYSIS.md`, and `M0.1-GCP-FREE-TIER-SETUP-GUIDE.md`. Its work is more careful than a quick read suggests — it independently rejects Cloudflare Workers+D1 for the right reason, it flags GCP's Standard-PD-versus-Balanced billing trap, and its "Recommendation B" (a standalone Hetzner CX23) is close to scenario E here.
+
+Where we differ:
+
+**The one substantive error.** Its GCP path claims that routing through Cloudflare Tunnel means "egress stays strictly within free boundaries." **It does not.** Tunnel traffic from the origin to Cloudflare's edge *is* billable outbound egress from the VM — `cloudflared` avoids the *static IP* charge, not the *data transfer* charge. Against GCP's verified **1 GB/month** free egress and ~$0.12/GB beyond it, serving 30 GB of photos in a month costs roughly **$3.60** — more than Hetzner CX23 saves, on a plan whose whole premise is $0.00. Combined with a 30 GB disk against §4's 26–52 GB archive, the "Absolute Zero Cost" path does not hold, and the 236-line `M0.1-GCP-FREE-TIER-SETUP-GUIDE.md` builds on it.
+
+The remaining differences are smaller but each moves a decision:
 
 | Its figure | This document | Explanation |
 |---|---|---|
 | Hetzner CX23 **€5.49** | €5.49 **base + €0.50 IPv4 = €5.99 / $7.09** | €5.49 is correct as the *base* price. It is only achievable IPv6-only, and an IPv6-only host cannot reach IPv4-only services (`registry.npmjs.org` has no AAAA record), so in practice you pay the €0.50 |
 | Hetzner CAX11 **€5.99** | €5.99 base **+ €0.50 = €6.49** | same reason |
 | Netcup **€4.96** | €4.97 ex-VAT / **€5.91 incl. 19% VAT** | Both are real prices; which applies depends on VAT treatment. Quoting only the ex-VAT figure understates it by 19% for an EU customer |
-| GCP e2-micro presented as the top cloud free tier | **Rejected outright** | Its 1 GB/month egress, 30 GB disk, and US-only regions are individually disqualifying for a photo archive (§5.3) |
+| GCP e2-micro as the zero-cost recommendation | **Rejected outright** | Its 1 GB/month egress, 30 GB disk, and US-only regions are each independently disqualifying for a photo archive (§5.3). It does note all three as "gotchas", but then concludes they don't bite |
+| "Standard persistent disk ~30–50 MB/s is unnoticeable for a single-user archive" | Not tested either way | Plausible for serving, but `sharp` derivative generation over a 5,114-photo backfill and FTS5 index builds are exactly the bulk-IO cases it excepts. Untested by both of us |
 | No disk-capacity analysis | **§4** | This is the finding that changes the answer. 22 GB free versus a 26–52 GB archive |
 | No latency analysis | **§6** | 176.8 ms measured to Helsinki versus 7.1 ms to Bangalore |
 | Strategy 1 depends on #319's cgroup work | **Does not** | The owner cancelled #319. Any recommendation that assumes those limits get applied and validated is now unexecutable |
