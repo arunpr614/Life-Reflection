@@ -619,3 +619,26 @@ M8–M11 ship real captured content — Telegram photos, VoiceNotes transcripts,
 ### 7.7 Widening `source_item.kind` rebuilds a table that other tables already hold foreign keys into
 
 §3.1's migration recreates `source_item` to add `'voice_journal'` to a `CHECK` constraint SQLite cannot `ALTER` in place. `id` is a `TEXT PRIMARY KEY`, not a `rowid` alias, so a plain `INSERT ... SELECT` preserves every existing ID exactly — that part is safe. The real gotcha is SQLite's own documented hazard for this exact operation: dropping and recreating a table that other tables (`source_revision`, `media_asset`, and by M9 also `telegram_origin`) hold a `REFERENCES source_item(id)` foreign key into can violate referential integrity or silently leave stale foreign-key definitions if done with `PRAGMA foreign_keys = ON`, which is why SQLite's documentation prescribes a specific multi-step procedure (disable foreign keys for the transaction, rebuild, then run `PRAGMA foreign_key_check` before re-enabling) rather than a naive four-statement rebuild. Copying the shape from `sqlite.org`'s own migration guidance, not from this plan's illustrative sketch, is the point. **Mitigation:** the M9 migration ticket writes and passes a test that seeds fixture rows in every table with a foreign key into `source_item`, runs the migration inside the documented procedure, and runs `PRAGMA foreign_key_check` afterward asserting zero violations — before this migration is ever run against anything but a disposable test database.
+
+---
+
+## 8. Decisions needed from the owner
+
+Carried forward from the controlling brief §13, unchanged and unresolved. These are surfaced here and again in every ticket that rests on one — they are not decided by this document, and no ticket should be written as though one of them already has an answer.
+
+1. **Hetzner host access timing.** Unanswered since existing plan §9 item 4; needed at M6 (shipped without it), and now also gates M13–M15's production deployment steps.
+2. **Provider credentials.** M10's and M11's evaluation gates both need test credentials the PRD says will be "supplied later." Neither milestone's gate ticket can be *worked* without them, though both can be *written* now.
+3. **The $15 evaluation ceiling split.** Shared across M10's text evaluation and M11's artwork evaluation (§7.1). Does the owner want an even split, an explicit $8/$7 (or other) allocation, or first-come with no reservation?
+4. **VoiceNotes test account.** `LID-VN-001`'s spike ticket needs one, and requires that no personal journal ever touches it.
+5. **Milestone ordering — encryption after capture.** M13 (encryption) sits after M8–M11 in this plan's sequencing, meaning real Telegram photos and provider-derived text land on an unencrypted database first (§7.3). That is a deliberate trade for visible per-milestone progress, and it is the owner's call whether that trade is acceptable or whether M13 should move earlier at the cost of a less immediately visible milestone.
+6. **B2 and R2 accounts.** M14 and M15 need real Backblaze B2 and Cloudflare R2 accounts and buckets in the EU regions this plan specifies; nobody has created them yet as far as either planning session has verified.
+
+None of these block writing the milestones or the tickets — the controlling brief is explicit that they should be surfaced inside the relevant ticket, not resolved by guessing whichever answer unblocks fastest (brief §13, §9.1). They do block *working* certain gate tickets once filed (`LID-VN-001`, `LID-AIT-001`, `LID-AIA-001` specifically cannot proceed past their spike/evaluation step without questions 2 and 4 answered).
+
+---
+
+## 9. Vocabulary
+
+`reference/CONTEXT.md`'s ~25 terms and their `_Avoid_` alias lists (existing plan §10) already cover every domain noun this plan uses — Journal Day, Source Item, Derived Artifact, Protected Field, Visual Brief, Generated Artwork, Active Artwork, Calendar Cover, Source Suppression, Artwork Suppression, Trash, Recovery Ceremony, and the rest. Nothing in M7–M19 needed a genuinely new product term.
+
+Two schema-level names introduced in §3 above are implementation vocabulary, not product vocabulary, and are defined by their SQL comments rather than repeated here: `derived_field` vs. `derived_field_version` (current value vs. full attempt history, §3.4), and `source_suppression` vs. `artwork_suppression` (§3.7, deliberately two tables — see `reference/CONTEXT.md`'s own `_Avoid_` note on `Source Suppression`: not to be confused with `Artwork Suppression`). Ticket titles and acceptance criteria should use the CONTEXT.md product terms; `## Technical notes` sections are where the table names belong.
