@@ -221,6 +221,27 @@ Notes on the arithmetic:
 
 ## 9. The free options, in full
 
+### 9.0 If cost is a hard constraint, the answer changes — and it is not the one in §8
+
+§8 recommends Netcup because, given a free hand, buying your way out of the disk ceiling and the coexistence risk is worth ~$6/month. **Impose a "must be free" constraint and Netcup drops out, and the winner is not either of the two options below. It is Scenario A: stay on the host you are already paying for, and put the photo bytes in R2.**
+
+| Free-ish option | Real monthly cost | New hardware | Rewrite | New failure domain |
+|---|---|---|---|---|
+| **A — Stay on the Hetzner host + R2** | **$0.25–0.55** | none | none | none |
+| K — Home box + Cloudflare Tunnel | $0.45–1.35 | a machine | none | **your house** |
+| J — Cloudflare Pages + R2 + Workers | ~$0.45 | none | **all of M1–M6** | none |
+
+All three land within about a dollar of each other, so cost does not separate them — **what separates them is what else you have to give up**, and A gives up nothing.
+
+Two things make A the right free answer, and both are easy to miss:
+
+1. **The $10/month is sunk.** AI Brain needs that host regardless of what Life in Days does. So the honest marginal cost of Scenario A is the R2 line item — **under $7 a year.** Options K and J don't save money against A; they save money against a bill you are paying anyway for a different product.
+2. **Moving the photos to R2 dissolves the disk ceiling, which was the only hard blocker.** With originals and derivatives in R2, the local disk carries the SQLite file plus the FTS5 index (**≤250 MB**) and ingest staging — call it 3–5 GB against 22 GB free. It fits with room to spare. §4's "the archive does not fit" is a statement about putting the archive *on that disk*, not about the host.
+
+That leaves the coexistence risk as A's only real cost, and it is the smaller of the two risks this survey found: 9-day `sar` peaks of 9.4% CPU and 431 MB of 3819 MB, memory PSI flat at 0.00 across 74 days (`M0.1-HOST-INVENTORY.md` §6). One cheap piece of insurance closes most of what remains — set a conservative `MemoryMax`/`MemoryHigh` on the Life in Days unit when it is first created. That is a line in a unit file, not #319's experiment, and it needs no load test against the shared host.
+
+**So: if it has to be free, do Scenario A. Choose K only if you want Life in Days off that host entirely, and J only if you want no server at all.** The two sections below are why K beats J.
+
 ### 9.1 Cloudflare Pages + R2 + Workers + Access — ~$0.45/month, and a different product
 
 This is the cheapest thing that could possibly work, and it works by giving up the server.
