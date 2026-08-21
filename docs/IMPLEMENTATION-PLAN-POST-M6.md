@@ -461,3 +461,50 @@ CREATE VIRTUAL TABLE search_index USING fts5(
 ```
 
 Index maintenance is transactional with every Correction, redate, Trash/restore, and field-protection change (Technical Considerations, `reference/PRODUCT-REQUIREMENTS.md`, "Search" — index updates must be transactional or recoverably queued). Photo Captions are indexed here and nowhere near an AI request payload — the one field that is searchable but never sent to a provider (`LID-TG-009`).
+
+---
+
+## 4. The privacy architecture
+
+One rule shapes M10 and M11 more than any other in this document, and it comes from `reference/PRINCIPLES.md` directly: **real photos and photo-derived data must never be sent to AI providers.** Everything below is that rule made specific enough to test.
+
+### 4.1 What is capable of crossing the boundary — enumerated, not implied
+
+Exactly two payload shapes ever leave this server for an AI provider, and each has exactly one producer:
+
+| Payload | Produced by | Consumed by | Contains |
+| --- | --- | --- | --- |
+| Text-generation request | `src/providers/text/*.ts` | Text Provider | Ordered, normalized journal text (all live Source Items for one Journal Day, concatenated with source boundaries) plus a minimal date/language hint and the requested `modelId` |
+| Artwork-generation request | `src/providers/artwork/*.ts` | Artwork Provider | The current Visual Brief (150–300 tokens, §3.5) and the requested `modelId` — nothing else |
+
+The existing plan's `TextProviderRequest`/`ArtworkProviderRequest` interfaces (§2.2 above) are the enforcement mechanism: there is no field on either type a photo, a caption, an identifier, or a filename could occupy. A reviewer checking this boundary reads two `.ts` files, not a policy document.
+
+### 4.2 What never crosses it — the enumerated list `LID-AIT-006` requires
+
+Never serialized into any AI request, by any code path, under any milestone:
+
+- Real photo bytes, thumbnails, derivatives, or EXIF/IPTC/XMP metadata (`LID-TG-010`)
+- Photo Captions — searchable in M7, never an AI input (`LID-TG-009`)
+- The owner-authored private accessibility description on a Media Asset (`LID-REF-006`, existing plan §5.1's `private_image_description` column — present since M1, unused by anything until this sentence)
+- Telegram or VoiceNotes account/chat/message/note identifiers, or any opaque ID from `telegram_origin` / `voicenotes_origin` (§3.2, §3.3)
+- Names, filenames, or source titles added by the application
+- Internal database IDs, request IDs from a *different* provider call, or anything from `ai_usage_ledger` (§3.11)
+- Credentials, tokens, API keys, or any value from the runtime secret path (`LID-OPS-003`)
+- A real Daily Photo, ever, as artwork-generation input — the Visual Brief is text-only and is itself derived only from journal text, never from a photo
+
+A contract test asserting this list — one test per forbidden field, serializing a worst-case fixture and asserting the field's absence from the outgoing JSON — is the M10/M11 acceptance criterion this section exists to make checkable, not just statable.
+
+### 4.3 Two boundary properties that are structural, not procedural
+
+- **Stateless, allowlisted requests.** Every request is complete in itself: no conversation, no files, no tools, no grounding, no provider-side session, no persistent request ID reused across calls. Journal text is treated as untrusted quoted data with a frozen instruction hierarchy — this is also the prompt-injection mitigation (existing plan's risk register style continues in §7 below), not a separate feature.
+- **No silent fallback, ever, in either direction.** Not between providers, not between models, not from Artwork Provider back to Text Provider if artwork fails, not from a failed evaluation candidate to an unevaluated one. A failure is a visible state (§3.4's `outcome`, §3.6's `outcome`), never a redirected request.
+
+### 4.4 Where the boundary is enforced, and where it is merely described
+
+The boundary lives in three places, in this order of trust:
+
+1. **The type signatures** (§2.2) — cannot represent a forbidden field. This is the strongest guarantee; it fails at compile time, not at request time.
+2. **The allowlisted serializer** — a single function per role that builds the outgoing payload field-by-field from an explicit allowlist, never by taking an object and stripping a denylist. An allowlist that omits a field is silent; a denylist that misses a field is a leak.
+3. **The contract test** (§4.2) — catches the case where someone widens the type or the serializer later without re-reading this section.
+
+Ticket-writing note for M10/M11 (also stated in the controlling brief §8.4): every ticket that touches an AI provider states this boundary in its `## Scope`, not only its `## Technical notes` — what is sent, and cites this section's enumerated "never" list rather than restating it.
