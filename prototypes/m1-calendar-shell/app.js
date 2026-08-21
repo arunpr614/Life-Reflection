@@ -197,7 +197,7 @@ function renderMargin(cell) {
         <dt>Calendar Cover</dt>
         <dd>${cover}</dd>
         <dt>Source Items</dt>
-        <dd>${journals} Uploaded journal${journals === 1 ? '' : 's'}<br>${photos} Daily Photo${photos === 1 ? '' : 's'}</dd>
+        <dd>${journals} Uploaded journal${journals === 1 ? '' : 's'}, ${photos} Daily Photo${photos === 1 ? '' : 's'}</dd>
       </dl>
       <div class="margin__preview">
         <h3>${cell.entries[0].title || 'Untitled Journal Day'}</h3>

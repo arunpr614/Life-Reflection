@@ -18,3 +18,7 @@ build/
 # OS / editor noise
 .DS_Store
 *.log
+
+# Local browser-automation tooling artifacts (playwright-cli)
+.playwright/
+.playwright-cli/
