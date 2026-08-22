@@ -325,6 +325,13 @@ function initControls() {
       <option value="loading">Loading</option>
       <option value="error">Failed to load</option>
     </select>
+    <label class="visually-hidden" for="lid-paper">Paper theme</label>
+    <select id="lid-paper" title="Paper theme — light mode only, dark canvas follows the colour theme instead">
+      <option value="cream">Paper: Cream</option>
+      <option value="linen">Paper: Linen</option>
+      <option value="blush">Paper: Blush</option>
+      <option value="fog">Paper: Fog</option>
+    </select>
     <button type="button" id="lid-theme">Use dark theme</button>
   `;
   document.body.appendChild(wrap);
@@ -332,6 +339,17 @@ function initControls() {
     state.demo = e.target.value;
     if (state.demo === 'single-day') state.monthKey = '2026-08';
     render();
+  });
+  const paperSelect = wrap.querySelector('#lid-paper');
+  const params = new URLSearchParams(location.search);
+  const initialPaper = params.get('paper') || 'cream';
+  paperSelect.value = initialPaper;
+  if (initialPaper !== 'cream') document.documentElement.dataset.paperTheme = initialPaper;
+  paperSelect.addEventListener('change', (e) => {
+    document.documentElement.dataset.paperTheme = e.target.value;
+    const p = new URLSearchParams(location.search);
+    p.set('paper', e.target.value);
+    history.replaceState(null, '', `${location.pathname}?${p.toString()}`);
   });
   wrap.querySelector('#lid-theme').addEventListener('click', () => {
     state.theme = state.theme === 'dark' ? 'light' : 'dark';

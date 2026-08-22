@@ -27,7 +27,10 @@
     that references --brand-hue re-measures automatically; nothing else
     changed. If a later agent sees 115 and assumes 171 was the decision and
     "fixes" it back: don't. This value is the current decision. */
-  --paper-hue: 86;  /* warm paper: canvas, raised surfaces, light lines */
+  --paper-hue: 86;  /* warm paper: canvas, raised surfaces, light lines.
+    "cream" below is the default/fallback for this too — see §"Paper themes":
+    unlike --brand-hue, this one stayed fixed through every colour-theme
+    round until 2026-08-22, when the owner asked to open it up as well. */
 
   /* ── Colour · 6 chosen values + focus (given) ─────────────────────
    * Trailing comment is the decided hex this OKLCH value reproduces.
@@ -222,6 +225,53 @@
 :root[data-color-theme="plum"][data-theme="dark"] {
   --accent: oklch(0.65 0.13 var(--brand-hue)); /* #bf6fae — 5.22:1 on dark paper */
   --focus:  oklch(0.82 0.13 calc(var(--brand-hue) + 3)); /* #fba2e1 — 9.72:1 on dark paper */
+}
+
+/* ── Paper themes ──────────────────────────────────────────────────────
+ * Exploration requested 2026-08-22, after the owner asked what #f4f0e7
+ * actually was. --paper-hue only ever drives LIGHT-theme surfaces — dark
+ * theme's canvas is tied to --brand-hue instead (see the dark block above),
+ * so these four only change what light mode looks like. Each theme tunes
+ * its own chroma per surface, not just a hue swap of "cream"'s numbers:
+ * `linen` is deliberately lower-chroma (quieter, closer to true white)
+ * while `blush` and `fog` keep chroma close to `cream`'s so the difference
+ * reads as hue, not just "more or less colourful." --line-control's 3:1
+ * requirement re-measured for all four — it barely moves at this chroma
+ * (3.19–3.25:1 on --paper, 3.54–3.61:1 on --paper-raised), unlike the
+ * accent/focus rotation, because luminance here is dominated by L, not C.
+ * `cream` (hue 86) is the existing default/fallback, unconditional above. */
+
+:root[data-paper-theme="linen"]:not([data-theme="dark"]) {
+  --paper-hue: 60; /* quieter than cream — lower chroma throughout, closer
+    to true warm white than to a visibly "cream" surface */
+  --paper:        oklch(0.956 0.008 var(--paper-hue)); /* #f5efeb */
+  --paper-raised: oklch(0.994 0.005 var(--paper-hue)); /* #fffcfa */
+  --line:         oklch(0.860 0.013 var(--paper-hue)); /* #d8cfc9 */
+  --line-strong:  oklch(0.771 0.016 var(--paper-hue)); /* #bdb2ab */
+  --line-control: oklch(0.620 0.016 var(--paper-hue)); /* #8e847d — 3.21:1 on paper */
+}
+
+:root[data-paper-theme="blush"]:not([data-theme="dark"]) {
+  --paper-hue: 25; /* warm pink undertone instead of cream's yellow-green.
+    Checked against banned cluster 1 ("cream + terracotta accent") — this
+    is the canvas alone, paired with whichever cool accent is active, not
+    a terracotta pairing. */
+  --paper:        oklch(0.956 0.014 var(--paper-hue)); /* #faedec */
+  --paper-raised: oklch(0.994 0.008 var(--paper-hue)); /* #fffbfa */
+  --line:         oklch(0.860 0.021 var(--paper-hue)); /* #dfccca */
+  --line-strong:  oklch(0.771 0.026 var(--paper-hue)); /* #c5afac */
+  --line-control: oklch(0.620 0.026 var(--paper-hue)); /* #95807e — 3.25:1 on paper */
+}
+
+:root[data-paper-theme="fog"]:not([data-theme="dark"]) {
+  --paper-hue: 220; /* the one cool option — a grey-blue paper, archive/
+    gallery mood rather than a warm personal-notebook one. The biggest
+    departure from "warm paper, cool ink" of anything tried so far. */
+  --paper:        oklch(0.956 0.013 var(--paper-hue)); /* #e7f3f7 */
+  --paper-raised: oklch(0.994 0.007 var(--paper-hue)); /* #f8feff */
+  --line:         oklch(0.860 0.020 var(--paper-hue)); /* #c3d4da */
+  --line-strong:  oklch(0.771 0.024 var(--paper-hue)); /* #a5b8bf */
+  --line-control: oklch(0.620 0.024 var(--paper-hue)); /* #778a90 — 3.19:1 on paper */
 }
 
 @media (prefers-reduced-motion: reduce) {
