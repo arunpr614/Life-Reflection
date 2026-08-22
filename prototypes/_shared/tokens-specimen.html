@@ -401,19 +401,19 @@
 /* Prototype furniture. In-memory only; reload returns to the first state. */
 
 /* The decided palette, as literals, so the swatch can compare against them.
-   Rotated from forest/teal to apple green on 2026-08-21 (--brand-hue 171→115,
-   accent/focus chroma boosted — see tokens.css for why). Re-measured, not
-   carried over from the old hex values. */
+   forest/teal → apple green (2026-08-21) → Indigo/Fog (2026-08-22, owner's
+   pick from the four-colour × four-paper exploration). Re-measured each
+   time, never carried over from the previous round's hex values. */
 const DECIDED = {
   light: {
-    paper: '#f4f0e7', 'paper-raised': '#fffdf8', ink: '#272820',
-    'ink-muted': '#65675d', line: '#d7d0c3', 'line-strong': '#bbb4a4',
-    accent: '#596e00', focus: '#708e00'
+    paper: '#e7f3f7', 'paper-raised': '#f8feff', ink: '#22282f',
+    'ink-muted': '#60676f', line: '#c3d4da', 'line-strong': '#a5b8bf',
+    accent: '#005fc6', focus: '#4385e5'
   },
   dark: {
-    paper: '#171811', 'paper-raised': '#1f2017', ink: '#eff0ea',
-    'ink-muted': '#bbbcb2', line: '#3d3f34', 'line-strong': '#5d5f53',
-    accent: '#97a941', focus: '#bfdb78'
+    paper: '#13181d', 'paper-raised': '#1a2027', ink: '#ebf0f6',
+    'ink-muted': '#b5bcc4', line: '#373e47', 'line-strong': '#565e68',
+    accent: '#5f8de4', focus: '#91bbff'
   }
 };
 /* --line-control has no v10 equivalent: it was derived here to satisfy the

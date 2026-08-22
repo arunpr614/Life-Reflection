@@ -330,17 +330,17 @@ function initControls() {
     </select>
     <label class="visually-hidden" for="lid-colortheme">Colour theme</label>
     <select id="lid-colortheme" title="Colour theme — accent, ink, and dark-mode canvas">
+      <option value="indigo">Colour: Indigo — decided</option>
       <option value="apple">Colour: Apple green</option>
       <option value="sage">Colour: Sage</option>
-      <option value="indigo">Colour: Indigo</option>
       <option value="plum">Colour: Plum</option>
     </select>
     <label class="visually-hidden" for="lid-paper">Paper theme</label>
     <select id="lid-paper" title="Paper theme — light mode only, dark canvas follows the colour theme instead">
+      <option value="fog">Paper: Fog — decided</option>
       <option value="cream">Paper: Cream</option>
       <option value="linen">Paper: Linen</option>
       <option value="blush">Paper: Blush</option>
-      <option value="fog">Paper: Fog</option>
     </select>
     <button type="button" id="lid-theme">Use dark theme</button>
   `;
@@ -352,7 +352,7 @@ function initControls() {
   });
   const colorSelect = wrap.querySelector('#lid-colortheme');
   const initialParams = new URLSearchParams(location.search);
-  const initialColor = initialParams.get('variant') || 'apple';
+  const initialColor = initialParams.get('variant') || 'indigo'; // decided 2026-08-22
   colorSelect.value = initialColor;
   document.documentElement.dataset.colorTheme = initialColor;
   colorSelect.addEventListener('change', (e) => {
@@ -363,9 +363,9 @@ function initControls() {
   });
   const paperSelect = wrap.querySelector('#lid-paper');
   const params = new URLSearchParams(location.search);
-  const initialPaper = params.get('paper') || 'cream';
+  const initialPaper = params.get('paper') || 'fog'; // decided 2026-08-22
   paperSelect.value = initialPaper;
-  if (initialPaper !== 'cream') document.documentElement.dataset.paperTheme = initialPaper;
+  document.documentElement.dataset.paperTheme = initialPaper;
   paperSelect.addEventListener('change', (e) => {
     document.documentElement.dataset.paperTheme = e.target.value;
     const p = new URLSearchParams(location.search);
@@ -377,6 +377,16 @@ function initControls() {
     document.documentElement.dataset.theme = state.theme;
     wrap.querySelector('#lid-theme').textContent = state.theme === 'dark' ? 'Use light theme' : 'Use dark theme';
   });
+
+  // This exact bug (rail content hidden behind the fixed controls bar at
+  // narrow widths) has recurred three times now, each time the controls
+  // changed — a guessed padding-top number goes stale the moment a label
+  // does. Measure the real height instead, so it never needs re-tuning.
+  const syncControlsHeight = () => {
+    document.documentElement.style.setProperty('--controls-height', `${wrap.offsetHeight}px`);
+  };
+  syncControlsHeight();
+  window.addEventListener('resize', syncControlsHeight);
 }
 
 function boot() {

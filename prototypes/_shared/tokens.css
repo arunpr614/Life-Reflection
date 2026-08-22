@@ -2,54 +2,46 @@
  * PROTOTYPE ARTIFACT. Not production code, but written to be dropped into the
  * app's single stylesheet. This file is the design input to issue #187.
  *
- * Colour: started from prototype-v10's forest/teal green (accent #255949,
- *         focus #0a7762), rotated to an apple green (#596e00 / #708e00) on
- *         2026-08-21 at the owner's request. UX §28.1's brown is superseded
- *         and was never used here; see the handover docs if that history
- *         matters. Expressed in OKLCH off two hue variables either way.
+ * Colour: v10's forest/teal → apple green (2026-08-21) → Indigo/Fog
+ *         (2026-08-22, owner's pick from the four-colour × four-paper
+ *         exploration). UX §28.1's brown was never used here. Expressed in
+ *         OKLCH off two hue variables throughout.
  * Type / spacing / shape / motion: UX-SPECIFICATION.md §28.2–28.4.
  *
- * Two hues, not one. The archive is warm paper and cool ink: the paper
- * surfaces sit at hue ~86 (warm), the greens and the green-tinted inks at
- * hue ~115 (apple green — was ~171, forest/teal, until 2026-08-21). Driving
- * both from one number would flatten that, so there are two knobs. Each
- * still shifts a whole family — which is exactly what changing --brand-hue
- * alone just did.
+ * Two hues, not one. The paper surfaces and the ink/accent surfaces move
+ * independently — that's the whole point of having two knobs instead of
+ * one. Both have moved at least once now: brand-hue teal→apple→indigo,
+ * paper-hue cream (fixed for a full day) → fog.
  */
 
 :root {
   color-scheme: light;
 
   /* ── The two knobs ───────────────────────────────────────────────── */
-  --brand-hue: 115; /* apple green: accent, focus, ink, lines in dark theme.
-    Rotated from 171 (forest/teal) on 2026-08-21 at the owner's request — one
-    number, per the file's own design intent (see header). Everything below
-    that references --brand-hue re-measures automatically; nothing else
-    changed. If a later agent sees 115 and assumes 171 was the decision and
-    "fixes" it back: don't. This value is the current decision. */
-  --paper-hue: 86;  /* warm paper: canvas, raised surfaces, light lines.
-    "cream" below is the default/fallback for this too — see §"Paper themes":
-    unlike --brand-hue, this one stayed fixed through every colour-theme
-    round until 2026-08-22, when the owner asked to open it up as well. */
+  --brand-hue: 255; /* Indigo — chosen 2026-08-22 from apple/sage/indigo/plum.
+    Was 115 (apple green, 2026-08-21), was 171 (forest/teal, original v10).
+    Everything below that references --brand-hue re-measures automatically.
+    This value is the current decision — do not revert it. */
+  --paper-hue: 220; /* Fog — chosen 2026-08-22 from cream/linen/blush/fog.
+    Was 86 (cream) through both colour-hue rotations above; opened up as
+    its own axis only once the owner asked what #f4f0e7 actually was. */
 
   /* ── Colour · 6 chosen values + focus (given) ─────────────────────
    * Trailing comment is the decided hex this OKLCH value reproduces.
    * Verified side by side in tokens-specimen.html, not by trusting math. */
-  --paper:        oklch(0.956 0.013 var(--paper-hue)); /* #f4f0e7 canvas */
-  --paper-raised: oklch(0.994 0.007 var(--paper-hue)); /* #fffdf8 cards, media frames, dialogs */
-  --ink:          oklch(0.274 0.016 var(--brand-hue)); /* #272820 the work: journal prose, dates */
-  --ink-muted:    oklch(0.510 0.016 var(--brand-hue)); /* #65675d the margin: provenance, meta */
-  --line:         oklch(0.860 0.020 var(--paper-hue)); /* #d7d0c3 tonal separation */
-  --line-strong:  oklch(0.771 0.024 var(--paper-hue)); /* #bbb4a4 a visible edge, not a control */
-  --line-control: oklch(0.620 0.024 var(--paper-hue)); /* #8d8576 form-control borders only — measures 3:1 */
-  /* Accent/focus default to the apple-green theme below. Each colour theme
-   * needed its own hand-tuned chroma, not just a hue swap of the same
-   * numbers — the sRGB gamut ceiling is different at every hue, so the same
-   * chroma reads vivid at one hue and muddy at another. Measured per theme,
-   * not assumed. See §"Colour themes" below for all four, and
-   * tokens-specimen.html for the rendered, measured proof of each. */
-  --accent:       oklch(0.50 0.16 var(--brand-hue)); /* #596e00 primary action + selection — 5.05:1 on paper */
-  --focus:        oklch(0.60 0.15 calc(var(--brand-hue) + 8)); /* #708e00 — 3.32:1 on paper */
+  --paper:        oklch(0.956 0.013 var(--paper-hue)); /* #e7f3f7 canvas */
+  --paper-raised: oklch(0.994 0.007 var(--paper-hue)); /* #f8feff cards, media frames, dialogs */
+  --ink:          oklch(0.274 0.016 var(--brand-hue)); /* the work: journal prose, dates */
+  --ink-muted:    oklch(0.510 0.016 var(--brand-hue)); /* the margin: provenance, meta */
+  --line:         oklch(0.860 0.020 var(--paper-hue)); /* #c3d4da tonal separation */
+  --line-strong:  oklch(0.771 0.024 var(--paper-hue)); /* #a5b8bf a visible edge, not a control */
+  --line-control: oklch(0.620 0.024 var(--paper-hue)); /* #778a90 form-control borders only — measures 3:1 */
+  /* Indigo needed far less chroma-tuning than apple green did — blue hues
+   * have much more sRGB gamut room than yellow-greens at this lightness,
+   * so this didn't hit the same "reads muddy, not vivid" problem. Still
+   * measured, not assumed — see the contrast table in tokens-specimen.html. */
+  --accent:       oklch(0.50 0.18 var(--brand-hue)); /* #005fc6 primary action + selection — 5.35:1 on paper */
+  --focus:        oklch(0.62 0.16 calc(var(--brand-hue) + 3)); /* #4385e5 — 3.23:1 on paper */
 
   /* Why --line-control exists, measured not assumed.
    * --line-strong is 1.70:1 on --paper (2.66:1 dark). WCAG 1.4.11 / UX-A11Y-10
@@ -137,30 +129,24 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  /* Dark is warm olive-brown ink, not near-black. The accent is now a more
-   * vivid apple green than the old forest/teal (chroma had to go up to read
-   * as green at all at this hue — see the note at --accent below), which
-   * moves it closer to the banned near-black+acid-green cluster than the
-   * old palette was. Checked deliberately: canvas stays warm dark olive,
-   * not black; accent is a mid-tone yellow-green (#a1b442), not a
-   * saturated pure-hue neon. Re-check this specifically if it drifts. */
-  --paper:        oklch(0.205 0.013 var(--brand-hue)); /* #171811 */
-  --paper-raised: oklch(0.240 0.017 var(--brand-hue)); /* #1f2017 */
-  --ink:          oklch(0.953 0.009 var(--brand-hue)); /* #eff0ea */
-  --ink-muted:    oklch(0.792 0.014 var(--brand-hue)); /* #bbbcb2 */
-  --line:         oklch(0.362 0.018 var(--brand-hue)); /* #3d3f34 */
-  --line-strong:  oklch(0.479 0.019 var(--brand-hue)); /* #5d5f53 */
-  --line-control: oklch(0.530 0.019 var(--brand-hue)); /* #6b6d61 — measures 3:1 on dark --paper */
-  /* Same gamut/chroma story as light mode: boosted chroma so it reads as
-   * apple green rather than a washed pastel. #a1b442 stays a full step
-   * away from the banned near-black+acid-green cluster — this canvas is
-   * warm dark olive-brown (#171811), not black, and the accent itself is
-   * a muted mid-tone, not a saturated neon. */
-  --accent:       oklch(0.70 0.13 calc(var(--brand-hue) + 3)); /* #97a941 — 6.86:1 on dark paper.
-    First pass (L0.734/C0.14, #a1b442) rendered too close to the banned
-    near-black+acid-green cluster on a filled button — pulled lightness and
-    chroma back a step. Still clearly apple green, reads calmer at scale. */
-  --focus:        oklch(0.85 0.13 calc(var(--brand-hue) + 7)); /* #bfdb78 — 11.59:1 on dark paper */
+  /* Dark canvas ties to --brand-hue (not --paper-hue), so it followed the
+   * indigo rotation automatically — this is now a cool blue-tinted dark,
+   * not the warm olive-brown of the apple-green round. Still nowhere near
+   * the banned near-black+acid-green cluster: that cluster is specifically
+   * about a saturated GREEN accent, and blue at this lightness/chroma reads
+   * as calm rather than neon. Re-measured, not carried over from apple. */
+  --paper:        oklch(0.205 0.013 var(--brand-hue)); /* #13181d */
+  --paper-raised: oklch(0.240 0.017 var(--brand-hue)); /* #1a2027 */
+  --ink:          oklch(0.953 0.009 var(--brand-hue)); /* #ebf0f6 */
+  --ink-muted:    oklch(0.792 0.014 var(--brand-hue)); /* #b5bcc4 */
+  --line:         oklch(0.362 0.018 var(--brand-hue)); /* #373e47 */
+  --line-strong:  oklch(0.479 0.019 var(--brand-hue)); /* #565e68 */
+  --line-control: oklch(0.530 0.019 var(--brand-hue)); /* #656d77 — 3.41:1 on dark --paper */
+  /* Indigo needed no chroma rescue in dark mode either — blue's gamut room
+   * meant the straight hue-rotated values already read as a proper rich
+   * blue, unlike apple green's muddy-olive-until-boosted problem. */
+  --accent:       oklch(0.65 0.14 calc(var(--brand-hue) + 7)); /* #5f8de4 — 5.48:1 on dark paper */
+  --focus:        oklch(0.80 0.14 calc(var(--brand-hue) + 10)); /* #91bbff — 9.19:1 on dark paper */
 
   --ink-on-accent: oklch(0.205 0.013 var(--brand-hue));
   --scrim-media:   oklch(0.15 0.010 var(--brand-hue) / 0.62);
@@ -171,13 +157,12 @@
 
 /* ── Colour themes ─────────────────────────────────────────────────────
  * Exploration requested 2026-08-21: hold the shell (Editorial) fixed, vary
- * only --brand-hue and the hand-tuned accent/focus that go with it. `apple`
- * above is the default/fallback (bare :root, no data-color-theme needed) —
- * these four blocks make it selectable alongside three genuinely different
- * hue families, not four shades of the same idea. Paper stays warm cream
- * (--paper-hue: 86) in every theme; only the "cool" side of the palette
- * moves. Every value below is measured in tokens-specimen.html, not
- * assumed — same discipline as the apple-green rotation.
+ * only --brand-hue and the hand-tuned accent/focus that go with it. `indigo`
+ * is the decided theme as of 2026-08-22 and lives unconditionally above
+ * (bare :root, no data-color-theme needed) — these four blocks (including
+ * an `indigo` one, now redundant with the base but left in so the dropdown
+ * can still switch back to compare) are what made the choice possible.
+ * Every value below is measured in tokens-specimen.html, not assumed.
  *
  * Each theme needed a different chroma to read as intentional rather than
  * washed-out or acid: green hues (apple, sage) hit the sRGB gamut ceiling
@@ -239,7 +224,9 @@
  * requirement re-measured for all four — it barely moves at this chroma
  * (3.19–3.25:1 on --paper, 3.54–3.61:1 on --paper-raised), unlike the
  * accent/focus rotation, because luminance here is dominated by L, not C.
- * `cream` (hue 86) is the existing default/fallback, unconditional above. */
+ * `fog` is the decided theme as of 2026-08-22 and lives unconditionally
+ * above (the `fog` block below is now redundant with the base, left in so
+ * the dropdown can still switch back to compare against cream/linen/blush). */
 
 :root[data-paper-theme="linen"]:not([data-theme="dark"]) {
   --paper-hue: 60; /* quieter than cream — lower chroma throughout, closer

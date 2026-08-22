@@ -70,7 +70,9 @@ body { padding: 0 0 56px; }
 }
 .month-header .t-month {
   font-family: var(--font-display); font-size: var(--text-month); line-height: var(--lh-month);
-  flex: 1;
+  flex: 1; min-width: 0; /* flex items default to an "auto" minimum that
+    refuses to shrink past min-content — at 320px that pushed the Today
+    button off-screen. Found by actually checking 320px, not assumed. */
 }
 .month-header__today { margin-left: auto; }
 .month-header--loading .t-month { color: var(--ink-muted); }
@@ -156,7 +158,10 @@ body { padding: 0 0 56px; }
    and a same-specificity rule earlier in the file loses regardless of media
    nesting (UI-DESIGN-INSTRUCTIONS.md §4's classic cascade-order failure). */
 @media (max-width: 480px) {
-  /* Measured, not guessed: with 4 controls the bar wraps to 2 rows here
-     (~82px). 64px was tuned for 2 controls/1 row — bumped with margin. */
-  .rail { padding-top: 100px; }
+  /* This exact reservation broke three times as the controls bar's content
+     changed (64px → 100px → 117px-and-still-wrong). Fixed properly instead
+     of re-guessing again: app.js measures the real bar height at runtime
+     into --controls-height. 12px is just breathing room, not a guess about
+     the bar's size. */
+  .rail { padding-top: calc(var(--controls-height, 64px) + 12px); }
 }
