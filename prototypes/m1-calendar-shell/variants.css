@@ -156,5 +156,7 @@ body { padding: 0 0 56px; }
    and a same-specificity rule earlier in the file loses regardless of media
    nesting (UI-DESIGN-INSTRUCTIONS.md §4's classic cascade-order failure). */
 @media (max-width: 480px) {
-  .rail { padding-top: 64px; }
+  /* Measured, not guessed: with 4 controls the bar wraps to 2 rows here
+     (~82px). 64px was tuned for 2 controls/1 row — bumped with margin. */
+  .rail { padding-top: 100px; }
 }

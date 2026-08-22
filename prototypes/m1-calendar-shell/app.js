@@ -1,9 +1,12 @@
 /* Life in Days — M1 Calendar shell + month view
  * PROTOTYPE ARTIFACT · fictional data · in-memory only · not production.
  * Milestone: M1. Issues: #187, #189, #195.
- * Shell is Editorial (approved 2026-08-21). The switcher now cycles COLOR
- * THEMES, not structure — the owner asked to hold the shell fixed and
- * explore --brand-hue. See docs/design/M1-BUILD-INSTRUCTIONS.md.
+ * Shell is Editorial (approved 2026-08-21) and fixed. Colour theme and
+ * paper theme are independent dropdowns in the top-right controls, not
+ * the floating arrow-bar switcher (_shared/switcher.js) — that pattern
+ * is for comparing radically different options live; these four-theme
+ * choices are settled enough that a dropdown is the honest UI for them.
+ * See docs/design/M1-BUILD-INSTRUCTIONS.md.
  */
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -325,6 +328,13 @@ function initControls() {
       <option value="loading">Loading</option>
       <option value="error">Failed to load</option>
     </select>
+    <label class="visually-hidden" for="lid-colortheme">Colour theme</label>
+    <select id="lid-colortheme" title="Colour theme — accent, ink, and dark-mode canvas">
+      <option value="apple">Colour: Apple green</option>
+      <option value="sage">Colour: Sage</option>
+      <option value="indigo">Colour: Indigo</option>
+      <option value="plum">Colour: Plum</option>
+    </select>
     <label class="visually-hidden" for="lid-paper">Paper theme</label>
     <select id="lid-paper" title="Paper theme — light mode only, dark canvas follows the colour theme instead">
       <option value="cream">Paper: Cream</option>
@@ -339,6 +349,17 @@ function initControls() {
     state.demo = e.target.value;
     if (state.demo === 'single-day') state.monthKey = '2026-08';
     render();
+  });
+  const colorSelect = wrap.querySelector('#lid-colortheme');
+  const initialParams = new URLSearchParams(location.search);
+  const initialColor = initialParams.get('variant') || 'apple';
+  colorSelect.value = initialColor;
+  document.documentElement.dataset.colorTheme = initialColor;
+  colorSelect.addEventListener('change', (e) => {
+    document.documentElement.dataset.colorTheme = e.target.value;
+    const p = new URLSearchParams(location.search);
+    p.set('variant', e.target.value);
+    history.replaceState(null, '', `${location.pathname}?${p.toString()}`);
   });
   const paperSelect = wrap.querySelector('#lid-paper');
   const params = new URLSearchParams(location.search);
@@ -358,19 +379,6 @@ function initControls() {
   });
 }
 
-/* ---------- chrome: colour-theme switcher (the axis under review now) ---------- */
-
-const COLOR_THEMES = [
-  { key: 'apple',  name: 'Apple green' },
-  { key: 'sage',   name: 'Sage' },
-  { key: 'indigo', name: 'Indigo' },
-  { key: 'plum',   name: 'Plum' }
-];
-
-function applyColorTheme(theme) {
-  document.documentElement.dataset.colorTheme = theme.key;
-}
-
 function boot() {
   const params = new URLSearchParams(location.search);
   const day = params.get('day');
@@ -380,4 +388,3 @@ function boot() {
 
 initControls();
 boot();
-initSwitcher(COLOR_THEMES, applyColorTheme);
